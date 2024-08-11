@@ -1,3 +1,5 @@
+# Create the updated HTML file content with "bw4s" replacing "Home" and search button on the right side
+final_html_content = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,27 +10,100 @@
         body {
             font-family: Arial, sans-serif;
             background-color: #f4f4f4;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
             margin: 0;
-            padding: 20px;
+            padding: 0;
         }
-        h1 {
-            color: #333;
+        .navbar {
+            overflow: hidden;
+            background-color: #333;
+            display: flex;
+            justify-content: space-between;
+            padding: 14px 20px;
         }
-        .section {
-            margin-top: 20px;
+        .navbar a {
+            font-size: 16px;
+            color: white;
+            text-align: center;
+            padding: 14px 16px;
+            text-decoration: none;
         }
-        .button-container {
+        .dropdown {
+            float: left;
+            overflow: hidden;
+        }
+        .dropdown .dropbtn {
+            font-size: 16px;
+            border: none;
+            outline: none;
+            color: white;
+            padding: 14px 16px;
+            background-color: inherit;
+            font-family: inherit;
+            margin: 0;
+            cursor: pointer;
+        }
+        .navbar a:hover, .dropdown:hover .dropbtn {
+            background-color: #575757;
+        }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+        }
+        .dropdown-content a {
+            float: none;
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            text-align: left;
+        }
+        .dropdown-content a:hover {
+            background-color: #ddd;
+        }
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+        .search-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px;
+        }
+        .search-container input[type=text] {
+            padding: 10px;
+            font-size: 17px;
+            border: 1px solid #ccc;
+            width: 80%;
+            margin-right: -1px;
+            border-top-left-radius: 5px;
+            border-bottom-left-radius: 5px;
+        }
+        .search-container button {
+            padding: 10px;
+            font-size: 17px;
+            border: 1px solid #ccc;
+            cursor: pointer;
+            background-color: #333;
+            color: white;
+            border-top-right-radius: 5px;
+            border-bottom-right-radius: 5px;
+            border-left: none; /* Prevent double border with input */
+        }
+        .search-container button:hover {
+            background-color: #575757;
+        }
+        .search-results {
             display: flex;
             flex-wrap: wrap;
+            justify-content: center;
             gap: 10px;
-            margin-top: 10px;
+            margin-top: 20px;
         }
-        .button {
+        .result-button {
             background-color: #007BFF;
             color: white;
             padding: 10px 20px;
@@ -42,45 +117,90 @@
             cursor: pointer;
             outline: none;
         }
-        .button:hover {
+        .result-button:hover {
             background-color: #0056b3;
         }
     </style>
 </head>
 <body>
-    <h1>Quick Access</h1>
-    
-    <!-- Quick Access Section -->
-    <div class="section">
-        <h2>Folders</h2>
-        <div class="button-container">
-            <a href="https://leoyen0404.github.io/web/HappyBirthdayWinter/" class="button">HappyBirthdayWinter</a>
-            <a href="https://leoyen0404.github.io/web/animation/" class="button">animation</a>
-            <a href="https://leoyen0404.github.io/web/cps/" class="button">cps</a>
-            <a href="https://leoyen0404.github.io/web/cube/" class="button">cube</a>
-            <a href="https://leoyen0404.github.io/web/favicon/" class="button">favicon</a>
-            <a href="https://leoyen0404.github.io/web/hypixel/" class="button">hypixel</a>
-            <a href="https://leoyen0404.github.io/web/learn/" class="button">learn</a>
-            <a href="https://leoyen0404.github.io/web/links/" class="button">links</a>
-            <a href="https://leoyen0404.github.io/web/mc/" class="button">mc</a>
-            <a href="https://leoyen0404.github.io/web/note/" class="button">note</a>
-            <a href="https://leoyen0404.github.io/web/qrcode/" class="button">qrcode</a>
-            <a href="https://leoyen0404.github.io/web/render/" class="button">render</a>
-            <a href="https://leoyen0404.github.io/web/score/" class="button">score</a>
-            <a href="https://leoyen0404.github.io/web/url/" class="button">url</a>
-        </div>
+
+    <!-- Navigation Bar -->
+    <div class="navbar">
+        <a href="#bw4s">bw4s</a>
+        <div class="dropdown">
+            <button class="dropbtn">Folders 
+                <i class="fa fa-caret-down"></i>
+            </button>
+            <div class="dropdown-content">
+                <a href="https://leoyen0404.github.io/web/HappyBirthdayWinter/">HappyBirthdayWinter</a>
+                <a href="https://leoyen0404.github.io/web/animation/">animation</a>
+                <a href="https://leoyen0404.github.io/web/cps/">cps</a>
+                <a href="https://leoyen0404.github.io/web/cube/">cube</a>
+                <a href="https://leoyen0404.github.io/web/favicon/">favicon</a>
+                <a href="https://leoyen0404.github.io/web/hypixel/">hypixel</a>
+                <a href="https://leoyen0404.github.io/web/learn/">learn</a>
+                <a href="https://leoyen0404.github.io/web/links/">links</a>
+                <a href="https://leoyen0404.github.io/web/mc/">mc</a>
+                <a href="https://leoyen0404.github.io/web/note/">note</a>
+                <a href="https://leoyen0404.github.io/web/qrcode/">qrcode</a>
+                <a href="https://leoyen0404.github.io/web/render/">render</a>
+                <a href="https://leoyen0404.github.io/web/score/">score</a>
+                <a href="https://leoyen0404.github.io/web/url/">url</a>
+            </div>
+        </div> 
+        <div class="dropdown">
+            <button class="dropbtn">Apps 
+                <i class="fa fa-caret-down"></i>
+            </button>
+            <div class="dropdown-content">
+                <a href="https://leoyen0404.github.io/web/app1/">App 1</a>
+                <a href="https://leoyen0404.github.io/web/app2/">App 2</a>
+                <a href="https://leoyen0404.github.io/web/app3/">App 3</a>
+            </div>
+        </div> 
     </div>
-    
-    <!-- Apps Section -->
-    <div class="section">
-        <h2>Apps</h2>
-        <div class="button-container">
-            <!-- Add your app links here -->
-            <a href="https://leoyen0404.github.io/web/app1/" class="button">App 1</a>
-            <a href="https://leoyen0404.github.io/web/app2/" class="button">App 2</a>
-            <a href="https://leoyen0404.github.io/web/app3/" class="button">App 3</a>
-        </div>
+
+    <!-- Search Bar -->
+    <div class="search-container">
+        <input type="text" id="searchInput" placeholder="Search for folders or apps..." onkeydown="if (event.keyCode == 13) searchFunction()">
+        <button type="button" onclick="searchFunction()">Search</button>
     </div>
-    
+    <div class="search-results" id="searchResults"></div>
+
+    <script>
+        function searchFunction() {
+            var input, filter, links, resultsContainer, i, txtValue, resultButton;
+            input = document.getElementById('searchInput');
+            filter = input.value.toLowerCase();
+            links = document.querySelectorAll('.dropdown-content a');
+            resultsContainer = document.getElementById('searchResults');
+
+            // Clear previous search results
+            resultsContainer.innerHTML = '';
+
+            // Search and display matching links as buttons
+            for (i = 0; i < links.length; i++) {
+                txtValue = links[i].textContent || links[i].innerText;
+                if (txtValue.toLowerCase().indexOf(filter) > -1) {
+                    resultButton = document.createElement('a');
+                    resultButton.href = links[i].href;
+                    resultButton.className = 'result-button';
+                    resultButton.textContent = txtValue;
+                    resultsContainer.appendChild(resultButton);
+                }
+            }
+        }
+    </script>
+
 </body>
 </html>
+"""
+
+# Define the final file path
+final_file_path = '/mnt/data/quick_access_index_final.html'
+
+# Write the final HTML content to the file
+with open(final_file_path, 'w') as file:
+    file.write(final_html_content)
+
+final_file_path
