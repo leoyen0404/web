@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geometric Art Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        canvas {
+            border: 1px solid #000;
+            margin-bottom: 20px;
+        }
+        button {
+            font-size: 16px;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        label {
+            display: flex;
+            justify-content: space-between;
+            width: 300px;
+        }
+        input {
+            width: 100px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Geometric Art Generator</h1>
+    <div class="controls">
+        <label>
+            Canvas Size:
+            <input type="number" id="canvasSize" min="100" max="1000" value="500">
+        </label>
+        <label>
+            Number of Squares:
+            <input type="number" id="numSquares" min="5" max="30" value="15">
+        </label>
+        <label>
+            Number of Shapes:
+            <input type="number" id="numShapes" min="1" max="10" value="3">
+        </label>
+        <label>
+            Min Shape Volume (%):
+            <input type="number" id="minShapeVolume" min="1" max="50" value="5">
+        </label>
+    </div>
+    <canvas id="artCanvas"></canvas>
+    <button id="generateBtn">Generate New Art</button>
+
+    <script>
+        const canvas = document.getElementById('artCanvas');
+        const ctx = canvas.getContext('2d');
+        const generateBtn = document.getElementById('generateBtn');
+        const canvasSizeInput = document.getElementById('canvasSize');
+        const numSquaresInput = document.getElementById('numSquares');
+        const numShapesInput = document.getElementById('numShapes');
+        const minShapeVolumeInput = document.getElementById('minShapeVolume');
+
+        function createLayeredSquares(size, numSquares) {
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, size, size);
+
+            let squareSize = size;
+            const step = size / (2 * numSquares);
+
+            for (let i = 0; i < numSquares; i++) {
+                ctx.fillStyle = i % 2 === 0 ? 'black' : 'white';
+                
+                if (i === numSquares - 1) {
+                    // Scale up the core black square
+                    let scaledSize = Math.min(size / 4, Math.max(size / 16, squareSize * 2));
+                    let offset = (size - scaledSize) / 2;
+                    ctx.fillRect(offset, offset, scaledSize, scaledSize);
+                } else {
+                    ctx.fillRect(i * step, i * step, squareSize, squareSize);
+                }
+                
+                squareSize -= 2 * step;
+            }
+        }
+
+        function generateRandomShape(size, existingShapes, minVolume) {
+            const halfSize = size / 2;
+            const minArea = (minVolume / 100) * size * size;
+            
+            while (true) {
+                const shapeType = Math.random() < 0.5 ? 'triangle' : 'quadrilateral';
+                const numPoints = shapeType === 'triangle' ? 3 : 4;
+                
+                // Generate points in a single quadrant
+                const quadrant = Math.floor(Math.random() * 4);
+                let points = Array.from({ length: numPoints }, () => {
+                    let x, y;
+                    switch (quadrant) {
+                        case 0: // Top-right
+                            x = Math.random() * halfSize;
+                            y = -Math.random() * halfSize;
+                            break;
+                        case 1: // Top-left
+                            x = -Math.random() * halfSize;
+                            y = -Math.random() * halfSize;
+                            break;
+                        case 2: // Bottom-left
+                            x = -Math.random() * halfSize;
+                            y = Math.random() * halfSize;
+                            break;
+                        case 3: // Bottom-right
+                            x = Math.random() * halfSize;
+                            y = Math.random() * halfSize;
+                            break;
+                    }
+                    return { x, y };
+                });
+
+                // Sort points to ensure non-crossing edges for quadrilaterals
+                if (shapeType === 'quadrilateral') {
+                    const center = points.reduce((acc, p) => ({ x: acc.x + p.x, y: acc.y + p.y }), { x: 0, y: 0 });
+                    center.x /= 4;
+                    center.y /= 4;
+                    points.sort((a, b) => Math.atan2(a.y - center.y, a.x - center.x) - Math.atan2(b.y - center.y, b.x - center.x));
+                }
+
+                // Ensure the shape doesn't cross more than two quadrants
+                const minX = Math.min(...points.map(p => p.x));
+                const maxX = Math.max(...points.map(p => p.x));
+                const minY = Math.min(...points.map(p => p.y));
+                const maxY = Math.max(...points.map(p => p.y));
+                
+                // Calculate shape area
+                let area = 0;
+                for (let i = 0; i < points.length; i++) {
+                    const j = (i + 1) % points.length;
+                    area += points[i].x * points[j].y - points[j].x * points[i].y;
+                }
+                area = Math.abs(area) / 2;
+
+                if ((minX < 0 && maxX > 0 && minY < 0 && maxY > 0) ||
+                    existingShapes.some(shape => shapesOverlap(points, shape)) ||
+                    area < minArea) {
+                    continue;
+                }
+
+                return points;
+            }
+        }
+
+        function shapesOverlap(shape1, shape2) {
+            const getBoundingBox = (shape) => {
+                const xs = shape.map(p => p.x);
+                const ys = shape.map(p => p.y);
+                return {
+                    minX: Math.min(...xs),
+                    maxX: Math.max(...xs),
+                    minY: Math.min(...ys),
+                    maxY: Math.max(...ys)
+                };
+            };
+
+            const box1 = getBoundingBox(shape1);
+            const box2 = getBoundingBox(shape2);
+
+            return !(box1.maxX < box2.minX || box2.maxX < box1.minX ||
+                     box1.maxY < box2.minY || box2.maxY < box1.minY);
+        }
+
+        function addInvertedShapes(size, numShapes, minVolume) {
+            const shapes = [];
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = size;
+            tempCanvas.height = size;
+            const tempCtx = tempCanvas.getContext('2d');
+            const halfSize = size / 2;
+
+            for (let i = 0; i < numShapes; i++) {
+                const shape = generateRandomShape(size, shapes, minVolume);
+                shapes.push(shape);
+
+                // Create a path for the shape
+                tempCtx.beginPath();
+                tempCtx.moveTo(shape[0].x + halfSize, shape[0].y + halfSize);
+                for (let j = 1; j < shape.length; j++) {
+                    tempCtx.lineTo(shape[j].x + halfSize, shape[j].y + halfSize);
+                }
+                tempCtx.closePath();
+
+                // Fill the shape with white to create a mask
+                tempCtx.fillStyle = 'white';
+                tempCtx.fill();
+
+                // Get the image data for the shape area
+                const imageData = ctx.getImageData(0, 0, size, size);
+                const maskData = tempCtx.getImageData(0, 0, size, size);
+
+                // Invert colors only within the shape
+                for (let i = 0; i < imageData.data.length; i += 4) {
+                    if (maskData.data[i + 3] > 0) {  // If the pixel is within the shape
+                        imageData.data[i] = 255 - imageData.data[i];
+                        imageData.data[i + 1] = 255 - imageData.data[i + 1];
+                        imageData.data[i + 2] = 255 - imageData.data[i + 2];
+                    }
+                }
+
+                // Put the inverted image data back on the main canvas
+                ctx.putImageData(imageData, 0, 0);
+
+                // Clear the temporary canvas for the next shape
+                tempCtx.clearRect(0, 0, size, size);
+
+                // Draw the shape outline
+                ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(shape[0].x + halfSize, shape[0].y + halfSize);
+                for (let j = 1; j < shape.length; j++) {
+                    ctx.lineTo(shape[j].x + halfSize, shape[j].y + halfSize);
+                }
+                ctx.closePath();
+                ctx.stroke();
+            }
+        }
+
+        function createGeometricArt() {
+            const size = parseInt(canvasSizeInput.value);
+            const numSquares = parseInt(numSquaresInput.value);
+            const numShapes = parseInt(numShapesInput.value);
+            const minShapeVolume = parseInt(minShapeVolumeInput.value);
+
+            canvas.width = size;
+            canvas.height = size;
+
+            createLayeredSquares(size, numSquares);
+            addInvertedShapes(size, numShapes, minShapeVolume);
+        }
+
+        generateBtn.addEventListener('click', createGeometricArt);
+
+        // Initial generation
+        createGeometricArt();
+    </script>
+</body>
+</html>
