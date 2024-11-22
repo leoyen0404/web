@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Color Replacement Tool</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        canvas {
+            max-width: 100%;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+        }
+        .preview {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .preview > div {
+            flex: 1;
+            min-width: 300px;
+        }
+        button {
+            margin: 10px 0;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            background: #0066cc;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0052a3;
+        }
+        input[type="file"] {
+            margin: 10px 0;
+            padding: 8px;
+        }
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .color-control {
+            background: #f8f8f8;
+            padding: 15px;
+            border-radius: 4px;
+        }
+        .color-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        input[type="color"] {
+            width: 50px;
+            height: 30px;
+        }
+        input[type="range"] {
+            width: 100%;
+        }
+        .color-preview {
+            width: 30px;
+            height: 30px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .eyedropper-active {
+            cursor: crosshair;
+        }
+        .tooltip {
+            position: absolute;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Color Replacement Tool</h1>
+        
+        <input type="file" accept="image/*" id="imageInput">
+        
+        <div class="controls">
+            <div class="color-control">
+                <h3>Source Color</h3>
+                <div class="color-row">
+                    <input type="color" id="sourceColor" value="#ff0000">
+                    <div class="color-preview" id="sourcePreview"></div>
+                    <button id="sourceEyedropper">🔍 Pick from image</button>
+                </div>
+                <label>Tolerance: <span id="toleranceValue">30</span></label>
+                <input type="range" id="tolerance" min="0" max="100" value="30">
+                <div id="sourceRgb"></div>
+            </div>
+            
+            <div class="color-control">
+                <h3>Target Color</h3>
+                <div class="color-row">
+                    <input type="color" id="targetColor" value="#0000ff">
+                    <div class="color-preview" id="targetPreview"></div>
+                    <button id="targetEyedropper">🔍 Pick from image</button>
+                </div>
+                <div id="targetRgb"></div>
+            </div>
+        </div>
+        
+        <div class="preview">
+            <div>
+                <h3>Original Image</h3>
+                <canvas id="originalCanvas"></canvas>
+            </div>
+            <div>
+                <h3>Processed Image</h3>
+                <canvas id="processedCanvas"></canvas>
+            </div>
+        </div>
+        
+        <button id="download">Download Processed Image</button>
+    </div>
+
+    <script>
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? [
+                parseInt(result[1], 16),
+                parseInt(result[2], 16),
+                parseInt(result[3], 16)
+            ] : null;
+        }
+
+        function rgbToHex(r, g, b) {
+            return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+        }
+
+        class ColorReplacer {
+            constructor(sourceColor, targetColor, tolerance) {
+                this.sourceColor = sourceColor;
+                this.targetColor = targetColor;
+                this.tolerance = tolerance;
+            }
+
+            colorDistance(color1, color2) {
+                return Math.sqrt(
+                    (color1[0] - color2[0]) ** 2 +
+                    (color1[1] - color2[1]) ** 2 +
+                    (color1[2] - color2[2]) ** 2
+                );
+            }
+
+            shouldReplace(color) {
+                const distance = this.colorDistance(color, this.sourceColor);
+                const maxDistance = (this.tolerance / 100) * 441.67; // sqrt(255^2 * 3)
+                return distance <= maxDistance;
+            }
+
+            process(imageData) {
+                const data = imageData.data;
+                for (let i = 0; i < data.length; i += 4) {
+                    const currentColor = [data[i], data[i + 1], data[i + 2]];
+                    
+                    if (this.shouldReplace(currentColor)) {
+                        const factor = 1 - (this.colorDistance(currentColor, this.sourceColor) / (this.tolerance / 100 * 441.67));
+                        data[i] = this.targetColor[0] * factor + currentColor[0] * (1 - factor);
+                        data[i + 1] = this.targetColor[1] * factor + currentColor[1] * (1 - factor);
+                        data[i + 2] = this.targetColor[2] * factor + currentColor[2] * (1 - factor);
+                    }
+                }
+                return imageData;
+            }
+        }
+
+        const imageInput = document.getElementById('imageInput');
+        const originalCanvas = document.getElementById('originalCanvas');
+        const processedCanvas = document.getElementById('processedCanvas');
+        const sourceColorInput = document.getElementById('sourceColor');
+        const targetColorInput = document.getElementById('targetColor');
+        const toleranceInput = document.getElementById('tolerance');
+        const toleranceValue = document.getElementById('toleranceValue');
+        const sourcePreview = document.getElementById('sourcePreview');
+        const targetPreview = document.getElementById('targetPreview');
+        const sourceRgb = document.getElementById('sourceRgb');
+        const targetRgb = document.getElementById('targetRgb');
+        const downloadBtn = document.getElementById('download');
+        const sourceEyedropper = document.getElementById('sourceEyedropper');
+        const targetEyedropper = document.getElementById('targetEyedropper');
+
+        let originalImage = null;
+        let eyedropperActive = false;
+        let activeColorInput = null;
+        let tooltip = null;
+
+        function createTooltip() {
+            tooltip = document.createElement('div');
+            tooltip.className = 'tooltip';
+            document.body.appendChild(tooltip);
+        }
+
+        function updateTooltip(x, y, color) {
+            if (!tooltip) createTooltip();
+            tooltip.style.left = (x + 15) + 'px';
+            tooltip.style.top = (y + 15) + 'px';
+            tooltip.textContent = `RGB(${color.join(', ')})`;
+        }
+
+        function removeTooltip() {
+            if (tooltip) {
+                tooltip.remove();
+                tooltip = null;
+            }
+        }
+
+        function handleEyedropper(e, canvas, callback) {
+            const rect = canvas.getBoundingClientRect();
+            const x = (e.clientX - rect.left) * (canvas.width / rect.width);
+            const y = (e.clientY - rect.top) * (canvas.height / rect.height);
+            
+            const ctx = canvas.getContext('2d');
+            const pixel = ctx.getImageData(x, y, 1, 1).data;
+            const color = [pixel[0], pixel[1], pixel[2]];
+            
+            updateTooltip(e.clientX, e.clientY, color);
+            
+            if (e.type === 'click') {
+                const hex = rgbToHex(color[0], color[1], color[2]);
+                callback(hex);
+                deactivateEyedropper();
+            }
+        }
+
+        function activateEyedropper(colorInput) {
+            eyedropperActive = true;
+            activeColorInput = colorInput;
+            originalCanvas.classList.add('eyedropper-active');
+            createTooltip();
+        }
+
+        function deactivateEyedropper() {
+            eyedropperActive = false;
+            activeColorInput = null;
+            originalCanvas.classList.remove('eyedropper-active');
+            removeTooltip();
+        }
+
+        sourceEyedropper.addEventListener('click', () => activateEyedropper(sourceColorInput));
+        targetEyedropper.addEventListener('click', () => activateEyedropper(targetColorInput));
+
+        originalCanvas.addEventListener('mousemove', (e) => {
+            if (eyedropperActive) {
+                handleEyedropper(e, originalCanvas, (hex) => {
+                    activeColorInput.value = hex;
+                    updateColorPreviews();
+                    processImage();
+                });
+            }
+        });
+
+        originalCanvas.addEventListener('click', (e) => {
+            if (eyedropperActive) {
+                handleEyedropper(e, originalCanvas, (hex) => {
+                    activeColorInput.value = hex;
+                    updateColorPreviews();
+                    processImage();
+                });
+            }
+        });
+
+        originalCanvas.addEventListener('mouseleave', () => {
+            if (eyedropperActive) {
+                removeTooltip();
+            }
+        });
+
+        function updateColorPreviews() {
+            const sourceRgbVal = hexToRgb(sourceColorInput.value);
+            const targetRgbVal = hexToRgb(targetColorInput.value);
+            
+            sourcePreview.style.backgroundColor = sourceColorInput.value;
+            targetPreview.style.backgroundColor = targetColorInput.value;
+            
+            sourceRgb.textContent = `RGB: ${sourceRgbVal.join(', ')}`;
+            targetRgb.textContent = `RGB: ${targetRgbVal.join(', ')}`;
+        }
+
+        function handleImage(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                originalImage = new Image();
+                originalImage.onload = function() {
+                    processImage();
+                };
+                originalImage.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function processImage() {
+            if (!originalImage) return;
+
+            originalCanvas.width = originalImage.width;
+            originalCanvas.height = originalImage.height;
+            processedCanvas.width = originalImage.width;
+            processedCanvas.height = originalImage.height;
+
+            const originalCtx = originalCanvas.getContext('2d');
+            originalCtx.drawImage(originalImage, 0, 0);
+
+            const processedCtx = processedCanvas.getContext('2d');
+            const imageData = originalCtx.getImageData(0, 0, originalCanvas.width, originalCanvas.height);
+
+            const replacer = new ColorReplacer(
+                hexToRgb(sourceColorInput.value),
+                hexToRgb(targetColorInput.value),
+                parseInt(toleranceInput.value)
+            );
+
+            const processedImageData = replacer.process(imageData);
+            processedCtx.putImageData(processedImageData, 0, 0);
+        }
+
+        function downloadImage() {
+            const link = document.createElement('a');
+            link.download = 'color-replaced-image.png';
+            link.href = processedCanvas.toDataURL();
+            link.click();
+        }
+
+        // Event listeners
+        imageInput.addEventListener('change', handleImage);
+        sourceColorInput.addEventListener('input', () => {
+            updateColorPreviews();
+            processImage();
+        });
+        targetColorInput.addEventListener('input', () => {
+            updateColorPreviews();
+            processImage();
+        });
+        toleranceInput.addEventListener('input', (e) => {
+            toleranceValue.textContent = e.target.value;
+            processImage();
+        });
+        downloadBtn.addEventListener('click', downloadImage);
+
+        // Initialize color previews
+        updateColorPreviews();
+    </script>
+</body>
+</html>
