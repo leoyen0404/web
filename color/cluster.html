@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Image Color Clustering</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        canvas {
+            max-width: 100%;
+            margin: 10px 0;
+        }
+        .preview {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .preview > div {
+            flex: 1;
+            min-width: 300px;
+        }
+        button, input:not([type="color"]) {
+            margin: 10px 0;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            background: #0066cc;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0052a3;
+        }
+        input[type="file"] {
+            background: none;
+            color: #333;
+        }
+        label {
+            display: block;
+            margin: 10px 0 5px;
+        }
+        .palette {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .color-box {
+            width: 50px;
+            height: 50px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            display: flex;
+            flex-direction: column;
+        }
+        .color-input {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 5px 0;
+        }
+        input[type="color"] {
+            width: 50px;
+            height: 30px;
+            padding: 0;
+            border: 1px solid #ddd;
+        }
+        #targetColors {
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Image Color Clustering</h1>
+        
+        <input type="file" accept="image/*" id="imageInput">
+        
+        <div id="targetColors">
+            <h3>Target Colors</h3>
+            <div id="colorInputs">
+                <div class="color-input">
+                    <input type="color" value="#0000FF">
+                    <span>Blue</span>
+                </div>
+                <div class="color-input">
+                    <input type="color" value="#FFFFFF">
+                    <span>White</span>
+                </div>
+                <div class="color-input">
+                    <input type="color" value="#000000">
+                    <span>Black</span>
+                </div>
+            </div>
+            <button onclick="addColorInput()">Add Color</button>
+            <button onclick="removeColorInput()">Remove Color</button>
+        </div>
+        
+        <div class="preview">
+            <div>
+                <h3>Original Image</h3>
+                <canvas id="originalCanvas"></canvas>
+            </div>
+            <div>
+                <h3>Processed Image</h3>
+                <canvas id="processedCanvas"></canvas>
+            </div>
+        </div>
+
+        <h3>Resulting Palette</h3>
+        <div id="palette" class="palette"></div>
+        
+        <button id="download">Download Processed Image</button>
+    </div>
+
+    <script>
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? [
+                parseInt(result[1], 16),
+                parseInt(result[2], 16),
+                parseInt(result[3], 16)
+            ] : null;
+        }
+
+        function rgbToHex(r, g, b) {
+            return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+        }
+
+        function addColorInput() {
+            const colorInputs = document.getElementById('colorInputs');
+            const newInput = document.createElement('div');
+            newInput.className = 'color-input';
+            newInput.innerHTML = `
+                <input type="color" value="#808080">
+                <span>Custom Color</span>
+            `;
+            colorInputs.appendChild(newInput);
+            if (originalImage) processImage();
+        }
+
+        function removeColorInput() {
+            const colorInputs = document.getElementById('colorInputs');
+            if (colorInputs.children.length > 1) {
+                colorInputs.removeChild(colorInputs.lastChild);
+                if (originalImage) processImage();
+            }
+        }
+
+        class TargetColorMapper {
+            constructor(targetColors) {
+                this.targetColors = targetColors.map(hex => hexToRgb(hex));
+            }
+
+            distance(a, b) {
+                return Math.sqrt(
+                    (a[0] - b[0]) ** 2 +
+                    (a[1] - b[1]) ** 2 +
+                    (a[2] - b[2]) ** 2
+                );
+            }
+
+            mapToClosestColor(color) {
+                let minDist = Infinity;
+                let closestColor = this.targetColors[0];
+
+                for (const targetColor of this.targetColors) {
+                    const dist = this.distance(color, targetColor);
+                    if (dist < minDist) {
+                        minDist = dist;
+                        closestColor = targetColor;
+                    }
+                }
+
+                return closestColor;
+            }
+        }
+
+        const imageInput = document.getElementById('imageInput');
+        const originalCanvas = document.getElementById('originalCanvas');
+        const processedCanvas = document.getElementById('processedCanvas');
+        const downloadBtn = document.getElementById('download');
+        const paletteDiv = document.getElementById('palette');
+
+        let originalImage = null;
+
+        imageInput.addEventListener('change', handleImage);
+        downloadBtn.addEventListener('click', downloadImage);
+
+        function handleImage(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                originalImage = new Image();
+                originalImage.onload = function() {
+                    processImage();
+                };
+                originalImage.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function processImage() {
+            if (!originalImage) return;
+
+            // Get target colors from inputs
+            const targetColors = Array.from(document.querySelectorAll('#colorInputs input[type="color"]'))
+                .map(input => input.value);
+
+            // Set canvas dimensions
+            originalCanvas.width = originalImage.width;
+            originalCanvas.height = originalImage.height;
+            processedCanvas.width = originalImage.width;
+            processedCanvas.height = originalImage.height;
+
+            // Draw original image
+            const originalCtx = originalCanvas.getContext('2d');
+            originalCtx.drawImage(originalImage, 0, 0);
+
+            // Get image data
+            const imageData = originalCtx.getImageData(0, 0, originalCanvas.width, originalCanvas.height);
+            
+            // Create color mapper
+            const colorMapper = new TargetColorMapper(targetColors);
+
+            // Process image
+            const processedCtx = processedCanvas.getContext('2d');
+            const processedImageData = processedCtx.createImageData(processedCanvas.width, processedCanvas.height);
+
+            for (let i = 0; i < imageData.data.length; i += 4) {
+                const originalPixel = [
+                    imageData.data[i],
+                    imageData.data[i + 1],
+                    imageData.data[i + 2]
+                ];
+                
+                const newPixel = colorMapper.mapToClosestColor(originalPixel);
+                
+                processedImageData.data[i] = newPixel[0];
+                processedImageData.data[i + 1] = newPixel[1];
+                processedImageData.data[i + 2] = newPixel[2];
+                processedImageData.data[i + 3] = 255;
+            }
+
+            processedCtx.putImageData(processedImageData, 0, 0);
+
+            // Update color palette
+            updatePalette(targetColors);
+        }
+
+        function updatePalette(colors) {
+            paletteDiv.innerHTML = '';
+            colors.forEach(color => {
+                const colorBox = document.createElement('div');
+                colorBox.className = 'color-box';
+                colorBox.style.backgroundColor = color;
+                paletteDiv.appendChild(colorBox);
+            });
+        }
+
+        function downloadImage() {
+            const link = document.createElement('a');
+            link.download = 'processed-image.png';
+            link.href = processedCanvas.toDataURL();
+            link.click();
+        }
+
+        // Add event listeners to color inputs
+        document.getElementById('colorInputs').addEventListener('input', function(e) {
+            if (e.target.type === 'color' && originalImage) {
+                processImage();
+            }
+        });
+    </script>
+</body>
+</html>
