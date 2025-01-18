@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FocusNotes - 主頁</title>
+  <link rel="stylesheet" href="styles.css">
+  <!-- 引入 Google 字體 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- 隱藏式導航欄 -->
+  <nav id="sidebar" class="sidebar">
+    <button class="close-btn" onclick="toggleSidebar()">✕</button>
+    <ul>
+      <li><a href="index.html">首頁</a></li>
+      <li><a href="notes.html">我的筆記</a></li>
+      <li><a href="notes.html#grammar">語法結構</a></li>
+      <li><a href="notes.html#vocab">高頻單字</a></li>
+      <li><a href="add_note.html">新增筆記</a></li>
+      <li><a href="vocabulary.html">翻譯/單字練習</a></li>
+    </ul>
+  </nav>
+
+  <!-- 頁面上方的漢堡選單按鈕 -->
+  <header class="header">
+    <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+    <h1 class="site-title">FocusNotes</h1>
+    <p class="site-subtitle">高效整理學測重點筆記與單字</p>
+    <div class="btn-group">
+      <a href="notes.html" class="btn">開始學習</a>
+      <a href="add_note.html" class="btn">新增筆記</a>
+    </div>
+  </header>
+
+  <!-- 主內容區 -->
+  <main class="main-content">
+    <section class="card-grid">
+      <div class="card" onclick="location.href='notes.html#grammar'">
+        <h2>語法結構</h2>
+        <p>學習語法的核心重點</p>
+      </div>
+      <div class="card" onclick="location.href='notes.html#vocab'">
+        <h2>高頻單字</h2>
+        <p>掌握學測必備單字</p>
+      </div>
+      <div class="card" onclick="location.href='vocabulary.html'">
+        <h2>翻譯/單字練習</h2>
+        <p>透過小測驗檢查學習成效</p>
+      </div>
+      <div class="card" onclick="location.href='notes.html'">
+        <h2>我的筆記</h2>
+        <p>整理、搜尋所有筆記</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- 引入共用的 JS -->
+  <script src="main.js"></script>
+</body>
+</html>
