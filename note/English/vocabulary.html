@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FocusNotes - 單字練習</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Roboto&display=swap"
+    rel="stylesheet"
+  />
+</head>
+<body>
+  <!-- 隱藏式導航欄 -->
+  <nav id="sidebar" class="sidebar">
+    <button class="close-btn" onclick="toggleSidebar()">✕</button>
+    <ul>
+      <li><a href="index.html">首頁</a></li>
+      <li><a href="notes.html">我的筆記</a></li>
+      <li><a href="notes.html#grammar">語法結構</a></li>
+      <li><a href="notes.html#vocab">高頻單字</a></li>
+      <li><a href="add_note.html">新增筆記</a></li>
+      <li><a href="vocabulary.html">翻譯/單字練習</a></li>
+    </ul>
+  </nav>
+
+  <!-- 漢堡按鈕 & 標題 -->
+  <header class="header">
+    <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+    <h1 class="site-title">單字練習</h1>
+  </header>
+
+  <main class="main-content">
+    <section class="quiz-section">
+      <h2>隨機單字選擇題</h2>
+      <p id="questionText">按下「下一題」開始</p>
+      <div id="answerOptions">
+        <!-- 選項按鈕將由 JS 動態生成 -->
+      </div>
+      <button class="btn" onclick="nextQuestion()">下一題</button>
+    </section>
+
+    <section class="vocab-list">
+      <h2>單字列表</h2>
+      <input
+        type="text"
+        id="vocabSearch"
+        placeholder="搜尋單字..."
+        oninput="filterVocabList()"
+      />
+      <table id="vocabTable">
+        <thead>
+          <tr>
+            <th>單字</th>
+            <th>翻譯</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- 由 JS 動態插入 -->
+        </tbody>
+      </table>
+    </section>
+  </main>
+
+  <script src="main.js"></script>
+</body>
+</html>
