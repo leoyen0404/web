@@ -1,0 +1,702 @@
+[
+    {
+        "word": "abandon",
+        "meaning": "放棄"
+    },
+    {
+        "word": "benefit",
+        "meaning": "好處"
+    },
+    {
+        "word": "candidate",
+        "meaning": "候選人"
+    },
+    {
+        "word": "dedicate",
+        "meaning": "致力於"
+    },
+    {
+        "word": "expand",
+        "meaning": "擴大；擴充"
+    },
+    {
+        "word": "highlight",
+        "meaning": "強調；凸顯"
+    },
+    {
+        "word": "implement",
+        "meaning": "實施；執行"
+    },
+    {
+        "word": "motivate",
+        "meaning": "激勵；驅使"
+    },
+    {
+        "word": "justify",
+        "meaning": "證明...正當；辯護"
+    },
+    {
+        "word": "negotiate",
+        "meaning": "談判；協商"
+    },
+    {
+        "word": "artificial intelligence",
+        "meaning": "人工智慧"
+    },
+    {
+        "word": "blockchain",
+        "meaning": "區塊鏈"
+    },
+    {
+        "word": "cryptocurrency",
+        "meaning": "加密貨幣"
+    },
+    {
+        "word": "cybersecurity",
+        "meaning": "網路安全"
+    },
+    {
+        "word": "quantum computing",
+        "meaning": "量子計算"
+    },
+    {
+        "word": "virtual reality",
+        "meaning": "虛擬實境"
+    },
+    {
+        "word": "augmented reality",
+        "meaning": "擴增實境"
+    },
+    {
+        "word": "renewable energy",
+        "meaning": "可再生能源"
+    },
+    {
+        "word": "automation",
+        "meaning": "自動化"
+    },
+    {
+        "word": "metaverse",
+        "meaning": "元宇宙"
+    },
+    {
+        "word": "sustainability",
+        "meaning": "永續性"
+    },
+    {
+        "word": "climate change",
+        "meaning": "氣候變遷"
+    },
+    {
+        "word": "carbon emission",
+        "meaning": "碳排放"
+    },
+    {
+        "word": "biodiversity",
+        "meaning": "生物多樣性"
+    },
+    {
+        "word": "greenhouse effect",
+        "meaning": "溫室效應"
+    },
+    {
+        "word": "renewable resources",
+        "meaning": "再生資源"
+    },
+    {
+        "word": "eco-friendly",
+        "meaning": "環保的"
+    },
+    {
+        "word": "conservation",
+        "meaning": "保育"
+    },
+    {
+        "word": "global warming",
+        "meaning": "全球暖化"
+    },
+    {
+        "word": "deforestation",
+        "meaning": "森林砍伐"
+    },
+    {
+        "word": "diversity",
+        "meaning": "多元化"
+    },
+    {
+        "word": "inclusion",
+        "meaning": "包容性"
+    },
+    {
+        "word": "equality",
+        "meaning": "平等"
+    },
+    {
+        "word": "refugee",
+        "meaning": "難民"
+    },
+    {
+        "word": "globalization",
+        "meaning": "全球化"
+    },
+    {
+        "word": "pandemic",
+        "meaning": "大流行病"
+    },
+    {
+        "word": "social justice",
+        "meaning": "社會正義"
+    },
+    {
+        "word": "urbanization",
+        "meaning": "城市化"
+    },
+    {
+        "word": "mental health",
+        "meaning": "心理健康"
+    },
+    {
+        "word": "human rights",
+        "meaning": "人權"
+    },
+    {
+        "word": "lifelong learning",
+        "meaning": "終身學習"
+    },
+    {
+        "word": "critical thinking",
+        "meaning": "批判性思維"
+    },
+    {
+        "word": "online learning",
+        "meaning": "線上學習"
+    },
+    {
+        "word": "internship",
+        "meaning": "實習"
+    },
+    {
+        "word": "entrepreneurship",
+        "meaning": "創業精神"
+    },
+    {
+        "word": "STEM",
+        "meaning": "科學、科技、工程、數學"
+    },
+    {
+        "word": "vocational training",
+        "meaning": "職業訓練"
+    },
+    {
+        "word": "scholarship",
+        "meaning": "獎學金"
+    },
+    {
+        "word": "career development",
+        "meaning": "職涯發展"
+    },
+    {
+        "word": "literacy",
+        "meaning": "素養"
+    },
+    {
+        "word": "inflation",
+        "meaning": "通貨膨脹"
+    },
+    {
+        "word": "supply chain",
+        "meaning": "供應鏈"
+    },
+    {
+        "word": "cyberbullying",
+        "meaning": "網路霸凌"
+    },
+    {
+        "word": "space exploration",
+        "meaning": "太空探索"
+    },
+    {
+        "word": "health equity",
+        "meaning": "健康公平"
+    },
+    {
+        "word": "artificial meat",
+        "meaning": "人造肉"
+    },
+    {
+        "word": "electric vehicles",
+        "meaning": "電動車"
+    },
+    {
+        "word": "ability",
+        "meaning": "能力"
+    },
+    {
+        "word": "abroad",
+        "meaning": "在國外"
+    },
+    {
+        "word": "absence",
+        "meaning": "缺席"
+    },
+    {
+        "word": "absolute",
+        "meaning": "絕對的"
+    },
+    {
+        "word": "absorb",
+        "meaning": "吸收"
+    },
+    {
+        "word": "abstract",
+        "meaning": "抽象的"
+    },
+    {
+        "word": "abundant",
+        "meaning": "豐富的"
+    },
+    {
+        "word": "academic",
+        "meaning": "學術的"
+    },
+    {
+        "word": "accelerate",
+        "meaning": "加速"
+    },
+    {
+        "word": "access",
+        "meaning": "進入；使用"
+    },
+    {
+        "word": "accommodate",
+        "meaning": "容納；適應"
+    },
+    {
+        "word": "accompany",
+        "meaning": "陪伴"
+    },
+    {
+        "word": "accomplish",
+        "meaning": "完成"
+    },
+    {
+        "word": "accordingly",
+        "meaning": "因此；相應地"
+    },
+    {
+        "word": "account",
+        "meaning": "帳戶；解釋"
+    },
+    {
+        "word": "accumulate",
+        "meaning": "累積"
+    },
+    {
+        "word": "accurate",
+        "meaning": "精確的"
+    },
+    {
+        "word": "accuse",
+        "meaning": "指控"
+    },
+    {
+        "word": "achieve",
+        "meaning": "達成"
+    },
+    {
+        "word": "acknowledge",
+        "meaning": "承認"
+    },
+    {
+        "word": "acquire",
+        "meaning": "獲得"
+    },
+    {
+        "word": "adapt",
+        "meaning": "適應"
+    },
+    {
+        "word": "adequate",
+        "meaning": "足夠的"
+    },
+    {
+        "word": "adjust",
+        "meaning": "調整"
+    },
+    {
+        "word": "administer",
+        "meaning": "管理；執行"
+    },
+    {
+        "word": "advocate",
+        "meaning": "提倡"
+    },
+    {
+        "word": "enhance",
+        "meaning": "提升；加強"
+    },
+    {
+        "word": "integrate",
+        "meaning": "整合；使融入"
+    },
+    {
+        "word": "innovate",
+        "meaning": "創新"
+    },
+    {
+        "word": "collaborate",
+        "meaning": "合作；協作"
+    },
+    {
+        "word": "explore",
+        "meaning": "探索；探討"
+    },
+    {
+        "word": "sustain",
+        "meaning": "支持；維持"
+    },
+    {
+        "word": "contribute",
+        "meaning": "貢獻；促成"
+    },
+    {
+        "word": "prioritize",
+        "meaning": "優先處理"
+    },
+    {
+        "word": "analyze",
+        "meaning": "分析"
+    },
+    {
+        "word": "reflect",
+        "meaning": "反映；反思"
+    },
+    {
+        "word": "persuade",
+        "meaning": "說服；勸說"
+    },
+    {
+        "word": "imply",
+        "meaning": "暗示"
+    },
+    {
+        "word": "demonstrate",
+        "meaning": "示範，證明"
+    },
+    {
+        "word": "emphasize",
+        "meaning": "強調"
+    },
+    {
+        "word": "clarify",
+        "meaning": "澄清"
+    },
+    {
+        "word": "illustrate",
+        "meaning": "舉例說明"
+    },
+    {
+        "word": "indicate",
+        "meaning": "指出"
+    },
+    {
+        "word": "predict",
+        "meaning": "預測"
+    },
+    {
+        "word": "influence",
+        "meaning": "影響"
+    },
+    {
+        "word": "assume",
+        "meaning": "假設"
+    },
+    {
+        "word": "hypothesis",
+        "meaning": "假設"
+    },
+    {
+        "word": "significant",
+        "meaning": "重要的，顯著的"
+    },
+    {
+        "word": "methodology",
+        "meaning": "方法論"
+    },
+    {
+        "word": "theory",
+        "meaning": "理論"
+    },
+    {
+        "word": "evidence",
+        "meaning": "證據"
+    },
+    {
+        "word": "variable",
+        "meaning": "變數"
+    },
+    {
+        "word": "phenomenon",
+        "meaning": "現象"
+    },
+    {
+        "word": "concept",
+        "meaning": "概念"
+    },
+    {
+        "word": "perspective",
+        "meaning": "觀點"
+    },
+    {
+        "word": "ecosystem",
+        "meaning": "生態系統"
+    },
+    {
+        "word": "pollution",
+        "meaning": "污染"
+    },
+    {
+        "word": "renewable",
+        "meaning": "可再生的"
+    },
+    {
+        "word": "carbon footprint",
+        "meaning": "碳足跡"
+    },
+    {
+        "word": "natural resources",
+        "meaning": "自然資源"
+    },
+    {
+        "word": "innovation",
+        "meaning": "創新"
+    },
+    {
+        "word": "algorithm",
+        "meaning": "演算法"
+    },
+    {
+        "word": "data analysis",
+        "meaning": "資料分析"
+    },
+    {
+        "word": "cloud computing",
+        "meaning": "雲端運算"
+    },
+    {
+        "word": "robotics",
+        "meaning": "機器人學"
+    },
+    {
+        "word": "digital transformation",
+        "meaning": "數位轉型"
+    },
+    {
+        "word": "nevertheless",
+        "meaning": "然而"
+    },
+    {
+        "word": "in contrast to",
+        "meaning": "與...形成對比"
+    },
+    {
+        "word": "take into account",
+        "meaning": "考慮到"
+    },
+    {
+        "word": "as a result",
+        "meaning": "結果"
+    },
+    {
+        "word": "on the other hand",
+        "meaning": "另一方面"
+    },
+    {
+        "word": "moreover",
+        "meaning": "此外"
+    },
+    {
+        "word": "despite",
+        "meaning": "儘管"
+    },
+    {
+        "word": "in addition to",
+        "meaning": "除了...之外"
+    },
+    {
+        "word": "therefore",
+        "meaning": "因此"
+    },
+    {
+        "word": "consequently",
+        "meaning": "結果"
+    },
+    {
+        "word": "pedagogy",
+        "meaning": "教學法"
+    },
+    {
+        "word": "proficiency",
+        "meaning": "熟練"
+    },
+    {
+        "word": "autonomy",
+        "meaning": "自主性"
+    },
+    {
+        "word": "extracurricular",
+        "meaning": "課外的"
+    },
+    {
+        "word": "cognitive",
+        "meaning": "認知的"
+    },
+    {
+        "word": "epidemic",
+        "meaning": "流行病"
+    },
+    {
+        "word": "rehabilitation",
+        "meaning": "復健"
+    },
+    {
+        "word": "malnutrition",
+        "meaning": "營養不良"
+    },
+    {
+        "word": "diagnosis",
+        "meaning": "診斷"
+    },
+    {
+        "word": "immune system",
+        "meaning": "免疫系統"
+    },
+    {
+        "word": "inequality",
+        "meaning": "不平等"
+    },
+    {
+        "word": "marginalized",
+        "meaning": "邊緣化的"
+    },
+    {
+        "word": "advocacy",
+        "meaning": "倡導"
+    },
+    {
+        "word": "segregation",
+        "meaning": "隔離"
+    },
+    {
+        "word": "prejudice",
+        "meaning": "偏見"
+    },
+    {
+        "word": "cultural assimilation",
+        "meaning": "文化同化"
+    },
+    {
+        "word": "heritage preservation",
+        "meaning": "遺產保存"
+    },
+    {
+        "word": "aesthetic",
+        "meaning": "美學的"
+    },
+    {
+        "word": "monument",
+        "meaning": "紀念碑"
+    },
+    {
+        "word": "folklore",
+        "meaning": "民間傳說"
+    },
+    {
+        "word": "afforestation",
+        "meaning": "造林"
+    },
+    {
+        "word": "biodegradable",
+        "meaning": "可生物分解的"
+    },
+    {
+        "word": "ecosystem restoration",
+        "meaning": "生態系統恢復"
+    },
+    {
+        "word": "depletion",
+        "meaning": "耗竭"
+    },
+    {
+        "word": "habitat fragmentation",
+        "meaning": "棲地破碎化"
+    },
+    {
+        "word": "breakthrough",
+        "meaning": "突破"
+    },
+    {
+        "word": "cybernetics",
+        "meaning": "控制論"
+    },
+    {
+        "word": "digitalization",
+        "meaning": "數位化"
+    },
+    {
+        "word": "biotechnology",
+        "meaning": "生物技術"
+    },
+    {
+        "word": "ambivalence",
+        "meaning": "矛盾心理"
+    },
+    {
+        "word": "altruism",
+        "meaning": "利他主義"
+    },
+    {
+        "word": "resilience",
+        "meaning": "韌性"
+    },
+    {
+        "word": "articulate",
+        "meaning": "善於表達的"
+    },
+    {
+        "word": "rapport",
+        "meaning": "融洽關係"
+    },
+    {
+        "word": "substantiate",
+        "meaning": "證實"
+    },
+    {
+        "word": "mitigate",
+        "meaning": "緩解"
+    },
+    {
+        "word": "exemplify",
+        "meaning": "例證"
+    },
+    {
+        "word": "elaborate",
+        "meaning": "詳細說明"
+    },
+    {
+        "word": "underscore",
+        "meaning": "強調"
+    },
+    {
+        "word": "anticipate",
+        "meaning": "預期"
+    },
+    {
+        "word": "employ",
+        "meaning": "使用"
+    },
+    {
+        "word": "facilitate",
+        "meaning": "促進"
+    }
+]

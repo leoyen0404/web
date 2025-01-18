@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FocusNotes - 重點筆記</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Roboto&display=swap"
+    rel="stylesheet"
+  />
+</head>
+<body>
+  <!-- 側邊欄 (導航) -->
+  <nav id="sidebar" class="sidebar">
+    <button class="close-btn" onclick="toggleSidebar()">✕</button>
+    <ul>
+      <li><a href="index.html">首頁</a></li>
+      <!-- 錨點連結至同頁區塊 -->
+      <li><a href="#grammar">語法結構</a></li>
+      <li><a href="#vocab">高頻單字</a></li>
+      <li><a href="#translation">翻譯技巧</a></li>
+      <li><a href="vocabulary.html">單字練習</a></li>
+    </ul>
+  </nav>
+
+  <!-- 頂部標題 -->
+  <header class="header">
+    <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+    <h1 class="site-title">重點筆記</h1>
+  </header>
+
+  <main class="main-content">
+    <!-- 搜尋工具 -->
+    <section class="search-bar">
+      <input
+        type="text"
+        id="searchInput"
+        placeholder="搜尋筆記..."
+        oninput="filterNotes()"
+      />
+    </section>
+
+    <!-- 語法結構 -->
+    <h2 id="grammar" class="category-title">語法結構</h2>
+    <section class="card-grid" id="grammarNotes"></section>
+
+    <!-- 高頻單字 -->
+    <h2 id="vocab" class="category-title">高頻單字</h2>
+    <section class="card-grid" id="vocabNotes"></section>
+
+    <!-- 翻譯技巧 -->
+    <h2 id="translation" class="category-title">翻譯技巧</h2>
+    <section class="card-grid" id="translationNotes"></section>
+
+    <!-- 其他筆記 -->
+    <h2 class="category-title">其他</h2>
+    <section class="card-grid" id="othersNotes"></section>
+  </main>
+
+  <script src="main.js"></script>
+</body>
+</html>

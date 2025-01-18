@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FocusNotes - 首頁</title>
+  <link rel="stylesheet" href="styles.css">
+  <!-- Google 字體 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Roboto&display=swap"
+    rel="stylesheet"
+  />
+</head>
+<body>
+  <!-- 隱藏式側邊欄 (導航) -->
+  <nav id="sidebar" class="sidebar">
+    <button class="close-btn" onclick="toggleSidebar()">✕</button>
+    <ul>
+      <li><a href="index.html">首頁</a></li>
+      <!-- 導向 notes.html#xxx，可平滑捲動至對應區域 -->
+      <li><a href="notes.html#grammar">語法結構</a></li>
+      <li><a href="notes.html#vocab">高頻單字</a></li>
+      <li><a href="notes.html#translation">翻譯技巧</a></li>
+      <li><a href="vocabulary.html">單字練習</a></li>
+    </ul>
+  </nav>
+
+  <!-- 頂部區域 -->
+  <header class="header">
+    <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+    <h1 class="site-title">FocusNotes</h1>
+    <p class="site-subtitle">高效整理學測重點筆記與單字</p>
+  </header>
+
+  <main class="main-content">
+    <!-- 簡介 -->
+    <section class="intro-section">
+      <h2>你專注於學習，我專注於整理</h2>
+      <p>
+        FocusNotes 為你提供最精華的重點筆記，涵蓋語法結構、高頻單字與翻譯技巧，
+        幫助你在緊湊的考試準備中更快掌握關鍵。
+      </p>
+      <div class="btn-group">
+        <a href="notes.html" class="btn">查看重點筆記</a>
+        <a href="vocabulary.html" class="btn btn-secondary">進行單字練習</a>
+      </div>
+    </section>
+
+    <!-- 功能卡片導覽 -->
+    <section class="card-grid">
+      <div class="card" onclick="location.href='notes.html#grammar'">
+        <h3>語法結構</h3>
+        <p>常見句型與必考重點</p>
+      </div>
+      <div class="card" onclick="location.href='notes.html#vocab'">
+        <h3>高頻單字</h3>
+        <p>整理常出現的重要單字</p>
+      </div>
+      <div class="card" onclick="location.href='notes.html#translation'">
+        <h3>翻譯技巧</h3>
+        <p>精準理解與應用的秘訣</p>
+      </div>
+      <div class="card" onclick="location.href='vocabulary.html'">
+        <h3>單字測驗</h3>
+        <p>隨機選擇題與列表查詢</p>
+      </div>
+    </section>
+  </main>
+
+  <script src="main.js"></script>
+</body>
+</html>
