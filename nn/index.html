@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>易經時空分析系統</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+  <style>
+    :root {
+      --primary-color: #2c3e50;
+      --secondary-color: #3498db;
+      --background: #f5f6fa;
+    }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 20px;
+      background: var(--background);
+    }
+
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .time-section {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      margin: 20px 0;
+    }
+
+    #timeInput {
+      padding: 12px;
+      border: 2px solid var(--secondary-color);
+      border-radius: 8px;
+      font-size: 16px;
+      width: 120px;
+      transition: border-color 0.3s ease;
+    }
+
+    #timeInput:focus {
+      border-color: #2ecc71;
+      outline: none;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 10px;
+      margin: 20px 0;
+    }
+
+    button {
+      padding: 12px 25px;
+      background: var(--secondary-color);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 3px 8px rgba(52,152,219,0.3);
+    }
+
+    .result-card {
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      margin: 20px 0;
+      animation: fadeIn 0.5s ease;
+    }
+
+    .hexagram-display {
+      font-size: 24px;
+      margin: 15px 0;
+      color: var(--primary-color);
+    }
+
+    .score-bar {
+      height: 20px;
+      background: #eee;
+      border-radius: 10px;
+      overflow: hidden;
+      position: relative;
+      margin: 15px 0;
+    }
+
+    .score-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #3498db, #2ecc71);
+      transition: width 0.5s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .training-log {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 15px 0;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🀄 易經時空分析系統</h1>
+    
+    <div class="time-section">
+      <div>
+        <label>選擇分析時間：</label>
+        <input type="time" id="timeInput" step="60">
+      </div>
+      <div class="button-group">
+        <button id="trainButton">🎓 訓練模型</button>
+        <button id="predictButton">🔮 立即分析</button>
+      </div>
+    </div>
+
+    <div id="output">
+      <div id="trainingProgress" style="display: none;">
+        <h3>🚀 訓練進度</h3>
+        <div class="training-log" id="trainingLog"></div>
+      </div>
+
+      <div class="result-card" id="resultTemplate" style="display: none;">
+        <h3>📊 分析結果</h3>
+        <div class="hexagram-info">
+          <div class="hexagram-display" id="hexSymbols"></div>
+          <p class="hex-text" id="hexText"></p>
+        </div>
+        <div class="score-section">
+          <h4>⏳ 時間契合度</h4>
+          <div class="score-bar">
+            <div class="score-fill" id="scoreFill"></div>
+          </div>
+          <p>評分：<span id="scoreValue">0</span>/14</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+// 卦象資料庫
+const HEXAGRAM_DB = [
+  { hexagram: [1,1,1,1,1,1], text: "乾為天：元亨利貞", class: 0 },
+  { hexagram: [0,0,0,0,0,0], text: "坤為地：元亨，利牝馬之貞", class: 1 },
+  { hexagram: [1,0,1,0,1,0], text: "離為火：利貞，亨。畜牝牛吉", class: 2 },
+  { hexagram: [0,1,0,1,0,1], text: "坎為水：有孚維心，亨。行有尚", class: 3 },
+  { hexagram: [1,1,0,1,1,1], text: "天澤履：履虎尾，不咥人，亨", class: 4 },
+  { hexagram: [1,1,1,0,1,0], text: "天火同人：同人于野，亨", class: 5 },
+  { hexagram: [0,0,1,0,0,0], text: "地雷復：亨。出入無疾", class: 6 },
+  { hexagram: [0,1,0,0,0,0], text: "水山蹇：利西南，不利東北", class: 7 }
+];
+
+// 系統初始化
+let model = null;
+const outputDiv = document.getElementById("output");
+
+// 初始化時間輸入
+function initTimeInput() {
+  const now = new Date();
+  const timeInput = document.getElementById("timeInput");
+  timeInput.value = 
+    `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+  
+  // 輸入驗證
+  timeInput.addEventListener('change', function(e) {
+    if(!this.validity.valid) {
+      alert("請輸入有效時間格式（HH:MM）");
+      this.value = this.defaultValue;
+    }
+  });
+}
+initTimeInput();
+
+// 顯示結果
+function showResult(hexData, score) {
+  const result = document.getElementById("resultTemplate").cloneNode(true);
+  result.id = "";
+  result.style.display = "block";
+
+  // 顯示卦象符號
+  const symbols = hexData.hexagram.map(y => y ? '⚊' : '⚋').join('');
+  result.querySelector("#hexSymbols").textContent = symbols;
+  
+  // 顯示卦辭
+  result.querySelector("#hexText").textContent = hexData.text;
+
+  // 動態進度條
+  const fill = result.querySelector("#scoreFill");
+  const value = result.querySelector("#scoreValue");
+  setTimeout(() => {
+    const width = (score / 14) * 100;
+    fill.style.width = `${width}%`;
+    value.textContent = score;
+  }, 100);
+
+  // 關閉按鈕
+  const closeBtn = document.createElement("button");
+  closeBtn.textContent = "× 關閉";
+  closeBtn.style.marginTop = "15px";
+  closeBtn.onclick = () => result.remove();
+  result.querySelector(".score-section").appendChild(closeBtn);
+
+  outputDiv.appendChild(result);
+}
+
+// 訓練日誌
+function logTraining(message, isError = false) {
+  const logEntry = document.createElement("div");
+  logEntry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+  logEntry.style.color = isError ? "#e74c3c" : "#2c3e50";
+  logEntry.style.padding = "5px 0";
+  document.getElementById("trainingLog").appendChild(logEntry);
+}
+
+// 模型訓練
+async function trainModel() {
+  try {
+    document.getElementById("trainingProgress").style.display = "block";
+    logTraining("開始準備訓練數據...");
+
+    // 模擬訓練過程
+    for(let epoch = 1; epoch <= 50; epoch++) {
+      await new Promise(resolve => setTimeout(resolve, 50));
+      const loss = (Math.random() * 0.5).toFixed(4);
+      logTraining(`訓練週期 ${epoch} - 損失值: ${loss}`);
+    }
+    
+    logTraining("✅ 訓練完成！");
+    alert("模型訓練完成！");
+
+  } catch (error) {
+    logTraining(`訓練錯誤: ${error.message}`, true);
+  }
+}
+
+// 預測功能
+async function predict() {
+  try {
+    const hexData = HEXAGRAM_DB[Math.floor(Math.random()*HEXAGRAM_DB.length)];
+    const score = Math.floor(Math.random() * 15); // 模擬預測結果
+    
+    showResult(hexData, score);
+    
+  } catch (error) {
+    logTraining(`預測錯誤: ${error.message}`, true);
+  }
+}
+
+// 事件綁定
+document.getElementById("trainButton").addEventListener("click", trainModel);
+document.getElementById("predictButton").addEventListener("click", predict);
+</script>
+</body>
+</html>
