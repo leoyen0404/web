@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Centered 3D Carousel</title>
+  <style>
+    /* 確保全螢幕高度且無邊距 */
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden; /* 防止滾動 */
+    }
+
+    /* 絕對置中容器 */
+    .carousel-container {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 300px;
+      height: 400px;
+      transform: translate(-50%, -50%);
+      perspective: 800px;
+      perspective-origin: center center;
+      user-select: none;
+    }
+
+    /* 3D 旋轉的輪盤 */
+    .carousel {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+      transform: rotateY(0deg);
+      transform-origin: center center;
+      transition: transform 0.1s ease-out;
+    }
+
+    /* 使每個 pack-wrapper 以輪盤中心為基準 */
+    .pack-wrapper {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform-style: preserve-3d;
+    }
+
+    /* 卡片本身的樣式 */
+    .pack {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 120px;
+      height: 180px;
+      margin-left: -60px; /* 寬度一半 */
+      margin-top: -90px;  /* 高度一半 */
+      transform-style: preserve-3d;
+    }
+
+    /* 卡片正反面的共用樣式 */
+    .pack-face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+    }
+
+    .pack-front {
+      transform: rotateY(0deg);
+    }
+
+    .pack-back {
+      transform: rotateY(180deg);
+    }
+
+    .pack-face img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+  </style>
+</head>
+<body>
+  <div class="carousel-container">
+    <div class="carousel"></div>
+  </div>
+
+  <script>
+    // 配置參數
+    const numberOfPacks = 14;
+    const angleStep = 360 / numberOfPacks;
+    const radius = 300;
+    const sensitivity = 0.5;
+    const friction = 0.95;
+    const minVelocity = 0.1;
+
+    // DOM 參考
+    const carousel = document.querySelector('.carousel');
+    const carouselContainer = document.querySelector('.carousel-container');
+
+    // 狀態參數
+    let currentAngle = 0;
+    let isDragging = false;
+    let startX;
+    let velocity = 0;
+    let animationFrame;
+
+    // 建立所有卡片
+    for (let i = 0; i < numberOfPacks; i++) {
+      const packWrapper = document.createElement('div');
+      packWrapper.classList.add('pack-wrapper');
+      const angle = i * angleStep;
+      packWrapper.style.transform = `rotateY(${angle}deg) translateZ(${radius}px)`;
+
+      const pack = document.createElement('div');
+      pack.classList.add('pack');
+
+      const front = document.createElement('div');
+      front.classList.add('pack-face', 'pack-front');
+      const frontImg = document.createElement('img');
+      frontImg.src = 'front.png';
+      frontImg.alt = 'Front of card';
+      front.appendChild(frontImg);
+
+      const back = document.createElement('div');
+      back.classList.add('pack-face', 'pack-back');
+      const backImg = document.createElement('img');
+      backImg.src = 'back.png';
+      backImg.alt = 'Back of card';
+      back.appendChild(backImg);
+
+      pack.appendChild(front);
+      pack.appendChild(back);
+      packWrapper.appendChild(pack);
+      carousel.appendChild(packWrapper);
+    }
+
+    // 取得滑鼠或觸控的 clientX
+    function getClientX(e) {
+      return e.touches && e.touches.length > 0 ? e.touches[0].clientX : e.clientX;
+    }
+
+    // 開始拖曳
+    function startDrag(e) {
+      isDragging = true;
+      startX = getClientX(e);
+      cancelAnimationFrame(animationFrame);
+      carousel.style.transition = 'none';
+      e.preventDefault();
+    }
+
+    // 拖曳時移動
+    function moveDrag(e) {
+      if (isDragging) {
+        const currentX = getClientX(e);
+        const deltaX = currentX - startX;
+        velocity = deltaX * sensitivity;
+        currentAngle += velocity;
+        carousel.style.transform = `rotateY(${currentAngle}deg)`;
+        startX = currentX;
+        e.preventDefault();
+      }
+    }
+
+    // 結束拖曳
+    function endDrag() {
+      if (isDragging) {
+        isDragging = false;
+        inertiaSpin();
+      }
+    }
+
+    // 慣性旋轉
+    function inertiaSpin() {
+      velocity *= friction;
+      currentAngle += velocity;
+      carousel.style.transform = `rotateY(${currentAngle}deg)`;
+      if (Math.abs(velocity) > minVelocity) {
+        animationFrame = requestAnimationFrame(inertiaSpin);
+      } else {
+        snapToNearestPack();
+      }
+    }
+
+    // 對齊最近的卡片
+    function snapToNearestPack() {
+      let nearestPackIndex = Math.round(currentAngle / angleStep) % numberOfPacks;
+      if (nearestPackIndex < 0) nearestPackIndex += numberOfPacks;
+      const targetAngle = nearestPackIndex * angleStep;
+      const k = Math.round((currentAngle - targetAngle) / 360);
+      const adjustedTargetAngle = targetAngle + k * 360;
+      carousel.style.transition = 'transform 0.5s ease-out';
+      carousel.style.transform = `rotateY(${adjustedTargetAngle}deg)`;
+      setTimeout(() => {
+        currentAngle = targetAngle % 360;
+        if (currentAngle < 0) currentAngle += 360;
+      }, 500);
+    }
+
+    // 事件監聽
+    carouselContainer.addEventListener('mousedown', startDrag);
+    carouselContainer.addEventListener('mousemove', moveDrag);
+    carouselContainer.addEventListener('mouseup', endDrag);
+    carouselContainer.addEventListener('mouseleave', endDrag);
+    carouselContainer.addEventListener('touchstart', startDrag);
+    carouselContainer.addEventListener('touchmove', moveDrag);
+    carouselContainer.addEventListener('touchend', endDrag);
+    carouselContainer.addEventListener('dragstart', (e) => e.preventDefault());
+  </script>
+</body>
+</html>
