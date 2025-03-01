@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Redirecting...</title>
+  <link rel="apple-touch-icon" sizes="180x180" href="https://raw.githubusercontent.com/g110351/cps/main/favicon/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://raw.githubusercontent.com/g110351/cps/main/favicon/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://raw.githubusercontent.com/g110351/cps/main/favicon/favicon-16x16.png">
+  <link rel="manifest" href="https://raw.githubusercontent.com/g110351/cps/main/favicon/site.webmanifest">
+  <style>
+    body {
+      font-family: 'Soehne', system-ui, -apple-system, Helvetica Neue, Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    #password-container {
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+      text-align: center;
+    }
+    label {
+      font-size: 24px;
+      display: block;
+      margin-bottom: 15px;
+    }
+    input {
+      padding: 15px;
+      font-size: 18px;
+      border-radius: 15px;
+    }
+    button {
+      background-color: #87CEFA;
+      color: #fff;
+      padding: 15px 30px;
+      font-size: 18px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      margin: 15px;
+    }
+    button:hover {
+      background-color: #5F9EA0;
+    }
+  </style>
+</head>
+<body>
+
+<div id="password-container">
+  <label for="password" style="font-size: 24px;">Enter Password:</label>
+  <input type="password" id="password" placeholder="Password" onkeydown="if(event.keyCode===13) checkPassword()">
+  <button onclick="checkPassword()">Submit</button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.js"></script>
+<script>
+  var hashedPassword = "b4c9e14061c2fd453b36700e3b0da008db2189c711ac629f0f583089164e267d";
+
+  function checkPassword() {
+    var password = document.getElementById('password').value;
+    var hashedInput = sha256(password);
+
+    if (hashedInput === hashedPassword) {
+      window.location.href = 'https://bit.ly/3F2DweW';
+    } else {
+      alert('Incorrect password. Please try again.');
+    }
+  }
+
+  function sha256(input) {
+    return CryptoJS.SHA256(input).toString(CryptoJS.enc.Hex);
+  }
+</script>
+
+</body>
+</html>
