@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Interactive Gradient Shapes</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      display: flex;
+      height: 100vh;
+      background-color: #f5f5f5;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+    
+    .container {
+      position: relative;
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: all 0.3s ease;
+      /* This ensures that the container will display the same background when in fullscreen */
+      background: inherit;
+    }
+    
+    .shape-container {
+      position: relative;
+      height: 400px;
+      width: 800px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: center;
+    }
+    
+    .rounded-rectangle {
+      position: absolute;
+      border-radius: 75px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      margin-left: 0;
+      transition: all 0.3s ease;
+    }
+    
+    .control-panel {
+      width: 300px;
+      background-color: #ffffff;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      padding: 20px;
+      overflow-y: auto;
+      z-index: 100;
+      transition: all 0.3s ease;
+    }
+    
+    .panel-hidden .control-panel {
+      transform: translateX(-100%);
+      position: absolute;
+    }
+    
+    h2 {
+      margin-top: 0;
+      color: #333;
+    }
+    
+    .control-group {
+      margin-bottom: 20px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+      color: #555;
+    }
+    
+    input[type="range"],
+    input[type="number"],
+    input[type="color"] {
+      width: 100%;
+      margin-bottom: 10px;
+    }
+    
+    input[type="color"] {
+      height: 30px;
+    }
+    
+    button {
+      background-color: #4b6db5;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 5px;
+      margin-bottom: 5px;
+    }
+    
+    button:hover {
+      background-color: #3a5ca0;
+    }
+    
+    .color-stops {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .color-stop {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .fullscreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 1000;
+      background: inherit;
+    }
+    
+    .helper-text {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      background-color: rgba(0,0,0,0.5);
+      color: white;
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-size: 12px;
+      opacity: 0.7;
+    }
+    
+    .small-text {
+      font-size: 12px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="control-panel" id="controlPanel">
+    <h2>Shape Editor</h2>
+    
+    <div class="control-group">
+      <label for="numShapes">Number of Shapes:</label>
+      <input type="range" id="numShapes" min="2" max="20" value="10">
+      <span id="numShapesValue">10</span>
+    </div>
+    
+    <div class="control-group">
+      <label for="shapeHeight">Height (px):</label>
+      <input type="range" id="shapeHeight" min="50" max="500" value="300">
+      <span id="shapeHeightValue">300</span>
+    </div>
+    
+    <div class="control-group">
+      <label for="shapeWidth">Width (px):</label>
+      <input type="range" id="shapeWidth" min="50" max="300" value="150">
+      <span id="shapeWidthValue">150</span>
+    </div>
+    
+    <div class="control-group">
+      <label for="borderRadius">Corner Radius (px):</label>
+      <input type="range" id="borderRadius" min="0" max="150" value="75">
+      <span id="borderRadiusValue">75</span>
+    </div>
+    
+    <div class="control-group">
+      <label for="spacing">Spacing (px):</label>
+      <input type="range" id="spacing" min="10" max="100" value="50">
+      <span id="spacingValue">50</span>
+    </div>
+    
+    <div class="control-group">
+      <label>Colors:</label>
+      <div class="color-stops" id="colorStops">
+        <div class="color-stop">
+          <input type="color" value="#E6F0F9" data-index="0">
+          <span>Start</span>
+        </div>
+        <div class="color-stop">
+          <input type="color" value="#1E3C72" data-index="1">
+          <span>End</span>
+        </div>
+      </div>
+      <button id="addColor">Add Color</button>
+      <button id="removeColor">Remove Color</button>
+      <p class="small-text">Note: Colors will be distributed evenly between shapes</p>
+    </div>
+    
+    <div class="control-group">
+      <label>Background:</label>
+      <div class="background-controls">
+        <select id="backgroundType">
+          <option value="solid">Solid Color</option>
+          <option value="gradient">Gradient</option>
+        </select>
+        
+        <div id="solidColorControl">
+          <input type="color" id="backgroundColor" value="#f5f5f5">
+          <span>Background Color</span>
+        </div>
+        
+        <div id="gradientColorControl" style="display: none;">
+          <div class="gradient-stops">
+            <div class="color-stop">
+              <input type="color" id="gradientStart" value="#e0e0e0">
+              <span>Start</span>
+            </div>
+            <div class="color-stop">
+              <input type="color" id="gradientEnd" value="#c0c0c0">
+              <span>End</span>
+            </div>
+          </div>
+          <select id="gradientDirection">
+            <option value="to right">Horizontal</option>
+            <option value="to bottom">Vertical</option>
+            <option value="to bottom right">Diagonal</option>
+            <option value="circle">Radial</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <button id="resetButton">Reset to Default</button>
+      <button id="randomizeButton">Randomize</button>
+    </div>
+    
+    <p class="small-text">Tip: Double-click anywhere to toggle fullscreen and hide this panel</p>
+  </div>
+  
+  <div class="container" id="mainContainer">
+    <div class="shape-container" id="shapeContainer"></div>
+  </div>
+  
+  <div class="helper-text" id="helperText">Double-click to toggle fullscreen and panel</div>
+  
+  <script>
+    // Configuration object
+    const config = {
+      numShapes: 10,
+      height: 300,
+      width: 150,
+      borderRadius: 75,
+      spacing: 50,
+      colors: ['#E6F0F9', '#1E3C72'],
+      isFullscreen: false,
+      isPanelHidden: false,
+      background: {
+        type: 'solid',
+        color: '#f5f5f5',
+        gradientStart: '#e0e0e0',
+        gradientEnd: '#c0c0c0',
+        gradientDirection: 'to right'
+      }
+    };
+    
+    // DOM elements
+    const shapeContainer = document.getElementById('shapeContainer');
+    const controlPanel = document.getElementById('controlPanel');
+    const mainContainer = document.getElementById('mainContainer');
+    const body = document.body;
+    const helperText = document.getElementById('helperText');
+    
+    // Control elements
+    const numShapesInput = document.getElementById('numShapes');
+    const numShapesValue = document.getElementById('numShapesValue');
+    const shapeHeightInput = document.getElementById('shapeHeight');
+    const shapeHeightValue = document.getElementById('shapeHeightValue');
+    const shapeWidthInput = document.getElementById('shapeWidth');
+    const shapeWidthValue = document.getElementById('shapeWidthValue');
+    const borderRadiusInput = document.getElementById('borderRadius');
+    const borderRadiusValue = document.getElementById('borderRadiusValue');
+    const spacingInput = document.getElementById('spacing');
+    const spacingValue = document.getElementById('spacingValue');
+    const colorStopsContainer = document.getElementById('colorStops');
+    const addColorButton = document.getElementById('addColor');
+    const removeColorButton = document.getElementById('removeColor');
+    const resetButton = document.getElementById('resetButton');
+    const randomizeButton = document.getElementById('randomizeButton');
+    
+    // Function to render shapes
+    function renderShapes() {
+      // Clear container
+      shapeContainer.innerHTML = '';
+      
+      // Generate color array based on the number of shapes
+      const colorArray = generateColors(config.colors, config.numShapes);
+      
+      // Calculate total width of all shapes with spacing
+      const totalWidth = (config.numShapes - 1) * config.spacing;
+      const centerOffset = totalWidth / 2;
+      
+      // Create shapes
+      for (let i = 0; i < config.numShapes; i++) {
+        const shape = document.createElement('div');
+        shape.className = 'rounded-rectangle';
+        shape.style.height = `${config.height}px`;
+        shape.style.width = `${config.width}px`;
+        shape.style.borderRadius = `${config.borderRadius}px`;
+        shape.style.backgroundColor = colorArray[i];
+        
+        // Position each shape relative to center
+        const xPosition = (i * config.spacing) - centerOffset;
+        shape.style.marginLeft = `${xPosition}px`;
+        
+        shape.style.zIndex = i + 1;
+        shapeContainer.appendChild(shape);
+      }
+      
+      // Apply background settings
+      updateBackground();
+    }
+    
+    // Function to update background for both body and container (fullscreen target)
+    function updateBackground() {
+      const bgType = document.getElementById('backgroundType').value;
+      let bgValue;
+      
+      if (bgType === 'solid') {
+        bgValue = document.getElementById('backgroundColor').value;
+      } else if (bgType === 'gradient') {
+        const gradientStart = document.getElementById('gradientStart').value;
+        const gradientEnd = document.getElementById('gradientEnd').value;
+        const direction = document.getElementById('gradientDirection').value;
+        
+        if (direction === 'circle') {
+          bgValue = `radial-gradient(circle, ${gradientStart}, ${gradientEnd})`;
+        } else {
+          bgValue = `linear-gradient(${direction}, ${gradientStart}, ${gradientEnd})`;
+        }
+      }
+      
+      document.body.style.background = bgValue;
+      mainContainer.style.background = bgValue;
+    }
+    
+    // Function to generate colors
+    function generateColors(colorStops, numColors) {
+      const colors = [];
+      
+      if (colorStops.length === 1) {
+        // If only one color, return array filled with that color
+        return Array(numColors).fill(colorStops[0]);
+      }
+      
+      for (let i = 0; i < numColors; i++) {
+        const position = i / (numColors - 1);
+        
+        if (position === 0) {
+          colors.push(colorStops[0]);
+        } else if (position === 1) {
+          colors.push(colorStops[colorStops.length - 1]);
+        } else {
+          // Find the two color stops this position is between
+          const segmentSize = 1 / (colorStops.length - 1);
+          const segment = Math.min(Math.floor(position / segmentSize), colorStops.length - 2);
+          const segmentPosition = (position - segment * segmentSize) / segmentSize;
+          
+          const color1 = hexToRgb(colorStops[segment]);
+          const color2 = hexToRgb(colorStops[segment + 1]);
+          
+          const r = Math.round(color1.r + segmentPosition * (color2.r - color1.r));
+          const g = Math.round(color1.g + segmentPosition * (color2.g - color1.g));
+          const b = Math.round(color1.b + segmentPosition * (color2.b - color1.b));
+          
+          colors.push(rgbToHex(r, g, b));
+        }
+      }
+      
+      return colors;
+    }
+    
+    // Helper function to convert hex to rgb
+    function hexToRgb(hex) {
+      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+      } : { r: 0, g: 0, b: 0 };
+    }
+    
+    // Helper function to convert rgb to hex
+    function rgbToHex(r, g, b) {
+      return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+    }
+    
+    // Update color stops in UI
+    function updateColorStopsUI() {
+      colorStopsContainer.innerHTML = '';
+      
+      config.colors.forEach((color, index) => {
+        const colorStop = document.createElement('div');
+        colorStop.className = 'color-stop';
+        
+        const colorInput = document.createElement('input');
+        colorInput.type = 'color';
+        colorInput.value = color;
+        colorInput.dataset.index = index;
+        colorInput.addEventListener('input', handleColorChange);
+        
+        const label = document.createElement('span');
+        label.textContent = index === 0 ? 'Start' : 
+                            index === config.colors.length - 1 ? 'End' : 
+                            `Color ${index + 1}`;
+        
+        colorStop.appendChild(colorInput);
+        colorStop.appendChild(label);
+        colorStopsContainer.appendChild(colorStop);
+      });
+    }
+    
+    // Event Handlers
+    function handleNumberOfShapesChange() {
+      config.numShapes = parseInt(numShapesInput.value);
+      numShapesValue.textContent = config.numShapes;
+      renderShapes();
+    }
+    
+    function handleShapeHeightChange() {
+      config.height = parseInt(shapeHeightInput.value);
+      shapeHeightValue.textContent = config.height;
+      renderShapes();
+    }
+    
+    function handleShapeWidthChange() {
+      config.width = parseInt(shapeWidthInput.value);
+      shapeWidthValue.textContent = config.width;
+      renderShapes();
+    }
+    
+    function handleBorderRadiusChange() {
+      config.borderRadius = parseInt(borderRadiusInput.value);
+      borderRadiusValue.textContent = config.borderRadius;
+      renderShapes();
+    }
+    
+    function handleSpacingChange() {
+      config.spacing = parseInt(spacingInput.value);
+      spacingValue.textContent = config.spacing;
+      renderShapes();
+    }
+    
+    function handleColorChange(e) {
+      const index = parseInt(e.target.dataset.index);
+      config.colors[index] = e.target.value;
+      renderShapes();
+    }
+    
+    function handleAddColor() {
+      if (config.colors.length >= 10) return; // Limit to 10 colors
+      
+      // Add new color that's a midpoint between last two colors
+      const lastColor = hexToRgb(config.colors[config.colors.length - 1]);
+      const prevColor = hexToRgb(config.colors[config.colors.length - 2] || config.colors[0]);
+      
+      const r = Math.round((lastColor.r + prevColor.r) / 2);
+      const g = Math.round((lastColor.g + prevColor.g) / 2);
+      const b = Math.round((lastColor.b + prevColor.b) / 2);
+      
+      const newColor = rgbToHex(r, g, b);
+      
+      config.colors.splice(config.colors.length - 1, 0, newColor);
+      updateColorStopsUI();
+      renderShapes();
+    }
+    
+    function handleRemoveColor() {
+      if (config.colors.length <= 2) return; // Keep at least 2 colors
+      
+      // Remove second to last color
+      config.colors.splice(config.colors.length - 2, 1);
+      updateColorStopsUI();
+      renderShapes();
+    }
+    
+    function handleReset() {
+      // Reset to default values
+      config.numShapes = 10;
+      config.height = 300;
+      config.width = 150;
+      config.borderRadius = 75;
+      config.spacing = 50;
+      config.colors = ['#E6F0F9', '#1E3C72'];
+      
+      // Reset background settings
+      config.background = {
+        type: 'solid',
+        color: '#f5f5f5',
+        gradientStart: '#e0e0e0',
+        gradientEnd: '#c0c0c0',
+        gradientDirection: 'to right'
+      };
+      
+      // Update UI
+      numShapesInput.value = config.numShapes;
+      numShapesValue.textContent = config.numShapes;
+      shapeHeightInput.value = config.height;
+      shapeHeightValue.textContent = config.height;
+      shapeWidthInput.value = config.width;
+      shapeWidthValue.textContent = config.width;
+      borderRadiusInput.value = config.borderRadius;
+      borderRadiusValue.textContent = config.borderRadius;
+      spacingInput.value = config.spacing;
+      spacingValue.textContent = config.spacing;
+      
+      // Update background controls
+      document.getElementById('backgroundType').value = 'solid';
+      document.getElementById('backgroundColor').value = '#f5f5f5';
+      document.getElementById('gradientStart').value = '#e0e0e0';
+      document.getElementById('gradientEnd').value = '#c0c0c0';
+      document.getElementById('gradientDirection').value = 'to right';
+      document.getElementById('solidColorControl').style.display = 'block';
+      document.getElementById('gradientColorControl').style.display = 'none';
+      
+      updateColorStopsUI();
+      renderShapes();
+    }
+    
+    function handleRandomize() {
+      // Randomize values within reasonable ranges
+      config.numShapes = Math.floor(Math.random() * 15) + 5; // 5-20 shapes
+      config.height = Math.floor(Math.random() * 300) + 100; // 100-400px
+      config.width = Math.floor(Math.random() * 200) + 50; // 50-250px
+      config.borderRadius = Math.floor(Math.random() * 100) + 10; // 10-110px
+      config.spacing = Math.floor(Math.random() * 60) + 20; // 20-80px
+      
+      // Generate 2-5 random colors
+      const numColors = Math.floor(Math.random() * 3) + 2; // 2-5 colors
+      config.colors = [];
+      
+      for (let i = 0; i < numColors; i++) {
+        const r = Math.floor(Math.random() * 200) + 55; // Not too dark
+        const g = Math.floor(Math.random() * 200) + 55;
+        const b = Math.floor(Math.random() * 200) + 55;
+        config.colors.push(rgbToHex(r, g, b));
+      }
+      
+      // Update UI
+      numShapesInput.value = config.numShapes;
+      numShapesValue.textContent = config.numShapes;
+      shapeHeightInput.value = config.height;
+      shapeHeightValue.textContent = config.height;
+      shapeWidthInput.value = config.width;
+      shapeWidthValue.textContent = config.width;
+      borderRadiusInput.value = config.borderRadius;
+      borderRadiusValue.textContent = config.borderRadius;
+      spacingInput.value = config.spacing;
+      spacingValue.textContent = config.spacing;
+      
+      updateColorStopsUI();
+      renderShapes();
+    }
+    
+    function toggleFullscreenAndPanel() {
+      // Toggle panel visibility
+      config.isPanelHidden = !config.isPanelHidden;
+      if (config.isPanelHidden) {
+        body.classList.add('panel-hidden');
+      } else {
+        body.classList.remove('panel-hidden');
+      }
+      
+      // Toggle fullscreen
+      if (!document.fullscreenElement) {
+        if (mainContainer.requestFullscreen) {
+          mainContainer.requestFullscreen();
+        }
+        config.isFullscreen = true;
+        helperText.textContent = "Double-click to exit fullscreen";
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+        config.isFullscreen = false;
+        helperText.textContent = "Double-click to toggle fullscreen and panel";
+      }
+    }
+    
+    // Attach event listeners
+    numShapesInput.addEventListener('input', handleNumberOfShapesChange);
+    shapeHeightInput.addEventListener('input', handleShapeHeightChange);
+    shapeWidthInput.addEventListener('input', handleShapeWidthChange);
+    borderRadiusInput.addEventListener('input', handleBorderRadiusChange);
+    spacingInput.addEventListener('input', handleSpacingChange);
+    addColorButton.addEventListener('click', handleAddColor);
+    removeColorButton.addEventListener('click', handleRemoveColor);
+    resetButton.addEventListener('click', handleReset);
+    randomizeButton.addEventListener('click', handleRandomize);
+    
+    // Background controls
+    document.getElementById('backgroundType').addEventListener('change', function() {
+      const bgType = this.value;
+      
+      if (bgType === 'solid') {
+        document.getElementById('solidColorControl').style.display = 'block';
+        document.getElementById('gradientColorControl').style.display = 'none';
+        config.background.type = 'solid';
+      } else {
+        document.getElementById('solidColorControl').style.display = 'none';
+        document.getElementById('gradientColorControl').style.display = 'block';
+        config.background.type = 'gradient';
+      }
+      
+      updateBackground();
+    });
+    
+    document.getElementById('backgroundColor').addEventListener('input', function() {
+      config.background.color = this.value;
+      updateBackground();
+    });
+    
+    document.getElementById('gradientStart').addEventListener('input', function() {
+      config.background.gradientStart = this.value;
+      updateBackground();
+    });
+    
+    document.getElementById('gradientEnd').addEventListener('input', function() {
+      config.background.gradientEnd = this.value;
+      updateBackground();
+    });
+    
+    document.getElementById('gradientDirection').addEventListener('change', function() {
+      config.background.gradientDirection = this.value;
+      updateBackground();
+    });
+    
+    // Double-click to toggle fullscreen and hide panel
+    document.addEventListener('dblclick', toggleFullscreenAndPanel);
+    
+    // Initialize
+    updateColorStopsUI();
+    renderShapes();
+  </script>
+</body>
+</html>
