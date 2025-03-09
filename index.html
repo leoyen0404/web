@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Quick Access</title>
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+  />
+  <style>
+    :root {
+      --primary-color: #3a86ff;
+      --primary-hover: #2563eb;
+      --dark-color: #1e293b;
+      --light-color: #f8fafc;
+      --accent-color: #fb7185;
+      --grey-light: #e2e8f0;
+      --grey-dark: #475569;
+      --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      --transition: all 0.3s ease;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--light-color);
+      color: var(--dark-color);
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* Header & Navigation */
+    header {
+      background-color: var(--dark-color);
+      padding: 1rem 0;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      box-shadow: var(--shadow);
+    }
+
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--light-color);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+    }
+
+    .logo i {
+      margin-right: 10px;
+      color: var(--accent-color);
+    }
+
+    .nav-menu {
+      display: flex;
+      gap: 1.5rem;
+      align-items: center;
+    }
+
+    .nav-item {
+      position: relative;
+    }
+
+    .nav-link {
+      color: var(--light-color);
+      text-decoration: none;
+      font-weight: 500;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .nav-link:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .dropdown-content {
+      display: none;
+      position: absolute;
+      left: 0;
+      top: 100%;
+      background-color: white;
+      min-width: 250px;
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      z-index: 1;
+      overflow: hidden;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .subtopic h3 {
+      color: var(--primary-color);
+      margin: 10px 0 5px;
+      font-size: 1rem;
+      font-weight: 600;
+      padding: 5px 16px;
+    }
+
+    .dropdown-content a {
+      color: var(--dark-color);
+      padding: 10px 16px;
+      text-decoration: none;
+      display: block;
+      transition: var(--transition);
+      font-size: 0.9rem;
+    }
+
+    .dropdown-content a:hover {
+      background-color: var(--grey-light);
+      color: var(--primary-color);
+    }
+
+    .nav-item.active .dropdown-content {
+      display: block;
+    }
+
+    .mobile-menu-btn {
+      display: none;
+      background: none;
+      border: none;
+      color: white;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+
+    /* Search Section */
+    .search-section {
+      background-color: white;
+      padding: 2rem 0;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .search-container {
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .search-bar {
+      display: flex;
+      box-shadow: var(--shadow);
+      border-radius: 50px;
+      overflow: hidden;
+      border: 1px solid var(--grey-light);
+    }
+
+    .search-bar input {
+      flex: 1;
+      padding: 15px 20px;
+      border: none;
+      outline: none;
+      font-size: 1rem;
+    }
+
+    .search-bar button {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 0 25px;
+      cursor: pointer;
+      transition: var(--transition);
+      font-size: 1rem;
+    }
+
+    .search-bar button:hover {
+      background-color: var(--primary-hover);
+    }
+
+    .search-results {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .result-button {
+      background-color: white;
+      color: var(--dark-color);
+      padding: 15px;
+      text-align: center;
+      text-decoration: none;
+      font-size: 0.9rem;
+      border-radius: 8px;
+      transition: var(--transition);
+      border: 1px solid var(--grey-light);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .result-button i {
+      color: var(--primary-color);
+    }
+
+    .result-button:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      color: var(--primary-color);
+      border-color: var(--primary-color);
+    }
+
+    /* Media Queries */
+    @media (max-width: 768px) {
+      .mobile-menu-btn {
+        display: block;
+      }
+
+      .nav-menu {
+        position: fixed;
+        top: 60px;
+        right: -100%;
+        flex-direction: column;
+        background-color: var(--dark-color);
+        width: 80%;
+        height: calc(100vh - 60px);
+        z-index: 999;
+        padding-top: 20px;
+        transition: var(--transition);
+        align-items: flex-start;
+      }
+
+      .nav-menu.active {
+        right: 0;
+      }
+
+      .nav-item {
+        width: 100%;
+      }
+
+      .nav-link {
+        width: 100%;
+        padding: 15px 20px;
+        border-radius: 0;
+        justify-content: space-between;
+      }
+
+      .dropdown-content {
+        position: static;
+        display: none;
+        width: 100%;
+        box-shadow: none;
+        border-radius: 0;
+        max-height: none;
+      }
+
+      .search-results {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header & Navigation -->
+  <header>
+    <div class="container">
+      <nav class="navbar">
+        <a href="#home" class="logo">
+          <i class="fas fa-stream"></i>
+          <span>QuickNav</span>
+        </a>
+
+        <button class="mobile-menu-btn" id="menuToggle">
+          <i class="fas fa-bars"></i>
+        </button>
+
+        <ul class="nav-menu" id="navMenu"></ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Search Section -->
+  <section class="search-section">
+    <div class="container">
+      <div class="search-container">
+        <div class="search-bar">
+          <input
+            type="text"
+            id="searchInput"
+            placeholder="Search for folders, wallpapers or apps..."
+            onkeydown="if (event.keyCode === 13) searchFunction()"
+          />
+          <button type="button" onclick="searchFunction()">
+            <i class="fas fa-search"></i> Search
+          </button>
+        </div>
+        <div class="search-results" id="searchResults"></div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    const menuData = {
+      "topics": [
+        {
+          "name": "Home",
+          "pages": [
+            {
+              "name": "Home",
+              "url": "#bw4s"
+            }
+          ]
+        },
+        {
+          "name": "Folders",
+          "subtopics": [
+            {
+              "name": "Projects",
+              "pages": [
+                {
+                  "name": "HappyBirthdayWinter",
+                  "url": "https://leoyen0404.github.io/web/HappyBirthdayWinter/"
+                },
+                {
+                  "name": "Animation",
+                  "url": "https://leoyen0404.github.io/web/animation/"
+                },
+                {
+                  "name": "CPS",
+                  "url": "https://leoyen0404.github.io/web/cps/"
+                },
+                {
+                  "name": "Cube",
+                  "url": "https://leoyen0404.github.io/web/cube/"
+                },
+                {
+                  "name": "Favicon",
+                  "url": "https://leoyen0404.github.io/web/favicon/"
+                },
+                {
+                  "name": "Hypixel",
+                  "url": "https://leoyen0404.github.io/web/hypixel/"
+                },
+                {
+                  "name": "MC",
+                  "url": "https://leoyen0404.github.io/web/mc/"
+                }
+              ]
+            },
+            {
+              "name": "Tools",
+              "pages": [
+                {
+                  "name": "Learn",
+                  "url": "https://leoyen0404.github.io/web/learn/"
+                },
+                {
+                  "name": "Links",
+                  "url": "https://leoyen0404.github.io/web/links/"
+                },
+                {
+                  "name": "Note",
+                  "url": "https://leoyen0404.github.io/web/note/"
+                },
+                {
+                  "name": "QR Code",
+                  "url": "https://leoyen0404.github.io/web/qrcode/"
+                },
+                {
+                  "name": "Render",
+                  "url": "https://leoyen0404.github.io/web/render/"
+                },
+                {
+                  "name": "Score",
+                  "url": "https://leoyen0404.github.io/web/score/"
+                },
+                {
+                  "name": "URL",
+                  "url": "https://leoyen0404.github.io/web/url/"
+                }
+              ]
+            },
+            {
+              "name": "Resources",
+              "pages": [
+                {
+                  "name": "AI",
+                  "url": "https://leoyen0404.github.io/web/ai/"
+                },
+                {
+                  "name": "Skin",
+                  "url": "https://leoyen0404.github.io/web/skin/"
+                },
+                {
+                  "name": "Geoart",
+                  "url": "https://leoyen0404.github.io/web/geoart/"
+                },
+                {
+                  "name": "Color",
+                  "url": "https://leoyen0404.github.io/web/color/"
+                },
+                {
+                  "name": "English",
+                  "url": "https://leoyen0404.github.io/web/english/"
+                },
+                {
+                  "name": "NN",
+                  "url": "https://leoyen0404.github.io/web/nn/"
+                },
+                {
+                  "name": "PTCG",
+                  "url": "https://leoyen0404.github.io/web/ptcg/"
+                },
+                {
+                  "name": "Share",
+                  "url": "https://leoyen0404.github.io/web/share/"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Wallpapers",
+          "pages": [
+            {
+              "name": "capsule",
+              "url": "https://bw4s.us.kg/capsuleWallpaper/"
+            },
+            {
+              "name": "Abstract Wallpapers",
+              "url": "#"
+            },
+            {
+              "name": "Minimal Wallpapers",
+              "url": "#"
+            },
+            {
+              "name": "Dark Wallpapers",
+              "url": "#"
+            },
+            {
+              "name": "Gradient Wallpapers",
+              "url": "#"
+            },
+            {
+              "name": "Gaming Wallpapers",
+              "url": "#"
+            },
+            {
+              "name": "Add New Wallpaper",
+              "url": "#"
+            }
+          ]
+        },
+        {
+          "name": "Apps",
+          "pages": [
+            {
+              "name": "App 1",
+              "url": "https://leoyen0404.github.io/web/app1/"
+            },
+            {
+              "name": "App 2",
+              "url": "https://leoyen0404.github.io/web/app2/"
+            },
+            {
+              "name": "App 3",
+              "url": "https://leoyen0404.github.io/web/app3/"
+            }
+          ]
+        }
+      ]
+    };
+
+    function createMenu() {
+      const navMenu = document.getElementById('navMenu');
+      navMenu.innerHTML = '';
+
+      menuData.topics.forEach(topic => {
+        const li = document.createElement('li');
+        li.className = 'nav-item';
+
+        if (topic.subtopics || (topic.pages && topic.pages.length > 1)) {
+          const link = document.createElement('a');
+          link.href = '#';
+          link.className = 'nav-link';
+          link.textContent = topic.name + ' ';
+          const chevron = document.createElement('i');
+          chevron.className = 'fas fa-chevron-down';
+          link.appendChild(chevron);
+          li.appendChild(link);
+
+          const dropdown = document.createElement('div');
+          dropdown.className = 'dropdown-content';
+
+          if (topic.subtopics) {
+            topic.subtopics.forEach(subtopic => {
+              const subtopicDiv = document.createElement('div');
+              subtopicDiv.className = 'subtopic';
+
+              const h3 = document.createElement('h3');
+              h3.textContent = subtopic.name;
+              subtopicDiv.appendChild(h3);
+
+              subtopic.pages.forEach(page => {
+                const a = document.createElement('a');
+                a.href = page.url;
+                const icon = document.createElement('i');
+                icon.className = 'fas fa-link';
+                a.appendChild(icon);
+                a.append(' ' + page.name);
+                subtopicDiv.appendChild(a);
+              });
+
+              dropdown.appendChild(subtopicDiv);
+            });
+          } else {
+            topic.pages.forEach(page => {
+              const a = document.createElement('a');
+              a.href = page.url;
+              const icon = document.createElement('i');
+              icon.className = 'fas fa-link';
+              a.appendChild(icon);
+              a.append(' ' + page.name);
+              dropdown.appendChild(a);
+            });
+          }
+          li.appendChild(dropdown);
+        } else {
+          const link = document.createElement('a');
+          link.href = topic.pages[0].url;
+          link.className = 'nav-link';
+          link.textContent = topic.name;
+          li.appendChild(link);
+        }
+        navMenu.appendChild(li);
+      });
+    }
+
+    function attachSubmenuToggle() {
+      const navItems = document.querySelectorAll('.nav-item');
+      navItems.forEach(item => item.classList.remove('active'));
+
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('.nav-item')) {
+          navItems.forEach(item => item.classList.remove('active'));
+        }
+      });
+
+      navItems.forEach(item => {
+        const link = item.querySelector('.nav-link');
+        if (link && link.nextElementSibling) {
+          link.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            navItems.forEach(otherItem => {
+              if (otherItem !== item) otherItem.classList.remove('active');
+            });
+            item.classList.toggle('active');
+          });
+        }
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      createMenu();
+      attachSubmenuToggle();
+    });
+
+    const menuToggle = document.getElementById('menuToggle');
+    menuToggle.addEventListener('click', () => {
+      const navMenu = document.getElementById('navMenu');
+      navMenu.classList.toggle('active');
+      menuToggle.innerHTML = navMenu.classList.contains('active')
+        ? '<i class="fas fa-times"></i>'
+        : '<i class="fas fa-bars"></i>';
+    });
+
+    function searchFunction() {
+      const input = document.getElementById('searchInput');
+      const filter = input.value.toLowerCase();
+      const links = document.querySelectorAll('.dropdown-content a');
+      const resultsContainer = document.getElementById('searchResults');
+
+      resultsContainer.innerHTML = '';
+
+      for (let i = 0; i < links.length; i++) {
+        const txtValue = links[i].textContent || links[i].innerText;
+        if (txtValue.toLowerCase().includes(filter) && filter.trim() !== '') {
+          const resultButton = document.createElement('a');
+          resultButton.href = links[i].href;
+          resultButton.className = 'result-button';
+
+          const icon = links[i].querySelector('i');
+          if (icon) {
+            const iconClone = document.createElement('i');
+            iconClone.className = icon.className;
+            resultButton.appendChild(iconClone);
+          } else {
+            const defaultIcon = document.createElement('i');
+            defaultIcon.className = 'fas fa-link';
+            resultButton.appendChild(defaultIcon);
+          }
+
+          const textSpan = document.createElement('span');
+          textSpan.textContent = txtValue.trim();
+          resultButton.appendChild(textSpan);
+
+          resultsContainer.appendChild(resultButton);
+        }
+      }
+
+      if (resultsContainer.children.length === 0 && filter.trim() !== '') {
+        const noResults = document.createElement('div');
+        noResults.style.gridColumn = '1 / -1';
+        noResults.style.textAlign = 'center';
+        noResults.style.padding = '20px';
+        noResults.style.color = '#666';
+        noResults.innerHTML = `
+          <i class="fas fa-search" style="font-size: 2rem; margin-bottom: 10px; color: #ccc;"></i><br>
+          No results found for "${filter}"
+        `;
+        resultsContainer.appendChild(noResults);
+      }
+    }
+  </script>
+</body>
+</html>
