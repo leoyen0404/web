@@ -46,6 +46,14 @@
       transition: all 0.3s ease;
     }
     
+    /* Glassmorphism styles */
+    .glassmorphism {
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+    
     .control-panel {
       width: 300px;
       background-color: #ffffff;
@@ -86,6 +94,52 @@
     
     input[type="color"] {
       height: 30px;
+    }
+    
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 60px;
+      height: 34px;
+      margin-bottom: 10px;
+    }
+    
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 34px;
+    }
+    
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 26px;
+      width: 26px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+    
+    input:checked + .slider {
+      background-color: #4b6db5;
+    }
+    
+    input:checked + .slider:before {
+      transform: translateX(26px);
     }
     
     button {
@@ -141,6 +195,12 @@
       font-size: 12px;
       color: #666;
     }
+    
+    .flex-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
   </style>
 </head>
 <body>
@@ -175,6 +235,27 @@
       <label for="spacing">Spacing (px):</label>
       <input type="range" id="spacing" min="10" max="100" value="50">
       <span id="spacingValue">50</span>
+    </div>
+    
+    <!-- New Glassmorphism toggle and opacity controls -->
+    <div class="control-group">
+      <div class="flex-row">
+        <label for="glassToggle">Glassmorphism:</label>
+        <label class="switch">
+          <input type="checkbox" id="glassToggle">
+          <span class="slider"></span>
+        </label>
+      </div>
+      
+      <div id="glassSettings" style="margin-top: 10px; display: none;">
+        <label for="glassOpacity">Opacity:</label>
+        <input type="range" id="glassOpacity" min="0" max="100" value="70">
+        <span id="glassOpacityValue">70%</span>
+        
+        <label for="glassBlur">Blur (px):</label>
+        <input type="range" id="glassBlur" min="0" max="20" value="10">
+        <span id="glassBlurValue">10px</span>
+      </div>
     </div>
     
     <div class="control-group">
@@ -253,6 +334,11 @@
       colors: ['#E6F0F9', '#1E3C72'],
       isFullscreen: false,
       isPanelHidden: false,
+      glassmorphism: {
+        enabled: false,
+        opacity: 70,
+        blur: 10
+      },
       background: {
         type: 'solid',
         color: '#f5f5f5',
@@ -286,6 +372,14 @@
     const resetButton = document.getElementById('resetButton');
     const randomizeButton = document.getElementById('randomizeButton');
     
+    // Glassmorphism controls
+    const glassToggle = document.getElementById('glassToggle');
+    const glassSettings = document.getElementById('glassSettings');
+    const glassOpacity = document.getElementById('glassOpacity');
+    const glassOpacityValue = document.getElementById('glassOpacityValue');
+    const glassBlur = document.getElementById('glassBlur');
+    const glassBlurValue = document.getElementById('glassBlurValue');
+    
     // Function to render shapes
     function renderShapes() {
       // Clear container
@@ -305,7 +399,22 @@
         shape.style.height = `${config.height}px`;
         shape.style.width = `${config.width}px`;
         shape.style.borderRadius = `${config.borderRadius}px`;
-        shape.style.backgroundColor = colorArray[i];
+        
+        // Apply glassmorphism if enabled
+        if (config.glassmorphism.enabled) {
+          shape.classList.add('glassmorphism');
+          
+          // Convert hex color to rgba with opacity
+          const baseColor = hexToRgb(colorArray[i]);
+          const opacity = config.glassmorphism.opacity / 100;
+          shape.style.backgroundColor = `rgba(${baseColor.r}, ${baseColor.g}, ${baseColor.b}, ${opacity})`;
+          
+          // Apply custom blur
+          shape.style.backdropFilter = `blur(${config.glassmorphism.blur}px)`;
+          shape.style.webkitBackdropFilter = `blur(${config.glassmorphism.blur}px)`;
+        } else {
+          shape.style.backgroundColor = colorArray[i];
+        }
         
         // Position each shape relative to center
         const xPosition = (i * config.spacing) - centerOffset;
@@ -491,6 +600,13 @@
       config.spacing = 50;
       config.colors = ['#E6F0F9', '#1E3C72'];
       
+      // Reset glassmorphism settings
+      config.glassmorphism = {
+        enabled: false,
+        opacity: 70,
+        blur: 10
+      };
+      
       // Reset background settings
       config.background = {
         type: 'solid',
@@ -512,6 +628,14 @@
       spacingInput.value = config.spacing;
       spacingValue.textContent = config.spacing;
       
+      // Update glassmorphism controls
+      glassToggle.checked = false;
+      glassSettings.style.display = 'none';
+      glassOpacity.value = 70;
+      glassOpacityValue.textContent = '70%';
+      glassBlur.value = 10;
+      glassBlurValue.textContent = '10px';
+      
       // Update background controls
       document.getElementById('backgroundType').value = 'solid';
       document.getElementById('backgroundColor').value = '#f5f5f5';
@@ -532,6 +656,11 @@
       config.width = Math.floor(Math.random() * 200) + 50; // 50-250px
       config.borderRadius = Math.floor(Math.random() * 100) + 10; // 10-110px
       config.spacing = Math.floor(Math.random() * 60) + 20; // 20-80px
+      
+      // Randomize glassmorphism settings
+      config.glassmorphism.enabled = Math.random() > 0.5;
+      config.glassmorphism.opacity = Math.floor(Math.random() * 80) + 20; // 20-100%
+      config.glassmorphism.blur = Math.floor(Math.random() * 15) + 5; // 5-20px
       
       // Generate 2-5 random colors
       const numColors = Math.floor(Math.random() * 3) + 2; // 2-5 colors
@@ -555,6 +684,14 @@
       borderRadiusValue.textContent = config.borderRadius;
       spacingInput.value = config.spacing;
       spacingValue.textContent = config.spacing;
+      
+      // Update glassmorphism UI
+      glassToggle.checked = config.glassmorphism.enabled;
+      glassSettings.style.display = config.glassmorphism.enabled ? 'block' : 'none';
+      glassOpacity.value = config.glassmorphism.opacity;
+      glassOpacityValue.textContent = `${config.glassmorphism.opacity}%`;
+      glassBlur.value = config.glassmorphism.blur;
+      glassBlurValue.textContent = `${config.glassmorphism.blur}px`;
       
       updateColorStopsUI();
       renderShapes();
@@ -584,6 +721,25 @@
         helperText.textContent = "Double-click to toggle fullscreen and panel";
       }
     }
+    
+    // Glassmorphism event handlers
+    glassToggle.addEventListener('change', function() {
+      config.glassmorphism.enabled = this.checked;
+      glassSettings.style.display = this.checked ? 'block' : 'none';
+      renderShapes();
+    });
+    
+    glassOpacity.addEventListener('input', function() {
+      config.glassmorphism.opacity = parseInt(this.value);
+      glassOpacityValue.textContent = `${config.glassmorphism.opacity}%`;
+      renderShapes();
+    });
+    
+    glassBlur.addEventListener('input', function() {
+      config.glassmorphism.blur = parseInt(this.value);
+      glassBlurValue.textContent = `${config.glassmorphism.blur}px`;
+      renderShapes();
+    });
     
     // Attach event listeners
     numShapesInput.addEventListener('input', handleNumberOfShapesChange);
