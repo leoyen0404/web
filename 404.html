@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>404 - Page Not Found</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+      position: relative;
+      height: 100vh;
+      color: #333;
+    }
+
+    .content {
+      padding: 20px;
+      max-width: 800px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 72px;
+      margin-bottom: 0;
+      color: #387f7a;
+    }
+
+    h2 {
+      margin-top: 10px;
+      color: #666;
+      font-weight: normal;
+    }
+
+    .back-link {
+      display: inline-block;
+      margin-top: 20px;
+      color: #5dc1b9;
+      text-decoration: none;
+      font-weight: bold;
+      border: 2px solid #5dc1b9;
+      padding: 10px 20px;
+      border-radius: 5px;
+      transition: all 0.3s ease;
+    }
+
+    .back-link:hover {
+      background-color: #5dc1b9;
+      color: white;
+    }
+
+    #dragonfly-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    #dragonfly {
+      position: absolute;
+      width: 80px;
+      height: 80px;
+      transition: transform 0.2s ease;
+      transform-origin: center;
+      filter: drop-shadow(0 0 3px rgba(0,0,0,0.2));
+    }
+
+    .dragonfly-body {
+      position: absolute;
+      width: 40px;
+      height: 16px;
+      background-color: #5dc1b9;
+      border-radius: 8px;
+      top: 32px;
+      left: 20px;
+    }
+
+    .dragonfly-head {
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      background-color: #387f7a;
+      border-radius: 50%;
+      top: 28px;
+      left: 6px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .dragonfly-eye {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background-color: #fff;
+      border-radius: 50%;
+      border: 2px solid #000;
+    }
+
+    .eye-left {
+      top: 5px;
+      left: 5px;
+    }
+
+    .eye-right {
+      top: 5px;
+      right: 5px;
+    }
+
+    .pupil {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background-color: #000;
+      border-radius: 50%;
+      top: 2px;
+      left: 2px;
+    }
+
+    .dragonfly-tail {
+      position: absolute;
+      width: 24px;
+      height: 12px;
+      background-color: #387f7a;
+      border-radius: 0 6px 6px 0;
+      top: 34px;
+      left: 56px;
+    }
+
+    .dragonfly-wing {
+      position: absolute;
+      width: 30px;
+      height: 12px;
+      background-color: rgba(255, 255, 255, 0.7);
+      border-radius: 50%;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      transform-origin: left center;
+    }
+
+    .wing-top-left {
+      top: 15px;
+      left: 28px;
+      transform: rotate(-20deg);
+    }
+
+    .wing-bottom-left {
+      top: 49px;
+      left: 28px;
+      transform: rotate(20deg);
+    }
+
+    .wing-top-right {
+      top: 15px;
+      left: 28px;
+      transform: rotate(-20deg);
+    }
+
+    .wing-bottom-right {
+      top: 49px;
+      left: 28px;
+      transform: rotate(20deg);
+    }
+
+    .badge-404 {
+      position: absolute;
+      background-color: #ff6b6b;
+      color: white;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      font-size: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      top: 20px;
+      left: 45px;
+      font-weight: bold;
+      z-index: 2;
+    }
+
+    .speech-bubble {
+      position: absolute;
+      background-color: #fff;
+      border-radius: 10px;
+      padding: 10px;
+      font-size: 14px;
+      max-width: 200px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+      z-index: 15;
+      font-weight: bold;
+    }
+
+    .speech-bubble:after {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 0;
+      border: 10px solid transparent;
+      border-top-color: #fff;
+      bottom: -20px;
+      left: 50%;
+      margin-left: -10px;
+    }
+
+    .custom-cursor {
+      position: fixed;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background-color: rgba(255, 105, 180, 0.3);
+      border: 2px solid hotpink;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 9999;
+      display: none;
+    }
+
+    .btn {
+      background-color: #5dc1b9;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 5px;
+      font-weight: bold;
+      transition: background-color 0.3s;
+    }
+
+    .btn:hover {
+      background-color: #387f7a;
+    }
+
+    .control-panel {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    .broken-link {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      background-color: #ff6b6b;
+      border-radius: 5px;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* Responsive design */
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 50px;
+      }
+      
+      .content {
+        padding: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="content">
+    <h1>404</h1>
+    <h2>Page Not Found</h2>
+    <p>Oops! Looks like this page has flown away. But don't worry, 404 the E-Dragonfly is here to help!</p>
+    
+    <div class="control-panel">
+      <button class="btn" id="search-btn">Search Area 🔍</button>
+      <button class="btn" id="debug-btn">Debug Mode 🛠️</button>
+      <button class="btn" id="chase-btn">Follow Me Home 🏠</button>
+    </div>
+    
+    <a href="/" class="back-link">Go Back Home</a>
+  </div>
+  
+  <div id="dragonfly-container">
+    <div id="dragonfly">
+      <div class="badge-404">404</div>
+      <div class="dragonfly-head">
+        <div class="dragonfly-eye eye-left"><div class="pupil"></div></div>
+        <div class="dragonfly-eye eye-right"><div class="pupil"></div></div>
+      </div>
+      <div class="dragonfly-body"></div>
+      <div class="dragonfly-tail"></div>
+      <div class="dragonfly-wing wing-top-left"></div>
+      <div class="dragonfly-wing wing-bottom-left"></div>
+      <div class="dragonfly-wing wing-top-right"></div>
+      <div class="dragonfly-wing wing-bottom-right"></div>
+    </div>
+    <div class="speech-bubble"></div>
+  </div>
+
+  <div class="custom-cursor"></div>
+  <div class="broken-link">404</div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // DOM elements
+      const dragonfly = document.getElementById('dragonfly');
+      const speechBubble = document.querySelector('.speech-bubble');
+      const wings = document.querySelectorAll('.dragonfly-wing');
+      const eyes = document.querySelectorAll('.pupil');
+      const cursor = document.querySelector('.custom-cursor');
+      const searchBtn = document.getElementById('search-btn');
+      const debugBtn = document.getElementById('debug-btn');
+      const chaseBtn = document.getElementById('chase-btn');
+      const brokenLink = document.querySelector('.broken-link');
+      
+      // States
+      let position = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+      let targetPosition = { x: position.x, y: position.y };
+      let velocity = { x: 0, y: 0 };
+      let wingAngle = 0;
+      let isFlapping = true;
+      let isBusy = false;
+      let isChasing = false;
+      let mousePosition = { x: 0, y: 0 };
+      let brokenLinks = [];
+      
+      // 404-themed messages
+      const errorMessages = [
+        "404 - Human not found!",
+        "Are you lost? Me too!",
+        "This page doesn't exist, just like my memory!",
+        "Error: Page not found in cache or RAM or anywhere!",
+        "I checked everywhere, no page here!",
+        "Looking for something? I ate it, sorry!",
+        "Maybe try turning it off and on again?",
+        "HTTP 404: Page went on vacation",
+        "Bzzt! 404 not found, but I found you!",
+        "404 errors are just pages playing hide and seek",
+        "This isn't the page you're looking for *waves wings*",
+        "Page not found, but I found a bug! Oh wait, that's me...",
+      ];
+      
+      // Initial setup
+      updateDragonflyPosition();
+      startFlapping();
+      moveRandomly();
+      
+      // Show welcome message after a short delay
+      setTimeout(() => {
+        showMessage("Hi! I'm 404 the E-Dragonfly. This page doesn't exist!");
+      }, 1000);
+      
+      // Track mouse position
+      document.addEventListener('mousemove', (e) => {
+        mousePosition.x = e.clientX;
+        mousePosition.y = e.clientY;
+        
+        if (isChasing) {
+          cursor.style.display = 'block';
+          cursor.style.left = `${e.clientX}px`;
+          cursor.style.top = `${e.clientY}px`;
+          targetPosition = { x: e.clientX, y: e.clientY };
+        }
+      });
+
+      // Control panel button events
+      searchBtn.addEventListener('click', () => {
+        if (isBusy) return;
+        searchArea();
+      });
+      
+      debugBtn.addEventListener('click', () => {
+        if (isBusy) return;
+        debugMode();
+      });
+      
+      chaseBtn.addEventListener('click', () => {
+        toggleChaseMode();
+      });
+      
+      // Animation loop
+      function update() {
+        // Update position based on velocity with some damping
+        velocity.x = (targetPosition.x - position.x) * 0.05;
+        velocity.y = (targetPosition.y - position.y) * 0.05;
+        
+        position.x += velocity.x;
+        position.y += velocity.y;
+        
+        // Rotate dragonfly based on movement direction
+        let angle = Math.atan2(velocity.y, velocity.x);
+        
+        // Update DOM element
+        updateDragonflyPosition();
+        rotateDragonfly(angle);
+        
+        // Update speech bubble position
+        speechBubble.style.left = `${position.x}px`;
+        speechBubble.style.top = `${position.y - 70}px`;
+        
+        // Eye tracking toward mouse when not busy
+        if (!isBusy) {
+          trackEyes();
+        }
+        
+        requestAnimationFrame(update);
+      }
+      
+      // Start the animation loop
+      update();
+      
+      // Functions
+      function updateDragonflyPosition() {
+        dragonfly.style.left = `${position.x - 40}px`;
+        dragonfly.style.top = `${position.y - 40}px`;
+      }
+      
+      function rotateDragonfly(angle) {
+        // Only rotate if moving significantly
+        if (Math.abs(velocity.x) > 0.5 || Math.abs(velocity.y) > 0.5) {
+          dragonfly.style.transform = `rotate(${angle}rad)`;
+        }
+      }
+      
+      function startFlapping() {
+        setInterval(() => {
+          if (!isFlapping) return;
+          
+          wingAngle = wingAngle === 0 ? 40 : 0;
+          
+          wings[0].style.transform = `rotate(${-20 - wingAngle}deg)`;
+          wings[1].style.transform = `rotate(${20 + wingAngle}deg)`;
+          wings[2].style.transform = `rotate(${-20 - wingAngle}deg)`;
+          wings[3].style.transform = `rotate(${20 + wingAngle}deg)`;
+        }, 100);
+      }
+      
+      function moveRandomly() {
+        if (isChasing) return;
+        
+        setInterval(() => {
+          if (isBusy || isChasing) return;
+          
+          // 20% chance to change direction or show message
+          if (Math.random() < 0.2) {
+            if (Math.random() < 0.3) {
+              // Show a random message
+              showMessage(errorMessages[Math.floor(Math.random() * errorMessages.length)]);
+            } else {
+              // New random position
+              targetPosition = {
+                x: Math.random() * window.innerWidth,
+                y: Math.random() * window.innerHeight
+              };
+            }
+          }
+        }, 2000);
+      }
+      
+      function showMessage(message, duration = 3000) {
+        speechBubble.textContent = message;
+        speechBubble.style.opacity = '1';
+        
+        setTimeout(() => {
+          speechBubble.style.opacity = '0';
+        }, duration);
+      }
+      
+      function searchArea() {
+        if (isBusy) return;
+        isBusy = true;
+        
+        showMessage("Searching for the missing page...");
+        
+        // Create phantom 404 blocks
+        createBrokenLinks();
+        
+        // Fly to each broken link
+        let currentLinkIndex = 0;
+        
+        const searchInterval = setInterval(() => {
+          if (currentLinkIndex < brokenLinks.length) {
+            const link = brokenLinks[currentLinkIndex];
+            targetPosition = { x: link.x, y: link.y };
+            
+            // Make link visible when close
+            setTimeout(() => {
+              link.element.style.opacity = '1';
+              
+              // Hide it after a moment
+              setTimeout(() => {
+                link.element.style.opacity = '0';
+              }, 800);
+            }, 500);
+            
+            currentLinkIndex++;
+          } else {
+            clearInterval(searchInterval);
+            
+            // Clean up
+            setTimeout(() => {
+              brokenLinks.forEach(link => {
+                link.element.remove();
+              });
+              brokenLinks = [];
+              
+              showMessage("Sorry, couldn't find the page anywhere!");
+              isBusy = false;
+            }, 1000);
+          }
+        }, 1000);
+      }
+      
+      function createBrokenLinks() {
+        // Clean up any existing broken links
+        brokenLinks.forEach(link => {
+          link.element.remove();
+        });
+        brokenLinks = [];
+        
+        // Create new broken links
+        const numLinks = 5;
+        for (let i = 0; i < numLinks; i++) {
+          const x = 100 + Math.random() * (window.innerWidth - 200);
+          const y = 100 + Math.random() * (window.innerHeight - 200);
+          
+          const linkElement = document.createElement('div');
+          linkElement.className = 'broken-link';
+          linkElement.textContent = '404';
+          linkElement.style.left = `${x}px`;
+          linkElement.style.top = `${y}px`;
+          
+          document.body.appendChild(linkElement);
+          
+          brokenLinks.push({
+            element: linkElement,
+            x: x,
+            y: y
+          });
+        }
+      }
+      
+      function debugMode() {
+        isBusy = true;
+        
+        // Stop flying
+        const currentPos = { ...position };
+        isFlapping = false;
+        
+        // Debug appearance
+        const originalColor = document.querySelector('.dragonfly-body').style.backgroundColor;
+        document.querySelector('.dragonfly-body').style.backgroundColor = '#ff6b6b';
+        
+        // Stop wings
+        wings.forEach(wing => {
+          wing.style.transform = 'rotate(0deg)';
+        });
+        
+        showMessage("Running diagnostics... *beep boop*");
+        
+        // Show debug messages in sequence
+        const debugMessages = [
+          "Checking HTML...",
+          "Scanning CSS...",
+          "Testing JavaScript...",
+          "ERROR: Page not in database!",
+          "Diagnosis: 404 - Page Not Found"
+        ];
+        
+        let messageIndex = 0;
+        
+        const debugInterval = setInterval(() => {
+          showMessage(debugMessages[messageIndex]);
+          messageIndex++;
+          
+          if (messageIndex >= debugMessages.length) {
+            clearInterval(debugInterval);
+            
+            // Reset appearance
+            setTimeout(() => {
+              document.querySelector('.dragonfly-body').style.backgroundColor = originalColor;
+              isFlapping = true;
+              isBusy = false;
+              
+              // Add a final message
+              setTimeout(() => {
+                showMessage("Try going back to the homepage!");
+              }, 3000);
+            }, 2000);
+          }
+        }, 1500);
+      }
+      
+      function toggleChaseMode() {
+        isChasing = !isChasing;
+        
+        if (isChasing) {
+          cursor.style.display = 'block';
+          chaseBtn.textContent = 'Stop Following 🛑';
+          showMessage("I'll guide you home! Follow me!");
+          
+          // Fly toward the home button
+          const homeLink = document.querySelector('.back-link');
+          const rect = homeLink.getBoundingClientRect();
+          targetPosition = { 
+            x: rect.left + rect.width / 2, 
+            y: rect.top - 50 
+          };
+        } else {
+          cursor.style.display = 'none';
+          chaseBtn.textContent = 'Follow Me Home 🏠';
+        }
+      }
+      
+      function trackEyes() {
+        const dx = mousePosition.x - position.x;
+        const dy = mousePosition.y - position.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        if (distance < 300) {
+          // Calculate eye movement (limited range)
+          const eyeMovementRange = 2;
+          const eyeX = (dx / distance) * eyeMovementRange;
+          const eyeY = (dy / distance) * eyeMovementRange;
+          
+          // Apply to both eyes
+          eyes.forEach(pupil => {
+            pupil.style.transform = `translate(${eyeX}px, ${eyeY}px)`;
+          });
+        } else {
+          // Reset eye position
+          eyes.forEach(pupil => {
+            pupil.style.transform = 'translate(0, 0)';
+          });
+        }
+      }
+      
+      // Resize handler
+      window.addEventListener('resize', () => {
+        // Keep dragonfly in visible area
+        position.x = Math.min(window.innerWidth - 50, position.x);
+        position.y = Math.min(window.innerHeight - 50, position.y);
+      });
+      
+      // Easter egg: Double click anywhere to make dragonfly come to that spot
+      document.addEventListener('dblclick', (e) => {
+        if (isBusy) return;
+        
+        targetPosition = { x: e.clientX, y: e.clientY };
+        showMessage("Maybe the page is over there?");
+      });
+    });
+  </script>
+</body>
+</html>
