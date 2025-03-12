@@ -1,148 +1,617 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>QR Code工具</title>
-    <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Tool</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-        .tool-container {
-            margin: 20px;
+        :root {
+            --primary: #4361ee;
+            --primary-light: #eef2ff;
+            --dark: #2b2d42;
+            --gray: #8d99ae;
+            --light: #edf2f4;
+            --success: #2ecc71;
+            --danger: #e74c3c;
         }
-
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f8f9fa;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+        
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        main {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--gray);
+            margin-bottom: 2rem;
+        }
+        
+        .tab {
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--gray);
+            transition: all 0.3s ease;
+        }
+        
+        .tab.active {
+            color: var(--primary);
+            border-bottom: 3px solid var(--primary);
+        }
+        
+        .tab:hover:not(.active) {
+            color: var(--dark);
+            background-color: var(--light);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .card-title {
+            margin-bottom: 1.5rem;
+            color: var(--dark);
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="text"]:focus, textarea:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn:hover {
+            background-color: #3051d3;
+            transform: translateY(-2px);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn-secondary {
+            background-color: var(--gray);
+        }
+        
+        .btn-secondary:hover {
+            background-color: #7b8797;
+        }
+        
+        .output-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 2rem;
+        }
+        
+        .qr-container {
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .qr-info {
+            text-align: center;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            color: var(--gray);
+        }
+        
+        .binary-view {
+            width: 100%;
+            max-width: 100%;
+            height: 150px;
+            font-family: monospace;
+            margin-top: 1rem;
+            resize: vertical;
+        }
+        
+        .copy-btn {
+            margin-top: 0.5rem;
+            background-color: var(--light);
+            color: var(--dark);
+            border: 1px solid #ddd;
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+        }
+        
+        .copy-btn:hover {
+            background-color: #e2e6ea;
+        }
+        
+        .alert {
+            padding: 0.75rem 1.25rem;
+            margin-bottom: 1rem;
+            border-radius: 4px;
+            display: none;
+        }
+        
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
         .qr-code-table {
             border-collapse: collapse;
+            margin: 1rem auto;
         }
-
+        
         .qr-module {
-            width: 10px;
-            height: 10px;
+            width: 8px;
+            height: 8px;
             padding: 0;
             border: none;
         }
-
+        
         .qr-module.black {
             background-color: black;
         }
-
+        
         .qr-module.white {
             background-color: white;
+        }
+        
+        .flex-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .options-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .option-card {
+            flex: 1;
+            min-width: 150px;
+            padding: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .option-card:hover {
+            border-color: var(--primary);
+            background-color: var(--primary-light);
+        }
+        
+        .option-card.selected {
+            border-color: var(--primary);
+            background-color: var(--primary-light);
+            box-shadow: 0 0 0 2px var(--primary);
+        }
+        
+        .responsive-flex {
+            display: flex;
+            gap: 2rem;
+        }
+        
+        .flex-col {
+            flex: 1;
+        }
+        
+        @media (max-width: 768px) {
+            .responsive-flex {
+                flex-direction: column;
+            }
+            
+            .options-group {
+                flex-direction: column;
+            }
+        }
+        
+        footer {
+            text-align: center;
+            padding: 2rem;
+            background-color: var(--light);
+            color: var(--gray);
+            margin-top: 3rem;
         }
     </style>
 </head>
 <body>
-
-    <h1>QR Code 加密&解密工具</h1>
-
-    <div class="tool-container">
-        <h2>[加密區]文字 -> QR Code(二進位數版)</h2>
-        <label for="textInput">輸入文字:</label>
-        <input type="text" id="textInput" placeholder="例: example.com">
-        <button onclick="generateTextToQRCode()">生成QR Code&二進位數版</button>
-
-        <div id="qrcodeContainer" style="margin: 20px auto; width: 300px; height: 300px;"></div>
-
-        <div id="outputInfo"></div>
-
-        <textarea id="binaryOutput" rows="6" cols="21" placeholder="二進位數代碼..."></textarea>
-
-        <script>
-            function generateTextToQRCode() {
-                const textInput = document.getElementById("textInput").value.trim();
-
-                if (!textInput) {
-                    alert("Please enter text to generate a QR code.");
-                    return;
-                }
-
-                // Clear the previous QR code container, if any
-                const qrcodeContainer = document.getElementById("qrcodeContainer");
-                qrcodeContainer.innerHTML = "";
-
-                // Generate the new QR code
-                const qr = new QRCode(qrcodeContainer, {
-                    text: textInput,
-                    width: 300,
-                    height: 300,
-                });
-
-                // Convert the QR code to binary data
-                const binaryData = qrToBinary(qr);
-                document.getElementById("binaryOutput").value = binaryData;
-
-                // Set the number of columns (cols) dynamically based on the square root of the binary data's length
-                const binaryDataLength = binaryData.length;
-                const sqrtBinaryDataLength = Math.ceil(Math.sqrt(binaryDataLength));
-                document.getElementById("binaryOutput").setAttribute("cols", sqrtBinaryDataLength.toString());
-
-                // Display the QR code size
-                const qrCodeSize = qr.getModuleCount();
-                document.getElementById("outputInfo").textContent = `${qrCodeSize}x${qrCodeSize}`;
-            }
-
-            function qrToBinary(qr) {
-                const qrModules = qr._oQRCode.modules;
-                let binaryData = "";
-
-                for (let row = 0; row < qrModules.length; row++) {
-                    for (let col = 0; col < qrModules[row].length; col++) {
-                        binaryData += qrModules[row][col] ? '1' : '0';
-                    }
-                }
-
-                return binaryData;
-            }
-        </script>
-    </div>
-
-    <div class="tool-container">
-        <h2>[解密區]二進位數代碼 -> QR Code</h2>
-        <label for="binaryInput">輸入二進位數代碼:</label>
-        <input type="text" id="binaryInput" placeholder="例: 1111...0100">
-        <button onclick="generateBinaryToQRCode()">生成 QR Code</button>
+    <header>
+        <h1>QR Code Tool</h1>
+        <p>Generate and decode QR codes with ease</p>
+    </header>
+    
+    <main>
+        <div class="tabs">
+            <button class="tab active" data-tab="encode">Encode</button>
+            <button class="tab" data-tab="decode">Decode</button>
+        </div>
         
-        <div id="qrCodeContainer"></div>
+        <div id="encode-tab" class="tab-content active">
+            <div class="card">
+                <h2 class="card-title">Generate QR Code</h2>
+                
+                <div class="form-group">
+                    <label for="encodeInput">Enter text or URL:</label>
+                    <input type="text" id="encodeInput" placeholder="e.g., https://example.com" autofocus>
+                </div>
+                
+                <div class="form-group">
+                    <label>QR Code Options:</label>
+                    <div class="options-group">
+                        <div class="option-card selected" data-size="small">
+                            <strong>Small</strong>
+                            <p>Low density</p>
+                        </div>
+                        <div class="option-card" data-size="medium">
+                            <strong>Medium</strong>
+                            <p>Standard</p>
+                        </div>
+                        <div class="option-card" data-size="large">
+                            <strong>Large</strong>
+                            <p>High density</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <button id="generateBtn" class="btn">Generate QR Code</button>
+                
+                <div id="encodeAlert" class="alert"></div>
+                
+                <div id="encodeOutput" class="output-container" style="display: none;">
+                    <div class="responsive-flex">
+                        <div class="flex-col">
+                            <h3>QR Code</h3>
+                            <div class="qr-container">
+                                <div id="qrcode"></div>
+                                <p id="qrInfo" class="qr-info"></p>
+                            </div>
+                            <button id="downloadQRBtn" class="btn btn-secondary">Download QR Code</button>
+                        </div>
+                        
+                        <div class="flex-col">
+                            <h3>Binary Representation</h3>
+                            <textarea id="binaryOutput" class="binary-view" readonly></textarea>
+                            <button id="copyBinaryBtn" class="btn copy-btn">Copy Binary</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="decode-tab" class="tab-content">
+            <div class="card">
+                <h2 class="card-title">Decode QR Code from Binary</h2>
+                
+                <div class="form-group">
+                    <label for="binaryInput">Enter binary data:</label>
+                    <textarea id="binaryInput" class="binary-view" placeholder="e.g., 11100001010..."></textarea>
+                </div>
+                
+                <button id="decodeBtn" class="btn">Generate QR Code</button>
+                
+                <div id="decodeAlert" class="alert"></div>
+                
+                <div id="decodeOutput" class="output-container" style="display: none;">
+                    <h3>Reconstructed QR Code</h3>
+                    <div class="qr-container">
+                        <div id="decodedQR"></div>
+                        <p id="decodedQRInfo" class="qr-info"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <p>QR Code Tool &copy; 2025 - A modern tool for QR code generation and decoding</p>
+    </footer>
 
-        <script>
-            function generateBinaryToQRCode() {
-                const binaryData = document.getElementById("binaryInput").value.trim();
-                const binaryRegex = /^[01]+$/;
-
-                if (!binaryData.match(binaryRegex)) {
-                    alert("輸入無效！請輸入有效的二進位數。");
-                    return;
-                }
-
-                // Calculate the QR code size (a perfect square number) based on the binary data length
-                const qrCodeSize = Math.ceil(Math.sqrt(binaryData.length));
-
-                // Pad the binary data with leading zeros to make it a multiple of the QR code size
-                const paddedBinaryData = binaryData.padEnd(qrCodeSize * qrCodeSize, '0');
-
-                // Clear the previous QR code, if any
-                const qrCodeContainer = document.getElementById("qrCodeContainer");
-                qrCodeContainer.innerHTML = "";
-
-                // Generate the QR code as a table
-                const table = document.createElement("table");
-                table.classList.add("qr-code-table");
-                qrCodeContainer.appendChild(table);
-
-                for (let i = 0; i < qrCodeSize; i++) {
-                    const row = document.createElement("tr");
-
-                    for (let j = 0; j < qrCodeSize; j++) {
-                        const index = i * qrCodeSize + j;
-                        const moduleValue = paddedBinaryData[index];
-
-                        const qrModule = document.createElement("td");
-                        qrModule.classList.add("qr-module", moduleValue === '1' ? "black" : "white");
-                        row.appendChild(qrModule);
-                    }
-
-                    table.appendChild(row);
+    <script>
+        // Tab switching functionality
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Remove active class from all tabs
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                // Add active class to clicked tab
+                tab.classList.add('active');
+                
+                // Hide all tab contents
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                
+                // Show the selected tab content
+                const tabId = tab.dataset.tab;
+                document.getElementById(`${tabId}-tab`).classList.add('active');
+            });
+        });
+        
+        // QR code options selection
+        document.querySelectorAll('.option-card').forEach(option => {
+            option.addEventListener('click', () => {
+                document.querySelectorAll('.option-card').forEach(o => o.classList.remove('selected'));
+                option.classList.add('selected');
+            });
+        });
+        
+        // Initialize QR code object and variables
+        let qrCode = null;
+        let qrSize = 'medium';
+        
+        // Function to show an alert message
+        function showAlert(elementId, message, type) {
+            const alert = document.getElementById(elementId);
+            alert.textContent = message;
+            alert.className = 'alert';
+            alert.classList.add(`alert-${type}`);
+            alert.style.display = 'block';
+            
+            // Hide alert after 5 seconds
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 5000);
+        }
+        
+        // Function to get QR code size based on selected option
+        function getQRCodeSize() {
+            const selectedOption = document.querySelector('.option-card.selected');
+            qrSize = selectedOption.dataset.size;
+            
+            // Return dimensions based on selected size
+            switch (qrSize) {
+                case 'small':
+                    return { width: 180, height: 180 };
+                case 'large':
+                    return { width: 320, height: 320 };
+                case 'medium':
+                default:
+                    return { width: 250, height: 250 };
+            }
+        }
+        
+        // Function to generate QR code
+        function generateQRCode() {
+            const text = document.getElementById('encodeInput').value.trim();
+            
+            if (!text) {
+                showAlert('encodeAlert', 'Please enter text or URL to generate a QR code.', 'danger');
+                return;
+            }
+            
+            // Clear previous QR code
+            const qrcodeContainer = document.getElementById('qrcode');
+            qrcodeContainer.innerHTML = '';
+            
+            // Get selected QR code size
+            const qrCodeSize = getQRCodeSize();
+            
+            // Generate new QR code
+            qrCode = new QRCode(qrcodeContainer, {
+                text: text,
+                width: qrCodeSize.width,
+                height: qrCodeSize.height,
+                colorDark: '#000000',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.H
+            });
+            
+            // Convert QR code to binary and display
+            setTimeout(() => {
+                const binaryData = qrToBinary(qrCode);
+                document.getElementById('binaryOutput').value = binaryData;
+                
+                // Show QR code size info
+                const qrCodeDimension = Math.sqrt(binaryData.length);
+                document.getElementById('qrInfo').textContent = `QR Code Size: ${qrCodeDimension}×${qrCodeDimension} modules`;
+                
+                // Show output container
+                document.getElementById('encodeOutput').style.display = 'block';
+            }, 100);
+        }
+        
+        // Function to convert QR code to binary
+        function qrToBinary(qr) {
+            // Access QR code modules
+            const qrModules = qr._oQRCode.modules;
+            let binaryData = '';
+            
+            // Convert modules to binary string
+            for (let row = 0; row < qrModules.length; row++) {
+                for (let col = 0; col < qrModules[row].length; col++) {
+                    binaryData += qrModules[row][col] ? '1' : '0';
                 }
             }
-        </script>
-    </div>
+            
+            return binaryData;
+        }
+        
+        // Function to decode binary data and display QR code
+        function decodeBinaryToQRCode() {
+            const binaryData = document.getElementById('binaryInput').value.trim();
+            const binaryRegex = /^[01]+$/;
+            
+            if (!binaryData) {
+                showAlert('decodeAlert', 'Please enter binary data to generate a QR code.', 'danger');
+                return;
+            }
+            
+            if (!binaryData.match(binaryRegex)) {
+                showAlert('decodeAlert', 'Invalid input! Please enter valid binary data (only 0s and 1s).', 'danger');
+                return;
+            }
+            
+            // Calculate QR code size (should be a perfect square)
+            const qrCodeSize = Math.sqrt(binaryData.length);
+            const isSquare = qrCodeSize === Math.floor(qrCodeSize);
+            
+            if (!isSquare) {
+                showAlert('decodeAlert', `The binary data length (${binaryData.length}) is not a perfect square. Automatically padding to the nearest square.`, 'success');
+            }
+            
+            // Calculate the proper size (rounded up to next perfect square)
+            const properSize = Math.ceil(qrCodeSize);
+            const paddedSize = properSize * properSize;
+            
+            // Pad binary data if necessary
+            const paddedBinaryData = binaryData.padEnd(paddedSize, '0');
+            
+            // Clear previous QR code
+            const decodedQRContainer = document.getElementById('decodedQR');
+            decodedQRContainer.innerHTML = '';
+            
+            // Create table for QR code visualization
+            const table = document.createElement('table');
+            table.className = 'qr-code-table';
+            
+            // Create QR code from binary data
+            for (let i = 0; i < properSize; i++) {
+                const row = document.createElement('tr');
+                
+                for (let j = 0; j < properSize; j++) {
+                    const index = i * properSize + j;
+                    const moduleValue = paddedBinaryData[index];
+                    
+                    const qrModule = document.createElement('td');
+                    qrModule.className = `qr-module ${moduleValue === '1' ? 'black' : 'white'}`;
+                    row.appendChild(qrModule);
+                }
+                
+                table.appendChild(row);
+            }
+            
+            decodedQRContainer.appendChild(table);
+            
+            // Show QR code info
+            document.getElementById('decodedQRInfo').textContent = `QR Code Size: ${properSize}×${properSize} modules`;
+            
+            // Show output container
+            document.getElementById('decodeOutput').style.display = 'block';
+        }
+        
+        // Function to download QR code as image
+        function downloadQRCode() {
+            const qrCanvas = document.querySelector('#qrcode canvas');
+            
+            if (!qrCanvas) {
+                showAlert('encodeAlert', 'No QR code to download. Please generate a QR code first.', 'danger');
+                return;
+            }
+            
+            const link = document.createElement('a');
+            link.download = 'qrcode.png';
+            link.href = qrCanvas.toDataURL('image/png');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        // Function to copy binary data
+        function copyBinaryData() {
+            const binaryOutput = document.getElementById('binaryOutput');
+            binaryOutput.select();
+            document.execCommand('copy');
+            
+            showAlert('encodeAlert', 'Binary data copied to clipboard!', 'success');
+        }
+        
+        // Event listeners
+        document.getElementById('generateBtn').addEventListener('click', generateQRCode);
+        document.getElementById('decodeBtn').addEventListener('click', decodeBinaryToQRCode);
+        document.getElementById('downloadQRBtn').addEventListener('click', downloadQRCode);
+        document.getElementById('copyBinaryBtn').addEventListener('click', copyBinaryData);
+        
+        // Add enter key event listeners for input fields
+        document.getElementById('encodeInput').addEventListener('keyup', event => {
+            if (event.key === 'Enter') {
+                generateQRCode();
+            }
+        });
+    </script>
 </body>
 </html>
