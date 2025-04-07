@@ -1,255 +1,626 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Geometric Art Generator</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-            background-color: #f0f0f0;
-        }
-        canvas {
-            border: 1px solid #000;
-            margin-bottom: 20px;
-        }
-        button {
-            font-size: 16px;
-            padding: 10px 20px;
-            cursor: pointer;
-        }
-        .controls {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        label {
-            display: flex;
-            justify-content: space-between;
-            width: 300px;
-        }
-        input {
-            width: 100px;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Geometric Art Generator - Enhanced UI</title>
+<style>
+/* --- Theme Variables --- */
+:root {
+--primary-color: #6200EE; /* Material Purple */
+--primary-variant: #3700B3;
+--secondary-color: #03DAC6; /* Material Teal */
+--background-color: #f5f5f5; /* Light grey */
+--surface-color: #ffffff; /* Card background */
+--on-primary: #ffffff;
+--on-secondary: #000000;
+--on-surface: #000000;
+--on-background: #000000;
+--text-secondary: rgba(0, 0, 0, 0.6);
+--border-color: rgba(0, 0, 0, 0.12);
+--font-family: 'Roboto', Arial, sans-serif; /* Example font */
+        --border-radius: 4px;
+        --card-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        --button-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+        --input-height: 40px;
+    }
+
+    /* --- Base Styles --- */
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        font-family: var(--font-family);
+        background-color: var(--background-color);
+        color: var(--on-background);
+        display: flex;
+        height: 100vh;
+        overflow: hidden; /* Prevent body scrolling */
+    }
+
+    /* --- Layout: Sidebar + Main Area --- */
+    .app-container {
+        display: flex;
+        width: 100%;
+        height: 100%;
+    }
+
+    .controls-sidebar {
+        width: 320px; /* Fixed width sidebar */
+        flex-shrink: 0;
+        background-color: var(--surface-color);
+        padding: 20px;
+        border-right: 1px solid var(--border-color);
+        overflow-y: auto; /* Allow sidebar scrolling if content overflows */
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .canvas-area {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center; /* Center canvas vertically */
+        padding: 30px;
+        overflow: hidden; /* Prevent canvas area scrolling */
+        position: relative; /* For positioning the overlay */
+    }
+
+    /* --- Control Group Styling (Cards) --- */
+    .control-group {
+        background-color: var(--surface-color);
+        border-radius: var(--border-radius);
+        box-shadow: var(--card-shadow);
+        padding: 15px;
+        border: 1px solid var(--border-color);
+    }
+
+    .control-group h2 {
+        font-size: 1rem;
+        font-weight: 500;
+        margin-bottom: 15px;
+        color: var(--on-surface);
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 8px;
+    }
+
+    .control-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+        min-height: var(--input-height);
+    }
+    .control-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .control-item label,
+    .control-item > span { /* For simple text spans in items */
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        margin-right: 10px;
+        white-space: nowrap;
+    }
+
+    /* --- Input Styling --- */
+    input[type="number"],
+    input[type="color"],
+    input[type="range"] {
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        padding: 5px 8px;
+        font-size: 0.9rem;
+        height: 32px; /* Consistent height */
+        transition: border-color 0.2s ease;
+    }
+    input[type="number"] {
+        width: 70px; /* Adjust width */
+    }
+    input[type="color"] {
+        width: 50px;
+        padding: 2px; /* Adjust padding for color input */
+        cursor: pointer;
+        height: 32px; /* Match height */
+         background-color: var(--surface-color); /* Ensure background consistency */
+        vertical-align: middle; /* Align better with text */
+    }
+     input[type="color"]::-webkit-color-swatch-wrapper {
+        padding: 0;
+    }
+    input[type="color"]::-webkit-color-swatch {
+        border: none;
+        border-radius: calc(var(--border-radius) / 2);
+    }
+
+    input[type="range"] {
+        width: 120px; /* Adjust width */
+        cursor: pointer;
+        padding: 0; /* Remove padding for range */
+         accent-color: var(--primary-color); /* Style the slider track/thumb */
+    }
+
+    input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 1px var(--primary-color);
+    }
+
+    /* --- Switch Styling --- */
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 40px; /* Smaller switch */
+        height: 20px;
+    }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background-color: #ccc;
+        transition: .3s;
+        border-radius: 20px; /* Fully rounded */
+    }
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 14px; /* Smaller knob */
+        width: 14px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: .3s;
+        border-radius: 50%;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+    input:checked + .slider { background-color: var(--primary-color); }
+    input:checked + .slider:before { transform: translateX(20px); } /* Adjusted translation */
+
+    /* --- Color Picker Layout --- */
+    .color-picker-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 10px; /* Spacing between color rows */
+        justify-content: space-between; /* Push elements apart */
+    }
+     .color-picker-item span {
+         flex-shrink: 0; /* Prevent text shrinking */
+          font-size: 0.9rem;
+         color: var(--text-secondary);
+     }
+     .color-picker-item .input-group { /* Group color input and possibly range */
+         display: flex;
+         align-items: center;
+         gap: 8px;
+     }
+
+
+    /* --- Canvas & Buttons Area --- */
+    #artCanvas {
+        border: 1px solid var(--border-color);
+        box-shadow: var(--card-shadow);
+        background-color: var(--surface-color); /* Ensure it has a background */
+        max-width: 90%; /* Prevent overflow */
+        max-height: 80%; /* Prevent overflow */
+        object-fit: contain; /* Scale nicely */
+        transition: opacity 0.3s ease-in-out; /* For generation feedback */
+    }
+
+    .canvas-actions {
+        margin-top: 20px;
+        display: flex;
+        gap: 15px;
+    }
+
+    /* --- Button Styling --- */
+    .btn {
+        font-family: inherit;
+        font-size: 0.9rem;
+        font-weight: 500;
+        padding: 10px 20px;
+        border: none;
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        transition: background-color 0.2s ease, box-shadow 0.2s ease;
+        display: inline-flex; /* Align icon and text */
+        align-items: center;
+        gap: 8px; /* Space between icon and text */
+    }
+    .btn:focus { outline: none; }
+
+    .btn-primary {
+        background-color: var(--primary-color);
+        color: var(--on-primary);
+        box-shadow: var(--button-shadow);
+    }
+    .btn-primary:hover {
+        background-color: var(--primary-variant);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2), 0 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .btn-secondary {
+        background-color: var(--surface-color);
+        color: var(--primary-color);
+        border: 1px solid var(--border-color);
+    }
+    .btn-secondary:hover {
+        background-color: rgba(98, 0, 238, 0.08); /* Primary color tint */
+    }
+
+     /* --- Generation Feedback --- */
+    .canvas-loading #artCanvas {
+        opacity: 0.5; /* Fade out during load */
+    }
+    /* Optional: Add an overlay/spinner later if needed */
+
+     /* --- Icon Placeholder (using text/emoji for simplicity) --- */
+    .icon::before {
+        display: inline-block;
+        font-weight: normal; /* Ensure icons aren't bold */
+        margin-right: 0; /* Remove margin if using flex gap */
+    }
+    .icon-generate::before { content: '✨'; } /* Sparkles */
+    .icon-download::before { content: '💾'; } /* Floppy Disk */
+
+    /* --- Responsive (Basic Example) --- */
+    @media (max-width: 768px) {
+        body { flex-direction: column; height: auto; overflow: auto; }
+        .controls-sidebar { width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--border-color); max-height: 50vh; /* Limit height */}
+        .canvas-area { height: auto; padding: 20px; min-height: 50vh; }
+        #artCanvas { max-height: 60vh; }
+    }
+
+</style>
+ <!-- Link Google Font (Optional) -->
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
 </head>
 <body>
-    <h1>Geometric Art Generator</h1>
-    <div class="controls">
-        <label>
-            Canvas Size:
-            <input type="number" id="canvasSize" min="100" max="1000" value="500">
-        </label>
-        <label>
-            Number of Squares:
-            <input type="number" id="numSquares" min="5" max="30" value="15">
-        </label>
-        <label>
-            Number of Shapes:
-            <input type="number" id="numShapes" min="1" max="10" value="3">
-        </label>
-        <label>
-            Min Shape Volume (%):
-            <input type="number" id="minShapeVolume" min="1" max="50" value="5">
-        </label>
-    </div>
-    <canvas id="artCanvas"></canvas>
-    <button id="generateBtn">Generate New Art</button>
+<div class="app-container">
+<!-- === Controls Sidebar === -->
+<aside class="controls-sidebar">
+<div class="control-group">
+            <h2>Canvas & Layers</h2>
+            <div class="control-item">
+                <label for="canvasSize">Canvas Size (px):</label>
+                <input type="number" id="canvasSize" min="100" max="1000" value="500">
+            </div>
+            <div class="control-item">
+                <label for="numSquares">Number of Squares:</label>
+                <input type="number" id="numSquares" min="5" max="30" value="15">
+            </div>
+            <div class="control-item">
+                <label for="roundedMode">Rounded Corners:</label>
+                <label class="switch">
+                    <input type="checkbox" id="roundedMode">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="control-item" id="cornerScaleControl" style="display: none;"> <!-- Hide initially -->
+                <label for="cornerScale">Corner Scale:</label>
+                <input type="range" id="cornerScale" min="0.1" max="2" step="0.1" value="1">
+            </div>
+        </div>
 
-    <script>
-        const canvas = document.getElementById('artCanvas');
-        const ctx = canvas.getContext('2d');
-        const generateBtn = document.getElementById('generateBtn');
-        const canvasSizeInput = document.getElementById('canvasSize');
-        const numSquaresInput = document.getElementById('numSquares');
-        const numShapesInput = document.getElementById('numShapes');
-        const minShapeVolumeInput = document.getElementById('minShapeVolume');
+        <div class="control-group">
+            <h2>Inverted Shapes</h2>
+            <div class="control-item">
+                <label for="numShapes">Number of Shapes:</label>
+                <input type="number" id="numShapes" min="0" max="10" value="3">
+            </div>
+            <div class="control-item">
+                <label for="minShapeVolume">Min Volume (%):</label>
+                <input type="number" id="minShapeVolume" min="1" max="50" value="5">
+            </div>
+            <div class="color-picker-item"> <!-- Use specific class for color items -->
+                 <span>Shape Outline:</span>
+                 <div class="input-group">
+                     <input type="color" id="outlineColor" value="#000000">
+                     <input type="range" id="outlineOpacity" min="0" max="100" value="50" title="Outline Opacity">
+                 </div>
+             </div>
+        </div>
 
-        function createLayeredSquares(size, numSquares) {
-            ctx.fillStyle = 'white';
-            ctx.fillRect(0, 0, size, size);
+        <div class="control-group">
+            <h2>Colors</h2>
+            <div class="control-item">
+                <label for="gradientMode">Use Gradient Mode:</label>
+                <label class="switch">
+                    <input type="checkbox" id="gradientMode">
+                    <span class="slider"></span>
+                </label>
+            </div>
 
-            let squareSize = size;
-            const step = size / (2 * numSquares);
+            <!-- Solid Colors Group -->
+            <div id="solidColorControls">
+                <div class="color-picker-item">
+                    <span>Primary Color:</span>
+                     <div class="input-group">
+                         <input type="color" id="primaryColor" value="#000000">
+                    </div>
+                </div>
+                <div class="color-picker-item">
+                    <span>Secondary Color:</span>
+                     <div class="input-group">
+                         <input type="color" id="secondaryColor" value="#FFFFFF">
+                    </div>
+                </div>
+            </div>
 
-            for (let i = 0; i < numSquares; i++) {
-                ctx.fillStyle = i % 2 === 0 ? 'black' : 'white';
-                
-                if (i === numSquares - 1) {
-                    // Scale up the core black square
-                    let scaledSize = Math.min(size / 4, Math.max(size / 16, squareSize * 2));
-                    let offset = (size - scaledSize) / 2;
-                    ctx.fillRect(offset, offset, scaledSize, scaledSize);
-                } else {
-                    ctx.fillRect(i * step, i * step, squareSize, squareSize);
-                }
-                
-                squareSize -= 2 * step;
+            <!-- Gradient Colors Group -->
+            <div id="gradientColorControls" style="display: none;">
+                <div class="color-picker-item">
+                    <span>Gradient Start:</span>
+                     <div class="input-group">
+                        <input type="color" id="gradientStart" value="#3498db">
+                    </div>
+                </div>
+                <div class="color-picker-item">
+                    <span>Gradient End:</span>
+                     <div class="input-group">
+                         <input type="color" id="gradientEnd" value="#e74c3c">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </aside>
+
+    <!-- === Canvas Area === -->
+    <main class="canvas-area" id="canvasArea">
+        <canvas id="artCanvas"></canvas>
+        <div class="canvas-actions">
+            <button id="generateBtn" class="btn btn-primary">
+                <span class="icon icon-generate"></span> Generate New Art
+            </button>
+            <button id="downloadBtn" class="btn btn-secondary">
+                <span class="icon icon-download"></span> Download 1080p
+            </button>
+        </div>
+    </main>
+</div>
+
+<script>
+    // === DOM Elements ===
+    const canvas = document.getElementById('artCanvas');
+    const ctx = canvas.getContext('2d');
+    const generateBtn = document.getElementById('generateBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const canvasArea = document.getElementById('canvasArea'); // For loading state
+
+    // Control Inputs
+    const canvasSizeInput = document.getElementById('canvasSize');
+    const numSquaresInput = document.getElementById('numSquares');
+    const numShapesInput = document.getElementById('numShapes');
+    const minShapeVolumeInput = document.getElementById('minShapeVolume');
+    const roundedModeCheckbox = document.getElementById('roundedMode');
+    const cornerScaleControl = document.getElementById('cornerScaleControl'); // Container div
+    const cornerScaleInput = document.getElementById('cornerScale');
+    const gradientModeCheckbox = document.getElementById('gradientMode');
+    const solidColorControls = document.getElementById('solidColorControls');
+    const gradientColorControls = document.getElementById('gradientColorControls');
+    const primaryColorInput = document.getElementById('primaryColor');
+    const secondaryColorInput = document.getElementById('secondaryColor');
+    const gradientStartInput = document.getElementById('gradientStart');
+    const gradientEndInput = document.getElementById('gradientEnd');
+    const outlineColorInput = document.getElementById('outlineColor');
+    const outlineOpacityInput = document.getElementById('outlineOpacity');
+
+    // === Generation Feedback State ===
+    let isGenerating = false;
+
+    // === Helper Functions (remain the same) ===
+    function drawRoundedRect(context, x, y, width, height, radius) {
+        const maxRadius = Math.min(width, height) / 2;
+        radius = Math.max(0, Math.min(radius, maxRadius));
+        context.beginPath();
+        if (radius === 0) {
+            context.rect(x, y, width, height);
+        } else {
+            context.moveTo(x + radius, y);
+            context.lineTo(x + width - radius, y); context.quadraticCurveTo(x + width, y, x + width, y + radius);
+            context.lineTo(x + width, y + height - radius); context.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+            context.lineTo(x + radius, y + height); context.quadraticCurveTo(x, y + height, x, y + height - radius);
+            context.lineTo(x, y + radius); context.quadraticCurveTo(x, y, x + radius, y);
+        }
+        context.closePath();
+        context.fill();
+    }
+    function hexToRgb(hex) {
+        const r = parseInt(hex.substring(1, 3), 16); const g = parseInt(hex.substring(3, 5), 16); const b = parseInt(hex.substring(5, 7), 16);
+        return [r, g, b];
+    }
+    function createGradient(context, size, startColor, endColor) {
+        const gradient = context.createLinearGradient(0, 0, size, size);
+        gradient.addColorStop(0, startColor); gradient.addColorStop(1, endColor);
+        return gradient;
+    }
+
+    // === Robust Shape Generation (remain the same) ===
+    function generateRandomShape(size, existingShapes, minVolume) {
+        const halfSize = size / 2; const minArea = (minVolume / 100) * size * size;
+        const buffer = size * 0.05; const maxAttempts = 100;
+        for (let attempts = 0; attempts < maxAttempts; attempts++) {
+            const shapeType = Math.random() < 0.5 ? 'triangle' : 'quadrilateral'; const numPoints = shapeType === 'triangle' ? 3 : 4;
+            const quadrant = Math.floor(Math.random() * 4);
+            let points = Array.from({ length: numPoints }, () => {
+                let x, y; const randX = Math.random() * (halfSize - buffer); const randY = Math.random() * (halfSize - buffer);
+                switch (quadrant) { case 0: x = randX; y = -randY; break; case 1: x = -randX; y = -randY; break; case 2: x = -randX; y = randY; break; case 3: x = randX; y = randY; break; }
+                return { x, y };
+            });
+            if (shapeType === 'triangle') { const areaCheck = 0.5 * Math.abs((points[1].x - points[0].x) * (points[2].y - points[0].y) - (points[2].x - points[0].x) * (points[1].y - points[0].y)); if (areaCheck < 1) continue; }
+            if (shapeType === 'quadrilateral') { const center = points.reduce((acc, p) => ({ x: acc.x + p.x / numPoints, y: acc.y + p.y / numPoints }), { x: 0, y: 0 }); points.sort((a, b) => Math.atan2(a.y - center.y, a.x - center.x) - Math.atan2(b.y - center.y, b.x - center.x)); }
+            let area = 0; for (let i = 0; i < points.length; i++) { const j = (i + 1) % points.length; area += points[i].x * points[j].y - points[j].x * points[i].y; } area = Math.abs(area) / 2;
+            const minDistance = size * 0.03;
+            if (area < minArea) continue;
+            if (existingShapes.some(existingShape => shapesOverlap(points, existingShape) || shapesTooClose(points, existingShape, minDistance))) { continue; }
+            return points;
+        }
+        console.warn("Couldn't generate a suitable random shape after max attempts. Using fallback.");
+        const fallbackSize = size / 15; return [ { x: 0, y: -fallbackSize }, { x: -fallbackSize, y: fallbackSize }, { x: fallbackSize, y: fallbackSize }];
+    }
+    function shapesTooClose(shape1, shape2, minDistance) { for (const p1 of shape1) { for (const p2 of shape2) { const dx = p1.x - p2.x; const dy = p1.y - p2.y; if (Math.sqrt(dx * dx + dy * dy) < minDistance) { return true; } } } return false; }
+    function shapesOverlap(shape1, shape2) { for (const point of shape1) { if (isPointInPolygon(point, shape2)) return true; } for (const point of shape2) { if (isPointInPolygon(point, shape1)) return true; } for (let i = 0; i < shape1.length; i++) { const p1a = shape1[i]; const p1b = shape1[(i + 1) % shape1.length]; for (let j = 0; j < shape2.length; j++) { const p2a = shape2[j]; const p2b = shape2[(j + 1) % shape2.length]; if (linesIntersect(p1a, p1b, p2a, p2b)) { return true; } } } return false; }
+    function isPointInPolygon(point, polygon) { let inside = false; for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) { const xi = polygon[i].x, yi = polygon[i].y; const xj = polygon[j].x, yj = polygon[j].y; const intersect = ((yi > point.y) !== (yj > point.y)) && (point.x < (xj - xi) * (point.y - yi) / (yj - yi) + xi); if (intersect) inside = !inside; } return inside; }
+    function linesIntersect(a, b, c, d) { function crossProduct(p1, p2) { return p1.x * p2.y - p1.y * p2.x; } function subtractPoints(p1, p2) { return { x: p1.x - p2.x, y: p1.y - p2.y }; } const p = a; const r = subtractPoints(b, a); const q = c; const s = subtractPoints(d, c); const rxs = crossProduct(r, s); const qpxr = crossProduct(subtractPoints(q, p), r); if (Math.abs(rxs) < 1e-8 && Math.abs(qpxr) < 1e-8) { const t0 = (q.x - p.x) / r.x; const t1 = t0 + s.x / r.x; if (!isFinite(t0) || !isFinite(t1)) { if (Math.abs(r.x) < 1e-8 && Math.abs(s.x) < 1e-8 && Math.abs(a.x - c.x) < 1e-8) { const ty0 = (q.y - p.y) / r.y; const ty1 = ty0 + s.y / r.y; return (Math.max(0, Math.min(ty0, ty1)) <= Math.min(1, Math.max(ty0, ty1))); } return false; } return (Math.max(0, Math.min(t0, t1)) <= Math.min(1, Math.max(t0, t1))); } if (Math.abs(rxs) < 1e-8) { return false; } const t = crossProduct(subtractPoints(q, p), s) / rxs; const u = crossProduct(subtractPoints(q, p), r) / rxs; return t >= 0 && t <= 1 && u >= 0 && u <= 1; }
+
+    // === Parameterized Drawing Functions (remain the same) ===
+    function createLayeredSquaresOnCtx(context, size, numSquares, useGradient, pColor, sColor, gStart, gEnd, useRounded, cornerScale) { context.fillStyle = 'white'; context.fillRect(0, 0, size, size); const step = size / (2 * numSquares); let primaryFill, secondaryFill; if (useGradient) { primaryFill = createGradient(context, size, gStart, gEnd); secondaryFill = 'white'; } else { primaryFill = pColor; secondaryFill = sColor; } let currentSize = size; for (let i = 0; i < numSquares; i++) { context.fillStyle = i % 2 === 0 ? primaryFill : secondaryFill; const offset = i * step; if (i === numSquares - 1) { let scaledSize = Math.max(step * 2, currentSize * 1.2); scaledSize = Math.min(scaledSize, size * 0.3); let coreOffset = (size - scaledSize) / 2; if (useRounded) { let radius = (scaledSize / 5) * cornerScale; drawRoundedRect(context, coreOffset, coreOffset, scaledSize, scaledSize, radius); } else { context.fillRect(coreOffset, coreOffset, scaledSize, scaledSize); } } else { if (useRounded) { let radius = (currentSize / 5) * cornerScale; drawRoundedRect(context, offset, offset, currentSize, currentSize, radius); } else { context.fillRect(offset, offset, currentSize, currentSize); } } currentSize -= 2 * step; } }
+    function addInvertedShapesOnCtx(context, size, numShapes, minVolume, outlineCol, outlineOp) { if (numShapes <= 0) return; const shapes = []; const tempCanvas = document.createElement('canvas'); tempCanvas.width = size; tempCanvas.height = size; const tempCtx = tempCanvas.getContext('2d'); const halfSize = size / 2; const [r, g, b] = hexToRgb(outlineCol); const outlineRgba = `rgba(${r}, ${g}, ${b}, ${outlineOp / 100})`; const outlineWidth = Math.max(1, size / 250); for (let i = 0; i < numShapes; i++) { const shapePoints = generateRandomShape(size, shapes, minVolume); if (!shapePoints) continue; shapes.push(shapePoints); tempCtx.clearRect(0, 0, size, size); tempCtx.beginPath(); tempCtx.moveTo(shapePoints[0].x + halfSize, shapePoints[0].y + halfSize); for (let j = 1; j < shapePoints.length; j++) { tempCtx.lineTo(shapePoints[j].x + halfSize, shapePoints[j].y + halfSize); } tempCtx.closePath(); tempCtx.fillStyle = 'white'; tempCtx.fill(); const imageData = context.getImageData(0, 0, size, size); const maskData = tempCtx.getImageData(0, 0, size, size); for (let p = 0; p < imageData.data.length; p += 4) { if (maskData.data[p + 3] > 0) { imageData.data[p] = 255 - imageData.data[p]; imageData.data[p + 1] = 255 - imageData.data[p + 1]; imageData.data[p + 2] = 255 - imageData.data[p + 2]; } } context.putImageData(imageData, 0, 0); if (outlineOp > 0) { context.strokeStyle = outlineRgba; context.lineWidth = outlineWidth; context.beginPath(); context.moveTo(shapePoints[0].x + halfSize, shapePoints[0].y + halfSize); for (let j = 1; j < shapePoints.length; j++) { context.lineTo(shapePoints[j].x + halfSize, shapePoints[j].y + halfSize); } context.closePath(); context.stroke(); } } }
+
+    // === Main Orchestration ===
+    function getSettings() {
+        const parsedNumShapes = parseInt(numShapesInput.value);
+        const numShapesValue = Number.isInteger(parsedNumShapes) && parsedNumShapes >= 0 ? parsedNumShapes : 0;
+        return {
+            size: parseInt(canvasSizeInput.value) || 500,
+            numSquares: parseInt(numSquaresInput.value) || 15,
+            numShapes: numShapesValue,
+            minShapeVolume: parseInt(minShapeVolumeInput.value) || 5,
+            useGradient: gradientModeCheckbox.checked,
+            primaryColor: primaryColorInput.value,
+            secondaryColor: secondaryColorInput.value,
+            gradientStart: gradientStartInput.value,
+            gradientEnd: gradientEndInput.value,
+            useRounded: roundedModeCheckbox.checked,
+            cornerScale: parseFloat(cornerScaleInput.value) || 1.0,
+            outlineColor: outlineColorInput.value,
+            outlineOpacity: parseInt(outlineOpacityInput.value) || 50
+        };
+    }
+
+    function createGeometricArtOnContext(context, size, settings) {
+        createLayeredSquaresOnCtx(context, size, settings.numSquares, settings.useGradient, settings.primaryColor, settings.secondaryColor, settings.gradientStart, settings.gradientEnd, settings.useRounded, settings.cornerScale);
+        if (settings.numShapes > 0) {
+            addInvertedShapesOnCtx(context, size, settings.numShapes, settings.minShapeVolume, settings.outlineColor, settings.outlineOpacity);
+        }
+    }
+
+    // Modified to handle loading state
+    function createGeometricArt() {
+        if (isGenerating) return; // Prevent concurrent generation
+        isGenerating = true;
+        canvasArea.classList.add('canvas-loading'); // Add loading class
+
+        // Use setTimeout to allow the UI to update (show loading state) before heavy computation
+        setTimeout(() => {
+            try {
+                const settings = getSettings();
+                // Adjust canvas size based on container if needed, or keep fixed
+                // For simplicity, using the input size directly.
+                 const displaySize = settings.size;
+                 canvas.width = displaySize;
+                 canvas.height = displaySize;
+
+                // Set canvas style size to fit container (optional but good practice)
+                 // const availableWidth = canvasArea.clientWidth - 60; // Account for padding
+                 // const availableHeight = canvasArea.clientHeight - 100; // Account for padding and buttons
+                 // const styleSize = Math.min(displaySize, availableWidth, availableHeight);
+                 // canvas.style.width = `${styleSize}px`;
+                 // canvas.style.height = `${styleSize}px`;
+
+                createGeometricArtOnContext(ctx, displaySize, settings);
+            } catch (error) {
+                console.error("Error during art generation:", error);
+                alert("An error occurred during generation. Check console.");
+            } finally {
+                // Remove loading state after a short delay to ensure fade effect completes
+                setTimeout(() => {
+                     canvasArea.classList.remove('canvas-loading');
+                     isGenerating = false;
+                }, 100); // Match transition duration roughly
             }
-        }
+        }, 10); // Small delay
+    }
 
-        function generateRandomShape(size, existingShapes, minVolume) {
-            const halfSize = size / 2;
-            const minArea = (minVolume / 100) * size * size;
-            
-            while (true) {
-                const shapeType = Math.random() < 0.5 ? 'triangle' : 'quadrilateral';
-                const numPoints = shapeType === 'triangle' ? 3 : 4;
-                
-                // Generate points in a single quadrant
-                const quadrant = Math.floor(Math.random() * 4);
-                let points = Array.from({ length: numPoints }, () => {
-                    let x, y;
-                    switch (quadrant) {
-                        case 0: // Top-right
-                            x = Math.random() * halfSize;
-                            y = -Math.random() * halfSize;
-                            break;
-                        case 1: // Top-left
-                            x = -Math.random() * halfSize;
-                            y = -Math.random() * halfSize;
-                            break;
-                        case 2: // Bottom-left
-                            x = -Math.random() * halfSize;
-                            y = Math.random() * halfSize;
-                            break;
-                        case 3: // Bottom-right
-                            x = Math.random() * halfSize;
-                            y = Math.random() * halfSize;
-                            break;
-                    }
-                    return { x, y };
-                });
+    // === Event Listeners ===
+    generateBtn.addEventListener('click', createGeometricArt);
 
-                // Sort points to ensure non-crossing edges for quadrilaterals
-                if (shapeType === 'quadrilateral') {
-                    const center = points.reduce((acc, p) => ({ x: acc.x + p.x, y: acc.y + p.y }), { x: 0, y: 0 });
-                    center.x /= 4;
-                    center.y /= 4;
-                    points.sort((a, b) => Math.atan2(a.y - center.y, a.x - center.x) - Math.atan2(b.y - center.y, b.x - center.x));
-                }
-
-                // Ensure the shape doesn't cross more than two quadrants
-                const minX = Math.min(...points.map(p => p.x));
-                const maxX = Math.max(...points.map(p => p.x));
-                const minY = Math.min(...points.map(p => p.y));
-                const maxY = Math.max(...points.map(p => p.y));
-                
-                // Calculate shape area
-                let area = 0;
-                for (let i = 0; i < points.length; i++) {
-                    const j = (i + 1) % points.length;
-                    area += points[i].x * points[j].y - points[j].x * points[i].y;
-                }
-                area = Math.abs(area) / 2;
-
-                if ((minX < 0 && maxX > 0 && minY < 0 && maxY > 0) ||
-                    existingShapes.some(shape => shapesOverlap(points, shape)) ||
-                    area < minArea) {
-                    continue;
-                }
-
-                return points;
-            }
-        }
-
-        function shapesOverlap(shape1, shape2) {
-            const getBoundingBox = (shape) => {
-                const xs = shape.map(p => p.x);
-                const ys = shape.map(p => p.y);
-                return {
-                    minX: Math.min(...xs),
-                    maxX: Math.max(...xs),
-                    minY: Math.min(...ys),
-                    maxY: Math.max(...ys)
-                };
-            };
-
-            const box1 = getBoundingBox(shape1);
-            const box2 = getBoundingBox(shape2);
-
-            return !(box1.maxX < box2.minX || box2.maxX < box1.minX ||
-                     box1.maxY < box2.minY || box2.maxY < box1.minY);
-        }
-
-        function addInvertedShapes(size, numShapes, minVolume) {
-            const shapes = [];
-            const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = size;
-            tempCanvas.height = size;
-            const tempCtx = tempCanvas.getContext('2d');
-            const halfSize = size / 2;
-
-            for (let i = 0; i < numShapes; i++) {
-                const shape = generateRandomShape(size, shapes, minVolume);
-                shapes.push(shape);
-
-                // Create a path for the shape
-                tempCtx.beginPath();
-                tempCtx.moveTo(shape[0].x + halfSize, shape[0].y + halfSize);
-                for (let j = 1; j < shape.length; j++) {
-                    tempCtx.lineTo(shape[j].x + halfSize, shape[j].y + halfSize);
-                }
-                tempCtx.closePath();
-
-                // Fill the shape with white to create a mask
-                tempCtx.fillStyle = 'white';
-                tempCtx.fill();
-
-                // Get the image data for the shape area
-                const imageData = ctx.getImageData(0, 0, size, size);
-                const maskData = tempCtx.getImageData(0, 0, size, size);
-
-                // Invert colors only within the shape
-                for (let i = 0; i < imageData.data.length; i += 4) {
-                    if (maskData.data[i + 3] > 0) {  // If the pixel is within the shape
-                        imageData.data[i] = 255 - imageData.data[i];
-                        imageData.data[i + 1] = 255 - imageData.data[i + 1];
-                        imageData.data[i + 2] = 255 - imageData.data[i + 2];
-                    }
-                }
-
-                // Put the inverted image data back on the main canvas
-                ctx.putImageData(imageData, 0, 0);
-
-                // Clear the temporary canvas for the next shape
-                tempCtx.clearRect(0, 0, size, size);
-
-                // Draw the shape outline
-                ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.moveTo(shape[0].x + halfSize, shape[0].y + halfSize);
-                for (let j = 1; j < shape.length; j++) {
-                    ctx.lineTo(shape[j].x + halfSize, shape[j].y + halfSize);
-                }
-                ctx.closePath();
-                ctx.stroke();
-            }
-        }
-
-        function createGeometricArt() {
-            const size = parseInt(canvasSizeInput.value);
-            const numSquares = parseInt(numSquaresInput.value);
-            const numShapes = parseInt(numShapesInput.value);
-            const minShapeVolume = parseInt(minShapeVolumeInput.value);
-
-            canvas.width = size;
-            canvas.height = size;
-
-            createLayeredSquares(size, numSquares);
-            addInvertedShapes(size, numShapes, minShapeVolume);
-        }
-
-        generateBtn.addEventListener('click', createGeometricArt);
-
-        // Initial generation
+    // Update UI state based on checkboxes
+    gradientModeCheckbox.addEventListener('change', function() {
+        solidColorControls.style.display = this.checked ? 'none' : 'block';
+        gradientColorControls.style.display = this.checked ? 'block' : 'none';
         createGeometricArt();
-    </script>
+    });
+
+    roundedModeCheckbox.addEventListener('change', function() {
+        cornerScaleControl.style.display = this.checked ? 'flex' : 'none'; // Use flex for alignment
+        createGeometricArt();
+    });
+
+    // Regenerate art on control changes
+    [canvasSizeInput, numSquaresInput, numShapesInput, minShapeVolumeInput,
+     primaryColorInput, secondaryColorInput, gradientStartInput,
+     gradientEndInput, outlineColorInput, outlineOpacityInput, cornerScaleInput]
+    .forEach(input => {
+        const eventType = (input.type === 'range' || input.type === 'color') ? 'input' : 'change';
+        input.addEventListener(eventType, createGeometricArt);
+    });
+
+    // --- Download Functionality ---
+    downloadBtn.addEventListener('click', function() {
+        if (isGenerating) return; // Prevent download during generation
+        console.log('Download initiated...');
+         downloadBtn.disabled = true; // Disable button during processing
+         downloadBtn.textContent = 'Preparing...'; // Provide feedback
+
+         // Use setTimeout to allow UI update
+         setTimeout(() => {
+            try {
+                const downloadSize = 1080;
+                const settings = getSettings();
+                const downloadCanvas = document.createElement('canvas');
+                downloadCanvas.width = downloadSize;
+                downloadCanvas.height = downloadSize;
+                const downloadCtx = downloadCanvas.getContext('2d');
+
+                console.log('Generating art for download...');
+                createGeometricArtOnContext(downloadCtx, downloadSize, settings);
+                console.log('Art generated.');
+
+                const imageData = downloadCanvas.toDataURL('image/png');
+                const link = document.createElement('a');
+                link.href = imageData;
+                link.download = `geometric_art_${Date.now()}.png`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                console.log('Download link processed.');
+
+            } catch (error) {
+                console.error('Error during download:', error);
+                alert('An error occurred while preparing the download. Check console.');
+            } finally {
+                 downloadBtn.disabled = false; // Re-enable button
+                 // Restore original button text with icon
+                 downloadBtn.innerHTML = '<span class="icon icon-download"></span> Download 1080p';
+                 console.log('Download process finished.');
+             }
+         }, 10); // Small delay
+    });
+
+
+    // --- Initial Setup ---
+    function initializeUI() {
+        solidColorControls.style.display = gradientModeCheckbox.checked ? 'none' : 'block';
+        gradientColorControls.style.display = gradientModeCheckbox.checked ? 'block' : 'none';
+        cornerScaleControl.style.display = roundedModeCheckbox.checked ? 'flex' : 'none';
+        createGeometricArt(); // Generate initial art
+    }
+
+    initializeUI();
+
+</script>
 </body>
 </html>
