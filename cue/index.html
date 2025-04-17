@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>3D Cue Card Cube - Smoother Pop</title>
+  <style>
+    :root {
+      /* Card dimensions from cueCard.html */
+      --card-width: 300px;
+      --card-height: 450px;
+      /* Depth calculated from width */
+      --card-depth: calc(var(--card-width) / 2);
+      /* Glassmorphism from cueCard.html - Slightly reduced blur for better performance */
+      --glass-bg-color: rgba(255, 255, 255, 0.25);
+      --glass-blur: 10px; /* Reduced blur from 12px to 10px */
+      --glass-border-color: rgba(255, 255, 255, 0.35);
+      /* Text colors from cueCard.html */
+      --text-color-primary: #333;
+      --text-color-secondary: #1a237e; /* For h2 */
+      --text-color-tertiary: #283593; /* For h3 */
+      /* Background gradient from cueCard.html */
+      --body-bg: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    html, body {
+        height: 100%;
+        overflow: hidden;
+        overscroll-behavior: none;
+    }
+
+    body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        background: var(--body-bg);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    .scene {
+      width: var(--card-width);
+      height: var(--card-height);
+      perspective: 1500px;
+      cursor: grab;
+    }
+
+    .scene.grabbing {
+      cursor: grabbing;
+    }
+
+    .cube {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transform: rotateY(0deg) scale(1);
+      transition: transform 0.7s cubic-bezier(0.68, -0.6, 0.32, 1.6); /* Kept pop animation */
+      will-change: transform; /* Added will-change for potential optimization */
+    }
+
+    .face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      transform-style: preserve-3d;
+      pointer-events: none;
+    }
+
+    .face1 { transform: rotateY(  0deg) translateZ(var(--card-depth)); }
+    .face2 { transform: rotateY( 90deg) translateZ(var(--card-depth)); }
+    .face3 { transform: rotateY(180deg) translateZ(var(--card-depth)); }
+    .face4 { transform: rotateY(-90deg) translateZ(var(--card-depth)); }
+
+    .card-content {
+        width: 100%;
+        height: 100%;
+        padding: 25px;
+        box-sizing: border-box;
+        background: var(--glass-bg-color);
+        backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+        -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+        border-radius: 25px;
+        border: 1px solid var(--glass-border-color);
+        box-shadow: 0 8px 32px 0 rgba(100, 108, 167, 0.2);
+        overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+        touch-action: pan-y;
+        pointer-events: auto;
+        word-wrap: break-word;
+        color: var(--text-color-primary);
+        text-shadow: 0 1px 1px rgba(255, 255, 255, 0.5);
+    }
+
+    .card-content::-webkit-scrollbar {
+        width: 8px;
+    }
+    .card-content::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+    }
+    .card-content::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .card-content::-webkit-scrollbar-thumb:hover {
+        background: rgba(0, 0, 0, 0.4);
+    }
+
+    .card-content h2 {
+        margin-bottom: 15px;
+        font-size: 1.4em;
+        color: var(--text-color-secondary);
+        border-bottom: 1px solid rgba(26, 35, 126, 0.2);
+        padding-bottom: 5px;
+    }
+    .card-content h3 {
+        margin-top: 15px;
+        margin-bottom: 5px;
+        font-size: 1.1em;
+        color: var(--text-color-tertiary);
+    }
+    .card-content p,
+    .card-content ul {
+        margin-bottom: 12px;
+        line-height: 1.6;
+        font-size: 0.95em;
+    }
+    .card-content ul {
+        padding-left: 20px;
+    }
+    .card-content li {
+        margin-bottom: 5px;
+    }
+
+    .scene.grabbing, .scene.grabbing * {
+        user-select: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="scene" id="scene">
+    <div class="cube" id="cube">
+      <div class="face face1">
+          <div class="card-content">
+              <h2>Cue Card 1: Opening (開頭)</h2>
+              <h3>Topic 主題</h3>
+              <p>Learn from Movie: Mandela (從電影《曼德拉》學到的事)</p>
+              <h3>Who 人物</h3>
+              <p>Nelson Mandela (納爾遜·曼德拉)</p>
+              <h3>Why Admire 為何欣賞</h3>
+              <p>Strong spirit, Never gave up (精神強大，永不放棄)</p>
+              <p>More text here to test scrolling on Face 1. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+          </div>
+      </div>
+      <div class="face face2">
+           <div class="card-content">
+              <h2>Cue Card 2: Main Point 1 (要點一：對抗不公)</h2>
+              <h3>What 內容</h3>
+              <p>Fought unfair rules (Apartheid) (對抗不公平的規定 - 種族隔離)</p>
+              <h3>Action 行動</h3>
+              <p>Risked his life for fairness (為公平冒生命危險)</p>
+              <h3>Result 結果</h3>
+              <p>Put in jail for many years (被關進監獄很多年)</p>
+              <h3>Feeling 感受</h3>
+              <p>So brave! (非常勇敢！)</p>
+              <p>This card also needs more text to demonstrate scrolling capabilities effectively on Face 2. The fight against apartheid was long and arduous, demanding immense courage and sacrifice from Mandela and many others. His imprisonment on Robben Island became a symbol of the struggle.</p>
+           </div>
+      </div>
+      <div class="face face3">
+           <div class="card-content">
+              <h2>Cue Card 3: Main Point 2 (要點二：領導與和解)</h2>
+              <h3>What 內容</h3>
+              <p>Leader even in jail; Got out later (即使在獄中也是領袖；後來獲釋)</p>
+              <h3>Action 行動</h3>
+              <p>Chose peace, not anger (選擇和平，而非憤怒)</p>
+              <h3>Result 結果</h3>
+              <p>Helped bring people together in South Africa (幫助南非人民團結起來)</p>
+              <h3>Feeling 感受</h3>
+              <p>Amazing forgiveness! (了不起的寬恕！)</p>
+              <p>Adding more text for Face 3 to test scrolling. Leadership is not just about position, but influence. Mandela led from prison, showing true leadership transcends physical freedom. More and more text just to be sure.</p>
+           </div>
+      </div>
+      <div class="face face4">
+          <div class="card-content">
+              <h2>Cue Card 4: Problem & Thoughts (問題與想法)</h2>
+              <h3>Problem 問題</h3>
+              <p>Apartheid = Cruel, Unfair (種族隔離 = 殘酷、不公平)</p>
+              <h3>Hardship 困難</h3>
+              <p>Long jail time, Sadness (長期監禁、悲傷)</p>
+              <h3>My Lesson 我的啟示</h3>
+              <ul>
+                <li>Always have hope, Keep trying (永遠保有希望，不斷嘗試)</li>
+                <li>Forgiving makes us strong (寬恕使我們強大)</li>
+                <li>Standing up for what's right matters, even when it's hard.</li>
+                <li>Leadership can emerge from the most difficult circumstances.</li>
+              </ul>
+              <h3>Big Idea 核心啟示</h3>
+              <p>One person can help change the world (一個人可以幫助改變世界)</p>
+              <p>Final thoughts to add scrolling possibility to Face 4. Reflecting on Mandela's journey teaches us about resilience, the power of reconciliation, and the enduring impact of fighting for justice. His legacy continues to inspire movements for equality globally. More text to ensure scrollability on Face 4 is tested. Even more text for Face 4 scrolling test. Just a bit more text for Face 4 to really be sure scrolling works. Okay, that should be enough text for Face 4 scrolling test.</p>
+          </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const cube = document.getElementById('cube');
+    const scene = document.getElementById('scene');
+    let currentAngle = 0;
+    let isDragging = false;
+    let isPotentialDrag = false;
+    let startX = 0;
+    let startY = 0;
+    let currentX = 0;
+
+    const dragSensitivity = 0.35;
+    const snapDuration = 700;
+    const snapTimingFunction = 'cubic-bezier(0.68, -0.6, 0.32, 1.6)'; // Kept "pop"
+    const minScale = 0.92;
+    const touchThreshold = 10;
+
+    function applyTransform(angle, scale) {
+      cube.style.transform = `rotateY(${angle}deg) scale(${scale})`;
+    }
+
+    function calculateScale(angle) {
+        const angleOffset = Math.abs(angle % 90);
+        const deviation = Math.min(angleOffset, 90 - angleOffset);
+        const normalizedDeviation = deviation / 45;
+        const scaleFactor = Math.sin(normalizedDeviation * Math.PI / 2);
+        return Math.max(minScale, 1 - (1 - minScale) * scaleFactor);
+    }
+
+    function startCubeDrag() {
+      if (isDragging) return;
+      isDragging = true;
+      cube.style.transition = 'none';
+      scene.classList.add('grabbing');
+    }
+
+    function processDrag(clientX) {
+      if (!isDragging) return;
+      const newDeltaX = (clientX - currentX) * dragSensitivity;
+      currentAngle += newDeltaX;
+      currentX = clientX;
+      applyTransform(currentAngle, calculateScale(currentAngle));
+    }
+
+    function endCubeDrag() {
+      if (!isDragging && !isPotentialDrag) return;
+
+      isPotentialDrag = false;
+
+      if (isDragging) {
+          isDragging = false;
+          scene.classList.remove('grabbing');
+
+          const targetAngle = Math.round(currentAngle / 90) * 90;
+          cube.style.transition = `transform ${snapDuration}ms ${snapTimingFunction}`;
+          applyTransform(targetAngle, 1);
+          currentAngle = targetAngle;
+      } else {
+           scene.classList.remove('grabbing');
+      }
+    }
+
+    scene.addEventListener('mousedown', (e) => {
+        if (e.target.closest('.card-content')) {
+             const rect = e.target.closest('.card-content').getBoundingClientRect();
+             const scrollbarWidth = 8;
+             if (e.clientX > rect.right - scrollbarWidth - 5) {
+                 return;
+             }
+        }
+
+        startX = e.clientX;
+        currentX = startX;
+        startCubeDrag();
+        e.preventDefault();
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (isDragging) {
+        processDrag(e.clientX);
+      }
+    });
+
+    window.addEventListener('mouseup', endCubeDrag);
+    document.addEventListener('mouseleave', endCubeDrag);
+
+    scene.addEventListener('touchstart', (e) => {
+        const scrollableElement = e.target.closest('.card-content');
+        const canScroll = scrollableElement && scrollableElement.scrollHeight > scrollableElement.clientHeight;
+
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        currentX = startX;
+
+        if (canScroll) {
+            isPotentialDrag = true;
+        } else {
+            isPotentialDrag = false;
+            startCubeDrag();
+            e.preventDefault();
+        }
+    }, { passive: false });
+
+    scene.addEventListener('touchmove', (e) => {
+        if (!isDragging && !isPotentialDrag) return;
+
+        const currentMoveX = e.touches[0].clientX;
+        const currentMoveY = e.touches[0].clientY;
+        const deltaX = Math.abs(currentMoveX - startX);
+        const deltaY = Math.abs(currentMoveY - startY);
+
+        if (isPotentialDrag) {
+            if (deltaX > touchThreshold && deltaX > deltaY) {
+                isPotentialDrag = false;
+                startCubeDrag();
+                processDrag(currentMoveX);
+                e.preventDefault();
+            } else if (deltaY > touchThreshold && deltaY >= deltaX) {
+                isPotentialDrag = false;
+            }
+        } else if (isDragging) {
+            processDrag(currentMoveX);
+            e.preventDefault();
+        }
+    }, { passive: false });
+
+    scene.addEventListener('touchend', endCubeDrag);
+    scene.addEventListener('touchcancel', endCubeDrag);
+
+    scene.addEventListener('contextmenu', (e) => {
+        if (isDragging || isPotentialDrag) {
+            e.preventDefault();
+        }
+    });
+
+    applyTransform(currentAngle, 1);
+
+  </script>
+</body>
+</html>
