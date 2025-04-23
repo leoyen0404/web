@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Car Sound Display - Capsule</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        /* Basic Reset */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Simulated Background from Image Colors with Blur */
+        body::before {
+            content: '';
+            position: absolute;
+            top: -20px; left: -20px; right: -20px; bottom: -20px;
+            z-index: -1;
+            /* --- Adjust these colors to match your car.jpg --- */
+            background: linear-gradient(135deg, #4a6a8a, #7a9cb0, #adb9c7, #d7dde5);
+            /* --- End Color Adjustment --- */
+            background-size: 200% 200%;
+            filter: blur(35px);
+            animation: gradientBG 15s ease infinite;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Car Image Styling */
+        #carImage {
+            display: block;
+            max-width: 60%;
+            height: auto;
+            border-radius: 50px; /* Continuous curvature approximation */
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            z-index: 1;
+        }
+
+        #carImage:hover {
+            transform: scale(1.03);
+        }
+
+        /* Glass Morphism Vertical Capsule Sidebar */
+        .sidebar {
+            position: fixed;
+            right: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 70px; /* Fixed width for capsule shape */
+            padding: 20px 0; /* Vertical padding, no horizontal */
+            background: rgba(255, 255, 255, 0.2); /* White Glassmorphism */
+            backdrop-filter: blur(15px) saturate(180%);
+            -webkit-backdrop-filter: blur(15px) saturate(180%);
+            border-radius: 35px; /* Half of the width for capsule shape */
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Center buttons horizontally */
+            gap: 20px; /* Space between buttons */
+            z-index: 2;
+        }
+
+        /* Circular Icon Button Styling */
+        .sidebar button {
+            width: 45px;  /* Button width */
+            height: 45px; /* Button height */
+            border-radius: 50%; /* Make it circular */
+            border: none;
+            background-color: rgba(0, 0, 0, 0.3);
+            color: #fff; /* Icon color */
+            cursor: pointer;
+            display: flex; /* Use flexbox to center icon */
+            justify-content: center;
+            align-items: center;
+            font-size: 1.1em; /* Icon size */
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .sidebar button:hover {
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .sidebar button:active {
+            transform: scale(0.9); /* Slightly shrink on click */
+        }
+
+        /* Style for Loop button when active */
+        .sidebar button#loopButton.active {
+             background-color: rgba(60, 150, 60, 0.6); /* Greenish tint */
+             /* Optional: Add a border or scale effect */
+             /* border: 2px solid rgba(255, 255, 255, 0.7); */
+        }
+
+        /* Ensure icon size is controlled */
+        .sidebar button i {
+            line-height: 1; /* Prevent extra space */
+            /* Font size is controlled by button's font-size */
+        }
+
+
+        /* Hidden Audio Element */
+        #carSound {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <img id="carImage" src="car.jpg" alt="Display Car">
+
+    <audio id="carSound" src="car.mp3"></audio>
+
+    <div class="sidebar">
+        <button id="playPauseButton" aria-label="Play/Pause Audio">
+            <i class="fas fa-play"></i>
+        </button>
+        <button id="loopButton" aria-label="Toggle Loop">
+            <i class="fas fa-repeat"></i> </button>
+    </div>
+
+    <script>
+        // Get references to the elements
+        const carImage = document.getElementById('carImage');
+        const carSound = document.getElementById('carSound');
+        const playPauseButton = document.getElementById('playPauseButton');
+        const loopButton = document.getElementById('loopButton');
+        // Get icon elements within buttons
+        const playPauseIcon = playPauseButton.querySelector('i');
+        const loopIcon = loopButton.querySelector('i'); // Although loop icon doesn't change
+
+        // Function to toggle play/pause
+        function togglePlayPause() {
+            if (carSound.paused || carSound.ended) {
+                carSound.play()
+                    .then(() => {
+                        playPauseIcon.classList.remove('fa-play');
+                        playPauseIcon.classList.add('fa-pause');
+                    })
+                    .catch(error => console.error("Error playing sound:", error));
+            } else {
+                carSound.pause();
+                playPauseIcon.classList.remove('fa-pause');
+                playPauseIcon.classList.add('fa-play');
+            }
+        }
+
+        // Function to toggle loop
+        function toggleLoop() {
+            carSound.loop = !carSound.loop; // Toggle the loop property
+            if (carSound.loop) {
+                loopButton.classList.add('active');
+                 // Optionally change icon if needed, but .active class is usually enough
+            } else {
+                loopButton.classList.remove('active');
+            }
+            console.log("Looping set to:", carSound.loop); // For debugging
+        }
+
+        // Reset play button when audio finishes naturally
+        carSound.addEventListener('ended', () => {
+            playPauseIcon.classList.remove('fa-pause');
+            playPauseIcon.classList.add('fa-play');
+        });
+
+        // Add event listeners
+        carImage.addEventListener('click', togglePlayPause); // Image click now toggles play/pause
+        playPauseButton.addEventListener('click', togglePlayPause);
+        loopButton.addEventListener('click', toggleLoop);
+
+        // Optional: Handle potential loading errors for media
+        carImage.onerror = function() {
+            console.error("Failed to load image: car.jpg");
+            carImage.alt = "Error loading car image";
+        };
+        carSound.onerror = function() {
+            console.error("Failed to load audio: car.mp3");
+            playPauseButton.disabled = true;
+            loopButton.disabled = true;
+            playPauseIcon.classList.remove('fa-play', 'fa-pause');
+            playPauseIcon.classList.add('fa-exclamation-triangle'); // Show error icon
+            loopIcon.classList.remove('fa-repeat');
+            loopIcon.classList.add('fa-exclamation-triangle');
+        };
+
+    </script>
+
+</body>
+</html>
