@@ -6,11 +6,10 @@
     <title>Car Sound Display - Capsule</title>
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <!-- html2canvas for screenshot functionality (Though button removed, keep library in case needed later) -->
+    <!-- html2canvas (kept in case needed later) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha512-B/wUf6IXBgBgK2gG9V+Wv8d4H+t4s/z/D1E+eO+Fp3r4D9v+d5g5+j2a5a+J+5A+w==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <!-- Color Thief Library from CDN (Needed for background color extraction) -->
+    <!-- Color Thief Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.2/color-thief.umd.js"></script>
-
 
     <style>
         /* Basic Reset */
@@ -26,41 +25,24 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            position: relative; /* Needed for z-index */
-            overflow: hidden; /* Prevent scrollbars during body zoom */
-            transition: transform 0.4s ease; /* Smooth transition for body zoom */
-            transform-origin: center center; /* Ensure zoom centers */
-            /* Background and its animation/blur will be handled by #background-canvas */
-            background-color: #1a1a1a; /* Fallback body color */
-            color: #ecf0f1; /* Default text color (Dark Mode) */
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.4s ease;
+            transform-origin: center center;
+            background-color: #1a1a1a; /* Fallback */
+            color: #ecf0f1;
         }
-
-        /* Light Mode Styles - Primarily affect text and menu items, not the dynamic background itself */
-        /* body.light-mode { */ /* Light mode toggle removed */
-            /* color: #34495e; */
-            /* background-color: #f4f4f4; */
-        /* } */
 
         /* --- Dynamic Background Canvas --- */
         #background-canvas {
-            position: fixed; /* Cover the entire viewport */
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 0; /* Place behind content (container has z-index: 1) */
-            /* Initial gradient/filter will be set by JavaScript from image colors */
-            /* The animation speed and filter blur/brightness will be dynamically controlled by JS based on audio */
-
-            /* Default animation and filter for idle state (quietest) - Will be overridden by JS when playing */
-            animation: gradientAnimation 90s ease infinite; /* Very slow when quiet */
-            filter: blur(40px) brightness(0.5); /* Very blurred and dark when quiet */
-
-            transition: filter 0.8s ease, animation-duration 0.8s ease; /* Smooth transition for filter and speed changes */
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0;
+            animation: gradientAnimation 90s ease infinite;
+            filter: blur(40px) brightness(0.5);
+            transition: filter 0.8s ease, animation-duration 0.8s ease;
         }
 
-        /* Keyframes for the background gradient movement */
-        /* Omni-directional path */
         @keyframes gradientAnimation {
             0% { background-position: 0% 0%; }
             25% { background-position: 100% 0%; }
@@ -69,15 +51,12 @@
             100% { background-position: 0% 0%; }
         }
 
-         /* Remove the body::before blur layer */
-         body::before {
-             display: none;
-         }
+        body::before { display: none; }
 
 
-        /* Main Content Container (holds image and menu) */
+        /* Main Content Container (holds image container and menu is fixed) */
         .container {
-            position: relative; /* Needed for z-index */
+            position: relative;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -87,387 +66,119 @@
             z-index: 1; /* Ensure content is above background */
         }
 
-        /* Car Image Styling */
-        #carImage {
+        /* --- Image Styling --- */
+        /* New container for clipping and styling */
+        .image-clipper {
             display: block;
-            width: 100%; /* Start at 100% as per index.html */
-            max-width: 80vw; /* Add max width for larger screens based on bg.html */
-            max-height: 70vh; /* Add max height based on bg.html */
-            height: auto;
-            border-radius: 50px; /* Continuous curvature approximation */
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); /* Adjusted shadow for darker bg */
-            cursor: pointer; /* Keep pointer cursor for clicking */
-            transition: transform 0.3s ease, width 0.4s ease, box-shadow 0.3s ease; /* Added width and shadow transition */
-            user-select: none; /* Prevent text selection on image */
-            -webkit-user-drag: none; /* Prevent dragging on webkit */
-            object-fit: contain; /* Ensure image scales correctly within bounds */
+            width: 100%;
+            max-width: 80vw;
+            max-height: 70vh;
+            border-radius: 50px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.4s cubic-bezier(0.4,0,0.2,1), box-shadow 0.3s ease;
+            position: relative;
+            margin: 0 auto;
+            /* Add transform-origin for scaling */
+            transform-origin: center center;
         }
 
-        #carImage:hover {
+        .image-clipper:hover {
             transform: scale(1.03);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.7); /* Stronger shadow on hover */
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.7);
+        }
+
+        /* Actual image element */
+        #carImage {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 0;
+            box-shadow: none;
+            user-select: none;
+            -webkit-user-drag: none;
+            pointer-events: none;
+            /* Remove transform and transition for zooming */
         }
 
 
         /* --- Capsule Menu Styles --- */
-
+        /* (Keep existing menu styles - abbreviated for brevity) */
         .menu-toggle {
-            position: fixed; /* Anchor to viewport */
-            right: 30px;    /* 30px from right edge */
-            top: 50%;       /* Vertically centered */
-            transform: translateY(-50%); /* Adjust for vertical centering */
-            z-index: 10; /* Above other content */
-
-            width: 60px;  /* Initial size */
-            height: 60px; /* Initial size */
-            border-radius: 30px; /* Initial capsule shape */
-
-            background: rgba(255, 255, 255, 0.2); /* Frosted glass background */
+            position: fixed; right: 30px; top: 50%;
+            transform: translateY(-50%); z-index: 10;
+            width: 60px; height: 60px; border-radius: 30px;
+            background: rgba(255, 255, 255, 0.2);
             backdrop-filter: blur(15px) saturate(180%);
             -webkit-backdrop-filter: blur(15px) saturate(180%);
             border: 1px solid rgba(255, 255, 255, 0.3);
             box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
-
             cursor: pointer;
-            /* Transitions for size, radius, background, and transform for mobile centering */
             transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1),
                         height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
                         border-radius 0.4s cubic-bezier(0.4, 0, 0.2, 1),
                         background 0.3s ease,
-                        transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); /* Add transform for centering */
-
-
-            display: flex; /* Use flexbox for arranging icon and items */
-            flex-direction: column; /* Default desktop vertical layout */
-            align-items: center; /* Center items horizontally */
-            overflow: hidden; /* Hide content outside bounds */
-            justify-content: flex-start; /* Align icon to the top */
+                        transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; flex-direction: column;
+            align-items: center; overflow: hidden; justify-content: flex-start;
         }
-
-        /* Default Desktop Active State (Vertical) */
-        .menu-toggle.active {
-            /* Height for 6 items: 6 * (40px item + 15px gap) = 330px items area + 30px icon + 15 top pad + 15 bottom pad = 390px */
-            height: 390px; /* Adjusted height */
-            width: 60px; /* Keep width fixed */
-             border-radius: 30px; /* Keep radius */
-             transform: translateY(-50%); /* Ensure it stays vertically centered */
-        }
-
-        .toggle-icon {
-            position: absolute; /* Position relative to menu-toggle */
-            /* Position icon within the initial 60x60 area */
-            top: 15px;
-            left: 15px;
-            width: 30px;
-            height: 30px;
-            transition: transform 0.3s ease, top 0.4s cubic-bezier(0.4, 0, 0.2, 1), left 0.4s cubic-bezier(0.4, 0, 0.2, 1); /* Add top and left to transition */
-            color: #fff; /* Font Awesome icon color */
-            font-size: 1.5em; /* Font Awesome icon size */
-            z-index: 12; /* Ensure icon is always above menu items */
-            display: flex; /* Center the FA icon inside */
-            justify-content: center;
-            align-items: center;
-        }
-
-         /* Desktop: Keep icon position fixed at top-left when active */
-        .menu-toggle.active .toggle-icon {
-            transform: rotate(360deg); /* Spin icon */
-             top: 15px; /* Keep at top */
-             left: 15px; /* Keep at left */
-        }
-
-
-        .menu-items {
-            position: absolute; /* Position relative to menu-toggle */
-            opacity: 0; /* Hidden initially */
-            pointer-events: none; /* Not interactive when hidden */
-            transition: opacity 0.3s ease 0.1s; /* Add transform to transition */
-
-            /* Default (Desktop - Vertical) Positioning & Layout */
-            top: 60px; /* Start below the toggle icon */
-            left: 0;
-            width: 100%; /* Full width of parent */
-            height: calc(100% - 60px); /* Full remaining height */
-            display: flex;
-            flex-direction: column; /* Vertical flow */
-            align-items: center; /* Center items horizontally */
-            padding: 0 15px 15px 15px; /* Vertical padding */
-            gap: 15px; /* Vertical gap */
-            justify-content: flex-start; /* Items start from the top */
-        }
-
-        /* Default Active state for items */
-        .menu-toggle.active .menu-items {
-            opacity: 1;
-            pointer-events: auto;
-             /* Reset transform if any was applied when hidden */
-            transform: none;
-        }
-
-
-        .menu-item {
-            width: 40px; /* Fixed size for circular items */
-            height: 40px; /* Fixed size for circular items */
-            border-radius: 50%; /* Make them round */
-            background: rgba(255, 255, 255, 0.1); /* Subtle item background */
-            border: 1px solid rgba(255, 255, 255, 0.15); /* Subtle item border */
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-
-            /* Initial state: scaled down */
-            transform: scale(0);
-            /* Transitions for appearance/disappearance, background, etc. */
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-                        background-color 0.2s ease,
-                        box-shadow 0.2s ease,
-                        color 0.2s ease; /* Add color transition for icon */
-
-            position: relative; /* Needed for pseudo-elements (labels) */
-            overflow: hidden; /* Hide content overflow */
-            flex-shrink: 0; /* Prevent shrinking in flex row */
-
-            color: #fff; /* Default item icon color (Font Awesome) */
-            font-size: 1.1em; /* Item icon size */
-        }
-
-        /* When menu is active, items scale up */
-        .menu-toggle.active .menu-item {
-            transform: scale(1);
-        }
-
-        /* Staggered transition delays for items appearing (6 items total) */
-        .menu-toggle.active .menu-item:nth-child(1) { transition-delay: 0.15s; } /* Play/Pause (50%) */
-        .menu-toggle.active .menu-item:nth-child(2) { transition-delay: 0.2s; } /* Loop (75%) */
-        .menu-toggle.active .menu-item:nth-child(3) { transition-delay: 0.25s; } /* Fullscreen (100%) */
-        .menu-toggle.active .menu-item:nth-child(4) { transition-delay: 0.3s; } /* Import Image (150%) */
-        .menu-toggle.active .menu-item:nth-child(5) { transition-delay: 0.35s; } /* Import Audio (200%) */
-        .menu-toggle.active .menu-item:nth-child(6) { transition-delay: 0.4s; } /* Zoom Trigger */
-
-
-        /* Icon inside the menu-item (Font Awesome <i> tag) */
-        .menu-item i {
-            transition: opacity 0.2s ease, color 0.2s ease; /* Smooth transition for icon changes */
-            pointer-events: none; /* Allow clicks to pass through to the parent div */
-        }
-
-        /* --- Styles for Showing Zoom Labels on Hover --- */
-
-        /* Style for items when the 'showing-label' class is added by JS (when zoom trigger icon is hovered) */
-        .menu-item.showing-label {
-             background: rgba(255, 255, 255, 0.1);
-             border: 1px solid rgba(255, 255, 255, 0.15);
-             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-             transform: scale(1);
-            transition: transform 0.3s ease, background 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        /* Hide the icon when showing label */
-        .menu-item.showing-label i {
-            opacity: 0;
-        }
-
-        /* Show the data-zoom value as text using a pseudo-element */
-        .menu-item.showing-label::after {
-            content: attr(data-zoom) '%'; /* Get text from data-zoom attribute and add '%' */
-            position: absolute; /* Position relative to the item */
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%); /* Center the text */
-            font-size: 12px; /* Slightly smaller font for better fit */
-            font-weight: bold; /* Make the percentage bold */
-            color: #34495e; /* Text color */
-            opacity: 1; /* Make text visible */
-            transition: opacity 0.3s ease; /* Smooth text appearance */
-            white-space: nowrap; /* Prevent text wrapping */
-            pointer-events: none; /* Allow clicks to pass through to the div */
-        }
-
-        /* Hover effect for items showing label state */
-        .menu-item.showing-label:hover {
-            background: rgba(255, 255, 255, 0.3); /* Subtle hover background */
-            transform: scale(1.05); /* Slight scale on hover */
-            box-shadow: 0 3px 8px rgba(0,0,0,0.15);
-        }
-        .menu-item.showing-label:hover::after {
-             color: #3498db; /* Change text color on hover */
-        }
-
-         /* Ensure items (and labels) scale to 0 when menu is not active, even if showing-label class is present */
-         .menu-toggle:not(.active) .menu-item.showing-label {
-             transform: scale(0);
-         }
-         .menu-toggle:not(.active) .menu-item.showing-label::after {
-             opacity: 0;
-         }
-
-        /* Default Hover Styles (only apply if not showing label) */
-        .menu-item:not(.showing-label):hover {
-            background: rgba(255, 255, 255, 0.3); /* Frosted Glass hover */
-            transform: scale(1.1);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            color: #3498db; /* Change icon color on hover */
-        }
-
-         /* Style for active control buttons (Play/Pause, Loop) */
-         /* Note: Removed Fullscreen from this rule */
-        .menu-item#playPauseMenuItem.active,
-        .menu-item#loopMenuItem.active {
-            background-color: rgba(255, 255, 255, 0.6); /* More opaque frosted glass */
-            border-color: #3498db; /* Highlight border */
-            color: #3498db; /* Highlight icon color */
-        }
-         .menu-item#playPauseMenuItem.active i,
-         .menu-item#loopMenuItem.active i {
-            color: #3498db; /* Ensure icon color stays highlighted */
-         }
-         .menu-item#playPauseMenuItem.active:hover,
-         .menu-item#loopMenuItem.active:hover {
-            background-color: rgba(255, 255, 255, 0.8); /* Even more opaque on hover */
-            border-color: #3498db;
-         }
-
-         /* Specific style for Fullscreen button when active (icon change only, no background/border change) */
-         /* This overrides the general .active style */
-         .menu-item#fullscreenMenuItem.active {
-            /* Keep default background, border, color */
-            background-color: rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 255, 255, 0.15);
-            color: #fff; /* Default icon color */
-            /* Only the icon itself changes via JS */
-         }
-          .menu-item#fullscreenMenuItem.active i {
-             color: #fff; /* Keep default icon color even when fullscreen is active */
-          }
-          /* Keep hover effect consistent for fullscreen button */
-         .menu-item#fullscreenMenuItem.active:hover {
-             background: rgba(255, 255, 255, 0.3);
-             transform: scale(1.1);
-             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-             color: #3498db; /* Change icon color on hover */
-         }
-          .menu-item#fullscreenMenuItem.active:hover i {
-             color: #3498db; /* Change icon color on hover */
-          }
-
-
-
-         /* Style for error items */
-         .menu-item.error {
-            background-color: rgba(255, 0, 0, 0.4); /* Reddish background */
-            border-color: #c0392b; /* Red border */
-            color: #c0392b; /* Red icon */
-            pointer-events: none !important; /* Disable clicks on error items */
-         }
-          .menu-item.error i {
-            color: #c0392b !important; /* Ensure icon is red */
-          }
-         .menu-item.error:hover {
-             background-color: rgba(255, 0, 0, 0.5);
-             transform: none; /* No scale on error hover */
-             box-shadow: none; /* No shadow on error hover */
-         }
-
-
-        /* --- Mobile Responsive Styles --- */
+        .menu-toggle.active { height: 390px; width: 60px; border-radius: 30px; transform: translateY(-50%); }
+        .toggle-icon { position: absolute; top: 15px; left: 15px; width: 30px; height: 30px; transition: transform 0.3s ease, top 0.4s cubic-bezier(0.4, 0, 0.2, 1), left 0.4s cubic-bezier(0.4, 0, 0.2, 1); color: #fff; font-size: 1.5em; z-index: 12; display: flex; justify-content: center; align-items: center; }
+        .menu-toggle.active .toggle-icon { transform: rotate(360deg); top: 15px; left: 15px; }
+        .menu-items { position: absolute; opacity: 0; pointer-events: none; transition: opacity 0.3s ease 0.1s; top: 60px; left: 0; width: 100%; height: calc(100% - 60px); display: flex; flex-direction: column; align-items: center; padding: 0 15px 15px 15px; gap: 15px; justify-content: flex-start; }
+        .menu-toggle.active .menu-items { opacity: 1; pointer-events: auto; transform: none; }
+        .menu-item { width: 40px; height: 40px; border-radius: 50%; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer; display: flex; justify-content: center; align-items: center; transform: scale(0); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease; position: relative; overflow: hidden; flex-shrink: 0; color: #fff; font-size: 1.1em; }
+        .menu-toggle.active .menu-item { transform: scale(1); }
+        /* Staggered delays (unchanged) */
+        .menu-toggle.active .menu-item:nth-child(1) { transition-delay: 0.15s; } .menu-toggle.active .menu-item:nth-child(2) { transition-delay: 0.2s; } .menu-toggle.active .menu-item:nth-child(3) { transition-delay: 0.25s; } .menu-toggle.active .menu-item:nth-child(4) { transition-delay: 0.3s; } .menu-toggle.active .menu-item:nth-child(5) { transition-delay: 0.35s; } .menu-toggle.active .menu-item:nth-child(6) { transition-delay: 0.4s; }
+        .menu-item i { transition: opacity 0.2s ease, color 0.2s ease; pointer-events: none; }
+        /* Zoom label styles (unchanged, includes bold number) */
+        .menu-item.showing-label { background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 2px 5px rgba(0,0,0,0.1); transform: scale(1); transition: transform 0.3s ease, background 0.2s ease, box-shadow 0.2s ease; }
+        .menu-item.showing-label i { opacity: 0; }
+        .menu-item.showing-label::after { content: attr(data-zoom) '%'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 12px; font-weight: bold; color: #34495e; opacity: 1; transition: opacity 0.3s ease; white-space: nowrap; pointer-events: none; }
+        .menu-item.showing-label:hover { background: rgba(255, 255, 255, 0.3); transform: scale(1.05); box-shadow: 0 3px 8px rgba(0,0,0,0.15); }
+        .menu-item.showing-label:hover::after { color: #3498db; }
+        .menu-toggle:not(.active) .menu-item.showing-label { transform: scale(0); } .menu-toggle:not(.active) .menu-item.showing-label::after { opacity: 0; }
+        /* Default Hover Styles */
+        .menu-item:not(.showing-label):hover { background: rgba(255, 255, 255, 0.3); transform: scale(1.1); box-shadow: 0 4px 10px rgba(0,0,0,0.2); color: #3498db; }
+        /* Active button styles (Play/Pause, Loop) */
+        .menu-item#playPauseMenuItem.active, .menu-item#loopMenuItem.active { background-color: rgba(255, 255, 255, 0.6); border-color: #3498db; color: #3498db; }
+        .menu-item#playPauseMenuItem.active i, .menu-item#loopMenuItem.active i { color: #3498db; }
+        .menu-item#playPauseMenuItem.active:hover, .menu-item#loopMenuItem.active:hover { background-color: rgba(255, 255, 255, 0.8); border-color: #3498db; }
+        /* Fullscreen button active state (icon changes only) */
+        .menu-item#fullscreenMenuItem.active { background-color: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.15); color: #fff; }
+        .menu-item#fullscreenMenuItem.active i { color: #fff; }
+        .menu-item#fullscreenMenuItem.active:hover { background: rgba(255, 255, 255, 0.3); transform: scale(1.1); box-shadow: 0 4px 10px rgba(0,0,0,0.2); color: #3498db; }
+        .menu-item#fullscreenMenuItem.active:hover i { color: #3498db; }
+        /* Error item styles */
+        .menu-item.error { background-color: rgba(255, 0, 0, 0.4); border-color: #c0392b; color: #c0392b; pointer-events: none !important; }
+        .menu-item.error i { color: #c0392b !important; }
+        .menu-item.error:hover { background-color: rgba(255, 0, 0, 0.5); transform: none; box-shadow: none; }
+        /* Mobile Styles */
         @media (max-width: 768px) {
-            .menu-toggle {
-                 /* Mobile Initial State (Horizontal Centering at Bottom) */
-                 right: auto; /* Remove right anchor */
-                 left: 50%; /* Anchor left edge to horizontal center */
-                 bottom: 20px; /* Anchor to bottom edge */
-                 top: auto; /* Remove top anchor */
-                 transform: translateX(-50%); /* Shift left by half its width to truly center */
-                 width: 60px;
-                 height: 60px;
-                 border-radius: 30px;
-                 /* Ensure the icon is centered within this 60x60 capsule */
-                 align-items: center;
-                 justify-content: center;
-            }
+            /* (Keep existing mobile menu styles - abbreviated) */
+            .menu-toggle { right: auto; left: 50%; bottom: 20px; top: auto; transform: translateX(-50%); width: 60px; height: 60px; border-radius: 30px; align-items: center; justify-content: center; }
+            .menu-toggle.active { width: 80%; max-width: 400px; left: 50%; transform: translateX(-50%); height: 60px; border-radius: 30px; bottom: 20px; top: auto; flex-direction: row; padding: 0 15px; justify-content: flex-start; align-items: center; }
+            .menu-toggle.active .toggle-icon { position: absolute; top: 50%; left: 15px; transform: translate(0, -50%) rotate(360deg); margin: 0; }
+            .menu-toggle.active .menu-items { position: absolute; top: 0; bottom: 0; left: 60px; right: 0; flex-direction: row; padding: 0 10px; gap: 5px; flex-grow: 1; align-items: center; justify-content: space-evenly; width: auto; height: auto; }
+            .menu-toggle.active .menu-item { width: 38px; height: 38px; font-size: 1em; }
+            .menu-item.showing-label::after { font-size: 10px; }
+            /* Mobile transition delays (unchanged) */
+            .menu-toggle.active .menu-item:nth-child(1) { transition-delay: 0.1s; } .menu-toggle.active .menu-item:nth-child(2) { transition-delay: 0.12s; } .menu-toggle.active .menu-item:nth-child(3) { transition-delay: 0.14s; } .menu-toggle.active .menu-item:nth-child(4) { transition-delay: 0.16s; } .menu-toggle.active .menu-item:nth-child(5) { transition-delay: 0.18s; } .menu-toggle.active .menu-item:nth-child(6) { transition-delay: 0.2s; }
 
-            /* Mobile Active State (Horizontal Expansion from Center) */
-            .menu-toggle.active {
-                 width: 80%; /* Adjust percentage as needed for desired width */
-                 max-width: 400px; /* Add max-width to prevent excessive stretching */
-                 left: 50%; /* Anchor left edge to center */
-                 transform: translateX(-50%); /* Shift left by half its own width */
-                 height: 60px; /* Keep height */
-                 border-radius: 30px; /* Keep radius */
-                 bottom: 20px; /* Keep anchored to the bottom */
-                 top: auto; /* Keep top auto */
-
-                 /* Keep existing flex properties for horizontal item layout */
-                 flex-direction: row;
-                 padding: 0 15px; /* Adjust horizontal padding if 80% width feels cramped */
-                 justify-content: flex-start;
-                 align-items: center;
-            }
-
-            /* Mobile Active: Position the toggle icon absolutely within the 60px height capsule */
-             .menu-toggle.active .toggle-icon {
-                 position: absolute;
-                 top: 50%;
-                 left: 15px;
-                 transform: translate(0, -50%) rotate(360deg); /* Vertically center and spin */
-                 margin: 0; /* Remove any default margins */
+            /* Adjust image clipper max size on mobile */
+             .image-clipper {
+                max-width: 90vw;
+                max-height: 65vh; /* Slightly smaller max height */
              }
-
-
-            /* Mobile Active State for Items Container */
-            .menu-toggle.active .menu-items {
-                position: absolute; /* Use absolute positioning */
-                top: 0; /* Align to top of the 60px parent */
-                bottom: 0; /* Align to bottom of the 60px parent */
-                left: 60px; /* Position to the right of the icon area (assuming icon area is 60px) */
-                right: 0; /* Fill the remaining width within the centered capsule */
-
-                flex-direction: row; /* Ensure horizontal flow */
-                 /* Override desktop padding/gap */
-                padding: 0 10px; /* Slightly reduced horizontal padding within the items container */
-                gap: 5px; /* Slightly reduced horizontal gap between items */
-
-                flex-grow: 1; /* Still take remaining space */
-                align-items: center; /* Center items vertically within the 60px height */
-                justify-content: space-evenly; /* Distribute items */
-
-                 /* Reset width/height if set previously */
-                 width: auto;
-                 height: auto;
-            }
-
-             /* Adjustments for items within mobile horizontal layout */
-            .menu-toggle.active .menu-item {
-                 /* May need slight adjustments if needed, but defaults should work */
-                 width: 38px; /* Slightly smaller on mobile */
-                 height: 38px;
-                 font-size: 1em;
-            }
-             .menu-item.showing-label::after {
-                 font-size: 10px; /* Make label slightly smaller on mobile */
-             }
-
-             /* Mobile transition delays (6 items total) */
-             /* These delays stack on top of the menu-items opacity transition (0.1s) */
-             .menu-toggle.active .menu-item:nth-child(1) { transition-delay: 0.1s; } /* Play/Pause (50%) */
-             .menu-toggle.active .menu-item:nth-child(2) { transition-delay: 0.12s; } /* Loop (75%) */
-             .menu-toggle.active .menu-item:nth-child(3) { transition-delay: 0.14s; } /* Fullscreen (100%) */
-             .menu-toggle.active .menu-item:nth-child(4) { transition-delay: 0.16s; } /* Import Image (150%) */
-             .menu-toggle.active .menu-item:nth-child(5) { transition-delay: 0.18s; } /* Import Audio (200%) */
-             .menu-toggle.active .menu-item:nth-child(6) { transition-delay: 0.2s; } /* Zoom Trigger */
         }
-
-        /* --- Hidden File Inputs --- */
-        .hidden-file-input {
-            display: none;
-        }
-
+        /* Hidden File Inputs */
+        .hidden-file-input { display: none; }
     </style>
 </head>
-<body> <!-- Removed initial dark-mode class, relying on JS default -->
+<body>
 
     <!-- Dynamic Background Canvas -->
     <div id="background-canvas"></div>
@@ -478,46 +189,29 @@
 
 
     <div class="container">
-        <img id="carImage" src="car.jpg" alt="Display Car">
+        <!-- Image Clipper Wrapper -->
+        <div class="image-clipper" id="imageClipper">
+             <img id="carImage" src="car.jpg" alt="Display Image">
+        </div>
 
         <audio id="carSound" src="car.mp3"></audio>
 
         <!-- Capsule Menu -->
-        <div class="menu-toggle" id="mainMenuToggle"> <!-- Added ID for easy JS ref -->
-            <i class="fas fa-cog toggle-icon"></i> <!-- Toggle Icon -->
-
+        <div class="menu-toggle" id="mainMenuToggle">
+            <i class="fas fa-cog toggle-icon"></i>
             <div class="menu-items">
-                 <!-- Control Items & Zoom Options -->
-
-                 <!-- Play/Pause Audio (Becomes 50% on hover of Zoom Trigger) -->
-                 <div class="menu-item" id="playPauseMenuItem" data-zoom="50">
-                     <i class="fas fa-play"></i>
-                 </div>
-
-                 <!-- Toggle Loop (Becomes 75% on hover of Zoom Trigger) -->
-                  <div class="menu-item" id="loopMenuItem" data-zoom="75">
-                     <i class="fas fa-repeat"></i>
-                 </div>
-
-                 <!-- Toggle Fullscreen (Becomes 100% on hover of Zoom Trigger) -->
-                  <div class="menu-item" id="fullscreenMenuItem" data-zoom="100">
-                     <i class="fas fa-expand"></i>
-                 </div>
-
-                 <!-- Import Image (Replaces Light/Dark) (Becomes 150% on hover of Zoom Trigger) -->
-                  <div class="menu-item" id="importImageMenuItem" data-zoom="150">
-                     <i class="fas fa-image"></i> <!-- Image Icon -->
-                 </div>
-
-                 <!-- Import Audio (Replaces Screenshot) (Becomes 200% on hover of Zoom Trigger) -->
-                  <div class="menu-item" id="importAudioMenuItem" data-zoom="200">
-                     <i class="fas fa-file-audio"></i> <!-- Audio File Icon -->
-                 </div>
-
-                 <!-- Zoom Control (Trigger for Hover Labels) -->
-                 <div class="menu-item zoom-trigger" id="zoomMenuItem">
-                     <i class="fas fa-search-plus"></i> <!-- Search/Zoom Icon -->
-                 </div>
+                 <!-- Play/Pause (Zoom 50) -->
+                 <div class="menu-item" id="playPauseMenuItem" data-zoom="50"><i class="fas fa-play"></i></div>
+                 <!-- Loop (Zoom 75) -->
+                  <div class="menu-item" id="loopMenuItem" data-zoom="75"><i class="fas fa-repeat"></i></div>
+                 <!-- Fullscreen (Zoom 100) -->
+                  <div class="menu-item" id="fullscreenMenuItem" data-zoom="100"><i class="fas fa-expand"></i></div>
+                 <!-- Import Image (Zoom 125) -->
+                  <div class="menu-item" id="importImageMenuItem" data-zoom="125"><i class="fas fa-image"></i></div>
+                 <!-- Import Audio (Zoom 150) -->
+                  <div class="menu-item" id="importAudioMenuItem" data-zoom="150"><i class="fas fa-file-audio"></i></div>
+                 <!-- Zoom Trigger -->
+                 <div class="menu-item zoom-trigger" id="zoomMenuItem"><i class="fas fa-search-plus"></i></div>
             </div>
         </div>
     </div>
@@ -525,622 +219,328 @@
     <script>
         // Get references to elements
         const body = document.body;
-        const carImage = document.getElementById('carImage');
-        const carSound = document.getElementById('carSound'); // Using carSound ID consistently
+        const imageClipper = document.getElementById('imageClipper'); // Reference to the new clipper div
+        const carImage = document.getElementById('carImage'); // Still need reference to the img element itself
+        const carSound = document.getElementById('carSound');
 
         // Hidden file inputs
         const imageInput = document.getElementById('imageInput');
         const audioInput = document.getElementById('audioInput');
 
         // Menu elements
-        const mainMenuToggle = document.getElementById('mainMenuToggle'); // The main capsule div
+        const mainMenuToggle = document.getElementById('mainMenuToggle');
         const menuItemsContainer = mainMenuToggle.querySelector('.menu-items');
-        const toggleIcon = mainMenuToggle.querySelector('.toggle-icon'); // The cog icon
+        const toggleIcon = mainMenuToggle.querySelector('.toggle-icon');
 
-        // Individual control items within the menu
+        // Individual control items
         const playPauseMenuItem = document.getElementById('playPauseMenuItem');
         const loopMenuItem = document.getElementById('loopMenuItem');
         const fullscreenMenuItem = document.getElementById('fullscreenMenuItem');
-        const importImageMenuItem = document.getElementById('importImageMenuItem'); // Updated ID
-        const importAudioMenuItem = document.getElementById('importAudioMenuItem'); // Updated ID
-        const zoomMenuItem = document.getElementById('zoomMenuItem'); // The single zoom control item (the trigger)
+        const importImageMenuItem = document.getElementById('importImageMenuItem');
+        const importAudioMenuItem = document.getElementById('importAudioMenuItem');
+        const zoomMenuItem = document.getElementById('zoomMenuItem');
 
-        // Get icons inside the control items
+        // Icons
         const playPauseIcon = playPauseMenuItem.querySelector('i');
         const loopIcon = loopMenuItem.querySelector('i');
         const fullscreenIcon = fullscreenMenuItem.querySelector('i');
-        const importImageIcon = importImageMenuItem.querySelector('i'); // Updated reference
-        const importAudioIcon = importAudioMenuItem.querySelector('i'); // Updated reference
+        const importImageIcon = importImageMenuItem.querySelector('i');
+        const importAudioIcon = importAudioMenuItem.querySelector('i');
         const zoomIcon = zoomMenuItem.querySelector('i');
 
-        // Get the first 5 menu items (these will show zoom labels on hover of the 6th item)
-        // Includes the new import buttons
+        // Items that show zoom labels
         const itemsToShowZoomLabels = Array.from(menuItemsContainer.children).slice(0, 5);
 
-        // Find the item with data-zoom="100" (fullscreen) and set it active initially for zoom
-        const initialZoomItem = itemsToShowZoomLabels.find(item => item.getAttribute('data-zoom') === '100');
-        if (initialZoomItem) {
-             initialZoomItem.classList.add('active'); // This 'active' class is for the zoom *indicator*, not the button state
-             // No! Don't add active class to the zoom button itself, add it to the *image* width logic
-             // The visual 'active' class for zoom selection is handled by applyZoom function
-        }
-        // Set initial image width to 100%
-        carImage.style.width = '100%';
-
-
-        // Get reference to the background canvas
+        // Background canvas
         const backgroundCanvas = document.getElementById('background-canvas');
 
 
-        // --- Background Effect Logic (from bg.html) ---
+        // --- Background Effect Logic ---
         let audioContext;
         let analyser;
-        let source; // This will hold the MediaElementSourceNode
+        let source; // MediaElementSourceNode
         let dataArray;
         let rafId; // requestAnimationFrame ID
-        let isAudioSetup = false; // Flag to track if AudioContext is setup for the current audio source
-        let currentAudioObjectURL = null; // To revoke previous object URLs
+        let isAudioSetup = false; // Tracks if context/nodes are ready for *current* audio source
+        let currentAudioObjectURL = null; // To revoke previous URLs
 
-         // Check if ColorThief is available
-        if (typeof ColorThief === 'undefined') {
-            console.error("ColorThief library not loaded. Dynamic background colors disabled.");
-            var colorThief = null; // Ensure colorThief is null if not loaded
-        } else {
-            var colorThief = new ColorThief(); // Define colorThief if loaded
-        }
+        const colorThief = typeof ColorThief !== 'undefined' ? new ColorThief() : null;
+        if (!colorThief) console.error("ColorThief library not loaded.");
 
+        // --- Color/Background Helpers (rgbToHsl, shuffleArray - unchanged) ---
+        function rgbToHsl(r, g, b) { r /= 255; g /= 255; b /= 255; const max = Math.max(r, g, b), min = Math.min(r, g, b); let h, s, l = (max + min) / 2; if (max === min) { h = s = 0; } else { const d = max - min; s = l > 0.5 ? d / (2 - max - min) : d / (max + min); switch (max) { case r: h = (g - b) / d + (g < b ? 6 : 0); break; case g: h = (b - r) / d + 2; break; case b: h = (r - g) / d + 4; break; } h /= 6; } return [h, s, l]; }
+        function shuffleArray(array) { let currentIndex = array.length, randomIndex; while (currentIndex !== 0) { randomIndex = Math.floor(Math.random() * currentIndex); currentIndex--; [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]]; } return array; }
 
-        // Helper function to convert RGB [r, g, b] to HSL [h, s, l]
-        function rgbToHsl(r, g, b) {
-            r /= 255; g /= 255; b /= 255;
-            const max = Math.max(r, g, b);
-            const min = Math.min(r, g, b);
-            let h, s, l = (max + min) / 2;
-
-            if (max === min) {
-                h = s = 0; // achromatic
-            } else {
-                const d = max - min;
-                s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-                switch (max) {
-                    case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-                    case g: h = (b - r) / d + 2; break;
-                    case b: h = (r - g) / d + 4; break;
-                }
-                h /= 6;
-            }
-            return [h, s, l];
-        }
-
-        // Fisher-Yates (aka Knuth) Shuffle algorithm
-        function shuffleArray(array) {
-            let currentIndex = array.length, randomIndex;
-            while (currentIndex !== 0) {
-                randomIndex = Math.floor(Math.random() * currentIndex);
-                currentIndex--;
-                [array[currentIndex], array[randomIndex]] = [
-                    array[randomIndex], array[currentIndex]];
-            }
-            return array;
-        }
-
-        // --- Color Extraction ---
+        // Apply Background Colors (uses carImage for extraction)
         function applyBackgroundColors() {
-            if (!colorThief || !carImage.complete || carImage.naturalWidth === 0) { // Check if image is loaded
-                console.warn("ColorThief not available or image not loaded yet. Applying fallback gradient.");
-                applyFallbackGradient();
-                return;
+            // Added check: ensure image is loaded enough for ColorThief
+            if (!colorThief || !carImage.complete || carImage.naturalWidth === 0) {
+                 console.warn("ColorThief not available or image not fully loaded. Applying fallback.");
+                 applyFallbackGradient();
+                 return;
             }
-            // Use the actual carImage element now, assuming it's loaded
              try {
-                // Extract palette
-                let extractedColors = colorThief.getPalette(carImage, 20); // Use carImage directly
-                console.log("Initial Extracted Colors:", extractedColors);
-
-                // Filtering Very Light Colors
-                const lightnessThreshold = 0.85;
-                const minColorsAfterFiltering = 5;
-                let filteredColors = extractedColors.filter(rgb => {
-                    const hsl = rgbToHsl(rgb[0], rgb[1], rgb[2]);
-                    return hsl[2] < lightnessThreshold;
-                });
-                console.log("Filtered Colors:", filteredColors);
-
-                // Handle insufficient colors after filtering
-                if (filteredColors.length < minColorsAfterFiltering) {
-                    console.warn(`Filtering removed too many colors (${filteredColors.length} remaining). Mixing with darkest from original.`);
-                    const sortedByLightness = [...extractedColors].sort((a, b) => rgbToHsl(a[0],a[1],a[2])[2] - rgbToHsl(b[0],b[1],b[2])[2]);
-                    const darkestColors = sortedByLightness.slice(0, Math.min(minColorsAfterFiltering - filteredColors.length, sortedByLightness.length));
-                    filteredColors = [...filteredColors, ...darkestColors];
-                    console.log("Using mixed palette:", filteredColors);
-                    if (filteredColors.length < minColorsAfterFiltering) {
-                        console.error("Still not enough colors after mixing. Using fallback gradient.");
-                        applyFallbackGradient();
-                        return;
-                    }
-                }
-
-                // Shuffle and apply
-                const shuffledColors = shuffleArray(filteredColors);
-                const cssColors = shuffledColors.map(rgb => `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`);
-                const gradientString = `linear-gradient(135deg, ${cssColors.join(', ')})`;
-                backgroundCanvas.style.background = gradientString;
-                backgroundCanvas.style.backgroundSize = '400% 400%';
-            } catch (error) {
-                console.error("Error extracting, filtering, or shuffling colors:", error);
-                applyFallbackGradient();
-            }
+                 let extractedColors = colorThief.getPalette(carImage, 20);
+                 const lightnessThreshold = 0.85, minColorsAfterFiltering = 5;
+                 let filteredColors = extractedColors.filter(rgb => rgbToHsl(rgb[0], rgb[1], rgb[2])[2] < lightnessThreshold);
+                 if (filteredColors.length < minColorsAfterFiltering) {
+                     const sortedByLightness = [...extractedColors].sort((a, b) => rgbToHsl(a[0],a[1],a[2])[2] - rgbToHsl(b[0],b[1],b[2])[2]);
+                     const darkestColors = sortedByLightness.slice(0, Math.min(minColorsAfterFiltering - filteredColors.length, sortedByLightness.length));
+                     filteredColors = [...filteredColors, ...darkestColors];
+                      if (filteredColors.length < minColorsAfterFiltering) { applyFallbackGradient(); return; }
+                 }
+                 const shuffledColors = shuffleArray(filteredColors);
+                 const cssColors = shuffledColors.map(rgb => `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`);
+                 const gradientString = `linear-gradient(135deg, ${cssColors.join(', ')})`;
+                 backgroundCanvas.style.background = gradientString;
+                 backgroundCanvas.style.backgroundSize = '400% 400%';
+             } catch (error) {
+                 console.error("Error applying background colors:", error);
+                 applyFallbackGradient();
+             }
         }
-
-         function applyFallbackGradient() {
-             console.log("Applying fallback gradient.");
+        function applyFallbackGradient() {
              backgroundCanvas.style.background = 'linear-gradient(45deg, #1a1a1a, #2c3e50, #1a1a1a, #34495e)';
              backgroundCanvas.style.backgroundSize = '400% 400%';
-         }
-
+        }
 
         // --- Audio Setup (Web Audio API) ---
         function setupAudioContext() {
-            // If already setup for the *current* audio source, return
-            if (isAudioSetup) return true;
+            if (isAudioSetup) return true; // Already setup for current source
 
             try {
-                // If context doesn't exist or was closed, create a new one
-                 if (!audioContext || audioContext.state === 'closed') {
+                // Ensure context exists and is running
+                if (!audioContext) {
                      audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                     // Create AnalyserNode only once per context creation
-                    analyser = audioContext.createAnalyser();
-                    analyser.fftSize = 256;
-                    analyser.minDecibels = -90;
-                    analyser.maxDecibels = 0;
-                    // Prepare data array
-                    const bufferLength = analyser.frequencyBinCount;
-                    dataArray = new Uint8Array(bufferLength);
+                     console.log("AudioContext created.");
+                     // Create analyser only once per context creation
+                     analyser = audioContext.createAnalyser();
+                     analyser.fftSize = 256;
+                     analyser.minDecibels = -90;
+                     analyser.maxDecibels = 0;
+                     const bufferLength = analyser.frequencyBinCount;
+                     dataArray = new Uint8Array(bufferLength);
+                 } else if (audioContext.state === 'suspended') {
+                    // Attempt to resume if suspended, handle potential errors
+                    audioContext.resume().then(() => {
+                         console.log("AudioContext resumed during setup.");
+                    }).catch(err => {
+                         console.error("Failed to resume AudioContext during setup:", err);
+                          // Might need user interaction again, alert or handle UI
+                         alert("Audio requires interaction to start. Please click play again.");
+                         return false; // Indicate setup failure due to resume issue
+                    });
+                 } else if (audioContext.state === 'closed') {
+                     console.error("AudioContext is closed. Cannot setup.");
+                     alert("Audio system error (Context Closed). Please refresh the page.");
+                     return false;
                  }
 
-                // Create MediaElementSource from the audio element *every time setup is called*
-                // because the source element might have changed (new audio file)
+                // Create a new source node for the current audio element source
+                // This NEEDS to happen after carSound.src is set
                 source = audioContext.createMediaElementSource(carSound);
-
-                // Connect the nodes: source -> analyser -> destination
                 source.connect(analyser);
                 analyser.connect(audioContext.destination);
 
                 isAudioSetup = true; // Mark as setup for this source
-                console.log("AudioContext setup complete.");
+                console.log("AudioContext setup complete for current source.");
                 return true; // Indicate success
             } catch (error) {
                  console.error("Error setting up Web Audio API:", error);
+                 // Check for specific errors, e.g., if element source is already used
+                 if (error.name === 'InvalidStateError'){
+                     console.warn("MediaElementSource likely already exists for this element in this context. Attempting to continue, but this might indicate a logic issue.");
+                     // If analyser is connected, assume previous setup might still be partially valid, though risky
+                     isAudioSetup = analyser && analyser.context === audioContext; // Tentative check
+                     return isAudioSetup;
+                 }
                  alert("Error setting up audio visualization. Try a different browser or ensure audio permissions.");
                  isAudioSetup = false; // Mark setup failed
                  return false; // Indicate failure
             }
         }
 
-        // --- Animation Loop (Reacting to Audio) ---
+
+        // --- Animation Loop (Unchanged) ---
         function animationLoop() {
-            // Stop if audio is paused, ended, or setup failed for the current source
-            if (!isAudioSetup || carSound.paused || carSound.ended) {
-                if (rafId) {
-                     cancelAnimationFrame(rafId);
-                     rafId = null;
-                }
-                // console.log("Animation loop stopped."); // Can be noisy
-                // Reset background state to idle CSS (remove classes)
-                backgroundCanvas.classList.remove('playing', 'pulsing');
-                return;
-            }
-
-            // Request the next frame
+            if (!isAudioSetup || carSound.paused || carSound.ended) { if (rafId) { cancelAnimationFrame(rafId); rafId = null; } backgroundCanvas.classList.remove('playing', 'pulsing'); return; }
             rafId = requestAnimationFrame(animationLoop);
-
-            // Get frequency data
             analyser.getByteFrequencyData(dataArray);
-
-            // Calculate an overall energy/volume level
-            let sum = 0;
-            for (let i = 0; i < dataArray.length; i++) { sum += dataArray[i]; }
-            let average = dataArray.length > 0 ? sum / dataArray.length : 0;
-
-            // --- Dynamic Effect: Control Animation Speed, Blur, and Brightness ---
-            const minDuration = 0.5, maxDuration = 120;
-            const speedVolumeMappingRange = 100, volumeOffset = 30;
-            const speedClampedAverage = Math.max(0, Math.min(average - volumeOffset, speedVolumeMappingRange - volumeOffset));
-            const normalizedSpeedVolume = (speedVolumeMappingRange - volumeOffset) > 0 ? speedClampedAverage / (speedVolumeMappingRange - volumeOffset) : 0;
-            const dynamicDuration = maxDuration - (normalizedSpeedVolume * (maxDuration - minDuration));
-            backgroundCanvas.style.animationDuration = `${Math.max(minDuration, Math.min(dynamicDuration, maxDuration))}s`;
-
-            const minBlur = 1, maxBlur = 60;
-            const minBrightness = 0.4, maxBrightness = 1.8;
-             const filterVolumeMappingRange = 200, filterVolumeOffset = 10;
-             const filterClampedAverage = Math.max(0, Math.min(average - filterVolumeOffset, filterVolumeMappingRange - filterVolumeOffset));
-             const normalizedFilterVolume = (filterVolumeMappingRange - filterVolumeOffset) > 0 ? filterClampedAverage / (filterVolumeMappingRange - filterVolumeOffset) : 0;
-             const dynamicBlur = maxBlur - (normalizedFilterVolume * (maxBlur - minBlur));
-             const dynamicBrightness = minBrightness + (normalizedFilterVolume * (maxBrightness - minBrightness));
-             backgroundCanvas.style.filter = `blur(${dynamicBlur}px) brightness(${dynamicBrightness})`;
-
-            // Add pulsing class (marker) - JS properties override CSS properties when active
-            backgroundCanvas.classList.add('pulsing');
-             // Ensure 'playing' class remains if audio is playing
-             if(!carSound.paused && !carSound.ended){
-                 backgroundCanvas.classList.add('playing');
-             }
+            let sum = 0; for (let i = 0; i < dataArray.length; i++) { sum += dataArray[i]; } let average = dataArray.length > 0 ? sum / dataArray.length : 0;
+            const minDuration = 0.5, maxDuration = 120; const speedVolumeMappingRange = 100, volumeOffset = 30; const speedClampedAverage = Math.max(0, Math.min(average - volumeOffset, speedVolumeMappingRange - volumeOffset)); const normalizedSpeedVolume = (speedVolumeMappingRange - volumeOffset) > 0 ? speedClampedAverage / (speedVolumeMappingRange - volumeOffset) : 0; const dynamicDuration = maxDuration - (normalizedSpeedVolume * (maxDuration - minDuration)); backgroundCanvas.style.animationDuration = `${Math.max(minDuration, Math.min(dynamicDuration, maxDuration))}s`;
+            const minBlur = 1, maxBlur = 60; const minBrightness = 0.4, maxBrightness = 1.8; const filterVolumeMappingRange = 200, filterVolumeOffset = 10; const filterClampedAverage = Math.max(0, Math.min(average - filterVolumeOffset, filterVolumeMappingRange - filterVolumeOffset)); const normalizedFilterVolume = (filterVolumeMappingRange - filterVolumeOffset) > 0 ? filterClampedAverage / (filterVolumeMappingRange - filterVolumeOffset) : 0; const dynamicBlur = maxBlur - (normalizedFilterVolume * (maxBlur - minBlur)); const dynamicBrightness = minBrightness + (normalizedFilterVolume * (maxBrightness - minBrightness)); backgroundCanvas.style.filter = `blur(${dynamicBlur}px) brightness(${dynamicBrightness})`;
+            backgroundCanvas.classList.add('pulsing'); if(!carSound.paused && !carSound.ended){ backgroundCanvas.classList.add('playing'); }
         }
 
         // --- Combined Play/Pause Logic ---
-        function togglePlayback() {
+        async function togglePlayback() { // Made async for await resume()
+            // 1. Ensure AudioContext exists and try to resume it *first*
+            if (audioContext && audioContext.state === 'suspended') {
+                try {
+                    await audioContext.resume();
+                    console.log("AudioContext resumed successfully on interaction.");
+                } catch (err) {
+                    console.error("AudioContext resume failed:", err);
+                    alert("Could not resume audio. Please interact with the page again (e.g., click play) or refresh.");
+                    return; // Don't proceed if context can't be resumed
+                }
+            }
+
+            // 2. Handle Play/Pause state
             if (carSound.paused || carSound.ended) {
-                 // Ensure audio context is ready before playing
-                // Set up context if needed (returns true on success/already setup, false on error)
-                if (!setupAudioContext()) {
-                    console.warn("Cannot play, AudioContext setup failed.");
-                    alert("Could not start audio or visualization. Ensure browser allows autoplay or interactions.");
-                    // Optional: Disable play button visually here if not already handled by error state
+                // 3. Setup context/source if needed (crucial AFTER potential resume)
+                if (!setupAudioContext()) { // setupAudioContext now returns boolean
+                    console.warn("Cannot play, AudioContext setup failed or context not ready.");
+                    // UI feedback handled within setupAudioContext or by error events
                     playPauseMenuItem.classList.add('error');
                     playPauseIcon.classList.remove('fa-play', 'fa-pause');
                     playPauseIcon.classList.add('fa-times-circle');
-                    return; // Prevent trying to play if setup failed
+                    return; // Stop if setup failed
                 }
 
-                 // Resume AudioContext on user interaction if it's suspended
-                if (audioContext && audioContext.state === 'suspended') {
-                    audioContext.resume().catch(error => console.error("AudioContext resume failed:", error));
+                // 4. Attempt to play
+                try {
+                    await carSound.play(); // Use await for cleaner flow
+                    console.log("Audio playing");
+                    playPauseIcon.classList.remove('fa-play');
+                    playPauseIcon.classList.add('fa-pause');
+                    playPauseMenuItem.classList.add('active');
+                    playPauseMenuItem.classList.remove('error'); // Clear error on successful play
+                    playPauseIcon.classList.remove('fa-times-circle'); // Clear error icon
+
+                    backgroundCanvas.classList.add('playing');
+                    animationLoop(); // Start animation
+                } catch (error) {
+                    console.error("Audio play failed:", error);
+                    if (error.name !== 'AbortError') { // Ignore AbortError from rapid clicks
+                        alert(`Failed to play audio: ${error.message}`);
+                        playPauseMenuItem.classList.add('error'); // Set error state
+                        playPauseIcon.classList.remove('fa-play', 'fa-pause');
+                        playPauseIcon.classList.add('fa-times-circle');
+                    }
+                    // Reset UI even on AbortError
+                    playPauseIcon.classList.remove('fa-pause');
+                    playPauseIcon.classList.add('fa-play');
+                    playPauseMenuItem.classList.remove('active');
+                    backgroundCanvas.classList.remove('playing', 'pulsing');
                 }
-
-                carSound.play()
-                    .then(() => {
-                        console.log("Audio playing");
-                        playPauseIcon.classList.remove('fa-play');
-                        playPauseIcon.classList.add('fa-pause');
-                        playPauseMenuItem.classList.add('active'); // Set button active state
-
-                        // Start the animation loop
-                        backgroundCanvas.classList.add('playing'); // Mark as playing for CSS/JS
-                        animationLoop();
-                    })
-                    .catch(error => {
-                        console.error("Audio play failed:", error);
-                        // Don't alert here if it's just an AbortError from rapid clicking
-                         if (error.name !== 'AbortError') {
-                            alert("Failed to play audio. Check browser console for details.");
-                         }
-                        // Reset state
-                        playPauseIcon.classList.remove('fa-pause');
-                        playPauseIcon.classList.add('fa-play');
-                        playPauseMenuItem.classList.remove('active');
-                        backgroundCanvas.classList.remove('playing', 'pulsing');
-                    });
             } else {
+                // --- Pause ---
                 carSound.pause();
                 console.log("Audio paused");
                 playPauseIcon.classList.remove('fa-pause');
                 playPauseIcon.classList.add('fa-play');
-                playPauseMenuItem.classList.remove('active'); // Remove button active state
-                backgroundCanvas.classList.remove('playing', 'pulsing'); // Explicitly remove classes immediately
+                playPauseMenuItem.classList.remove('active');
+                backgroundCanvas.classList.remove('playing', 'pulsing');
             }
         }
 
-        // --- Event Listener for Image Click ---
-        carImage.addEventListener('click', togglePlayback);
+        // --- Event Listener for Image Clipper Click ---
+        imageClipper.addEventListener('click', togglePlayback); // Attach listener to the clipper div
 
 
-        // Helper function to remove 'showing-label' class from the 5 items
-        function hideZoomLabels() {
-            itemsToShowZoomLabels.forEach(item => {
-                item.classList.remove('showing-label');
-            });
-        }
-
-        // --- Menu Toggle Logic ---
-        mainMenuToggle.addEventListener('click', (event) => {
-            const target = event.target;
-            const isToggleIcon = toggleIcon.contains(target);
-            const isMenuItem = target.closest('.menu-item');
-
-             if (isToggleIcon || (!isMenuItem && target === mainMenuToggle)) {
-                mainMenuToggle.classList.toggle('active');
-                if (!mainMenuToggle.classList.contains('active')) {
-                    hideZoomLabels();
-                }
-             }
-        });
-
-        // --- Zoom Label Visibility Logic (Hovering the Zoom Trigger) ---
-        zoomMenuItem.addEventListener('mouseover', () => {
-            if (mainMenuToggle.classList.contains('active')) {
-                itemsToShowZoomLabels.forEach(item => {
-                    item.classList.add('showing-label');
-                });
-            }
-        });
-
-        // Hide labels when the mouse leaves the entire menu capsule area
-        mainMenuToggle.addEventListener('mouseleave', () => {
-             hideZoomLabels();
-        });
+        // --- Menu Logic (Toggle, Zoom Labels - unchanged) ---
+        function hideZoomLabels() { itemsToShowZoomLabels.forEach(item => item.classList.remove('showing-label')); }
+        mainMenuToggle.addEventListener('click', (event) => { const target = event.target; const isToggleIcon = toggleIcon.contains(target); const isMenuItem = target.closest('.menu-item'); if (isToggleIcon || (!isMenuItem && target === mainMenuToggle)) { mainMenuToggle.classList.toggle('active'); if (!mainMenuToggle.classList.contains('active')) hideZoomLabels(); } });
+        zoomMenuItem.addEventListener('mouseover', () => { if (mainMenuToggle.classList.contains('active')) itemsToShowZoomLabels.forEach(item => item.classList.add('showing-label')); });
+        mainMenuToggle.addEventListener('mouseleave', hideZoomLabels);
 
         // --- Control Button Functionality ---
-
-        // Function to apply zoom when a label item is clicked
         function applyZoom(itemElement) {
-             // Remove active class from all potential zoom options (the first 5 items)
-             // This 'active' class is purely for indicating the *selected zoom level*, not button state
-             itemsToShowZoomLabels.forEach(opt => opt.classList.remove('active'));
-             // Add active class to the clicked item (for visual zoom indication)
-             itemElement.classList.add('active');
-
-             const zoomLevel = parseFloat(itemElement.getAttribute('data-zoom'));
-             carImage.style.width = `${zoomLevel}%`;
-             console.log(`Zoom set to ${zoomLevel}%`);
+            itemsToShowZoomLabels.forEach(opt => opt.classList.remove('active'));
+            itemElement.classList.add('active');
+            const zoomLevel = parseFloat(itemElement.getAttribute('data-zoom'));
+            // Apply scale to the image-clipper container
+            const scale = zoomLevel / 100;
+            imageClipper.style.transform = `scale(${scale})`;
+            console.log(`Zoom set to ${zoomLevel}% (scale: ${scale})`);
         }
+        function handleClick(event) { const item = event.currentTarget; if (itemsToShowZoomLabels.includes(item) && item.classList.contains('showing-label')) { applyZoom(item); event.stopImmediatePropagation(); return true; } return false; }
+        itemsToShowZoomLabels.forEach(item => item.addEventListener('click', handleClick));
 
-        // Function to handle clicks on items that *might* be showing a zoom label
-        function handleClick(event) {
-            const item = event.currentTarget;
-            if (itemsToShowZoomLabels.includes(item) && item.classList.contains('showing-label')) {
-                applyZoom(item);
-                 event.stopImmediatePropagation(); // Prevent default action
-                 return true; // Indicate zoom was applied
-            }
-            return false; // Indicate default action should proceed
-        }
-
-        // Add generic click listener first to handle zoom clicks
-        itemsToShowZoomLabels.forEach(item => {
-            item.addEventListener('click', handleClick);
-        });
-
-        // --- Specific Default Click Actions (only run if handleClick returned false) ---
-
-        // Default Play/Pause action (calls the shared function)
-        playPauseMenuItem.addEventListener('click', (e) => {
-             // Check if handleClick already handled this event (as a zoom click)
-             // This check is technically redundant if stopImmediatePropagation works, but good safety.
-             if (!e.defaultPrevented && !playPauseMenuItem.classList.contains('showing-label')) {
-                togglePlayback();
-             }
-        });
-
-         // Default Loop action
-         loopMenuItem.addEventListener('click', (e) => {
-             if (e.defaultPrevented || loopMenuItem.classList.contains('showing-label')) return;
-            carSound.loop = !carSound.loop;
-            loopMenuItem.classList.toggle('active', carSound.loop);
-            console.log("Looping set to:", carSound.loop);
-        });
-
-         // Default Fullscreen action
-         fullscreenMenuItem.addEventListener('click', (e) => {
-             if (e.defaultPrevented || fullscreenMenuItem.classList.contains('showing-label')) return;
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch(err => console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`));
-            } else {
-                document.exitFullscreen().catch(err => console.error(`Error attempting to exit full-screen mode: ${err.message} (${err.name})`));
-            }
-             // Icon change handled by fullscreenchange event listener
-        });
-
-        // Update Fullscreen button icon based on state (NO active class change)
-        function updateFullscreenButton() {
-            if (document.fullscreenElement) {
-                fullscreenIcon.classList.remove('fa-expand');
-                fullscreenIcon.classList.add('fa-compress');
-                // fullscreenMenuItem.classList.add('active'); // REMOVED: Don't add active class visually
-            } else {
-                fullscreenIcon.classList.remove('fa-compress');
-                fullscreenIcon.classList.add('fa-expand');
-                // fullscreenMenuItem.classList.remove('active'); // REMOVED: Don't remove active class visually
-            }
-        }
-        document.addEventListener('fullscreenchange', updateFullscreenButton);
-        document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
-        document.addEventListener('mozfullscreenchange', updateFullscreenButton);
-        document.addEventListener('MSFullscreenChange', updateFullscreenButton);
-
-        // Import Image action
-        importImageMenuItem.addEventListener('click', (e) => {
-            if (e.defaultPrevented || importImageMenuItem.classList.contains('showing-label')) return;
-            imageInput.click(); // Trigger hidden file input
-        });
-
-        // Import Audio action
-        importAudioMenuItem.addEventListener('click', (e) => {
-            if (e.defaultPrevented || importAudioMenuItem.classList.contains('showing-label')) return;
-            audioInput.click(); // Trigger hidden file input
-        });
-
+        // --- Specific Default Click Actions ---
+        playPauseMenuItem.addEventListener('click', (e) => { if (!e.defaultPrevented && !playPauseMenuItem.classList.contains('showing-label')) togglePlayback(); });
+        loopMenuItem.addEventListener('click', (e) => { if (e.defaultPrevented || loopMenuItem.classList.contains('showing-label')) return; carSound.loop = !carSound.loop; loopMenuItem.classList.toggle('active', carSound.loop); console.log("Looping set to:", carSound.loop); });
+        fullscreenMenuItem.addEventListener('click', (e) => { if (e.defaultPrevented || fullscreenMenuItem.classList.contains('showing-label')) return; if (!document.fullscreenElement) { document.documentElement.requestFullscreen().catch(err => console.error(`Fullscreen Error: ${err.message}`)); } else { document.exitFullscreen().catch(err => console.error(`Exit Fullscreen Error: ${err.message}`)); } });
+        function updateFullscreenButton() { if (document.fullscreenElement) { fullscreenIcon.classList.remove('fa-expand'); fullscreenIcon.classList.add('fa-compress'); } else { fullscreenIcon.classList.remove('fa-compress'); fullscreenIcon.classList.add('fa-expand'); } }
+        document.addEventListener('fullscreenchange', updateFullscreenButton); document.addEventListener('webkitfullscreenchange', updateFullscreenButton); document.addEventListener('mozfullscreenchange', updateFullscreenButton); document.addEventListener('MSFullscreenChange', updateFullscreenButton);
+        importImageMenuItem.addEventListener('click', (e) => { if (e.defaultPrevented || importImageMenuItem.classList.contains('showing-label')) return; imageInput.click(); });
+        importAudioMenuItem.addEventListener('click', (e) => { if (e.defaultPrevented || importAudioMenuItem.classList.contains('showing-label')) return; audioInput.click(); });
 
          // --- File Input Change Handlers ---
-
         imageInput.addEventListener('change', (event) => {
             const file = event.target.files[0];
             if (file && file.type.startsWith('image/')) {
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     carImage.src = e.target.result;
-                     // Important: Wait for the new image to load before extracting colors
-                     carImage.onload = () => {
+                    // Wait for NEW image to load in the <img> tag
+                    carImage.onload = () => {
                          console.log("New image loaded, extracting colors...");
-                         applyBackgroundColors(); // Re-extract colors for the new image
-                         carImage.onload = null; // Remove the listener to prevent potential loops
-                     };
-                     carImage.onerror = () => { // Handle potential load error of new image
-                         console.error("Failed to load newly selected image.");
-                         alert("Error loading the selected image file.");
-                         applyFallbackGradient(); // Revert to fallback if new image fails
-                         carImage.onerror = null;
-                     }
+                         applyBackgroundColors(); // Re-extract colors
+                         carImage.onload = null; // Prevent re-triggering
+                    };
+                    carImage.onerror = () => {
+                         console.error("Failed to load selected image."); alert("Error loading the image file.");
+                         applyFallbackGradient(); carImage.onerror = null;
+                    }
                 }
-                reader.onerror = () => {
-                    console.error("Error reading image file.");
-                    alert("Error reading the selected image file.");
-                }
+                reader.onerror = () => { console.error("Error reading image file."); alert("Error reading image file."); }
                 reader.readAsDataURL(file);
-            } else if (file) {
-                 alert("Please select a valid image file (e.g., JPG, PNG, GIF).");
-            }
-             // Reset input value to allow selecting the same file again
-             event.target.value = null;
+            } else if (file) { alert("Please select a valid image file."); }
+            event.target.value = null; // Allow re-selecting same file
         });
 
         audioInput.addEventListener('change', (event) => {
             const file = event.target.files[0];
             if (file && file.type.startsWith('audio/')) {
-                // Stop current playback and reset state
-                if (!carSound.paused) {
-                    carSound.pause();
-                }
-                backgroundCanvas.classList.remove('playing', 'pulsing'); // Stop background animation
-                playPauseIcon.classList.remove('fa-pause');
-                playPauseIcon.classList.add('fa-play');
-                playPauseMenuItem.classList.remove('active', 'error'); // Reset play button state
-                loopMenuItem.classList.remove('active'); // Reset loop button state
+                // Stop current playback & reset state
+                if (!carSound.paused) carSound.pause(); // Pause triggers animation stop via event listener
+                playPauseIcon.classList.remove('fa-pause'); playPauseIcon.classList.add('fa-play');
+                playPauseMenuItem.classList.remove('active', 'error'); loopMenuItem.classList.remove('active');
+                playPauseIcon.classList.remove('fa-times-circle'); loopIcon.classList.remove('fa-times-circle');
+                if (!playPauseIcon.classList.contains('fa-play')) playPauseIcon.classList.add('fa-play');
+                if (!loopIcon.classList.contains('fa-repeat')) loopIcon.classList.add('fa-repeat');
 
-                // Revoke the previous object URL if one exists to free up memory
-                if (currentAudioObjectURL) {
-                    URL.revokeObjectURL(currentAudioObjectURL);
-                    console.log("Revoked previous audio object URL:", currentAudioObjectURL);
-                }
+                // Revoke previous Object URL
+                if (currentAudioObjectURL) URL.revokeObjectURL(currentAudioObjectURL);
 
-                // Create a new object URL for the selected file
+                // Create new URL and set source
                 currentAudioObjectURL = URL.createObjectURL(file);
                 carSound.src = currentAudioObjectURL;
-                carSound.loop = false; // Ensure loop is off for new track
-                isAudioSetup = false; // Mark context as needing setup for the new source
+                carSound.loop = false; // Reset loop for new track
+                isAudioSetup = false; // IMPORTANT: Force re-setup of AudioContext source node on next play
 
                 console.log("New audio loaded:", file.name);
-                console.log("New object URL:", currentAudioObjectURL);
-
-                // Reset any previous errors on buttons
-                playPauseMenuItem.classList.remove('error');
-                loopMenuItem.classList.remove('error');
-                playPauseIcon.classList.remove('fa-times-circle');
-                 if (!playPauseIcon.classList.contains('fa-play')) playPauseIcon.classList.add('fa-play'); // Ensure play icon
-                loopIcon.classList.remove('fa-times-circle');
-                 if (!loopIcon.classList.contains('fa-repeat')) loopIcon.classList.add('fa-repeat'); // Ensure repeat icon
-
-            } else if (file) {
-                alert("Please select a valid audio file (e.g., MP3, WAV, OGG).");
-            }
-            // Reset input value to allow selecting the same file again
-            event.target.value = null;
+                 // Don't try to play immediately, wait for user click
+            } else if (file) { alert("Please select a valid audio file."); }
+            event.target.value = null; // Allow re-selecting same file
         });
 
+        // --- Audio Element Event Listeners ---
+        carSound.addEventListener('ended', () => { console.log("Audio ended."); playPauseIcon.classList.remove('fa-pause'); playPauseIcon.classList.add('fa-play'); playPauseMenuItem.classList.remove('active'); /* Animation stops in loop check */ });
+        carSound.addEventListener('pause', () => { /* Handled by togglePlayback or ended event */ backgroundCanvas.classList.remove('playing', 'pulsing'); }); // Ensure visual stop on pause
+        carSound.onerror = function(e) { console.error("Audio Element Error:", carSound.error, e); let errorMessage = "Unknown audio error."; /* ... (error code checking) ... */ if (carSound.error) { /* existing switch statement */ switch (carSound.error.code) { case MediaError.MEDIA_ERR_ABORTED: errorMessage = "Audio playback aborted."; break; case MediaError.MEDIA_ERR_NETWORK: errorMessage = "A network error caused the audio download to fail."; break; case MediaError.MEDIA_ERR_DECODE: errorMessage = "Audio playback aborted due to a corruption problem or because the audio used features your browser did not support."; break; case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED: errorMessage = `The audio format may not be supported or the file could not be accessed (${file ? file.name : 'unknown source'}).`; break; default: errorMessage = `An unknown audio error occurred (Code: ${carSound.error.code}).`; break; }} if (!playPauseMenuItem.classList.contains('error')) alert(`Audio Error: ${errorMessage}`); playPauseMenuItem.classList.add('error'); loopMenuItem.classList.add('error'); playPauseIcon.classList.remove('fa-play', 'fa-pause'); playPauseIcon.classList.add('fa-times-circle'); loopIcon.classList.remove('fa-repeat'); loopIcon.classList.add('fa-times-circle'); backgroundCanvas.classList.remove('playing', 'pulsing'); if (rafId) { cancelAnimationFrame(rafId); rafId = null; } isAudioSetup = false; };
+        carSound.addEventListener('canplaythrough', () => { console.log("Audio ready."); playPauseMenuItem.classList.remove('error'); loopMenuItem.classList.remove('error'); if (!carSound.paused) { playPauseIcon.classList.remove('fa-times-circle', 'fa-play'); playPauseIcon.classList.add('fa-pause'); } else { playPauseIcon.classList.remove('fa-times-circle', 'fa-pause'); playPauseIcon.classList.add('fa-play'); } loopIcon.classList.remove('fa-times-circle'); loopIcon.classList.add('fa-repeat'); });
 
-        // Add click listener specifically for the Zoom Trigger item (it has no zoom label action)
-         zoomMenuItem.addEventListener('click', () => {
-             // No default action needed on click for this item.
-         });
+        // Initial Image Load Error
+        carImage.onerror = function() { console.error("Failed to load initial image."); carImage.alt = "Error loading image"; applyFallbackGradient(); };
 
-
-         // --- Additional Event Listeners (Audio Element) ---
-
-        // Reset play button/state when audio finishes naturally
-        carSound.addEventListener('ended', () => {
-            console.log("Audio ended event.");
-            playPauseIcon.classList.remove('fa-pause');
-            playPauseIcon.classList.add('fa-play');
-            playPauseMenuItem.classList.remove('active');
-            backgroundCanvas.classList.remove('playing', 'pulsing');
-        });
-
-         // Log when audio is paused (also called by togglePlayback)
-         carSound.addEventListener('pause', () => {
-             // console.log("Audio paused event."); // Can be noisy
-             // State changes are handled by togglePlayback or ended event
-             backgroundCanvas.classList.remove('playing', 'pulsing');
-         });
-
-        // Handle potential loading/playback errors for media
-        carImage.onerror = function() { // Original image load error
-            console.error("Failed to load initial image: car.jpg");
-            carImage.alt = "Error loading car image";
-            applyFallbackGradient(); // Ensure background has something
-        };
-
-        carSound.onerror = function(e) { // Handles errors after src is set
-            console.error("Audio Element Error:", carSound.error, e);
-            let errorMessage = "Unknown audio error.";
-            if (carSound.error) {
-                switch (carSound.error.code) {
-                    case MediaError.MEDIA_ERR_ABORTED: errorMessage = "Audio playback aborted."; break;
-                    case MediaError.MEDIA_ERR_NETWORK: errorMessage = "A network error caused the audio download to fail."; break;
-                    case MediaError.MEDIA_ERR_DECODE: errorMessage = "Audio playback aborted due to a corruption problem or because the audio used features your browser did not support."; break;
-                    case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED: errorMessage = "The audio could not be loaded, either because the server or network failed or because the format is not supported."; break;
-                    default: errorMessage = "An unknown audio error occurred."; break;
-                }
-            }
-            // Avoid alerting duplicate errors if play() already failed
-            if (!playPauseMenuItem.classList.contains('error')) {
-                 alert(`Audio Error: ${errorMessage}`);
-            }
-
-            // Mark relevant buttons with error state
-            playPauseMenuItem.classList.add('error');
-            loopMenuItem.classList.add('error');
-            playPauseIcon.classList.remove('fa-play', 'fa-pause');
-            playPauseIcon.classList.add('fa-times-circle');
-            loopIcon.classList.remove('fa-repeat');
-            loopIcon.classList.add('fa-times-circle');
-
-            // Ensure visuals stop
-             backgroundCanvas.classList.remove('playing', 'pulsing');
-             if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
-             isAudioSetup = false; // Mark audio setup as failed/invalid
-        };
-
-         // Log when audio is ready to play
-         carSound.addEventListener('canplaythrough', () => {
-             console.log("Audio is ready to play through.");
-             // Reset error state if successfully loaded after an error
-              playPauseMenuItem.classList.remove('error');
-              loopMenuItem.classList.remove('error');
-               if (!carSound.paused) { // If it's already playing (e.g. after seeking) ensure correct icon
-                   playPauseIcon.classList.remove('fa-times-circle', 'fa-play');
-                   playPauseIcon.classList.add('fa-pause');
-               } else {
-                   playPauseIcon.classList.remove('fa-times-circle', 'fa-pause');
-                   playPauseIcon.classList.add('fa-play');
-               }
-              loopIcon.classList.remove('fa-times-circle');
-              loopIcon.classList.add('fa-repeat');
-         });
-
-
-        // Close the menu when clicking anywhere outside of the menu-toggle
-        document.addEventListener('click', (e) => {
-            if (mainMenuToggle.classList.contains('active') && !mainMenuToggle.contains(e.target)) {
-                mainMenuToggle.classList.remove('active');
-                hideZoomLabels(); // Also hide labels on close
-            }
-        });
+        // --- Global Click Listener (Menu Close) ---
+        document.addEventListener('click', (e) => { if (mainMenuToggle.classList.contains('active') && !mainMenuToggle.contains(e.target)) { mainMenuToggle.classList.remove('active'); hideZoomLabels(); } });
 
         // --- Initial Setup on Window Load ---
         window.addEventListener('load', () => {
-            // Initial call to extract colors and apply background gradient
-            // Ensure image is loaded first if possible
+            // Wait for initial image before setting background
              if (carImage.complete) {
                  applyBackgroundColors();
              } else {
-                 carImage.onload = () => {
-                     applyBackgroundColors();
-                     carImage.onload = null; // Prevent re-triggering if src changes later
-                 };
+                 carImage.onload = () => { applyBackgroundColors(); carImage.onload = null; };
              }
-            // Set dark mode as default (if needed - currently no light mode toggle)
-             // body.classList.add('dark-mode'); // Or remove dark-mode if default CSS is dark
-
-            // Set initial zoom state visually
-             const initialZoomLevel = 100; // Corresponds to fullscreen button's data-zoom
-             carImage.style.width = `${initialZoomLevel}%`;
-             itemsToShowZoomLabels.forEach(item => {
-                 item.classList.remove('active'); // Clear any accidental active states
-                 if (item.getAttribute('data-zoom') == initialZoomLevel) {
-                     item.classList.add('active'); // Mark the 100% item as the active zoom indicator
-                 }
-             });
-
-            // Note: AudioContext setup and animationLoop are triggered by the first click on play (image or button).
+            // Set initial zoom state (clipper width) and visual indicator
+             const initialZoomLevel = 100;
+             imageClipper.style.transform = `scale(1)`; // Reset zoom to 100%
+             itemsToShowZoomLabels.forEach(item => { item.classList.remove('active'); if (item.getAttribute('data-zoom') == initialZoomLevel) item.classList.add('active'); });
         });
 
     </script>
