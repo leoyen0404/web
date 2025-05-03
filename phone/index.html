@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Glassmorphism Phone UI Demo with Continuous Corners & App Open Animation</title>
+    <title>Glassmorphism Phone UI Demo - White Widgets</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -36,13 +36,12 @@
         .phone-screen {
             width: 100%;
             height: 100%;
-            background-color: #ffffff; /* Fallback */
+            background-color: #ffffffe9; /* Fallback */
             /* border-radius removed */
             position: relative; /* Needed for absolute positioning of children */
             overflow: hidden; /* Clip background elements */
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
             padding: 20px 15px;
             /* Mask properties applied by JS */
             --phone-screen-radius: 60px;
@@ -84,12 +83,14 @@
 
          /* Glassmorphism Element Style (Widgets) - Uses mask */
         .glass-element {
-            background: rgba(255, 255, 255, 0.2);
+            /* --- MODIFIED: White Glassmorphism --- */
+            background: rgba(255, 255, 255, 0.5); /* Increased opacity */
+            color: #374151; /* Dark text color for contrast */
+            /* --- END MODIFIED --- */
             backdrop-filter: blur(25px);
             -webkit-backdrop-filter: blur(25px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.3); /* Keep border subtle */
             box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-            /* border-radius: 28px; */ /* Replaced by mask */
             position: relative;
             z-index: 1;
             margin-bottom: 15px;
@@ -99,12 +100,46 @@
             --widget-radius: 28px; /* Define CSS variable for radius */
         }
         .glass-element:last-child {
-            margin-bottom: 0;
+            margin-bottom: 0; /* Remove bottom margin from the very last element in the container */
+        }
+
+        /* Search Bar Widget */
+        .search-widget {
+            padding: 10px 15px; /* Adjust padding */
+            display: flex;
+            align-items: center;
+             /* Inherits dark color from .glass-element */
+        }
+        .search-widget i { /* Style for the icon */
+            font-size: 16px;
+            margin-right: 10px; /* Space between icon and input */
+            opacity: 0.6; /* Adjusted opacity for dark icon */
+            color: #4b5563; /* Slightly lighter dark grey */
+        }
+        .search-widget input[type="search"] {
+            flex-grow: 1; /* Take remaining space */
+            background: transparent; /* Transparent background */
+            border: none; /* No border */
+            outline: none; /* No focus outline */
+            color: #1f2937; /* Darker color for input text */
+            font-size: 14px;
+            font-weight: 500;
+            width: 100%; /* Ensure it tries to fill */
+        }
+        .search-widget input[type="search"]::placeholder { /* Placeholder style */
+            color: #6b7280; /* Darker placeholder */
+            opacity: 1; /* Override default opacity */
+        }
+        /* Remove default search input cancel button (optional) */
+        .search-widget input[type="search"]::-webkit-search-cancel-button,
+        .search-widget input[type="search"]::-webkit-search-decoration {
+             -webkit-appearance: none;
+             appearance: none;
         }
 
         /* Spacer div */
         .spacer {
-            flex-grow: 1;
+            flex-grow: 1; /* Pushes elements below it downwards */
         }
 
         /* App Icon Grid */
@@ -121,13 +156,13 @@
         /* Individual App Icon Style - Uses mask */
         .app-icon {
             aspect-ratio: 1 / 1;
-            background-color: rgba(245, 245, 245, 0.9);
+            background-color: rgba(245, 245, 245, 0.9); /* Keep icon background light */
             /* border-radius: 18px; */ /* Replaced by mask */
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 20px;
-            color: #374151; /* Default icon color */
+            color: #374151; /* Default icon color (already darkish) */
             box-shadow: 0 3px 8px rgba(0,0,0,0.08);
             transition: transform 0.2s ease-in-out;
             overflow: hidden; /* Needed for mask */
@@ -140,32 +175,32 @@
         .app-icon:hover {
             transform: scale(1.05);
         }
-        /* Explicit background/text colors using Tailwind classes in HTML */
+        /* Explicit background/text colors using Tailwind classes in HTML for app icons */
 
-        /* Middle Music Widget Style */
+        /* Music Widget Style */
         .music-widget {
             padding: 15px;
             display: flex;
             align-items: center;
-            color: #fff;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            /* Inherits dark color from .glass-element */
+            /* text-shadow removed */
         }
         .music-widget img {
             width: 50px;
             height: 50px;
-            border-radius: 10px; /* Keep simple radius for inner image */
+            border-radius: 18px; /* Keep simple radius for inner image */
             margin-right: 12px;
             object-fit: cover;
-            background-color: rgba(255,255,255,0.2);
+            background-color: rgba(0,0,0,0.05); /* Darker placeholder bg */
             flex-shrink: 0;
         }
         .music-info { flex-grow: 1; margin-right: 12px; overflow: hidden; }
-        .music-info .title { font-weight: 600; font-size: 14px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .music-info .artist { font-weight: 400; font-size: 12px; opacity: 0.8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .music-info .title { font-weight: 600; font-size: 14px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #1f2937; } /* Darker text */
+        .music-info .artist { font-weight: 400; font-size: 12px; opacity: 0.8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #4b5563; } /* Darker text */
         .music-controls { flex-shrink: 0; }
-        .music-controls button { background: none; border: none; color: #fff; font-size: 18px; padding: 5px; cursor: pointer; opacity: 0.9; transition: opacity 0.2s ease; }
+        .music-controls button { background: none; border: none; color: #4b5563; /* Darker buttons */ font-size: 18px; padding: 5px; cursor: pointer; opacity: 0.8; transition: opacity 0.2s ease; }
         .music-controls button:hover { opacity: 1; }
-        .music-controls .play-pause { font-size: 22px; margin: 0 5px; }
+        .music-controls .play-pause { font-size: 18px; margin: 0 5px; }
 
         /* Weather Widget Style (Bottom) */
         .weather-widget {
@@ -174,14 +209,14 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            color: #fff;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            /* Inherits dark color from .glass-element */
+            /* text-shadow removed */
         }
         .widget-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;}
-        .widget-location { font-size: 16px; font-weight: 600; }
-        .widget-temp { font-size: 44px; font-weight: 700; line-height: 1; }
-        .widget-condition { font-size: 14px; font-weight: 500; text-align: right; }
-        .widget-icon { font-size: 26px; margin-bottom: 4px; }
+        .widget-location { font-size: 16px; font-weight: 600; color: #1f2937;} /* Darker text */
+        .widget-temp { font-size: 44px; font-weight: 700; line-height: 1; color: #111827;} /* Darkest text */
+        .widget-condition { font-size: 14px; font-weight: 500; text-align: right; color: #4b5563;} /* Darker text */
+        .widget-icon { font-size: 26px; margin-bottom: 4px; color: #4b5563;} /* Darker icon */
 
         /* --- App Open Animation Styles --- */
         #app-open-overlay {
@@ -194,14 +229,12 @@
             z-index: 1000; /* High z-index above everything */
             opacity: 0; /* Start transparent */
             transform-origin: top left; /* Consistent origin for transforms */
-            /* Smooth transition for size, transform, opacity and mask */
             transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1),
                         height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
                         transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
                         opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
                         mask-image 0.4s cubic-bezier(0.4, 0, 0.2, 1),
                         -webkit-mask-image 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            /* border-radius is handled by the mask */
             border-radius: 0; /* Keep at 0 */
             overflow: hidden; /* Needed for mask */
             display: none; /* Initially hidden */
@@ -214,7 +247,6 @@
            display: block; /* Make it visible for animation */
            opacity: 1; /* Become opaque */
         }
-        /* No closing class needed */
 
     </style>
 </head>
@@ -232,6 +264,9 @@
 
             <div class="spacer"></div>
 
+            <div class="search-widget glass-element">
+                <i class="fab fa-google"></i> <input type="search" placeholder="Search Google or type a URL">
+            </div>
             <div class="app-grid">
                  <div class="app-icon bg-green-500 text-white"><i class="fas fa-phone"></i></div>
                 <div class="app-icon bg-blue-500 text-white"><i class="fas fa-comment-dots"></i></div>
@@ -248,8 +283,7 @@
             </div>
 
             <div class="music-widget glass-element">
-                 <img src="https://placehold.co/100x100/7b2cbf/white?text=Album" alt="Album Art" onerror="this.src='https://placehold.co/100x100/cccccc/ffffff?text=Error'">
-                 <div class="music-info">
+                 <img src="https://placehold.co/100x100/cccccc/333333?text=Album" alt="Album Art" onerror="this.src='https://placehold.co/100x100/cccccc/ffffff?text=Error'"> <div class="music-info">
                      <div class="title">Sunset Drive</div>
                      <div class="artist">Lofi Chillhop</div>
                  </div>
@@ -279,98 +313,53 @@
 
 
     <script>
-        // --- Constants for Radii (read from CSS variables or set directly) ---
-        const ICON_RADIUS = '18px'; // Matches --icon-radius or the value used in applySquircleMask
-        const PHONE_SCREEN_RADIUS = '60px'; // Matches --phone-screen-radius or the value used in applySquircleMask
+        // --- Constants for Radii ---
+        const ICON_RADIUS = '18px';
+        const PHONE_SCREEN_RADIUS = '60px';
+        const WIDGET_RADIUS = '40px';
 
         /**
-         * Generates an SVG path string for a rounded rectangle with continuous curvature corners.
-         * Uses a single cubic Bezier curve per corner, approximating a circular arc (kappa method).
-         *
-         * @param {number} W - The width of the rectangle.
-         * @param {number} H - The height of the rectangle.
-         * @param {number|string} r - The corner radius (can be px string or number).
-         * @returns {string} The SVG path data string.
+         * Generates an SVG path string for continuous curvature corners.
          */
         function generateContinuousPath(W, H, r) {
-            // Convert radius string (like '18px') to number
             let radius = parseFloat(r);
-            // Clamp radius
             radius = Math.min(radius, W / 2, H / 2);
             if (radius < 0) radius = 0;
-
-            const k = 0.5522847498; // Kappa value for approximating circle with Bezier
+            const k = 0.5522847498;
             const ox = radius * k;
             const oy = radius * k;
-
-            // Generate path data string
-            const pathData = `
-                M 0 ${radius}
-                C 0 ${radius - oy}, ${radius - ox} 0, ${radius} 0
-                L ${W - radius} 0
-                C ${W - radius + ox} 0, ${W} ${radius - oy}, ${W} ${radius}
-                L ${W} ${H - radius}
-                C ${W} ${H - radius + oy}, ${W - radius + ox} ${H}, ${W - radius} ${H}
-                L ${radius} ${H}
-                C ${radius - ox} ${H}, 0 ${H - radius + oy}, 0 ${H - radius}
-                Z
-            `.replace(/\s+/g, ' ').trim(); // Clean up whitespace
-
+            const pathData = `M 0 ${radius} C 0 ${radius - oy}, ${radius - ox} 0, ${radius} 0 L ${W - radius} 0 C ${W - radius + ox} 0, ${W} ${radius - oy}, ${W} ${radius} L ${W} ${H - radius} C ${W} ${H - radius + oy}, ${W - radius + ox} ${H}, ${W - radius} ${H} L ${radius} ${H} C ${radius - ox} ${H}, 0 ${H - radius + oy}, 0 ${H - radius} Z`.replace(/\s+/g, ' ').trim();
             return pathData;
         }
 
         /**
-         * Applies an SVG mask for continuous curvature corners to a given element.
-         *
-         * @param {Element} element - The DOM element to apply the mask to.
-         * @param {number|string} radius - The desired corner radius (can be px string or number).
-         * @param {number} [width] - Optional width for the mask (defaults to element's offsetWidth or bounding rect).
-         * @param {number} [height] - Optional height for the mask (defaults to element's offsetHeight or bounding rect).
+         * Applies an SVG mask for continuous curvature corners.
          */
         function applySquircleMask(element, radius, width, height) {
-            if (!element) return; // Exit if element is null
-
-            // Use provided dimensions or get from element's current state
+            if (!element) return;
             const rect = element.getBoundingClientRect();
-            // Use provided W/H if > 0, otherwise use current element W/H
-            // Prioritize offsetWidth/Height for more reliable layout dimensions including padding
             const W = width > 0 ? width : (element.offsetWidth > 0 ? element.offsetWidth : rect.width);
             const H = height > 0 ? height : (element.offsetHeight > 0 ? element.offsetHeight : rect.height);
-
-            // Ensure we have valid dimensions before proceeding
             if (W <= 0 || H <= 0) {
-                // Don't warn for overlay as its initial dimensions might be 0
-                if(element.id !== 'app-open-overlay') {
-                     console.warn('Skipping mask application for element with zero/invalid dimensions:', element, W, H);
-                }
+                if(element.id !== 'app-open-overlay') { console.warn('Skipping mask application for element with zero/invalid dimensions:', element, W, H); }
                 return;
             }
-
-            // Generate the SVG path for the mask
             const path = generateContinuousPath(W, H, radius);
-            // Create the SVG mask string
-            // Note: Using single quotes inside the SVG string for attributes
             const svgMask = `<svg xmlns='http://www.w3.org/2000/svg' width='${W}' height='${H}' viewBox='0 0 ${W} ${H}'><path d='${path}' fill='black'/></svg>`;
-            // Encode the SVG string for use as a data URL
             const dataUrl = `url("data:image/svg+xml;utf8,${encodeURIComponent(svgMask)}")`;
-
-            // Apply mask styles using vendor prefixes for compatibility
             element.style.webkitMaskImage = dataUrl;
             element.style.maskImage = dataUrl;
             element.style.webkitMaskSize = '100% 100%';
             element.style.maskSize = '100% 100%';
             element.style.webkitMaskRepeat = 'no-repeat';
             element.style.maskRepeat = 'no-repeat';
-             // Important: Ensure the element clips its content to the mask shape
-             element.style.webkitMaskComposite = 'source-in'; // For Webkit browsers
-             element.style.maskComposite = 'intersect'; // Standard property
-             // Ensure border-radius doesn't interfere
-             element.style.borderRadius = '0';
+            element.style.webkitMaskComposite = 'source-in';
+            element.style.maskComposite = 'intersect';
+            element.style.borderRadius = '0';
         }
 
         /**
          * Removes the SVG mask from an element.
-         * @param {Element} element - The DOM element to remove the mask from.
          */
         function removeSquircleMask(element) {
             if (!element) return;
@@ -386,34 +375,16 @@
             const appIcons = document.querySelectorAll('.app-icon');
             const widgets = document.querySelectorAll('.glass-element');
 
-             // Read radii from CSS variables if needed, otherwise use constants
-             const phoneFrameRadius = '70px'; // Or read from CSS
-             const phoneScreenRadius = PHONE_SCREEN_RADIUS; // Use constant
-             const iconRadius = ICON_RADIUS; // Use constant
-             const widgetRadius = '28px'; // Or read from CSS
+             const phoneFrameRadius = '70px';
+             const phoneScreenRadius = PHONE_SCREEN_RADIUS;
+             const iconRadius = ICON_RADIUS;
+             const widgetRadius = WIDGET_RADIUS;
 
-            // Apply mask to Phone Frame
-            if (phoneFrame) {
-                applySquircleMask(phoneFrame, phoneFrameRadius);
-            }
+            if (phoneFrame) applySquircleMask(phoneFrame, phoneFrameRadius);
+            if (phoneScreen) applySquircleMask(phoneScreen, phoneScreenRadius);
+            appIcons.forEach(icon => applySquircleMask(icon, iconRadius));
+            widgets.forEach(widget => applySquircleMask(widget, widgetRadius));
 
-            // Apply mask to Phone Screen
-            if (phoneScreen) {
-                applySquircleMask(phoneScreen, phoneScreenRadius);
-            }
-
-            // Apply mask to App Icons
-            appIcons.forEach(icon => {
-                applySquircleMask(icon, iconRadius);
-            });
-
-            // Apply mask to Widgets
-            widgets.forEach(widget => {
-                 applySquircleMask(widget, widgetRadius);
-            });
-
-            // --- Initialize the App Open Animation Logic ---
-            // Pass the phoneScreen element to the setup function
             if (phoneScreen) {
                 setupAppOpenAnimation(phoneScreen);
             } else {
@@ -421,182 +392,109 @@
             }
         });
 
-         // --- Optional: Re-apply masks on resize if layout is fluid ---
+         // --- Optional: Re-apply masks on resize ---
          let resizeTimeout;
          window.addEventListener('resize', () => {
-             clearTimeout(resizeTimeout); // Clear previous timeout
-             // Debounce the resize event
+             clearTimeout(resizeTimeout);
              resizeTimeout = setTimeout(() => {
                  console.log("Re-applying masks on resize");
                  const phoneFrame = document.querySelector('.phone-frame');
                  const phoneScreen = document.querySelector('.phone-screen');
                  const appIcons = document.querySelectorAll('.app-icon');
                  const widgets = document.querySelectorAll('.glass-element');
-                 const overlay = document.getElementById('app-open-overlay'); // Also re-apply if visible
+                 const overlay = document.getElementById('app-open-overlay');
 
-                 // Re-read radii in case they are dynamic
                  const phoneFrameRadius = '70px';
                  const phoneScreenRadius = PHONE_SCREEN_RADIUS;
                  const iconRadius = ICON_RADIUS;
-                 const widgetRadius = '28px';
+                 const widgetRadius = WIDGET_RADIUS;
 
-                 // Re-apply masks
                  if (phoneFrame) applySquircleMask(phoneFrame, phoneFrameRadius);
                  if (phoneScreen) applySquircleMask(phoneScreen, phoneScreenRadius);
                  appIcons.forEach(icon => applySquircleMask(icon, iconRadius));
                  widgets.forEach(widget => applySquircleMask(widget, widgetRadius));
 
-                 // If overlay is currently displayed (expanded), re-apply its mask
-                 // AND update its position/size if the screen resized
                  if (overlay && overlay.style.display === 'block' && overlay.classList.contains('visible')) {
                     const phoneScreenRect = phoneScreen?.getBoundingClientRect();
                     const screenWidth = phoneScreen?.offsetWidth;
                     const screenHeight = phoneScreen?.offsetHeight;
                     if (phoneScreenRect && screenWidth && screenHeight) {
-                         // Update size and position to match the new screen dimensions
                          overlay.style.width = `${screenWidth}px`;
                          overlay.style.height = `${screenHeight}px`;
                          overlay.style.transform = `translate(${phoneScreenRect.left}px, ${phoneScreenRect.top}px)`;
-                         // Re-apply the mask with the correct (potentially new) dimensions
                          applySquircleMask(overlay, phoneScreenRadius, screenWidth, screenHeight);
                     }
                  }
-
-
-             }, 150); // Wait 150ms after resize stops
+             }, 150);
          });
 
          // --- App Open Animation Logic ---
         /**
          * Sets up the click listeners and animation logic for app icons.
-         * @param {Element} phoneScreenElement - The DOM element representing the phone screen.
          */
         function setupAppOpenAnimation(phoneScreenElement) {
             const icons = document.querySelectorAll('.app-icon');
             const overlay = document.getElementById('app-open-overlay');
-            if (!overlay) {
-                console.error("Overlay element not found!");
-                return;
-            }
+            if (!overlay) { console.error("Overlay element not found!"); return; }
+            let currentIcon = null, isAnimating = false, animationDirection = null, lastIconRect = null;
 
-            let currentIcon = null; // Track the originating icon
-            let isAnimating = false; // Track animation state
-            let animationDirection = null; // 'opening' or 'closing'
-            let lastIconRect = null; // Store icon rect for closing
-
-            // Define named functions for event listeners to allow removal
             const openTransitionEndHandler = (event) => {
-                // Check if the transition ended for a property we care about (e.g., transform or width)
                 if (['transform', 'width', 'height'].includes(event.propertyName)) {
-                    // Only set isAnimating to false once *all* tracked properties have finished transitioning
-                    // This simple check might need refinement if transitions have different durations/delays
-                    isAnimating = false;
-                    animationDirection = null;
+                    isAnimating = false; animationDirection = null;
                     overlay.removeEventListener('transitionend', openTransitionEndHandler);
                     console.log("Open transition finished for:", event.propertyName);
                 }
             };
-
             const closeTransitionEndHandler = (event) => {
                  if (['transform', 'width', 'height'].includes(event.propertyName)) {
-                    // Wait for transform/width/height to finish before hiding
-                    isAnimating = false;
-                    animationDirection = null;
-                    overlay.style.display = 'none'; // Hide the element
-                    overlay.classList.remove('visible'); // Remove visibility class
-                    removeSquircleMask(overlay); // Clean up mask
-                    currentIcon = null; // Reset the tracked icon
-                    lastIconRect = null;
+                    isAnimating = false; animationDirection = null;
+                    overlay.style.display = 'none'; overlay.classList.remove('visible');
+                    removeSquircleMask(overlay); currentIcon = null; lastIconRect = null;
                     overlay.removeEventListener('transitionend', closeTransitionEndHandler);
-                    overlay.removeEventListener('click', closeOverlay); // Remove close listener
+                    overlay.removeEventListener('click', closeOverlay);
                     console.log("Close transition finished for:", event.propertyName);
                  }
             };
-
-            // --- Function to close the overlay ---
             function closeOverlay() {
-                if (!currentIcon || !lastIconRect) {
-                    console.log("Close cancelled: Missing icon or screen data");
-                    return;
-                }
+                if (!currentIcon || !lastIconRect) { console.log("Close cancelled: Missing icon or screen data"); return; }
                 if (isAnimating && animationDirection === 'closing') return;
-
                 console.log("Closing animation triggered");
-                isAnimating = true;
-                animationDirection = 'closing';
-
-                // Remove any existing transitionend listeners
+                isAnimating = true; animationDirection = 'closing';
                 overlay.removeEventListener('transitionend', openTransitionEndHandler);
                 overlay.removeEventListener('transitionend', closeTransitionEndHandler);
-
-                // Apply the icon mask *immediately* using stored icon dimensions
                 applySquircleMask(overlay, ICON_RADIUS, lastIconRect.width, lastIconRect.height);
-
-                // Apply styles for the shrinking animation:
-                // Animate back to the icon's original position and size
                 overlay.style.width = `${lastIconRect.width}px`;
                 overlay.style.height = `${lastIconRect.height}px`;
                 overlay.style.transform = `translate(${lastIconRect.left}px, ${lastIconRect.top}px)`;
-                overlay.style.opacity = '0'; // Fade out
-
-                // Add the listener for when the closing animation finishes
+                overlay.style.opacity = '0';
                 overlay.addEventListener('transitionend', closeTransitionEndHandler);
             }
-
-            // --- Add click listener to each app icon ---
             icons.forEach(icon => {
                 icon.addEventListener('click', (e) => {
-                    if (isAnimating) return; // Prevent starting new animation if one is running
-
+                    if (isAnimating) return;
                     console.log("Opening animation triggered");
-                    isAnimating = true;
-                    animationDirection = 'opening';
-                    currentIcon = e.currentTarget; // Store the clicked icon element
-                    const iconRect = currentIcon.getBoundingClientRect(); // Get icon position/size (relative to viewport)
-                    const phoneScreenRect = phoneScreenElement.getBoundingClientRect(); // Get phone screen position/size (for positioning)
-                    const phoneScreenOffsetWidth = phoneScreenElement.offsetWidth; // Get screen layout width (for target size/mask)
-                    const phoneScreenOffsetHeight = phoneScreenElement.offsetHeight; // Get screen layout height (for target size/mask)
-                    const iconColor = window.getComputedStyle(currentIcon).backgroundColor; // Get icon color
-
-                    // Store icon rect for closing animation
+                    isAnimating = true; animationDirection = 'opening'; currentIcon = e.currentTarget;
+                    const iconRect = currentIcon.getBoundingClientRect();
+                    const phoneScreenRect = phoneScreenElement.getBoundingClientRect();
+                    const phoneScreenOffsetWidth = phoneScreenElement.offsetWidth;
+                    const phoneScreenOffsetHeight = phoneScreenElement.offsetHeight;
+                    const iconColor = window.getComputedStyle(currentIcon).backgroundColor;
                     lastIconRect = iconRect;
-
-                    // Remove any existing transitionend listeners before starting
                     overlay.removeEventListener('transitionend', openTransitionEndHandler);
                     overlay.removeEventListener('transitionend', closeTransitionEndHandler);
-
-                    // 1. Set initial state of the overlay (at icon's position and size)
                     overlay.style.backgroundColor = iconColor;
-                    overlay.style.width = `${iconRect.width}px`; // Use icon's actual width
-                    overlay.style.height = `${iconRect.height}px`; // Use icon's actual height
-                    // Apply initial transform to place it over the icon
+                    overlay.style.width = `${iconRect.width}px`;
+                    overlay.style.height = `${iconRect.height}px`;
                     overlay.style.transform = `translate(${iconRect.left}px, ${iconRect.top}px)`;
-                    overlay.style.opacity = '1'; // Start fully visible
-                    overlay.style.display = 'block'; // Make it visible
-                    overlay.style.transformOrigin = 'top left'; // Keep origin consistent
-
-                    // Apply icon mask initially using icon dimensions
+                    overlay.style.opacity = '1'; overlay.style.display = 'block'; overlay.style.transformOrigin = 'top left';
                     applySquircleMask(overlay, ICON_RADIUS, iconRect.width, iconRect.height);
-
-                    // Add the visible class (doesn't trigger transition yet)
                     overlay.classList.add('visible');
-
-                    // 2. Force reflow: Ensure browser applies initial styles BEFORE starting transition
-                    void overlay.offsetWidth;
-
-                    // 3. Set target state (filling phone screen)
-                    // Apply the phone screen mask *immediately* using target dimensions
+                    void overlay.offsetWidth; // Force reflow
                     applySquircleMask(overlay, PHONE_SCREEN_RADIUS, phoneScreenOffsetWidth, phoneScreenOffsetHeight);
-
-                    // Set the target size and position
                     overlay.style.width = `${phoneScreenOffsetWidth}px`;
                     overlay.style.height = `${phoneScreenOffsetHeight}px`;
                     overlay.style.transform = `translate(${phoneScreenRect.left}px, ${phoneScreenRect.top}px)`;
-
-                    // Add the listener for when the opening animation finishes
                     overlay.addEventListener('transitionend', openTransitionEndHandler);
-
-                    // Add click listener to the overlay itself to trigger the close animation
                     overlay.removeEventListener('click', closeOverlay);
                     overlay.addEventListener('click', closeOverlay);
                 });
