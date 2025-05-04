@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>高中學習歷程反思與未來規劃 (A4 Optimized - Color Print)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Basic Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Body Styling - These styles apply to both screen and print by default */
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            line-height: 1.8;
+            color: #333;
+            padding: 40px; /* Screen/Print padding */
+            background-color: #fdfdfd; /* Screen/Print background (will print if background graphics enabled) */
+            font-size: 17px; /* Screen/Print font size */
+            max-width: 18cm; /* Screen max-width */
+            margin: 20px auto; /* Screen centering */
+        }
+
+        /* Section Styling */
+        .page-section {
+            margin-bottom: 40px; /* Screen/Print margin */
+            padding-bottom: 20px; /* Screen/Print padding */
+        }
+
+        /* Heading Styling with Red Decoration */
+        h2 {
+            font-size: 1.7em; /* Screen/Print font size */
+            color: #B71C1C; /* Screen/Print red color */
+            margin-bottom: 25px; /* Screen/Print margin */
+            padding-bottom: 8px; /* Screen/Print padding */
+            border-bottom: 2px solid #E57373; /* Screen/Print border */
+            font-weight: 700;
+        }
+
+        /* Paragraph Styling */
+        p {
+            margin-bottom: 18px; /* Screen/Print margin */
+            text-align: justify;
+            line-height: 1.8; /* Screen/Print line-height */
+        }
+
+        /* List Styling */
+        ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        li {
+            margin-bottom: 18px; /* Screen/Print margin */
+            padding-left: 25px;
+            position: relative;
+            text-align: justify;
+            line-height: 1.8; /* Screen/Print line-height */
+        }
+
+        /* Custom Red Dot Bullet */
+        li::before {
+            content: '•';
+            color: #B71C1C; /* Screen/Print red color */
+            font-size: 1.2em;
+            position: absolute;
+            left: 5px;
+            top: 0px; /* Screen/Print position */
+        }
+
+        /* Styling for Bold text within lists */
+        strong {
+            color: #B71C1C; /* Screen/Print red color */
+            font-weight: 700;
+        }
+
+
+        /* --- Print Styles --- */
+        @media print {
+            /* The general styles above apply unless overridden here.
+               We only need to add the specific page break rule. */
+
+            /* Add a page break AFTER the second section */
+            .page-section:nth-of-type(2) {
+                page-break-after: always;
+            }
+
+            /* Optional: Adjust body margin/max-width for A4 print if needed, but
+               keeping the screen padding (40px) is closer to "exact like screen" */
+             body {
+                 /* You could add print-specific body styles here if you need to fine-tune
+                    for print paper size, but keep the screen's padding, font size, etc.
+                    to match the screen appearance as closely as possible.
+                    For example:
+                    margin: 0;
+                    max-width: none; */
+             }
+
+             /* Ensure background colors/images are printed */
+             body {
+                 -webkit-print-color-adjust: exact; /* Chrome, Safari */
+                 print-color-adjust: exact; /* Standard syntax */
+             }
+
+             /* Ensure colors are not turned to black/grey by default */
+             h2, li::before, strong {
+                 color: #B71C1C !important;
+             }
+             /* Ensure border color is not turned to black/grey */
+             h2 {
+                 border-bottom-color: #E57373 !important;
+             }
+
+        }
+    </style>
+</head>
+<body>
+
+    <div class="page-section">
+        <h2>高中學習歷程反思：探索與突破的成長印記</h2>
+        <p>
+            從國中數理資優班的紮實基礎啟程，我對邏輯與數理世界有著先天的熱情。升高中的階段性失利曾短暫影響我對學制內學習的熱忱，數學成績也一度停滯。然而，隨著對程式設計的深入接觸與人工智慧浪潮的興起，我赫然發現數學是理解這些前沿領域不可或缺的基石。這份體悟猶如醍醐灌頂，激勵我重新審視並投入數學的學習，即使起步較晚，我也產生了迎頭趕上的決心與行動力。這段經歷不僅提升了我解決問題的能力，更培養了我面對挑戰、自主學習的堅韌特質。回顧高中生涯，無論是課業上的鑽研、社團的投入，或是其他活動的參與，我都秉持著好奇心與責任感，不斷探索自己的潛能與興趣。
+        </p>
+    </div>
+
+    <div class="page-section">
+        <h2>就讀動機：匯聚熱情，築夢逢甲資電</h2>
+        <p>
+            我對資訊與電腦科學的熱愛並非一時興起，而是從小學接觸程式設計與機器學習種下的根基，國高中的相關課程與專題更是不斷澆灌這份熱情。特別是近年來 AI 的快速發展，其背後精妙的邏輯與硬體深深吸引著我，促使我決心深入學習相關知識。逢甲大學資訊電機學院學士班，正是我認為能匯聚我這份熱情並助我實現夢想的理想場域。貴系「延後分流」的獨特設計，精準契合我對軟體與硬體兼具的興趣，提供我在廣泛探索資訊、電機、電子、自控、通訊等領域後，做出最適合自己專業方向的寶貴機會。我相信，在貴系紮實的基礎課程與豐富的實作資源下，我能將過去的學習經驗與熱情轉化為前進的動力，為未來的專業發展奠定堅實基礎。
+        </p>
+    </div>
+
+    <div class="page-section">
+        <h2>未來學習計畫與生涯規劃：累積實力，迎向未來</h2>
+        <p>
+            我的未來學習計畫與生涯發展，將以逢甲大學資訊電機學院學士班為核心，採短、中、長期分階段穩步推進：
+        </p>
+        <ul>
+            <li><strong>短期（入學前）：</strong> 我將專注於強化大學基礎學科能力，特別是針對資訊電機領域至關重要的數學（微積分、線性代數等）進行深入學習與預習。同時，我也會利用線上資源，提前接觸大學程式設計或計算機科學的基礎概念，為無縫接軌大學課程做好準備。此外，我會持續關注貴系的最新資訊，包括教授研究方向與實驗室特色，以便入學後能更快找到感興趣的領域。</li>
+            <li><strong>中期（大學就學階段）：</strong> 進入大學後，我將以嚴謹的態度修習系內各項專業課程，建立廣泛而紮實的資訊電機知識。我會積極參與系上的課程及其他實作機會，將理論知識應用於實踐。在大二分流後，我將更聚焦於選擇的主修領域，並主動爭取進入實驗室參與研究或尋求相關企業實習機會，透過實戰經驗來探索自己的專業潛能與具體興趣方向。同時，我也會保持開放的態度，透過參與跨領域課程或活動，拓展視野，為未來的多元發展累積能量。</li>
+            <li><strong>長期（畢業後發展）：</strong> 展望畢業後，我規劃朝向資訊電機領域的研發或應用方向邁進。無論是選擇繼續攻讀研究所深耕學術，或是進入產業貢獻所學，我都會將目標鎖定在具備創新與前瞻性的領域，例如人工智慧的應用與發展。我深知科技發展日新月異，因此已做好成為終身學習者的準備，將持續關注產業動向與技術革新，不斷精進自身能力，期許自己在資訊電機領域做出有意義的貢獻。</li>
+        </ul>
+    </div>
+
+</body>
+</html>
