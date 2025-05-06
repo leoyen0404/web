@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Glassmorphism Business Card with Export & Edit</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha512-BNaRQnYJYiPSqHHDb58B0yaPfCu+Wgds8Gp/gU33kqBtgNS4tSPHuGibyoeqMV/TJlSKda6FXzoEyYGjTe+vXA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: url('https://source.unsplash.com/random/1600x900?light,abstract,minimal') no-repeat center center fixed;
+            background-size: cover;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 2rem;
+            transition: background-image 0.5s ease-in-out;
+            color: #374151; /* Default text color for controls */
+        }
+
+        /* Dark mode body styles */
+        body.dark-mode-active {
+            background: url('https://source.unsplash.com/random/1600x900?dark,abstract,tech') no-repeat center center fixed;
+            background-size: cover;
+            color: #d1d5db; /* Lighter text for controls in dark mode */
+        }
+
+        .code-block {
+            font-family: 'Courier New', Courier, monospace;
+            line-height: 1.6;
+            color: #e5e7eb; /* Default for light mode card */
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+            padding: 1rem 1.5rem;
+        }
+
+        .line-number {
+            display: inline-block;
+            width: 2.5em;
+            text-align: right;
+            margin-right: 0.5em;
+            color: #9ca3af; /* Default for light mode card */
+            user-select: none;
+        }
+        .json-indent {
+            margin-right: 0.5em;
+        }
+
+        .json-string, .json-key, .editable-filename {
+            outline: none;
+            padding: 0.1em 0.2em;
+            border-radius: 3px;
+            transition: background-color 0.2s ease, box-shadow 0.2s ease, color 0.3s ease;
+            word-break: break-all;
+            min-width: 1ch;
+            display: inline-block;
+        }
+        .json-string:focus, .json-key:focus, .editable-filename:focus {
+            background-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.4);
+        }
+        /* Light mode card text colors */
+        .json-string { color: #10B981; } /* Emerald for strings */
+        .json-key { color: #3B82F6; }    /* Blue for keys */
+        .json-punctuation { color: #4B5563; } /* Darker gray for punctuation */
+        .editable-filename { color: #4B5563; }
+
+
+        .glass-card {
+            /* Light Mode Default Card */
+            background-color: rgba(255, 255, 255, 0.6); /* Lighter background for light mode */
+            backdrop-filter: blur(12px) saturate(150%);
+            -webkit-backdrop-filter: blur(12px) saturate(150%);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            color: #374151; /* Darker text for light mode card */
+            text-shadow: none; /* Remove text shadow for better readability in light mode */
+
+            width: auto;
+            display: inline-block;
+            min-width: 380px;
+            max-width: 90vw;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            transition: box-shadow 0.3s ease, background-image 0.3s ease, background-color 0.5s ease, border-color 0.5s ease, color 0.5s ease;
+            position: relative;
+            border-radius: 1.5rem; /* Tailwind rounded-3xl */
+            box-shadow: 0 10px 25px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1); /* Softer shadow */
+            overflow: hidden;
+        }
+        .glass-card .code-block { color: #4B5563; text-shadow: none;}
+        .glass-card .line-number { color: #6B7280; }
+
+
+        /* Dark Mode Card Styles */
+        .glass-card.dark-mode {
+            background-color: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(14px); /* Original blur for dark mode */
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #d1d5db; /* Light text for dark mode card */
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5); /* Restore text shadow for dark mode */
+        }
+        .glass-card.dark-mode .code-block { color: #e5e7eb; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+        .glass-card.dark-mode .line-number { color: #9ca3af; }
+        .glass-card.dark-mode .json-string { color: #a5d6a7; } /* Light green for strings */
+        .glass-card.dark-mode .json-key { color: #90caf9; }    /* Light blue for keys */
+        .glass-card.dark-mode .json-punctuation { color: #f9fafb; } /* Lighter white for punctuation */
+        .glass-card.dark-mode .editable-filename { color: #cbd5e1; }
+        .glass-card.dark-mode .card-header, .glass-card.dark-mode .card-toolbar {
+            background-color: rgba(0, 0, 0, 0.35);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .glass-card.dark-mode .card-toolbar { color: #9ca3af; }
+        .glass-card.dark-mode .icon-button { color: #9ca3af; }
+        .glass-card.dark-mode .icon-button:hover { color: #e5e7eb; }
+
+
+        .drag-over {
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.6), 0 10px 15px -3px rgba(0,0,0,0.3), 0 4px 6px -4px rgba(0,0,0,0.2);
+        }
+        .glass-card.dark-mode .drag-over { /* Ensure drag over is visible in dark mode */
+             box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.7), 0 10px 15px -3px rgba(0,0,0,0.4), 0 4px 6px -4px rgba(0,0,0,0.3);
+        }
+
+
+        .card-content-wrapper { display: flex; flex-direction: column; overflow: hidden; }
+
+        .card-header, .card-toolbar {
+            background-color: rgba(255, 255, 255, 0.2); /* Lighter toolbar for light mode */
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+            flex-shrink: 0;
+            transition: background-color 0.5s ease, border-color 0.5s ease, color 0.5s ease;
+        }
+        .card-header { padding: 0.5rem 1rem; }
+        .card-toolbar { padding: 0.25rem 1rem; color: #6B7280; /* Icon color for light mode toolbar */ }
+
+        .export-button {
+            margin-top: 1.5rem; padding: 0.75rem 1.5rem;
+            background-color: rgba(79, 70, 229, 0.9); /* Indigo */
+            color: white; font-weight: 500; border-radius: 0.75rem;
+            border: 1px solid transparent; /* Cleaner look */
+            cursor: pointer;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .export-button:hover {
+            background-color: rgba(67, 56, 202, 1);
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+        }
+        .export-button:active {
+            background-color: rgba(55, 48, 163, 1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Dark mode export button */
+        body.dark-mode-active .export-button {
+            background-color: rgba(99, 102, 241, 0.8); /* Slightly lighter indigo for dark bg */
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        body.dark-mode-active .export-button:hover {
+            background-color: rgba(79, 70, 229, 0.9);
+        }
+         body.dark-mode-active .export-button:active {
+            background-color: rgba(67, 56, 202, 0.95);
+        }
+
+
+        .icon-button {
+            background: none; border: none; color: #6B7280; /* Default for light mode */
+            cursor: pointer; padding: 0.25rem; transition: color 0.2s ease;
+            display: inline-flex; align-items: center; justify-content: center; line-height: 1; 
+        }
+        .icon-button:hover { color: #374151; /* Darker hover for light mode */ }
+        .icon-button i.fas { font-size: 0.9rem; }
+        .remove-line-btn { margin-left: 0.75rem; }
+
+        [contenteditable="true"]:empty:before {
+            content: attr(data-placeholder);
+            color: rgba(0, 0, 0, 0.3); /* Placeholder for light mode */
+            font-style: italic;
+        }
+        .glass-card.dark-mode [contenteditable="true"]:empty:before {
+            color: rgba(255, 255, 255, 0.4); /* Placeholder for dark mode */
+        }
+
+        .json-line-item { display: flex; align-items: center; }
+
+        /* Controls Styling */
+        .controls-container {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background-color: rgba(255, 255, 255, 0.7);
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            width: auto;
+            min-width: 300px;
+            max-width: 380px;
+        }
+        body.dark-mode-active .controls-container {
+            background-color: rgba(31, 41, 55, 0.7); /* Dark gray for controls bg */
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+
+        .control-item { display: flex; align-items: center; justify-content: space-between; }
+        .control-item label { font-size: 0.875rem; font-weight: 500; }
+
+        /* Dark Mode Toggle Switch */
+        .toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc; border-radius: 34px;
+            transition: .4s;
+        }
+        .slider:before {
+            position: absolute; content: "";
+            height: 18px; width: 18px; left: 3px; bottom: 3px;
+            background-color: white; border-radius: 50%;
+            transition: .4s;
+        }
+        input:checked + .slider { background-color: #4F46E5; } /* Indigo */
+        input:focus + .slider { box-shadow: 0 0 1px #4F46E5; }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        /* Range Slider for Nudge */
+        .nudge-control input[type="range"] {
+            width: 150px; /* Adjust as needed */
+            cursor: pointer;
+        }
+        .nudge-value { font-weight: 500; min-width: 40px; text-align: right; }
+
+    </style>
+</head>
+<body id="pageBody">
+
+    <div id="businessCard" class="glass-card">
+        <div class="card-content-wrapper">
+            <div class="card-header flex items-center justify-between">
+                <div class="flex space-x-2">
+                    <div class="w-3 h-3 bg-red-500 rounded-full opacity-80"></div>
+                    <div class="w-3 h-3 bg-yellow-500 rounded-full opacity-80"></div>
+                    <div class="w-3 h-3 bg-green-500 rounded-full opacity-80"></div>
+                </div>
+                <span id="cardFilename" class="editable-filename text-sm font-medium" contenteditable="true" data-placeholder="filename.json">BusinessCard.json</span>
+                <div></div> </div>
+
+            <div class="card-toolbar flex items-center text-xs space-x-3">
+                <button class="icon-button" title="List view"><i class="fas fa-list fa-fw"></i></button>
+                <button class="icon-button" title="Navigate back"><i class="fas fa-arrow-left fa-fw"></i></button>
+                <button class="icon-button" title="Navigate forward"><i class="fas fa-arrow-right fa-fw"></i></button>
+                <button class="icon-button" title="Search"><i class="fas fa-search fa-fw"></i></button>
+                <button class="icon-button add-line-btn" id="addLineBtn" title="Add new line">
+                    <i class="fas fa-plus-circle fa-fw"></i>
+                </button>
+            </div>
+
+            <div class="code-content-area">
+                <div class="code-block text-sm" id="codeBlock">
+                    </div>
+            </div>
+        </div>
+    </div>
+
+    <button id="exportButton" class="export-button">
+        <i class="fas fa-download mr-2"></i>Export Card (PNG)
+    </button>
+
+    <div class="controls-container">
+        <div class="control-item">
+            <label for="darkModeToggle">Dark Mode</label>
+            <label class="toggle-switch">
+                <input type="checkbox" id="darkModeToggle">
+                <span class="slider"></span>
+            </label>
+        </div>
+        <div class="control-item nudge-control">
+            <label for="iconNudgeSlider">Icon Export Nudge (px)</label>
+            <div>
+                <input type="range" id="iconNudgeSlider" min="-10" max="10" value="-1.5" step="0.1">
+                <span id="iconNudgeValue" class="nudge-value">-1.5px</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const card = document.getElementById('businessCard');
+        const exportButton = document.getElementById('exportButton');
+        const codeBlock = document.getElementById('codeBlock');
+        const addLineBtn = document.getElementById('addLineBtn');
+        const cardFilename = document.getElementById('cardFilename');
+        const pageBody = document.getElementById('pageBody');
+
+        // --- New Controls ---
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const iconNudgeSlider = document.getElementById('iconNudgeSlider');
+        const iconNudgeValueDisplay = document.getElementById('iconNudgeValue');
+
+        let initialJsonData = {
+            name: "flowith",
+            title: "Operations Management",
+            email: "dwk122911@gmail.com",
+            link: "break.Duuuuuu"
+        };
+
+        let iconNudgeAmount = -1.5; // Default nudge amount
+
+        // --- Dark Mode Functionality ---
+        darkModeToggle.addEventListener('change', function() {
+            pageBody.classList.toggle('dark-mode-active');
+            card.classList.toggle('dark-mode');
+            // Update controls container for dark mode
+            // document.querySelector('.controls-container').classList.toggle('dark-mode');
+        });
+
+        // --- Icon Nudge Control ---
+        iconNudgeSlider.addEventListener('input', function() {
+            iconNudgeAmount = parseFloat(this.value);
+            iconNudgeValueDisplay.textContent = `${iconNudgeAmount.toFixed(1)}px`;
+        });
+        // Initialize display
+        iconNudgeValueDisplay.textContent = `${parseFloat(iconNudgeSlider.value).toFixed(1)}px`;
+        iconNudgeAmount = parseFloat(iconNudgeSlider.value);
+
+
+        function makeFieldEditable(element, placeholderText = "value") {
+            element.setAttribute('contenteditable', 'true');
+            element.dataset.placeholder = placeholderText;
+            if (!element.textContent.trim() && placeholderText) { /* CSS handles placeholder */ }
+            else if (element.textContent.trim()) { element.style.opacity = '1'; }
+            element.addEventListener('focus', (e) => { e.target.style.opacity = '1'; });
+            element.addEventListener('blur', (e) => {
+                if (!e.target.textContent.trim() && e.target.dataset.placeholder) { /* CSS handles placeholder */ }
+                else { e.target.style.opacity = '1'; }
+            });
+        }
+
+        function renderJsonEditor(data) {
+            codeBlock.innerHTML = '';
+            const openBraceDiv = document.createElement('div');
+            openBraceDiv.innerHTML = `<span class="line-number">1</span><span class="json-punctuation">{</span>`;
+            codeBlock.appendChild(openBraceDiv);
+
+            let lineNumber = 2;
+            const keys = Object.keys(data);
+
+            keys.forEach((key) => {
+                const lineDiv = document.createElement('div');
+                lineDiv.classList.add('json-line-item');
+
+                const keySpan = document.createElement('span');
+                keySpan.classList.add('json-key');
+                keySpan.textContent = `"${key}"`;
+                makeFieldEditable(keySpan, "key");
+
+                const valueSpan = document.createElement('span');
+                valueSpan.classList.add('json-string');
+                valueSpan.textContent = data[key];
+                makeFieldEditable(valueSpan, "value");
+                
+                lineDiv.dataset.originalKey = key;
+
+                const commaSpan = document.createElement('span');
+                commaSpan.classList.add('json-punctuation', 'json-comma-punctuation');
+                commaSpan.textContent = ',';
+
+                const removeBtn = document.createElement('button');
+                removeBtn.classList.add('icon-button', 'remove-line-btn');
+                removeBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
+                removeBtn.title = 'Remove line';
+                removeBtn.addEventListener('click', () => removeJsonLine(lineDiv));
+
+                const lineNumberSpan = document.createElement('span');
+                lineNumberSpan.classList.add('line-number');
+
+                const indentSpan = document.createElement('span');
+                indentSpan.classList.add('json-indent');
+                indentSpan.innerHTML = '&nbsp;&nbsp;';
+
+                lineDiv.appendChild(lineNumberSpan);
+                lineDiv.appendChild(indentSpan);
+                lineDiv.appendChild(keySpan);
+                lineDiv.innerHTML += `<span class="json-punctuation">: </span>`;
+                lineDiv.appendChild(valueSpan);
+                lineDiv.appendChild(commaSpan);
+                lineDiv.appendChild(removeBtn);
+
+                codeBlock.appendChild(lineDiv);
+                lineNumber++; 
+            });
+
+            const closeBraceDiv = document.createElement('div');
+            closeBraceDiv.innerHTML = `<span class="line-number"></span><span class="json-punctuation">}</span>`;
+            codeBlock.appendChild(closeBraceDiv);
+
+            updateLineNumbersAndCommas();
+        }
+
+        function addJsonLine() {
+            const lines = Array.from(codeBlock.children);
+            const closingBraceLine = lines[lines.length - 1];
+            const newLineDiv = document.createElement('div');
+            newLineDiv.classList.add('json-line-item');
+
+            const newKey = `newKey${Date.now() % 1000}`;
+            const newValue = "newValue";
+
+            const keySpan = document.createElement('span');
+            keySpan.classList.add('json-key');
+            keySpan.textContent = `"${newKey}"`;
+            makeFieldEditable(keySpan, "key");
+
+            const valueSpan = document.createElement('span');
+            valueSpan.classList.add('json-string');
+            valueSpan.textContent = newValue;
+            makeFieldEditable(valueSpan, "value");
+            
+            newLineDiv.dataset.originalKey = newKey;
+
+            const commaSpan = document.createElement('span');
+            commaSpan.classList.add('json-punctuation', 'json-comma-punctuation');
+            commaSpan.textContent = ',';
+
+            const removeBtn = document.createElement('button');
+            removeBtn.classList.add('icon-button', 'remove-line-btn');
+            removeBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
+            removeBtn.title = 'Remove line';
+            removeBtn.addEventListener('click', () => removeJsonLine(newLineDiv));
+
+            const lineNumberSpan = document.createElement('span');
+            lineNumberSpan.classList.add('line-number');
+
+            const indentSpan = document.createElement('span');
+            indentSpan.classList.add('json-indent');
+            indentSpan.innerHTML = '&nbsp;&nbsp;';
+
+            newLineDiv.appendChild(lineNumberSpan);
+            newLineDiv.appendChild(indentSpan);
+            newLineDiv.appendChild(keySpan);
+            newLineDiv.innerHTML += `<span class="json-punctuation">: </span>`;
+            newLineDiv.appendChild(valueSpan);
+            newLineDiv.appendChild(commaSpan);
+            newLineDiv.appendChild(removeBtn);
+
+            codeBlock.insertBefore(newLineDiv, closingBraceLine);
+            updateLineNumbersAndCommas();
+            keySpan.focus();
+        }
+
+        function removeJsonLine(lineElement) {
+            lineElement.remove();
+            updateLineNumbersAndCommas();
+        }
+
+        function updateLineNumbersAndCommas() {
+            const lines = Array.from(codeBlock.children);
+            let currentLineNumber = 1;
+            const dataLines = [];
+
+            lines.forEach(line => {
+                const lineNumberSpan = line.querySelector('.line-number');
+                if (lineNumberSpan) {
+                    lineNumberSpan.textContent = currentLineNumber;
+                }
+                currentLineNumber++;
+                if (line.classList.contains('json-line-item')) {
+                    dataLines.push(line);
+                }
+            });
+
+            dataLines.forEach((line, index) => {
+                const comma = line.querySelector('.json-comma-punctuation');
+                if (comma) {
+                    comma.style.display = (index === dataLines.length - 1) ? 'none' : 'inline';
+                }
+            });
+        }
+
+        makeFieldEditable(cardFilename, "filename.json");
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            card.addEventListener(eventName, preventDefaults, false);
+            document.body.addEventListener(eventName, preventDefaults, false);
+        });
+        function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
+        ['dragenter', 'dragover'].forEach(eventName => card.addEventListener(eventName, highlight, false));
+        ['dragleave', 'drop'].forEach(eventName => card.addEventListener(eventName, unhighlight, false));
+        function highlight() { card.classList.add('drag-over'); }
+        function unhighlight() { card.classList.remove('drag-over'); }
+        card.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const files = e.dataTransfer.files;
+            handleFiles(files);
+        }
+        function handleFiles(files) {
+            const file = files[0];
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    card.style.backgroundImage = `url('${event.target.result}')`;
+                    card.style.backgroundSize = 'cover';
+                    card.style.backgroundPosition = 'center';
+                }
+                reader.readAsDataURL(file);
+            } else { console.warn('Dropped file is not an image.'); }
+        }
+
+        exportButton.addEventListener('click', () => {
+            console.log('Export button clicked');
+            exportButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Exporting...';
+            exportButton.disabled = true;
+
+            const originalRemoveButtons = card.querySelectorAll('.remove-line-btn');
+            originalRemoveButtons.forEach(btn => btn.style.visibility = 'hidden');
+
+            if (document.activeElement && typeof document.activeElement.blur === 'function') {
+                document.activeElement.blur();
+            }
+            
+            document.fonts.ready.then(function() {
+                setTimeout(() => { 
+                    html2canvas(card, {
+                        backgroundColor: null,
+                        useCORS: true,
+                        logging: false, 
+                        onclone: (clonedDoc) => {
+                            const clonedCard = clonedDoc.getElementById('businessCard');
+                            if (clonedCard) {
+                                // If dark mode is active on the original card, apply it to the clone
+                                if (card.classList.contains('dark-mode')) {
+                                    clonedCard.classList.add('dark-mode');
+                                }
+
+
+                                const clonedRemoveButtons = clonedCard.querySelectorAll('.remove-line-btn');
+                                clonedRemoveButtons.forEach(btn => {
+                                    btn.style.display = 'none'; 
+                                });
+
+                                const allClonedIcons = clonedCard.querySelectorAll('.icon-button i.fas');
+                                allClonedIcons.forEach(icon => {
+                                    icon.style.position = 'relative';
+                                    icon.style.top = `${iconNudgeAmount}px`; // Use dynamic nudge value
+                                    icon.style.verticalAlign = 'middle !important';
+                                });
+                                
+                                clonedCard.style.display = 'none';
+                                clonedCard.offsetHeight; 
+                                clonedCard.style.display = ''; 
+                            }
+                        }
+                    }).then(canvas => {
+                        console.log('Canvas generated');
+                        const image = canvas.toDataURL('image/png');
+                        const link = document.createElement('a');
+                        const filename = cardFilename.textContent.trim().endsWith('.json') ?
+                                         cardFilename.textContent.trim().replace(/\.json$/, '.png') :
+                                         `${cardFilename.textContent.trim() || 'business-card'}.png`;
+                        link.download = filename;
+                        link.href = image;
+                        link.click();
+                        console.log('Download triggered');
+                    }).catch(error => {
+                        console.error('Error exporting card:', error);
+                        alert('Error exporting card. Check the console for details.');
+                    }).finally(() => {
+                        exportButton.innerHTML = '<i class="fas fa-download mr-2"></i>Export Card (PNG)';
+                        exportButton.disabled = false;
+                        originalRemoveButtons.forEach(btn => btn.style.visibility = 'visible');
+                    });
+                }, 150); 
+            }).catch(err => {
+                console.error("Font loading error or timeout:", err);
+                alert("Could not load fonts properly. Export might be affected.");
+                exportButton.innerHTML = '<i class="fas fa-download mr-2"></i>Export Card (PNG)';
+                exportButton.disabled = false;
+                originalRemoveButtons.forEach(btn => btn.style.visibility = 'visible');
+            });
+        });
+
+        addLineBtn.addEventListener('click', addJsonLine);
+        renderJsonEditor(initialJsonData);
+
+    </script>
+</body>
+</html>
