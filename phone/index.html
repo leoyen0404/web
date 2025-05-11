@@ -29,7 +29,7 @@
             background-color: #111827; /* Bezel color */
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 15px rgba(0,0,0,0.2);
             overflow: hidden; /* Crucial for mask */
-            position: relative;
+            position: relative; /* Positioning context for absolute children */
         }
 
         .phone-screen-masked {
@@ -41,6 +41,7 @@
             height: calc(100% - var(--frame-stroke-width));
             overflow: hidden; 
             z-index: 1;
+            box-sizing: border-box; /* Added for robustness */
         }
 
         .phone-frame-svg {
@@ -110,7 +111,24 @@
 
         .dynamic-island { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); width: 120px; height: 36px; background-color: black; border-radius: 18px; z-index: 300; display: flex; align-items: center; justify-content: center; }
 
-        .app-open-view { position: absolute; background-color: rgba(0, 0, 0, 0.3); z-index: 200; display: flex; flex-direction: column; justify-content: flex-start; align-items: stretch; overflow: hidden; opacity: 0; pointer-events: none; transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), -webkit-mask-image 0.4s cubic-bezier(0.4, 0, 0.2, 1), mask-image 0.4s cubic-bezier(0.4, 0, 0.2, 1); will-change: transform, opacity, mask-image, -webkit-mask-image; }
+        .app-open-view { 
+            position: absolute; 
+            background-color: rgba(0, 0, 0, 0.3); /* Default, JS will override with icon color */
+            z-index: 200; 
+            display: flex; /* Set by JS when active */
+            flex-direction: column; 
+            justify-content: flex-start; 
+            align-items: stretch; 
+            overflow: hidden; 
+            opacity: 0; 
+            pointer-events: none; 
+            box-sizing: border-box; /* Added for robustness */
+            transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+                        transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+                        -webkit-mask-image 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+                        mask-image 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+            will-change: transform, opacity, mask-image, -webkit-mask-image; 
+        }
         .app-open-view.active { opacity: 1; pointer-events: auto; }
         .app-open-content { width: 100%; height: 100%; padding: 20px; padding-top: 70px; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; font-size: 1.5rem; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.5); box-sizing: border-box; overflow-y: auto; }
         .app-open-content h1 { margin-top: 20px; font-size: 2rem; font-weight: bold; }
@@ -162,24 +180,21 @@
 
         // --- Dynamically calculated radii for masks based on centerline and stroke width ---
         const FRAME_CENTERLINE_RADIUS_VAL = parseFloat(FRAME_CENTERLINE_RADIUS_STR);
-        // Radius for the mask on .phone-device (bezel), corresponds to the OUTER edge of the stroke
         const DEVICE_MASK_RADIUS_VAL = FRAME_CENTERLINE_RADIUS_VAL + (FRAME_STROKE_WIDTH / 2);
-        // Radius for the mask on .phone-screen-masked, corresponds to the INNER edge of the stroke
         const SCREEN_MASK_RADIUS_VAL = FRAME_CENTERLINE_RADIUS_VAL - (FRAME_STROKE_WIDTH / 2);
 
         /**
          * Generates an SVG path string for a "squircle" shape.
-         * Used for both the frame's path and for generating masks.
          * @param {number} w - Width of the shape.
          * @param {number} h - Height of the shape.
          * @param {number} rNumeric - Corner radius value (numeric).
          * @param {number} controlFactor - Determines the "squirciness" (e.g., 0.6).
-         * @param {number} [offsetX=0] - X offset for all path coordinates (used for frame path).
-         * @param {number} [offsetY=0] - Y offset for all path coordinates (used for frame path).
+         * @param {number} [offsetX=0] - X offset for all path coordinates.
+         * @param {number} [offsetY=0] - Y offset for all path coordinates.
          * @returns {string} SVG path data string for the squircle.
          */
         function generateSquirclePath(w, h, rNumeric, controlFactor, offsetX = 0, offsetY = 0) {
-            const effectiveRadius = Math.max(0, Math.min(rNumeric, w / 2, h / 2)); // Clamp radius
+            const effectiveRadius = Math.max(0, Math.min(rNumeric, w / 2, h / 2)); 
             const controlPointOffset = effectiveRadius * controlFactor; 
             
             return `
@@ -199,7 +214,7 @@
         /**
          * Applies an SVG squircle mask to an element.
          * @param {HTMLElement} element - The element to apply the mask to.
-         * @param {string | number} radiusInput - The desired corner radius (e.g., '20px', '25%', or a number).
+         * @param {string | number} radiusInput - The desired corner radius.
          * @param {number} controlFactor - The squirciness factor.
          * @param {number} [maskWidth=0] - Optional explicit width for the mask.
          * @param {number} [maskHeight=0] - Optional explicit height for the mask.
@@ -225,7 +240,6 @@
                 rNumeric = parseFloat(radiusInput);
             }
             
-            // Path for mask is generated at 0,0 offset
             const path = generateSquirclePath(W, H, rNumeric, controlFactor); 
             const svgMask = `<svg xmlns='http://www.w3.org/2000/svg' width='${W}' height='${H}' viewBox='0 0 ${W} ${H}'><path d='${path}' fill='black'/></svg>`;
             const dataUrl = `url("data:image/svg+xml;utf8,${encodeURIComponent(svgMask)}")`;
@@ -236,13 +250,13 @@
             element.style.maskSize = '100% 100%';
             element.style.webkitMaskRepeat = 'no-repeat';
             element.style.maskRepeat = 'no-repeat';
-            element.style.borderRadius = '0px'; // Important: disable standard border-radius
+            element.style.borderRadius = '0px'; 
         }
         
         /**
          * Applies an SVG squircle path to the phone frame's <path> element and sets the parent SVG's viewBox.
          * @param {SVGPathElement} svgPathElement - The <path> element to update.
-         * @param {HTMLElement} targetElement - The element whose dimensions determine the path size (e.g., phoneDevice).
+         * @param {HTMLElement} targetElement - The element whose dimensions determine the path size.
          * @param {number} centerlineRadiusNumeric - The numeric corner radius for the stroke's centerline.
          * @param {number} controlFactor - The squirciness factor.
          */
@@ -255,13 +269,10 @@
 
             const svgElement = svgPathElement.ownerSVGElement;
             if (svgElement) {
-                // Expand viewBox to accommodate the full stroke width
                 svgElement.setAttribute('viewBox', `0 0 ${W_device + FRAME_STROKE_WIDTH} ${H_device + FRAME_STROKE_WIDTH}`);
             }
 
-            // Offset the path drawing by half the stroke width to center the stroke
             const pathDrawingOffset = FRAME_STROKE_WIDTH / 2;
-            // The path itself is drawn based on the device's dimensions and centerline radius
             const pathD = generateSquirclePath(W_device, H_device, centerlineRadiusNumeric, controlFactor, pathDrawingOffset, pathDrawingOffset);
             svgPathElement.setAttribute('d', pathD);
         }
@@ -274,26 +285,27 @@
             const phoneBodyPath = document.getElementById('phoneBodyPath'); 
             const appOpenView = document.getElementById('appOpenView');
 
-            // Mask for the main device body (bezel) - uses outer edge radius of the frame
             if (phoneDevice) {
                 applySquircleMask(phoneDevice, DEVICE_MASK_RADIUS_VAL, FRAME_SQUIRCLE_CONTROL_FACTOR); 
-                // SVG Frame path - uses centerline radius of the frame
                 if (phoneBodyPath) { 
                     applySvgPathToFrame(phoneBodyPath, phoneDevice, FRAME_CENTERLINE_RADIUS_VAL, FRAME_SQUIRCLE_CONTROL_FACTOR);
                 }
             }
-            // Mask for the screen area - uses inner edge radius of the frame
             if (phoneScreenMasked) {
                  applySquircleMask(phoneScreenMasked, SCREEN_MASK_RADIUS_VAL, FRAME_SQUIRCLE_CONTROL_FACTOR, phoneScreenMasked.offsetWidth, phoneScreenMasked.offsetHeight);
             }
             
-            // Masks for icons and widgets - use their own radii and the global squircle factor
             appIcons.forEach(icon => applySquircleMask(icon, ICON_RADIUS_STR, FRAME_SQUIRCLE_CONTROL_FACTOR));
             widgets.forEach(widget => applySquircleMask(widget, WIDGET_RADIUS_STR, FRAME_SQUIRCLE_CONTROL_FACTOR));
 
-            // If appOpenView is active, its mask needs to match the screen mask
             if (appOpenView && appOpenView.classList.contains('active') && appOpenView.currentAppData) {
-                const actualScreenRect = phoneScreenMasked.getBoundingClientRect();
+                const actualScreenRect = phoneScreenMasked.getBoundingClientRect(); 
+                const phoneDeviceRect = phoneDevice.getBoundingClientRect();
+                appOpenView.style.top = `${actualScreenRect.top - phoneDeviceRect.top}px`;
+                appOpenView.style.left = `${actualScreenRect.left - phoneDeviceRect.left}px`;
+                appOpenView.style.width = `${actualScreenRect.width}px`;
+                appOpenView.style.height = `${actualScreenRect.height}px`;
+                
                 applySquircleMask(appOpenView, SCREEN_MASK_RADIUS_VAL, FRAME_SQUIRCLE_CONTROL_FACTOR, actualScreenRect.width, actualScreenRect.height);
                 appOpenView.currentAppData.phoneScreenRect = actualScreenRect; 
             }
@@ -311,13 +323,14 @@
         });
 
         function setupAppOpenAnimation() {
+            const phoneDevice = document.getElementById('phoneDevice'); 
             const icons = document.querySelectorAll('.app-icon');
             const appOpenView = document.getElementById('appOpenView');
             const appOpenContent = document.getElementById('appOpenContent');
             const indicatorBar = document.getElementById('indicatorBar');
             const phoneScreenMasked = document.getElementById('phoneScreenMasked');
 
-            if (!appOpenView || !indicatorBar || !phoneScreenMasked) {
+            if (!phoneDevice || !appOpenView || !indicatorBar || !phoneScreenMasked) { 
                 console.error("Required elements for app open animation not found!"); return;
             }
 
@@ -354,12 +367,20 @@
                 indicatorBar.classList.remove('visible'); 
                 indicatorBar.removeEventListener('click', closeOverlay); 
                 appOpenView.removeEventListener('transitionend', openTransitionEndHandler); 
-                const { iconRect, phoneScreenRect } = appOpenView.currentAppData; 
-                const scale = iconRect.width / phoneScreenRect.width;
+                
+                const { iconRect, phoneScreenRect } = appOpenView.currentAppData; // phoneScreenRect is for scale
+                const currentAppViewRect = appOpenView.getBoundingClientRect(); // Get live position of appOpenView
+
+                const scale = iconRect.width / phoneScreenRect.width; // Scale based on appOpenView's intended full width
                 const iconCenterX = iconRect.left + iconRect.width / 2;
                 const iconCenterY = iconRect.top + iconRect.height / 2;
-                appOpenView.style.transformOrigin = `${iconCenterX - phoneScreenRect.left}px ${iconCenterY - phoneScreenRect.top}px`;
-                applySquircleMask(appOpenView, ICON_RADIUS_STR, FRAME_SQUIRCLE_CONTROL_FACTOR, phoneScreenRect.width, phoneScreenRect.height);
+                
+                // Calculate origin relative to appOpenView's current top-left viewport position
+                const originX = iconCenterX - currentAppViewRect.left;
+                const originY = iconCenterY - currentAppViewRect.top;
+                appOpenView.style.transformOrigin = `${originX}px ${originY}px`;
+                
+                applySquircleMask(appOpenView, ICON_RADIUS_STR, FRAME_SQUIRCLE_CONTROL_FACTOR, currentAppViewRect.width, currentAppViewRect.height);
                 void appOpenView.offsetWidth;
                 appOpenView.style.transform = `scale(${scale})`;
                 appOpenView.classList.remove('active'); 
@@ -372,25 +393,38 @@
                     isAnimating = true;
                     currentIcon = e.currentTarget;
                     const appName = currentIcon.dataset.appName || "App";
+                    
                     const iconRect = currentIcon.getBoundingClientRect();
-                    const actualScreenRect = phoneScreenMasked.getBoundingClientRect(); 
+                    const actualScreenRect = phoneScreenMasked.getBoundingClientRect(); // This is appOpenView's target geometry
+                    const phoneDeviceRect = phoneDevice.getBoundingClientRect(); 
+                    
                     const iconColor = window.getComputedStyle(currentIcon).backgroundColor;
                     appOpenView.currentAppData = { iconRect, phoneScreenRect: actualScreenRect }; 
+                    
                     const titleElement = appOpenContent.querySelector('h1');
                     if(titleElement) titleElement.textContent = appName;
                     appOpenView.style.backgroundColor = iconColor;
-                    appOpenView.style.top = `calc(var(--frame-stroke-width) / 2)`;
-                    appOpenView.style.left = `calc(var(--frame-stroke-width) / 2)`;
-                    appOpenView.style.width = `calc(100% - var(--frame-stroke-width))`;
-                    appOpenView.style.height = `calc(100% - var(--frame-stroke-width))`;
+
+                    appOpenView.style.top = `${actualScreenRect.top - phoneDeviceRect.top}px`;
+                    appOpenView.style.left = `${actualScreenRect.left - phoneDeviceRect.left}px`;
+                    appOpenView.style.width = `${actualScreenRect.width}px`;
+                    appOpenView.style.height = `${actualScreenRect.height}px`;
                     appOpenView.style.display = 'flex';
+                    
                     const scale = iconRect.width / actualScreenRect.width;
                     const iconCenterX = iconRect.left + iconRect.width / 2; 
                     const iconCenterY = iconRect.top + iconRect.height / 2;
-                    appOpenView.style.transformOrigin = `${iconCenterX - actualScreenRect.left}px ${iconCenterY - actualScreenRect.top}px`;
-                    appOpenView.style.transform = `scale(${scale})`;
+
+                    // Calculate origin relative to appOpenView's target top-left viewport position (actualScreenRect.left/top)
+                    const originX = iconCenterX - actualScreenRect.left;
+                    const originY = iconCenterY - actualScreenRect.top;
+                    appOpenView.style.transformOrigin = `${originX}px ${originY}px`;
+                    
+                    appOpenView.style.transform = `scale(${scale})`; // Initial state: scaled down at icon position
                     applySquircleMask(appOpenView, ICON_RADIUS_STR, FRAME_SQUIRCLE_CONTROL_FACTOR, actualScreenRect.width, actualScreenRect.height);
                     void appOpenView.offsetWidth; 
+                    
+                    // Target state: full screen
                     applySquircleMask(appOpenView, SCREEN_MASK_RADIUS_VAL, FRAME_SQUIRCLE_CONTROL_FACTOR, actualScreenRect.width, actualScreenRect.height);
                     appOpenView.style.transform = 'scale(1)';
                     appOpenView.classList.add('active'); 
