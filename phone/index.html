@@ -3,505 +3,408 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Glassmorphism Phone UI Demo - White Widgets</title>
+    <title>Enhanced Phone UI Demo with Consistent 5px Squircle Frame</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
-        /* Custom styles for the demo */
+        :root {
+            --frame-stroke-width: 5px; /* Define CSS variable for stroke width */
+        }
         body {
             font-family: 'Inter', sans-serif;
-            min-height: 100vh;
-            overflow: hidden; /* Prevent scrollbars during animation */
+            overscroll-behavior: none;
             background: linear-gradient(to bottom right, #f0f4f8, #d9e2ec);
             display: flex;
-            align-items: center;
             justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden; /* Prevent body scrollbars */
         }
 
-        /* Phone Frame Styles - Uses mask */
-        .phone-frame {
-            width: 320px;
-            height: 640px;
-            background-color: #111827;
-            /* border-radius removed */
-            padding: 10px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35), inset 0 0 0 3px rgba(255,255,255,0.05);
+        .phone-device {
+            width: 375px;
+            height: 812px;
+            background-color: #111827; /* Bezel color */
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 15px rgba(0,0,0,0.2);
+            overflow: hidden; /* Crucial for mask */
             position: relative;
-            overflow: hidden; /* Keep for mask */
-            /* Mask properties applied by JS */
         }
 
-        /* Phone Screen Styles - Uses mask */
-        .phone-screen {
-            width: 100%;
-            height: 100%;
-            background-color: #ffffffe9; /* Fallback */
-            /* border-radius removed */
-            position: relative; /* Needed for absolute positioning of children */
-            overflow: hidden; /* Clip background elements */
-            display: flex;
-            flex-direction: column;
-            padding: 20px 15px;
-            /* Mask properties applied by JS */
-            --phone-screen-radius: 60px;
+        .phone-screen-masked {
+            background-color: #1f2937; /* Screen background if content isn't opaque */
+            position: absolute; 
+            top: calc(var(--frame-stroke-width) / 2);
+            left: calc(var(--frame-stroke-width) / 2);
+            width: calc(100% - var(--frame-stroke-width));
+            height: calc(100% - var(--frame-stroke-width));
+            overflow: hidden; 
+            z-index: 1;
         }
 
-        /* Container for the MOVING wallpaper blocks */
-        .background-container {
+        .phone-frame-svg {
             position: absolute;
             top: 0;
             left: 0;
-            width: 100%;
+            width: 100%; 
+            height: 100%; 
+            z-index: 300; 
+            pointer-events: none; 
+        }
+
+        .phone-frame-svg #phoneBodyPath {
+            stroke: black; /* Phone frame color */
+            stroke-width: var(--frame-stroke-width); /* Use CSS variable */
+            fill: none;
+            vector-effect: non-scaling-stroke; 
+        }
+
+        .screen-content-wrapper {
             height: 100%;
-            overflow: hidden;
-            z-index: 0;
-            /* Mask on parent handles clipping */
-        }
-
-        /* MOVING Wallpaper Block Styles */
-        .color-block {
-            position: absolute;
-            opacity: 0.85;
-            animation: move 25s infinite linear alternate;
-            will-change: transform, border-radius;
-        }
-
-        /* Define wallpaper blocks */
-         .block-1 { background-color: #0077b6; width: 180px; height: 250px; top: -30px; left: -50px; border-radius: 30% 70% 50% 50% / 30% 30% 70% 70%; transform: rotate(-15deg); animation-duration: 28s; --initial-rotate: -15deg; --initial-radius: 30% 70% 50% 50% / 30% 30% 70% 70%; }
-        .block-2 { background-color: #ffb703; width: 220px; height: 180px; top: 150px; left: 80px; border-radius: 70% 30% 80% 20% / 60% 70% 30% 40%; transform: rotate(25deg); opacity: 0.8; animation-duration: 24s; animation-delay: -7s; --initial-rotate: 25deg; --initial-radius: 70% 30% 80% 20% / 60% 70% 30% 40%; }
-        .block-3 { background-color: #e63946; width: 150px; height: 200px; bottom: -40px; left: 20px; border-radius: 50% 50% 30% 70% / 60% 40% 60% 40%; transform: rotate(10deg); animation-duration: 30s; animation-delay: -12s; --initial-rotate: 10deg; --initial-radius: 50% 50% 30% 70% / 60% 40% 60% 40%; }
-        .block-4 { background-color: #2ec4b6; width: 190px; height: 160px; top: 350px; right: -60px; border-radius: 40% 60% 70% 30% / 50% 60% 40% 50%; transform: rotate(-30deg); opacity: 0.75; animation-duration: 26s; animation-delay: -18s; --initial-rotate: -30deg; --initial-radius: 40% 60% 70% 30% / 50% 60% 40% 50%; }
-         .block-5 { background-color: #fb8500; width: 120px; height: 100px; top: 80px; left: 30px; border-radius: 50%; opacity: 0.9; animation-duration: 22s; animation-delay: -4s; --initial-rotate: 0deg; --initial-radius: 50%; }
-
-        /* Keyframes for gentle drifting and morphing */
-        @keyframes move {
-            0% { transform: translate(0, 0) scale(1) rotate(var(--initial-rotate, 0deg)); border-radius: var(--initial-radius, 50%); }
-            50% { transform: translate(15px, 25px) scale(1.05) rotate(calc(var(--initial-rotate, 0deg) + 30deg)); border-radius: 40% 60% 60% 40% / 70% 50% 50% 30%; }
-            100% { transform: translate(-10px, -20px) scale(0.95) rotate(calc(var(--initial-rotate, 0deg) - 20deg)); border-radius: var(--initial-radius, 50%); }
-        }
-
-         /* Glassmorphism Element Style (Widgets) - Uses mask */
-        .glass-element {
-            /* --- MODIFIED: White Glassmorphism --- */
-            background: rgba(255, 255, 255, 0.5); /* Increased opacity */
-            color: #374151; /* Dark text color for contrast */
-            /* --- END MODIFIED --- */
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            border: 1px solid rgba(255, 255, 255, 0.3); /* Keep border subtle */
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-            position: relative;
-            z-index: 1;
-            margin-bottom: 15px;
-            flex-shrink: 0;
-            overflow: hidden; /* Needed for mask to clip content */
-            /* Mask properties applied by JS */
-            --widget-radius: 28px; /* Define CSS variable for radius */
-        }
-        .glass-element:last-child {
-            margin-bottom: 0; /* Remove bottom margin from the very last element in the container */
-        }
-
-        /* Search Bar Widget */
-        .search-widget {
-            padding: 10px 15px; /* Adjust padding */
-            display: flex;
-            align-items: center;
-             /* Inherits dark color from .glass-element */
-        }
-        .search-widget i { /* Style for the icon */
-            font-size: 16px;
-            margin-right: 10px; /* Space between icon and input */
-            opacity: 0.6; /* Adjusted opacity for dark icon */
-            color: #4b5563; /* Slightly lighter dark grey */
-        }
-        .search-widget input[type="search"] {
-            flex-grow: 1; /* Take remaining space */
-            background: transparent; /* Transparent background */
-            border: none; /* No border */
-            outline: none; /* No focus outline */
-            color: #1f2937; /* Darker color for input text */
-            font-size: 14px;
-            font-weight: 500;
-            width: 100%; /* Ensure it tries to fill */
-        }
-        .search-widget input[type="search"]::placeholder { /* Placeholder style */
-            color: #6b7280; /* Darker placeholder */
-            opacity: 1; /* Override default opacity */
-        }
-        /* Remove default search input cancel button (optional) */
-        .search-widget input[type="search"]::-webkit-search-cancel-button,
-        .search-widget input[type="search"]::-webkit-search-decoration {
-             -webkit-appearance: none;
-             appearance: none;
-        }
-
-        /* Spacer div */
-        .spacer {
-            flex-grow: 1; /* Pushes elements below it downwards */
-        }
-
-        /* App Icon Grid */
-        .app-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 15px; /* Keep gap */
-            position: relative;
-            z-index: 1; /* Above background */
-            margin-bottom: 15px;
-            flex-shrink: 0;
-        }
-
-        /* Individual App Icon Style - Uses mask */
-        .app-icon {
-            aspect-ratio: 1 / 1;
-            background-color: rgba(245, 245, 245, 0.9); /* Keep icon background light */
-            /* border-radius: 18px; */ /* Replaced by mask */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            color: #374151; /* Default icon color (already darkish) */
-            box-shadow: 0 3px 8px rgba(0,0,0,0.08);
-            transition: transform 0.2s ease-in-out;
-            overflow: hidden; /* Needed for mask */
-            cursor: pointer; /* Indicate clickable */
-            position: relative; /* Needed for z-index */
-            z-index: 2; /* Ensure icons are clickable above widgets */
-            /* Mask properties applied by JS */
-            --icon-radius: 18px; /* Define CSS variable for radius */
-        }
-        .app-icon:hover {
-            transform: scale(1.05);
-        }
-        /* Explicit background/text colors using Tailwind classes in HTML for app icons */
-
-        /* Music Widget Style */
-        .music-widget {
-            padding: 15px;
-            display: flex;
-            align-items: center;
-            /* Inherits dark color from .glass-element */
-            /* text-shadow removed */
-        }
-        .music-widget img {
-            width: 50px;
-            height: 50px;
-            border-radius: 18px; /* Keep simple radius for inner image */
-            margin-right: 12px;
-            object-fit: cover;
-            background-color: rgba(0,0,0,0.05); /* Darker placeholder bg */
-            flex-shrink: 0;
-        }
-        .music-info { flex-grow: 1; margin-right: 12px; overflow: hidden; }
-        .music-info .title { font-weight: 600; font-size: 14px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #1f2937; } /* Darker text */
-        .music-info .artist { font-weight: 400; font-size: 12px; opacity: 0.8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #4b5563; } /* Darker text */
-        .music-controls { flex-shrink: 0; }
-        .music-controls button { background: none; border: none; color: #4b5563; /* Darker buttons */ font-size: 18px; padding: 5px; cursor: pointer; opacity: 0.8; transition: opacity 0.2s ease; }
-        .music-controls button:hover { opacity: 1; }
-        .music-controls .play-pause { font-size: 18px; margin: 0 5px; }
-
-        /* Weather Widget Style (Bottom) */
-        .weather-widget {
-            height: auto;
-            padding: 18px;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
-            /* Inherits dark color from .glass-element */
-            /* text-shadow removed */
-        }
-        .widget-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;}
-        .widget-location { font-size: 16px; font-weight: 600; color: #1f2937;} /* Darker text */
-        .widget-temp { font-size: 44px; font-weight: 700; line-height: 1; color: #111827;} /* Darkest text */
-        .widget-condition { font-size: 14px; font-weight: 500; text-align: right; color: #4b5563;} /* Darker text */
-        .widget-icon { font-size: 26px; margin-bottom: 4px; color: #4b5563;} /* Darker icon */
-
-        /* --- App Open Animation Styles --- */
-        #app-open-overlay {
-            position: fixed; /* Use fixed positioning relative to viewport */
-            top: 0; /* Positioned via transform */
-            left: 0; /* Positioned via transform */
-            width: 0; /* Initial size set by JS */
-            height: 0; /* Initial size set by JS */
-            background-color: #ccc; /* Placeholder, will be set by JS */
-            z-index: 1000; /* High z-index above everything */
-            opacity: 0; /* Start transparent */
-            transform-origin: top left; /* Consistent origin for transforms */
-            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-                        height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-                        transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-                        opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-                        mask-image 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-                        -webkit-mask-image 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            border-radius: 0; /* Keep at 0 */
-            overflow: hidden; /* Needed for mask */
-            display: none; /* Initially hidden */
-            cursor: pointer; /* Indicate it's clickable to close */
-            will-change: width, height, transform, opacity, mask-image, -webkit-mask-image; /* Optimize animation */
-            /* Mask properties applied by JS */
+            justify-content: flex-end; 
+            padding: 24px;
+            padding-top: 70px; 
+            position: relative;
+            z-index: 10; 
+            box-sizing: border-box;
         }
 
-        #app-open-overlay.visible {
-           display: block; /* Make it visible for animation */
-           opacity: 1; /* Become opaque */
+        .app-icon {
+            width: 64px;
+            height: 64px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 28px; 
+            color: white; 
+            cursor: pointer;
+            transition: transform 0.2s ease-out;
+            overflow: hidden; 
+            position: relative; 
         }
 
+        .app-icon:active {
+            transform: scale(0.9);
+        }
+
+        .widget {
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            overflow: hidden; 
+            position: relative; 
+        }
+
+        .blob-container { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
+        .blob { position: absolute; border-radius: 50%; opacity: 0.7; filter: blur(35px); animation: moveBlob 20s infinite alternate ease-in-out; will-change: transform, filter, opacity; }
+        .blob-1 { width: 350px; height: 350px; background-color: #3b82f6; top: 10%; left: -15%; animation-duration: 22s; }
+        .blob-2 { width: 300px; height: 300px; background-color: #f59e0b; top: 25%; right: -10%; animation-duration: 25s; animation-delay: -5s; }
+        .blob-3 { width: 280px; height: 280px; background-color: #10b981; bottom: 15%; left: -10%; animation-duration: 18s; animation-delay: -10s; }
+        .blob-4 { width: 320px; height: 320px; background-color: #ef4444; bottom: -10%; right: -15%; animation-duration: 20s; animation-delay: -15s; }
+        @keyframes moveBlob { 0% { transform: scale(1) translate(0px, 0px) rotate(0deg); opacity: 0.6; } 50% { transform: scale(1.25) translate(30px, -40px) rotate(15deg); opacity: 0.8; } 100% { transform: scale(1) translate(0px, 0px) rotate(0deg); opacity: 0.6; } }
+
+        .dynamic-island { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); width: 120px; height: 36px; background-color: black; border-radius: 18px; z-index: 300; display: flex; align-items: center; justify-content: center; }
+
+        .app-open-view { position: absolute; background-color: rgba(0, 0, 0, 0.3); z-index: 200; display: flex; flex-direction: column; justify-content: flex-start; align-items: stretch; overflow: hidden; opacity: 0; pointer-events: none; transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), -webkit-mask-image 0.4s cubic-bezier(0.4, 0, 0.2, 1), mask-image 0.4s cubic-bezier(0.4, 0, 0.2, 1); will-change: transform, opacity, mask-image, -webkit-mask-image; }
+        .app-open-view.active { opacity: 1; pointer-events: auto; }
+        .app-open-content { width: 100%; height: 100%; padding: 20px; padding-top: 70px; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; font-size: 1.5rem; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.5); box-sizing: border-box; overflow-y: auto; }
+        .app-open-content h1 { margin-top: 20px; font-size: 2rem; font-weight: bold; }
+        .app-open-content p { margin-top: 10px; font-size: 1rem; text-align: center; }
+        .indicator-bar { position: absolute; bottom: 15px; left: 50%; width: 134px; height: 5px; background-color: rgba(255, 255, 255, 0.7); border-radius: 2.5px; cursor: grab; z-index: 210; transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); opacity: 0; pointer-events: none; transform: translateX(-50%); }
+        .indicator-bar.visible { opacity: 1; pointer-events: auto; }
     </style>
 </head>
 <body>
-
-    <div class="phone-frame">
-        <div class="phone-screen">
-            <div class="background-container">
-                <div class="color-block block-1"></div>
-                <div class="color-block block-2"></div>
-                <div class="color-block block-3"></div>
-                <div class="color-block block-4"></div>
-                <div class="color-block block-5"></div>
+    <div class="phone-device" id="phoneDevice">
+        <svg class="phone-frame-svg" preserveAspectRatio="none">
+            <path id="phoneBodyPath"/> 
+        </svg>
+        <div class="phone-screen-masked" id="phoneScreenMasked">
+            <div class="blob-container"> <div class="blob blob-1"></div> <div class="blob blob-2"></div> <div class="blob blob-3"></div> <div class="blob blob-4"></div> </div>
+            <div class="dynamic-island"></div>
+            <div class="screen-content-wrapper space-y-5">
+                <div class="bg-white/10 backdrop-blur-md shadow-lg rounded-full flex items-center px-4 py-3 mx-2 mb-3"> <i class="fab fa-google text-gray-300 text-xl"></i> <input type="text" placeholder="Search Google or type a URL" class="ml-3 bg-transparent text-sm text-gray-200 focus:outline-none flex-grow placeholder-gray-400"> </div>
+                <div class="grid grid-cols-4 gap-x-4 gap-y-6 px-1">
+                    <div class="app-icon bg-green-500" data-app-name="Phone"><i class="fas fa-phone"></i></div>
+                    <div class="app-icon bg-blue-500" data-app-name="Messages"><i class="fas fa-comment-dots"></i></div>
+                    <div class="app-icon bg-sky-500" data-app-name="Browser"><i class="fab fa-safari"></i></div>
+                    <div class="app-icon bg-red-600" data-app-name="Mail"><i class="fas fa-envelope"></i></div>
+                    <div class="app-icon bg-slate-800" data-app-name="Camera"><i class="fas fa-camera"></i></div>
+                    <div class="app-icon bg-purple-500" data-app-name="Music"><i class="fas fa-music"></i></div>
+                    <div class="app-icon bg-orange-500" data-app-name="Maps"><i class="fas fa-map-marker-alt"></i></div>
+                    <div class="app-icon bg-cyan-500" data-app-name="Calendar"><i class="fas fa-calendar-alt"></i></div>
+                    <div class="app-icon bg-pink-500" data-app-name="Photos"><i class="fas fa-image"></i></div>
+                    <div class="app-icon bg-yellow-400 text-black" data-app-name="Notes"><i class="fas fa-sticky-note"></i></div>
+                    <div class="app-icon bg-gray-200 text-gray-700" data-app-name="Weather"><i class="fas fa-cloud-sun"></i></div>
+                    <div class="app-icon bg-indigo-600" data-app-name="Settings"><i class="fas fa-cog"></i></div>
+                </div>
+                <div class="widget shadow-xl mx-1"> <div class="flex items-center"> <div class="w-12 h-12 bg-indigo-500 rounded-xl flex items-center justify-center mr-4"><i class="fas fa-music text-white text-2xl"></i></div> <div class="flex-grow"> <p class="font-semibold text-gray-100">Lo-Fi Beats</p> <p class="text-xs text-gray-300">Chillhop Radio</p> </div> <div class="flex space-x-3 text-gray-200"> <i class="fas fa-backward-step text-lg cursor-pointer hover:text-white transition-colors"></i> <i class="fas fa-play text-lg cursor-pointer hover:text-white transition-colors"></i> <i class="fas fa-forward-step text-lg cursor-pointer hover:text-white transition-colors"></i> </div> </div> </div>
+                <div class="widget shadow-xl mx-1"> <div class="flex justify-between items-start"> <div> <p class="text-gray-100 text-lg">Taichung City</p> <p class="text-5xl font-bold text-white">28&deg;</p> </div> <div class="text-center"> <i class="fas fa-cloud-sun text-5xl text-yellow-300 mb-1"></i> <p class="text-sm text-gray-200">Partly Cloudy</p> </div> </div> </div>
+                <div class="h-4"></div> 
             </div>
-
-            <div class="spacer"></div>
-
-            <div class="search-widget glass-element">
-                <i class="fab fa-google"></i> <input type="search" placeholder="Search Google or type a URL">
-            </div>
-            <div class="app-grid">
-                 <div class="app-icon bg-green-500 text-white"><i class="fas fa-phone"></i></div>
-                <div class="app-icon bg-blue-500 text-white"><i class="fas fa-comment-dots"></i></div>
-                 <div class="app-icon bg-teal-500 text-white"><i class="fab fa-safari"></i></div>
-                <div class="app-icon bg-red-500 text-white"><i class="fas fa-envelope"></i></div>
-                 <div class="app-icon bg-yellow-500 text-white"><i class="fas fa-camera"></i></div>
-                <div class="app-icon bg-purple-500 text-white"><i class="fas fa-music"></i></div>
-                <div class="app-icon bg-orange-500 text-white"><i class="fas fa-map-marker-alt"></i></div>
-                 <div class="app-icon bg-cyan-500 text-white"><i class="fas fa-calendar-alt"></i></div>
-                 <div class="app-icon bg-pink-500 text-white"><i class="fas fa-heart"></i></div>
-                 <div class="app-icon bg-lime-500 text-white"><i class="fas fa-play"></i></div>
-                 <div class="app-icon bg-gray-200 text-gray-700"><i class="fas fa-cloud"></i></div>
-                 <div class="app-icon bg-indigo-500 text-white"><i class="fas fa-cog"></i></div>
-            </div>
-
-            <div class="music-widget glass-element">
-                 <img src="https://placehold.co/100x100/cccccc/333333?text=Album" alt="Album Art" onerror="this.src='https://placehold.co/100x100/cccccc/ffffff?text=Error'"> <div class="music-info">
-                     <div class="title">Sunset Drive</div>
-                     <div class="artist">Lofi Chillhop</div>
-                 </div>
-                 <div class="music-controls">
-                     <button aria-label="Previous Track"><i class="fas fa-backward-step"></i></button>
-                     <button aria-label="Play/Pause" class="play-pause"><i class="fas fa-play"></i></button>
-                     <button aria-label="Next Track"><i class="fas fa-forward-step"></i></button>
-                 </div>
-            </div>
-
-            <div class="weather-widget glass-element">
-                 <div class="widget-header">
-                     <div>
-                         <div class="widget-location">Taichung City</div>
-                          <div class="widget-temp">28&deg;</div>
-                     </div>
-                     <div class="text-right">
-                         <div class="widget-icon"><i class="fas fa-cloud-sun"></i></div>
-                         <div class="widget-condition">Partly Cloudy</div>
-                     </div>
-                 </div>
-            </div>
-
+            <div class="app-open-view" id="appOpenView"> <div class="app-open-content" id="appOpenContent"> <h1>App Name</h1> <p>This is the opened app view. Swipe up or tap bar to close.</p> </div> <div class="indicator-bar" id="indicatorBar"></div> </div>
         </div>
     </div>
-    <div id="app-open-overlay"></div>
-
 
     <script>
-        // --- Constants for Radii ---
-        const ICON_RADIUS = '18px';
-        const PHONE_SCREEN_RADIUS = '60px';
-        const WIDGET_RADIUS = '40px';
+        // --- Constants for Radii, Frame, and Squircle Shape ---
+        const FRAME_STROKE_WIDTH = 5; 
+        const FRAME_SQUIRCLE_CONTROL_FACTOR = 0.6; // Determines the "squirciness"
+
+        const FRAME_CENTERLINE_RADIUS_STR = '60px'; 
+        const ICON_RADIUS_STR = '28%';    
+        const WIDGET_RADIUS_STR = '28px'; 
+
+        // --- Dynamically calculated radii for masks based on centerline and stroke width ---
+        const FRAME_CENTERLINE_RADIUS_VAL = parseFloat(FRAME_CENTERLINE_RADIUS_STR);
+        // Radius for the mask on .phone-device (bezel), corresponds to the OUTER edge of the stroke
+        const DEVICE_MASK_RADIUS_VAL = FRAME_CENTERLINE_RADIUS_VAL + (FRAME_STROKE_WIDTH / 2);
+        // Radius for the mask on .phone-screen-masked, corresponds to the INNER edge of the stroke
+        const SCREEN_MASK_RADIUS_VAL = FRAME_CENTERLINE_RADIUS_VAL - (FRAME_STROKE_WIDTH / 2);
 
         /**
-         * Generates an SVG path string for continuous curvature corners.
+         * Generates an SVG path string for a "squircle" shape.
+         * Used for both the frame's path and for generating masks.
+         * @param {number} w - Width of the shape.
+         * @param {number} h - Height of the shape.
+         * @param {number} rNumeric - Corner radius value (numeric).
+         * @param {number} controlFactor - Determines the "squirciness" (e.g., 0.6).
+         * @param {number} [offsetX=0] - X offset for all path coordinates (used for frame path).
+         * @param {number} [offsetY=0] - Y offset for all path coordinates (used for frame path).
+         * @returns {string} SVG path data string for the squircle.
          */
-        function generateContinuousPath(W, H, r) {
-            let radius = parseFloat(r);
-            radius = Math.min(radius, W / 2, H / 2);
-            if (radius < 0) radius = 0;
-            const k = 0.5522847498;
-            const ox = radius * k;
-            const oy = radius * k;
-            const pathData = `M 0 ${radius} C 0 ${radius - oy}, ${radius - ox} 0, ${radius} 0 L ${W - radius} 0 C ${W - radius + ox} 0, ${W} ${radius - oy}, ${W} ${radius} L ${W} ${H - radius} C ${W} ${H - radius + oy}, ${W - radius + ox} ${H}, ${W - radius} ${H} L ${radius} ${H} C ${radius - ox} ${H}, 0 ${H - radius + oy}, 0 ${H - radius} Z`.replace(/\s+/g, ' ').trim();
-            return pathData;
+        function generateSquirclePath(w, h, rNumeric, controlFactor, offsetX = 0, offsetY = 0) {
+            const effectiveRadius = Math.max(0, Math.min(rNumeric, w / 2, h / 2)); // Clamp radius
+            const controlPointOffset = effectiveRadius * controlFactor; 
+            
+            return `
+                M ${offsetX + effectiveRadius},${offsetY + 0} 
+                L ${offsetX + w - effectiveRadius},${offsetY + 0} 
+                C ${offsetX + w - effectiveRadius + controlPointOffset},${offsetY + 0} ${offsetX + w},${offsetY + effectiveRadius - controlPointOffset} ${offsetX + w},${offsetY + effectiveRadius}
+                L ${offsetX + w},${offsetY + h - effectiveRadius}
+                C ${offsetX + w},${offsetY + h - effectiveRadius + controlPointOffset} ${offsetX + w - effectiveRadius + controlPointOffset},${offsetY + h} ${offsetX + w - effectiveRadius},${offsetY + h}
+                L ${offsetX + effectiveRadius},${offsetY + h}
+                C ${offsetX + effectiveRadius - controlPointOffset},${offsetY + h} ${offsetX + 0},${offsetY + h - effectiveRadius + controlPointOffset} ${offsetX + 0},${offsetY + h - effectiveRadius}
+                L ${offsetX + 0},${offsetY + effectiveRadius}
+                C ${offsetX + 0},${offsetY + effectiveRadius - controlPointOffset} ${offsetX + effectiveRadius - controlPointOffset},${offsetY + 0} ${offsetX + effectiveRadius},${offsetY + 0}
+                Z
+            `.replace(/\s+/g, ' ').trim();
         }
 
         /**
-         * Applies an SVG mask for continuous curvature corners.
+         * Applies an SVG squircle mask to an element.
+         * @param {HTMLElement} element - The element to apply the mask to.
+         * @param {string | number} radiusInput - The desired corner radius (e.g., '20px', '25%', or a number).
+         * @param {number} controlFactor - The squirciness factor.
+         * @param {number} [maskWidth=0] - Optional explicit width for the mask.
+         * @param {number} [maskHeight=0] - Optional explicit height for the mask.
          */
-        function applySquircleMask(element, radius, width, height) {
+        function applySquircleMask(element, radiusInput, controlFactor, maskWidth = 0, maskHeight = 0) {
             if (!element) return;
             const rect = element.getBoundingClientRect();
-            const W = width > 0 ? width : (element.offsetWidth > 0 ? element.offsetWidth : rect.width);
-            const H = height > 0 ? height : (element.offsetHeight > 0 ? element.offsetHeight : rect.height);
+            const W = maskWidth > 0 ? maskWidth : (element.offsetWidth > 0 ? element.offsetWidth : rect.width);
+            const H = maskHeight > 0 ? maskHeight : (element.offsetHeight > 0 ? element.offsetHeight : rect.height);
+
             if (W <= 0 || H <= 0) {
-                if(element.id !== 'app-open-overlay') { console.warn('Skipping mask application for element with zero/invalid dimensions:', element, W, H); }
+                if (!(element.id === 'appOpenView' && !element.classList.contains('active'))) {
+                     // console.warn('Skipping mask for zero/invalid dimensions:', element.id || element.tagName, W, H);
+                }
                 return;
             }
-            const path = generateContinuousPath(W, H, radius);
+
+            let rNumeric;
+            if (typeof radiusInput === 'string' && radiusInput.endsWith('%')) {
+                const percentage = parseFloat(radiusInput) / 100;
+                rNumeric = Math.min(W, H) * percentage;
+            } else {
+                rNumeric = parseFloat(radiusInput);
+            }
+            
+            // Path for mask is generated at 0,0 offset
+            const path = generateSquirclePath(W, H, rNumeric, controlFactor); 
             const svgMask = `<svg xmlns='http://www.w3.org/2000/svg' width='${W}' height='${H}' viewBox='0 0 ${W} ${H}'><path d='${path}' fill='black'/></svg>`;
             const dataUrl = `url("data:image/svg+xml;utf8,${encodeURIComponent(svgMask)}")`;
+
             element.style.webkitMaskImage = dataUrl;
             element.style.maskImage = dataUrl;
             element.style.webkitMaskSize = '100% 100%';
             element.style.maskSize = '100% 100%';
             element.style.webkitMaskRepeat = 'no-repeat';
             element.style.maskRepeat = 'no-repeat';
-            element.style.webkitMaskComposite = 'source-in';
-            element.style.maskComposite = 'intersect';
-            element.style.borderRadius = '0';
+            element.style.borderRadius = '0px'; // Important: disable standard border-radius
+        }
+        
+        /**
+         * Applies an SVG squircle path to the phone frame's <path> element and sets the parent SVG's viewBox.
+         * @param {SVGPathElement} svgPathElement - The <path> element to update.
+         * @param {HTMLElement} targetElement - The element whose dimensions determine the path size (e.g., phoneDevice).
+         * @param {number} centerlineRadiusNumeric - The numeric corner radius for the stroke's centerline.
+         * @param {number} controlFactor - The squirciness factor.
+         */
+        function applySvgPathToFrame(svgPathElement, targetElement, centerlineRadiusNumeric, controlFactor) {
+            if (!svgPathElement || !targetElement) return;
+
+            const W_device = targetElement.offsetWidth; 
+            const H_device = targetElement.offsetHeight; 
+            if (W_device <= 0 || H_device <= 0) return;
+
+            const svgElement = svgPathElement.ownerSVGElement;
+            if (svgElement) {
+                // Expand viewBox to accommodate the full stroke width
+                svgElement.setAttribute('viewBox', `0 0 ${W_device + FRAME_STROKE_WIDTH} ${H_device + FRAME_STROKE_WIDTH}`);
+            }
+
+            // Offset the path drawing by half the stroke width to center the stroke
+            const pathDrawingOffset = FRAME_STROKE_WIDTH / 2;
+            // The path itself is drawn based on the device's dimensions and centerline radius
+            const pathD = generateSquirclePath(W_device, H_device, centerlineRadiusNumeric, controlFactor, pathDrawingOffset, pathDrawingOffset);
+            svgPathElement.setAttribute('d', pathD);
         }
 
-        /**
-         * Removes the SVG mask from an element.
-         */
+        function updateAllMasksAndFrames() {
+            const phoneDevice = document.getElementById('phoneDevice');
+            const phoneScreenMasked = document.getElementById('phoneScreenMasked');
+            const appIcons = document.querySelectorAll('.app-icon');
+            const widgets = document.querySelectorAll('.widget');
+            const phoneBodyPath = document.getElementById('phoneBodyPath'); 
+            const appOpenView = document.getElementById('appOpenView');
+
+            // Mask for the main device body (bezel) - uses outer edge radius of the frame
+            if (phoneDevice) {
+                applySquircleMask(phoneDevice, DEVICE_MASK_RADIUS_VAL, FRAME_SQUIRCLE_CONTROL_FACTOR); 
+                // SVG Frame path - uses centerline radius of the frame
+                if (phoneBodyPath) { 
+                    applySvgPathToFrame(phoneBodyPath, phoneDevice, FRAME_CENTERLINE_RADIUS_VAL, FRAME_SQUIRCLE_CONTROL_FACTOR);
+                }
+            }
+            // Mask for the screen area - uses inner edge radius of the frame
+            if (phoneScreenMasked) {
+                 applySquircleMask(phoneScreenMasked, SCREEN_MASK_RADIUS_VAL, FRAME_SQUIRCLE_CONTROL_FACTOR, phoneScreenMasked.offsetWidth, phoneScreenMasked.offsetHeight);
+            }
+            
+            // Masks for icons and widgets - use their own radii and the global squircle factor
+            appIcons.forEach(icon => applySquircleMask(icon, ICON_RADIUS_STR, FRAME_SQUIRCLE_CONTROL_FACTOR));
+            widgets.forEach(widget => applySquircleMask(widget, WIDGET_RADIUS_STR, FRAME_SQUIRCLE_CONTROL_FACTOR));
+
+            // If appOpenView is active, its mask needs to match the screen mask
+            if (appOpenView && appOpenView.classList.contains('active') && appOpenView.currentAppData) {
+                const actualScreenRect = phoneScreenMasked.getBoundingClientRect();
+                applySquircleMask(appOpenView, SCREEN_MASK_RADIUS_VAL, FRAME_SQUIRCLE_CONTROL_FACTOR, actualScreenRect.width, actualScreenRect.height);
+                appOpenView.currentAppData.phoneScreenRect = actualScreenRect; 
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateAllMasksAndFrames();
+            setupAppOpenAnimation();
+        });
+
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(updateAllMasksAndFrames, 150);
+        });
+
+        function setupAppOpenAnimation() {
+            const icons = document.querySelectorAll('.app-icon');
+            const appOpenView = document.getElementById('appOpenView');
+            const appOpenContent = document.getElementById('appOpenContent');
+            const indicatorBar = document.getElementById('indicatorBar');
+            const phoneScreenMasked = document.getElementById('phoneScreenMasked');
+
+            if (!appOpenView || !indicatorBar || !phoneScreenMasked) {
+                console.error("Required elements for app open animation not found!"); return;
+            }
+
+            let isAnimating = false;
+            let currentIcon = null;
+
+            const openTransitionEndHandler = (event) => {
+                if (event.target === appOpenView && (event.propertyName === 'opacity' || event.propertyName === 'transform')) {
+                    if (parseFloat(window.getComputedStyle(appOpenView).opacity) === 1) {
+                        isAnimating = false;
+                        indicatorBar.addEventListener('click', closeOverlay, { once: true });
+                        appOpenView.removeEventListener('transitionend', openTransitionEndHandler);
+                    }
+                }
+            };
+            
+            const closeTransitionEndHandler = (event) => {
+                 if (event.target === appOpenView && (event.propertyName === 'opacity' || event.propertyName === 'transform')) {
+                     if (parseFloat(window.getComputedStyle(appOpenView).opacity) === 0) { 
+                        isAnimating = false;
+                        appOpenView.style.display = 'none'; 
+                        removeSquircleMask(appOpenView); 
+                        appOpenView.removeEventListener('transitionend', closeTransitionEndHandler);
+                        const titleElement = appOpenContent.querySelector('h1');
+                        if(titleElement) titleElement.textContent = "App Name"; 
+                        appOpenView.currentAppData = null; 
+                    }
+                 }
+            };
+
+            function closeOverlay() {
+                if (isAnimating || !currentIcon || !appOpenView.currentAppData) return;
+                isAnimating = true;
+                indicatorBar.classList.remove('visible'); 
+                indicatorBar.removeEventListener('click', closeOverlay); 
+                appOpenView.removeEventListener('transitionend', openTransitionEndHandler); 
+                const { iconRect, phoneScreenRect } = appOpenView.currentAppData; 
+                const scale = iconRect.width / phoneScreenRect.width;
+                const iconCenterX = iconRect.left + iconRect.width / 2;
+                const iconCenterY = iconRect.top + iconRect.height / 2;
+                appOpenView.style.transformOrigin = `${iconCenterX - phoneScreenRect.left}px ${iconCenterY - phoneScreenRect.top}px`;
+                applySquircleMask(appOpenView, ICON_RADIUS_STR, FRAME_SQUIRCLE_CONTROL_FACTOR, phoneScreenRect.width, phoneScreenRect.height);
+                void appOpenView.offsetWidth;
+                appOpenView.style.transform = `scale(${scale})`;
+                appOpenView.classList.remove('active'); 
+                appOpenView.addEventListener('transitionend', closeTransitionEndHandler);
+            }
+
+            icons.forEach(icon => {
+                icon.addEventListener('click', (e) => {
+                    if (isAnimating) return;
+                    isAnimating = true;
+                    currentIcon = e.currentTarget;
+                    const appName = currentIcon.dataset.appName || "App";
+                    const iconRect = currentIcon.getBoundingClientRect();
+                    const actualScreenRect = phoneScreenMasked.getBoundingClientRect(); 
+                    const iconColor = window.getComputedStyle(currentIcon).backgroundColor;
+                    appOpenView.currentAppData = { iconRect, phoneScreenRect: actualScreenRect }; 
+                    const titleElement = appOpenContent.querySelector('h1');
+                    if(titleElement) titleElement.textContent = appName;
+                    appOpenView.style.backgroundColor = iconColor;
+                    appOpenView.style.top = `calc(var(--frame-stroke-width) / 2)`;
+                    appOpenView.style.left = `calc(var(--frame-stroke-width) / 2)`;
+                    appOpenView.style.width = `calc(100% - var(--frame-stroke-width))`;
+                    appOpenView.style.height = `calc(100% - var(--frame-stroke-width))`;
+                    appOpenView.style.display = 'flex';
+                    const scale = iconRect.width / actualScreenRect.width;
+                    const iconCenterX = iconRect.left + iconRect.width / 2; 
+                    const iconCenterY = iconRect.top + iconRect.height / 2;
+                    appOpenView.style.transformOrigin = `${iconCenterX - actualScreenRect.left}px ${iconCenterY - actualScreenRect.top}px`;
+                    appOpenView.style.transform = `scale(${scale})`;
+                    applySquircleMask(appOpenView, ICON_RADIUS_STR, FRAME_SQUIRCLE_CONTROL_FACTOR, actualScreenRect.width, actualScreenRect.height);
+                    void appOpenView.offsetWidth; 
+                    applySquircleMask(appOpenView, SCREEN_MASK_RADIUS_VAL, FRAME_SQUIRCLE_CONTROL_FACTOR, actualScreenRect.width, actualScreenRect.height);
+                    appOpenView.style.transform = 'scale(1)';
+                    appOpenView.classList.add('active'); 
+                    indicatorBar.classList.add('visible'); 
+                    appOpenView.addEventListener('transitionend', openTransitionEndHandler);
+                });
+            });
+        }
+
         function removeSquircleMask(element) {
             if (!element) return;
             element.style.webkitMaskImage = 'none';
             element.style.maskImage = 'none';
         }
-
-
-        // --- Apply Masks on Load ---
-        document.addEventListener('DOMContentLoaded', () => {
-            const phoneFrame = document.querySelector('.phone-frame');
-            const phoneScreen = document.querySelector('.phone-screen');
-            const appIcons = document.querySelectorAll('.app-icon');
-            const widgets = document.querySelectorAll('.glass-element');
-
-             const phoneFrameRadius = '70px';
-             const phoneScreenRadius = PHONE_SCREEN_RADIUS;
-             const iconRadius = ICON_RADIUS;
-             const widgetRadius = WIDGET_RADIUS;
-
-            if (phoneFrame) applySquircleMask(phoneFrame, phoneFrameRadius);
-            if (phoneScreen) applySquircleMask(phoneScreen, phoneScreenRadius);
-            appIcons.forEach(icon => applySquircleMask(icon, iconRadius));
-            widgets.forEach(widget => applySquircleMask(widget, widgetRadius));
-
-            if (phoneScreen) {
-                setupAppOpenAnimation(phoneScreen);
-            } else {
-                console.error("Phone screen element not found!");
-            }
-        });
-
-         // --- Optional: Re-apply masks on resize ---
-         let resizeTimeout;
-         window.addEventListener('resize', () => {
-             clearTimeout(resizeTimeout);
-             resizeTimeout = setTimeout(() => {
-                 console.log("Re-applying masks on resize");
-                 const phoneFrame = document.querySelector('.phone-frame');
-                 const phoneScreen = document.querySelector('.phone-screen');
-                 const appIcons = document.querySelectorAll('.app-icon');
-                 const widgets = document.querySelectorAll('.glass-element');
-                 const overlay = document.getElementById('app-open-overlay');
-
-                 const phoneFrameRadius = '70px';
-                 const phoneScreenRadius = PHONE_SCREEN_RADIUS;
-                 const iconRadius = ICON_RADIUS;
-                 const widgetRadius = WIDGET_RADIUS;
-
-                 if (phoneFrame) applySquircleMask(phoneFrame, phoneFrameRadius);
-                 if (phoneScreen) applySquircleMask(phoneScreen, phoneScreenRadius);
-                 appIcons.forEach(icon => applySquircleMask(icon, iconRadius));
-                 widgets.forEach(widget => applySquircleMask(widget, widgetRadius));
-
-                 if (overlay && overlay.style.display === 'block' && overlay.classList.contains('visible')) {
-                    const phoneScreenRect = phoneScreen?.getBoundingClientRect();
-                    const screenWidth = phoneScreen?.offsetWidth;
-                    const screenHeight = phoneScreen?.offsetHeight;
-                    if (phoneScreenRect && screenWidth && screenHeight) {
-                         overlay.style.width = `${screenWidth}px`;
-                         overlay.style.height = `${screenHeight}px`;
-                         overlay.style.transform = `translate(${phoneScreenRect.left}px, ${phoneScreenRect.top}px)`;
-                         applySquircleMask(overlay, phoneScreenRadius, screenWidth, screenHeight);
-                    }
-                 }
-             }, 150);
-         });
-
-         // --- App Open Animation Logic ---
-        /**
-         * Sets up the click listeners and animation logic for app icons.
-         */
-        function setupAppOpenAnimation(phoneScreenElement) {
-            const icons = document.querySelectorAll('.app-icon');
-            const overlay = document.getElementById('app-open-overlay');
-            if (!overlay) { console.error("Overlay element not found!"); return; }
-            let currentIcon = null, isAnimating = false, animationDirection = null, lastIconRect = null;
-
-            const openTransitionEndHandler = (event) => {
-                if (['transform', 'width', 'height'].includes(event.propertyName)) {
-                    isAnimating = false; animationDirection = null;
-                    overlay.removeEventListener('transitionend', openTransitionEndHandler);
-                    console.log("Open transition finished for:", event.propertyName);
-                }
-            };
-            const closeTransitionEndHandler = (event) => {
-                 if (['transform', 'width', 'height'].includes(event.propertyName)) {
-                    isAnimating = false; animationDirection = null;
-                    overlay.style.display = 'none'; overlay.classList.remove('visible');
-                    removeSquircleMask(overlay); currentIcon = null; lastIconRect = null;
-                    overlay.removeEventListener('transitionend', closeTransitionEndHandler);
-                    overlay.removeEventListener('click', closeOverlay);
-                    console.log("Close transition finished for:", event.propertyName);
-                 }
-            };
-            function closeOverlay() {
-                if (!currentIcon || !lastIconRect) { console.log("Close cancelled: Missing icon or screen data"); return; }
-                if (isAnimating && animationDirection === 'closing') return;
-                console.log("Closing animation triggered");
-                isAnimating = true; animationDirection = 'closing';
-                overlay.removeEventListener('transitionend', openTransitionEndHandler);
-                overlay.removeEventListener('transitionend', closeTransitionEndHandler);
-                applySquircleMask(overlay, ICON_RADIUS, lastIconRect.width, lastIconRect.height);
-                overlay.style.width = `${lastIconRect.width}px`;
-                overlay.style.height = `${lastIconRect.height}px`;
-                overlay.style.transform = `translate(${lastIconRect.left}px, ${lastIconRect.top}px)`;
-                overlay.style.opacity = '0';
-                overlay.addEventListener('transitionend', closeTransitionEndHandler);
-            }
-            icons.forEach(icon => {
-                icon.addEventListener('click', (e) => {
-                    if (isAnimating) return;
-                    console.log("Opening animation triggered");
-                    isAnimating = true; animationDirection = 'opening'; currentIcon = e.currentTarget;
-                    const iconRect = currentIcon.getBoundingClientRect();
-                    const phoneScreenRect = phoneScreenElement.getBoundingClientRect();
-                    const phoneScreenOffsetWidth = phoneScreenElement.offsetWidth;
-                    const phoneScreenOffsetHeight = phoneScreenElement.offsetHeight;
-                    const iconColor = window.getComputedStyle(currentIcon).backgroundColor;
-                    lastIconRect = iconRect;
-                    overlay.removeEventListener('transitionend', openTransitionEndHandler);
-                    overlay.removeEventListener('transitionend', closeTransitionEndHandler);
-                    overlay.style.backgroundColor = iconColor;
-                    overlay.style.width = `${iconRect.width}px`;
-                    overlay.style.height = `${iconRect.height}px`;
-                    overlay.style.transform = `translate(${iconRect.left}px, ${iconRect.top}px)`;
-                    overlay.style.opacity = '1'; overlay.style.display = 'block'; overlay.style.transformOrigin = 'top left';
-                    applySquircleMask(overlay, ICON_RADIUS, iconRect.width, iconRect.height);
-                    overlay.classList.add('visible');
-                    void overlay.offsetWidth; // Force reflow
-                    applySquircleMask(overlay, PHONE_SCREEN_RADIUS, phoneScreenOffsetWidth, phoneScreenOffsetHeight);
-                    overlay.style.width = `${phoneScreenOffsetWidth}px`;
-                    overlay.style.height = `${phoneScreenOffsetHeight}px`;
-                    overlay.style.transform = `translate(${phoneScreenRect.left}px, ${phoneScreenRect.top}px)`;
-                    overlay.addEventListener('transitionend', openTransitionEndHandler);
-                    overlay.removeEventListener('click', closeOverlay);
-                    overlay.addEventListener('click', closeOverlay);
-                });
-            });
-        }
-
     </script>
-
 </body>
 </html>
