@@ -4,10 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Quick Access</title>
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicons/favicon-16x16.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicons/favicon-32x32.png">
-  <link rel="icon" type="image/x-icon" href="/favicons/favicon.ico">
-  <link rel="apple-touch-icon" sizes="180x180" href="/favicons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicons/favicon-16x16.png" onerror="this.href='https://placehold.co/16x16/3a86ff/ffffff?text=QA'">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicons/favicon-32x32.png" onerror="this.href='https://placehold.co/32x32/3a86ff/ffffff?text=QA'">
+  <link rel="icon" type="image/x-icon" href="/favicons/favicon.ico" onerror="this.href='https://placehold.co/32x32/3a86ff/ffffff?text=QA'">
+  <link rel="apple-touch-icon" sizes="180x180" href="/favicons/apple-touch-icon.png" onerror="this.href='https://placehold.co/180x180/3a86ff/ffffff?text=QA'">
   <link rel="manifest" href="/favicons/site.webmanifest">
 
   <link
@@ -22,7 +22,7 @@
       --light-color: #f8fafc;
       --accent-color: #fb7185;
       --grey-light: #e2e8f0;
-      --grey-dark: #475569;
+      --grey-dark: #3576d1; /* Adjusted from #64748b for better contrast on light bg if needed */
       --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
       --transition: all 0.3s ease;
     }
@@ -80,6 +80,7 @@
       display: flex;
       gap: 1.5rem;
       align-items: center;
+      list-style-type: none; /* Remove bullet points globally for nav-menu */
     }
 
     .nav-item {
@@ -112,9 +113,9 @@
       border-radius: 8px;
       box-shadow: var(--shadow);
       z-index: 1;
-      overflow: hidden;
-      max-height: 400px;
-      overflow-y: auto;
+      overflow: hidden; /* Changed from overflow-y: auto to hidden, parent will scroll */
+      max-height: 400px; /* Max height for desktop dropdown */
+      overflow-y: auto; /* Allow individual dropdowns to scroll if content is too long */
     }
 
     .subtopic h3 {
@@ -216,10 +217,12 @@
       align-items: center;
       justify-content: center;
       gap: 10px;
+      word-break: break-word; /* Ensure long text wraps */
     }
 
     .result-button i {
       color: var(--primary-color);
+      flex-shrink: 0; /* Prevent icon from shrinking */
     }
 
     .result-button:hover {
@@ -237,20 +240,24 @@
 
       .nav-menu {
         position: fixed;
-        top: 60px;
-        right: -100%;
+        top: 60px; /* Height of the header, ensure this matches actual header height */
+        right: -100%; /* Start off-screen */
         flex-direction: column;
         background-color: var(--dark-color);
-        width: 80%;
-        height: calc(100vh - 60px);
+        width: 80%; /* Or a preferred width like 280px */
+        max-width: 300px; /* Max width for mobile menu */
+        height: calc(100vh - 60px); /* Full available height minus header */
         z-index: 999;
         padding-top: 20px;
-        transition: var(--transition);
+        padding-bottom: 20px; /* Add padding at the bottom */
+        transition: right 0.3s ease; /* Animate only the 'right' property */
         align-items: flex-start;
+        list-style-type: none; /* Explicitly remove bullet points for mobile menu */
+        overflow-y: auto; /* Enable scrolling for the entire mobile menu if content overflows */
       }
 
       .nav-menu.active {
-        right: 0;
+        right: 0; /* Slide in from the right */
       }
 
       .nav-item {
@@ -261,26 +268,55 @@
         width: 100%;
         padding: 15px 20px;
         border-radius: 0;
-        justify-content: space-between;
+        justify-content: space-between; /* Pushes chevron to the end */
+      }
+      .nav-link:hover {
+        background-color: rgba(255, 255, 255, 0.2); /* Slightly more visible hover for mobile */
       }
 
+
       .dropdown-content {
-        position: static;
-        display: none;
+        position: static; /* Makes it flow in document order */
+        display: none; /* Keep it hidden by default */
         width: 100%;
         box-shadow: none;
         border-radius: 0;
-        max-height: none;
+        background-color: rgba(0,0,0,0.2); /* Slightly darker to distinguish from parent */
+        max-height: none; /* Allow it to take full height needed */
+        overflow-y: visible; /* Let parent .nav-menu handle scrolling */
+      }
+      
+      .nav-item.active .dropdown-content {
+         display: block; /* Show when parent .nav-item is active */
       }
 
+      .dropdown-content a {
+        padding: 12px 20px 12px 30px; /* Indent sub-items */
+        font-size: 0.85rem;
+        color: var(--light-color); /* Ensure sub-item links are visible on dark background */
+      }
+       .subtopic h3 {
+        padding: 10px 20px 5px 20px; /* Adjust padding for mobile */
+        font-size: 0.9rem;
+        color: var(--grey-light);
+      }
+
+
       .search-results {
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        grid-template-columns: 1fr; /* Single column for search results on mobile */
+      }
+      .search-bar input {
+        padding: 12px 15px;
+        font-size: 0.9rem;
+      }
+      .search-bar button {
+        padding: 0 20px;
+        font-size: 0.9rem;
       }
     }
   </style>
 </head>
 <body>
-  <!-- Header & Navigation -->
   <header>
     <div class="container">
       <nav class="navbar">
@@ -289,16 +325,16 @@
           <span>QuickNav</span>
         </a>
 
-        <button class="mobile-menu-btn" id="menuToggle">
+        <button class="mobile-menu-btn" id="menuToggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="navMenu">
           <i class="fas fa-bars"></i>
         </button>
 
-        <ul class="nav-menu" id="navMenu"></ul>
+        <ul class="nav-menu" id="navMenu">
+          </ul>
       </nav>
     </div>
   </header>
 
-  <!-- Search Section -->
   <section class="search-section">
     <div class="container">
       <div class="search-container">
@@ -306,14 +342,15 @@
           <input
             type="text"
             id="searchInput"
-            placeholder="Search for folders, wallpapers or apps..."
-            onkeydown="if (event.keyCode === 13) searchFunction()"
+            placeholder="Search for links..."
+            onkeydown="if (event.key === 'Enter') searchFunction()"
           />
-          <button type="button" onclick="searchFunction()">
+          <button type="button" onclick="searchFunction()" aria-label="Search">
             <i class="fas fa-search"></i> Search
           </button>
         </div>
-        <div class="search-results" id="searchResults"></div>
+        <div class="search-results" id="searchResults">
+          </div>
       </div>
     </div>
   </section>
@@ -325,45 +362,53 @@
       "name": "Home",
       "pages": [
         {
-          "name": "Home",
-          "url": "#bw4s"
+          "name": "Dashboard",
+          "url": "#home",
+          "icon": "fa-home"
         }
       ]
     },
     {
       "name": "Tools",
+      "icon": "fa-tools",
       "subtopics": [
         {
           "name": "Originals",
           "pages": [
             {
-              "name": "CPS",
-              "url": "https://leoyen0404.github.io/web/cps/"
+              "name": "CPS Test",
+              "url": "https://bw4s.dpdns.org/cps/",
+              "icon": "fa-mouse-pointer"
             },
             {
               "name": "QR Code",
-              "url": "https://leoyen0404.github.io/web/qrcode/"
+              "url": "https://bw4s.dpdns.org/qrcode/",
+              "icon": "fa-qrcode"
             },
             {
-              "name": "Score",
-              "url": "https://leoyen0404.github.io/web/score/"
+              "name": "Score Script",
+              "url": "https://bw4s.dpdns.org/score/",
+              "icon": "fa-clipboard-list"
             },
             {
-              "name": "Color",
-              "url": "https://leoyen0404.github.io/web/color/"
+              "name": "Color Picker",
+              "url": "https://bw4s.dpdns.org/color/",
+              "icon": "fa-palette"
             },
             {
               "name": "Nav Editor",
-              "url": "https://leoyen0404.github.io/web/navEditor/"
+              "url": "https://bw4s.dpdns.org/navEditor/",
+              "icon": "fa-edit"
             }
           ]
         },
         {
-          "name": "Hosted",
+          "name": "Hosted Apps",
           "pages": [
             {
-              "name": "Render",
-              "url": "https://leoyen0404.github.io/web/render/"
+              "name": "Render Test",
+              "url": "https://bw4s.dpdns.org/render/",
+              "icon": "fa-server"
             }
           ]
         }
@@ -371,42 +416,51 @@
     },
     {
       "name": "Experiments",
+      "icon": "fa-flask",
       "pages": [
         {
           "name": "NN",
-          "url": "https://leoyen0404.github.io/web/nn/"
+          "url": "https://bw4s.dpdns.org/nn/",
+          "icon": "fa-brain"
         },
         {
           "name": "PTCG",
-          "url": "https://leoyen0404.github.io/web/ptcg/"
+          "url": "https://bw4s.dpdns.org/ptcg/",
+          "icon": "fa-gamepad"
         },
         {
-          "name": "English",
-          "url": "https://leoyen0404.github.io/web/english/"
+          "name": "English Helper",
+          "url": "https://bw4s.dpdns.org/english/",
+          "icon": "fa-language"
         }
       ]
     },
     {
       "name": "Creations",
+      "icon": "fa-paint-brush",
       "subtopics": [
         {
           "name": "Originals",
           "pages": [
             {
               "name": "HappyBirthdayWinter",
-              "url": "https://leoyen0404.github.io/web/HappyBirthdayWinter/"
+              "url": "https://bw4s.dpdns.org/HappyBirthdayWinter/",
+              "icon": "fa-birthday-cake"
             },
             {
-              "name": "Capsule(wallpaper)",
-              "url": "https://leoyen0404.github.io/web/capsuleWallpaper/"
+              "name": "Capsule Wallpaper",
+              "url": "https://bw4s.dpdns.org/capsuleWallpaper/",
+              "icon": "fa-image"
             },
             {
               "name": "GeoArt",
-              "url": "https://leoyen0404.github.io/web/geoart/"
+              "url": "https://bw4s.dpdns.org/geoart/",
+              "icon": "fa-shapes"
             },
             {
-              "name": "cueCard",
-              "url": "https://leoyen0404.github.io/web/cue/"
+              "name": "Cue Cards",
+              "url": "https://bw4s.dpdns.org/cue/",
+              "icon": "fa-layer-group"
             }
           ]
         },
@@ -414,8 +468,9 @@
           "name": "Hosted",
           "pages": [
             {
-              "name": "Animation",
-              "url": "https://leoyen0404.github.io/web/animation/"
+              "name": "JS Animation",
+              "url": "https://bw4s.dpdns.org/animation/",
+              "icon": "fa-film"
             }
           ]
         }
@@ -423,34 +478,40 @@
     },
     {
       "name": "Others",
+      "icon": "fa-ellipsis-h",
       "subtopics": [
         {
-          "name": "Canceled",
+          "name": "Archived/Canceled",
           "pages": [
             {
-              "name": "Note",
-              "url": "https://leoyen0404.github.io/web/note/"
+              "name": "Old Notes",
+              "url": "https://bw4s.dpdns.org/note/",
+              "icon": "fa-archive"
             },
             {
-              "name": "AI",
-              "url": "https://9aab-1-168-28-217.ngrok-free.app/"
+              "name": "LLM",
+              "url": "https://9aab-1-168-28-217.ngrok-free.app/",
+              "icon": "fa-robot"
             },
             {
-              "name": "Skin",
-              "url": "https://leoyen0404.github.io/web/skin/"
+              "name": "Skin Viewer",
+              "url": "https://bw4s.dpdns.org/skin/",
+              "icon": "fa-user-astronaut"
             }
           ]
         },
         {
-          "name": "Games",
+          "name": "Games (Hosted)",
           "pages": [
             {
-              "name": "Cube(hosted)",
-              "url": "https://leoyen0404.github.io/web/cube/"
+              "name": "Cube",
+              "url": "https://bw4s.dpdns.org/cube/",
+              "icon": "fa-cube"
             },
             {
-              "name": "track-not-found(hosted)",
-              "url": "https://leoyen0404.github.io/web/track-not-found/"
+              "name": "Track Not Found",
+              "url": "https://bw4s.dpdns.org/track-not-found/",
+              "icon": "fa-ghost"
             }
           ]
         }
@@ -461,22 +522,33 @@
 
     function createMenu() {
       const navMenu = document.getElementById('navMenu');
-      navMenu.innerHTML = '';
+      navMenu.innerHTML = ''; // Clear existing menu items
 
       menuData.topics.forEach(topic => {
         const li = document.createElement('li');
         li.className = 'nav-item';
 
-        if (topic.subtopics || (topic.pages && topic.pages.length > 1)) {
-          const link = document.createElement('a');
-          link.href = '#';
-          link.className = 'nav-link';
-          link.textContent = topic.name + ' ';
-          const chevron = document.createElement('i');
-          chevron.className = 'fas fa-chevron-down';
-          link.appendChild(chevron);
-          li.appendChild(link);
+        // Main link for the topic
+        const link = document.createElement('a');
+        link.className = 'nav-link';
+        
+        let topicIconHtml = '';
+        if (topic.icon) {
+            topicIconHtml = `<i class="fas ${topic.icon}" style="margin-right: 8px;"></i>`;
+        }
 
+        // If it's a simple link (e.g., Home) or has pages but no subtopics
+        if (!topic.subtopics && topic.pages && topic.pages.length === 1 && topic.pages[0].name.toLowerCase() === topic.name.toLowerCase()) {
+            link.href = topic.pages[0].url;
+            link.innerHTML = topicIconHtml + `<span>${topic.name}</span>`;
+        } else { // It's a dropdown
+            link.href = '#'; // Prevent navigation for dropdown toggles
+            link.innerHTML = topicIconHtml + `<span>${topic.name}</span> <i class="fas fa-chevron-down dropdown-indicator"></i>`;
+        }
+        li.appendChild(link);
+
+        // Create dropdown content if there are subtopics or multiple pages under a topic
+        if (topic.subtopics || (topic.pages && topic.pages.length > 0 && !(topic.pages.length === 1 && topic.pages[0].name.toLowerCase() === topic.name.toLowerCase()) )) {
           const dropdown = document.createElement('div');
           dropdown.className = 'dropdown-content';
 
@@ -489,127 +561,210 @@
               h3.textContent = subtopic.name;
               subtopicDiv.appendChild(h3);
 
-              subtopic.pages.forEach(page => {
-                const a = document.createElement('a');
-                a.href = page.url;
-                const icon = document.createElement('i');
-                icon.className = 'fas fa-link';
-                a.appendChild(icon);
-                a.append(' ' + page.name);
-                subtopicDiv.appendChild(a);
-              });
-
+              subtopic.pages.forEach(page => createPageLink(page, subtopicDiv));
               dropdown.appendChild(subtopicDiv);
             });
-          } else {
-            topic.pages.forEach(page => {
-              const a = document.createElement('a');
-              a.href = page.url;
-              const icon = document.createElement('i');
-              icon.className = 'fas fa-link';
-              a.appendChild(icon);
-              a.append(' ' + page.name);
-              dropdown.appendChild(a);
-            });
+          } else if (topic.pages) { // Handle topics with direct pages (no subtopics)
+            // This case is for topics that are not "Home-like" but have direct pages.
+            // Example: "Experiments" topic
+            topic.pages.forEach(page => createPageLink(page, dropdown));
           }
           li.appendChild(dropdown);
-        } else {
-          const link = document.createElement('a');
-          link.href = topic.pages[0].url;
-          link.className = 'nav-link';
-          link.textContent = topic.name;
-          li.appendChild(link);
         }
         navMenu.appendChild(li);
       });
     }
 
+    function createPageLink(page, parentElement) {
+      const a = document.createElement('a');
+      a.href = page.url;
+      a.target = page.url.startsWith('http') ? '_blank' : '_self'; // Open external links in new tab
+      if (page.url.startsWith('http')) {
+          a.rel = "noopener noreferrer";
+      }
+
+      let iconHtml = '';
+      if (page.icon) {
+          iconHtml = `<i class="fas ${page.icon}" style="margin-right: 8px; width: 16px; text-align: center;"></i>`;
+      } else {
+          iconHtml = `<i class="fas fa-link" style="margin-right: 8px; width: 16px; text-align: center;"></i>`; // Default icon
+      }
+      a.innerHTML = iconHtml + page.name;
+      parentElement.appendChild(a);
+    }
+
+
     function attachSubmenuToggle() {
       const navItems = document.querySelectorAll('.nav-item');
-      navItems.forEach(item => item.classList.remove('active'));
 
+      // Close all dropdowns when clicking outside
       document.addEventListener('click', (e) => {
         if (!e.target.closest('.nav-item')) {
-          navItems.forEach(item => item.classList.remove('active'));
+          navItems.forEach(item => {
+            item.classList.remove('active');
+            const indicator = item.querySelector('.dropdown-indicator');
+            if (indicator) indicator.classList.replace('fa-chevron-up', 'fa-chevron-down');
+          });
         }
       });
 
       navItems.forEach(item => {
         const link = item.querySelector('.nav-link');
-        if (link && link.nextElementSibling) {
+        const dropdown = item.querySelector('.dropdown-content');
+        const indicator = link.querySelector('.dropdown-indicator');
+
+        if (dropdown) { // Only add listener if it's a dropdown
           link.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
+            e.preventDefault(); // Prevent default anchor behavior
+            e.stopPropagation(); // Stop click from bubbling to document listener
+
+            const isActive = item.classList.contains('active');
+
+            // Close other active dropdowns
             navItems.forEach(otherItem => {
-              if (otherItem !== item) otherItem.classList.remove('active');
+              if (otherItem !== item) {
+                otherItem.classList.remove('active');
+                const otherIndicator = otherItem.querySelector('.dropdown-indicator');
+                if (otherIndicator) otherIndicator.classList.replace('fa-chevron-up', 'fa-chevron-down');
+              }
             });
-            item.classList.toggle('active');
+
+            // Toggle current item
+            item.classList.toggle('active', !isActive);
+            if (indicator) {
+              indicator.classList.toggle('fa-chevron-down', isActive);
+              indicator.classList.toggle('fa-chevron-up', !isActive);
+            }
           });
         }
       });
     }
-
-    document.addEventListener('DOMContentLoaded', () => {
-      createMenu();
-      attachSubmenuToggle();
-    });
-
+    
+    // Mobile menu toggle
     const menuToggle = document.getElementById('menuToggle');
-    menuToggle.addEventListener('click', () => {
-      const navMenu = document.getElementById('navMenu');
-      navMenu.classList.toggle('active');
-      menuToggle.innerHTML = navMenu.classList.contains('active')
+    const navMenu = document.getElementById('navMenu');
+
+    menuToggle.addEventListener('click', (e) => {
+      e.stopPropagation(); // Prevent click from closing menu immediately
+      const isActive = navMenu.classList.toggle('active');
+      menuToggle.setAttribute('aria-expanded', isActive.toString());
+      menuToggle.innerHTML = isActive
         ? '<i class="fas fa-times"></i>'
         : '<i class="fas fa-bars"></i>';
     });
 
+    // Close mobile menu when a link inside it is clicked
+    navMenu.addEventListener('click', (e) => {
+        // Check if the clicked element is an anchor tag and not a dropdown toggle
+        if (e.target.tagName === 'A' && e.target.getAttribute('href') !== '#') {
+            if (window.innerWidth <= 768) { // Only on mobile
+                navMenu.classList.remove('active');
+                menuToggle.setAttribute('aria-expanded', 'false');
+                menuToggle.innerHTML = '<i class="fas fa-bars"></i>';
+                // Reset any open dropdowns within the mobile menu
+                navMenu.querySelectorAll('.nav-item.active').forEach(item => {
+                    item.classList.remove('active');
+                    const indicator = item.querySelector('.dropdown-indicator');
+                    if (indicator) indicator.classList.replace('fa-chevron-up', 'fa-chevron-down');
+                });
+            }
+        }
+        // If it's a dropdown toggle link (href="#"), the submenu toggle logic will handle it.
+    });
+
+
     function searchFunction() {
       const input = document.getElementById('searchInput');
-      const filter = input.value.toLowerCase();
-      const links = document.querySelectorAll('.dropdown-content a');
+      const filter = input.value.toLowerCase().trim();
       const resultsContainer = document.getElementById('searchResults');
+      resultsContainer.innerHTML = ''; // Clear previous results
 
-      resultsContainer.innerHTML = '';
-
-      for (let i = 0; i < links.length; i++) {
-        const txtValue = links[i].textContent || links[i].innerText;
-        if (txtValue.toLowerCase().includes(filter) && filter.trim() !== '') {
-          const resultButton = document.createElement('a');
-          resultButton.href = links[i].href;
-          resultButton.className = 'result-button';
-
-          const icon = links[i].querySelector('i');
-          if (icon) {
-            const iconClone = document.createElement('i');
-            iconClone.className = icon.className;
-            resultButton.appendChild(iconClone);
-          } else {
-            const defaultIcon = document.createElement('i');
-            defaultIcon.className = 'fas fa-link';
-            resultButton.appendChild(defaultIcon);
-          }
-
-          const textSpan = document.createElement('span');
-          textSpan.textContent = txtValue.trim();
-          resultButton.appendChild(textSpan);
-
-          resultsContainer.appendChild(resultButton);
-        }
+      if (filter === '') {
+        return; // Don't search if input is empty
       }
 
-      if (resultsContainer.children.length === 0 && filter.trim() !== '') {
+      let foundResults = 0;
+      const addedUrls = new Set(); // To track added URLs and prevent duplicates
+
+      menuData.topics.forEach(topic => {
+        if (topic.subtopics) {
+          topic.subtopics.forEach(subtopic => {
+            subtopic.pages.forEach(page => {
+              if ((page.name.toLowerCase().includes(filter) || (page.url && page.url.toLowerCase().includes(filter))) && !addedUrls.has(page.url)) {
+                createResultButton(page, resultsContainer);
+                addedUrls.add(page.url);
+                foundResults++;
+              }
+            });
+          });
+        }
+        if (topic.pages) {
+          topic.pages.forEach(page => {
+            // Check if this page is part of a subtopic (already processed) or a direct page under a topic
+            const isDirectPageNotUnderSubtopic = !topic.subtopics; 
+            // Or, if it's a page directly under a topic that also has subtopics (less common, but possible)
+            // This check ensures we don't re-add pages if they are listed both directly and under subtopics (though the current data structure doesn't do this)
+
+            if ((page.name.toLowerCase().includes(filter) || (page.url && page.url.toLowerCase().includes(filter))) && !addedUrls.has(page.url)) {
+              createResultButton(page, resultsContainer);
+              addedUrls.add(page.url);
+              foundResults++;
+            }
+          });
+        }
+      });
+
+      if (foundResults === 0) {
         const noResults = document.createElement('div');
-        noResults.style.gridColumn = '1 / -1';
+        noResults.style.gridColumn = '1 / -1'; // Span full width if grid
         noResults.style.textAlign = 'center';
         noResults.style.padding = '20px';
-        noResults.style.color = '#666';
+        noResults.style.color = 'var(--grey-dark)';
         noResults.innerHTML = `
-          <i class="fas fa-search" style="font-size: 2rem; margin-bottom: 10px; color: #ccc;"></i><br>
-          No results found for "${filter}"
+          <i class="fas fa-meh" style="font-size: 2rem; margin-bottom: 10px; color: var(--grey-light);"></i><br>
+          No results found for "<strong>${input.value}</strong>"
         `;
         resultsContainer.appendChild(noResults);
       }
     }
+
+    function createResultButton(page, container) {
+      const resultButton = document.createElement('a');
+      resultButton.href = page.url;
+      resultButton.className = 'result-button';
+      resultButton.target = page.url.startsWith('http') ? '_blank' : '_self';
+       if (page.url.startsWith('http')) {
+          resultButton.rel = "noopener noreferrer";
+      }
+
+      let iconHtml = '';
+      if (page.icon) {
+          iconHtml = `<i class="fas ${page.icon}"></i>`;
+      } else {
+          iconHtml = `<i class="fas fa-link"></i>`; // Default icon
+      }
+      
+      const textSpan = document.createElement('span');
+      textSpan.textContent = page.name;
+
+      resultButton.innerHTML = iconHtml; // Add icon first
+      resultButton.appendChild(textSpan); // Then add text
+
+      container.appendChild(resultButton);
+    }
+
+
+    // Initialize menu and event listeners
+    document.addEventListener('DOMContentLoaded', () => {
+      createMenu();
+      attachSubmenuToggle();
+      // Initial search if there's a hash for it (optional)
+      // if(window.location.hash.startsWith('#search=')) {
+      //   document.getElementById('searchInput').value = decodeURIComponent(window.location.hash.substring(8));
+      //   searchFunction();
+      // }
+    });
+
   </script>
 </body>
 </html>
