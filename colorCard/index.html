@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Glassmorphism Card Swiper v7 (Toggle Fixes)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif; 
+            background-color: #dddddd; 
+            display: flex;
+            flex-direction: column; /* Align items vertically */
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            padding-bottom: 20px; /* Space for the toggle switch */
+        }
+
+        .card-swiper-container {
+            position: relative;
+            width: 320px; 
+            height: 480px; 
+            perspective: 1800px; 
+            transform-style: preserve-3d; 
+            margin-bottom: 30px; /* Space between cards and toggle */
+        }
+
+        .card {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            box-sizing: border-box;
+            color: white; 
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between; 
+            overflow: hidden; 
+            will-change: transform, opacity, color; 
+            border-radius: 25px;
+            transition: transform 0.9s cubic-bezier(0.76, 0, 0.24, 1),
+                        opacity 0.8s cubic-bezier(0.76, 0, 0.24, 1),
+                        color 0.8s cubic-bezier(0.76, 0, 0.24, 1);
+        }
+
+        .card-content-wrapper {
+            padding: 30px; 
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative; 
+            z-index: 2;
+        }
+
+        @keyframes livelyBlob {
+            0% { transform: translate(-50%, -50%) scale(1.3) rotate(0deg); }
+            25% { transform: translate(-52%, -48%) scale(1.32) rotate(5deg); }
+            50% { transform: translate(-50%, -52%) scale(1.28) rotate(-3deg); }
+            75% { transform: translate(-48%, -49%) scale(1.31) rotate(2deg); }
+            100% { transform: translate(-50%, -50%) scale(1.3) rotate(0deg); }
+        }
+
+        .color-blob {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 250px; 
+            height: 250px;
+            border-radius: 50%;
+            transform: translate(-50%, -50%) scale(1); 
+            filter: blur(60px); 
+            opacity: 0; 
+            transition: opacity 0.7s ease-out,
+                        transform 0.7s ease-out, 
+                        background-color 0.7s ease-out,
+                        border 0.3s ease-out; /* Transition for the new border */
+            z-index: 1; 
+            border: 2px solid transparent; /* Default transparent border */
+        }
+
+        .card-title {
+            font-family: 'Poppins', sans-serif; 
+            font-size: 1.85rem; 
+            font-weight: 600; 
+            margin-bottom: 15px;
+            text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.2); 
+        }
+
+        .card-description {
+            font-size: 0.95rem; 
+            flex-grow: 1; 
+            line-height: 1.65; 
+            font-weight: 400; 
+        }
+        
+        .card-footer {
+            font-size: 0.75rem; 
+            opacity: 0.65; 
+            text-align: right;
+            font-weight: 500; 
+        }
+
+        .is-front {
+            background: rgba(255, 255, 255, 0.25); 
+            backdrop-filter: blur(28px) saturate(160%); 
+            -webkit-backdrop-filter: blur(28px) saturate(160%);
+            box-shadow: 0 20px 55px rgba(0, 0, 0, 0.4); 
+            transform: translateZ(80px) scale(1) rotateY(0deg) rotateX(0deg); 
+            opacity: 1;
+            z-index: 10;
+        }
+        .is-front .color-blob {
+            opacity: 0.9; 
+            transform: translate(-50%, -50%) scale(1.3) rotate(0deg); 
+            animation: livelyBlob 15s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite alternate-reverse;
+        }
+        /* Class to add border to light-colored blobs */
+        .is-front .color-blob.light-outline {
+            border: 2px solid rgba(0, 0, 0, 0.1);
+        }
+
+
+        .is-back {
+            background-color: #ffffff; 
+            color: #333; 
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25); 
+            transform: translateZ(-90px) scale(0.70) translateX(25%) rotateY(-15deg) rotateX(5deg); 
+            opacity: 0.75; 
+            z-index: 5;
+        }
+         .is-back .color-blob {
+            opacity: 0; 
+            animation: none; 
+            border-color: transparent; /* Ensure border is off for back card blob */
+        }
+        
+        .is-back .card-title,
+        .is-back .card-description,
+        .is-back .card-footer {
+            color: #333 !important; 
+        }
+        .is-back .card-footer {
+            opacity: 0.6;
+        }
+
+        /* Toggle Switch Styles */
+        .toggle-switch-container {
+            display: flex;
+            align-items: center;
+            color: #333; 
+        }
+        .toggle-switch-container span { /* Label for the switch */
+            margin-right: 12px; /* Increased margin */
+            font-family: 'Poppins', sans-serif; /* Using Poppins for the label */
+            font-weight: 500; /* Poppins medium weight */
+            font-size: 0.9rem; 
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 62px; 
+            height: 28px; 
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #B0B0B0; /* Slightly darker gray for off state */
+            transition: .4s cubic-bezier(0.68, -0.55, 0.265, 1.55); 
+            border-radius: 28px; 
+        }
+
+        .slider:before { /* This is the knob */
+            position: absolute;
+            content: "";
+            height: 20px; 
+            width: 20px;  
+            left: 4px;   
+            bottom: 4px; 
+            background-color: white;
+            transition: .4s cubic-bezier(0.68, -0.55, 0.265, 1.55); 
+            border-radius: 50%; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2); /* Slightly softer shadow */
+        }
+
+        input:checked + .slider {
+            background-color: #6667AB; 
+        }
+
+        input:focus + .slider {
+            box-shadow: 0 0 2px #6667AB; /* Focus outline */
+        }
+
+        input:checked + .slider:before {
+            /* translateX ensures the knob stays within the slider bounds */
+            /* Slider width (50) - Knob width (20) - Left padding (4) - Right padding (4) = 22 */
+            transform: translateX(22px); /* Removed scale to keep knob size consistent */
+        }
+
+    </style>
+</head>
+<body>
+    <div class="card-swiper-container" id="cardSwiper">
+        <div class="card" id="cardElementA">
+            <div class="color-blob"></div>
+            <div class="card-content-wrapper">
+                <h3 class="card-title"></h3>
+                <p class="card-description"></p>
+                <div class="card-footer"></div>
+            </div>
+        </div>
+        <div class="card" id="cardElementB">
+            <div class="color-blob"></div>
+            <div class="card-content-wrapper">
+                <h3 class="card-title"></h3>
+                <p class="card-description"></p>
+                <div class="card-footer"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toggle-switch-container">
+        <span>Random Order</span>
+        <label class="toggle-switch">
+            <input type="checkbox" id="randomModeToggle">
+            <span class="slider"></span>
+        </label>
+    </div>
+
+    <script>
+        const cardData = [
+            // ... (All 85 card data objects remain here, same as previous version) ...
+            { "id": 1, "name": "Living Coral", "code": "#FF6F61", "year": "2019", "description": "An animating and life-affirming coral hue with a golden undertone." },
+            { "id": 2, "name": "Classic Blue", "code": "#0F4C81", "year": "2020", "description": "Instilling calm, confidence, and connection." },
+            { "id": 3, "name": "Ultimate Gray", "code": "#939597", "year": "2021", "description": "Emboldening spirit, highlighting fortitude and practicality." },
+            { "id": 4, "name": "Illuminating", "code": "#F5DF4D", "year": "2021", "description": "A bright and cheerful yellow sparkling with vivacity." },
+            { "id": 5, "name": "Very Peri", "code": "#6667AB", "year": "2022", "description": "Displaying a carefree confidence and a daring curiosity." },
+            { "id": 6, "name": "Viva Magenta", "code": "#BB2649", "year": "2023", "description": "Brave and fearless, a pulsating color whose exuberance promotes joy." },
+            { "id": 7, "name": "Peach Fuzz", "code": "#FFBE98", "year": "2024", "description": "A velvety gentle peach whose all-embracing spirit enriches mind, body, and heart." },
+            { "id": 8, "name": "Rose Quartz", "code": "#F7CAC9", "year": "2016", "description": "A persuasive yet gentle tone that conveys compassion and a sense of composure." },
+            { "id": 9, "name": "Serenity", "code": "#92A8D1", "year": "2016", "description": "Weightless and airy, like the expanse of the blue sky above us." },
+            { "id": 10, "name": "Greenery", "code": "#88B04B", "year": "2017", "description": "A fresh and zesty yellow-green shade that evokes the first days of spring." },
+            { "id": 11, "name": "Ultra Violet", "code": "#5F4B8B", "year": "2018", "description": "Inventive and imaginative, Ultra Violet lights the way to what is yet to come." },
+            { "id": 12, "name": "Marsala", "code": "#955251", "year": "2015", "description": "A naturally robust and earthy wine red, Marsala enriches our minds, bodies, and souls." },
+            { "id": 13, "name": "Radiant Orchid", "code": "#B565A7", "year": "2014", "description": "An enchanting harmony of fuchsia, purple, and pink undertones, Radiant Orchid inspires confidence and emanates great joy, love, and health." },
+            { "id": 14, "name": "Emerald", "code": "#009473", "year": "2013", "description": "A lively, radiant, lush green, Emerald promotes balance and harmony." },
+            { "id": 15, "name": "Tangerine Tango", "code": "#DD4124", "year": "2012", "description": "A vivacious, enticing hue, Tangerine Tango is an orange with a lot of depth to it, reminiscent of the radiant shadings of a sunset." },
+            { "id": 16, "name": "Honeysuckle", "code": "#D94F70", "year": "2011", "description": "A courageous, confident, and vital reddish pink, Honeysuckle encourages us to face everyday troubles with verve and vigor." },
+            { "id": 17, "name": "Turquoise", "code": "#45B5AA", "year": "2010", "description": "Combining the serene qualities of blue and the invigorating aspects of green, Turquoise inspires thoughts of soothing, tropical waters and a comforting escape from the everyday troubles of the world, while at the same time restoring our sense of wellbeing." },
+            { "id": 18, "name": "Mimosa", "code": "#F0C05A", "year": "2009", "description": "A warm, engaging yellow, Mimosa represents hope and optimism in a time of economic uncertainty and political change." },
+            { "id": 19, "name": "Blue Iris", "code": "#5A5B9F", "year": "2008", "description": "A beautifully balanced blue-purple, Blue Iris combines the stable and calming aspects of blue with the mystical and spiritual qualities of purple, satisfying the need for reassurance in a complex world, while adding a touch of mystery and excitement." },
+            { "id": 20, "name": "Chili Pepper", "code": "#9B1B30", "year": "2007", "description": "A deep, spicy red, Chili Pepper is engaging, sophisticated, and enticing, connoting an outgoing, confident, and design-savvy attitude." },
+            { "id": 21, "name": "Sand Dollar", "code": "#DECDBE", "year": "2006", "description": "A warm, comforting neutral, Sand Dollar was chosen as a response to the economic and housing market uncertainties, representing a need for grounding and stability." },
+            { "id": 22, "name": "Blue Turquoise", "code": "#53B0AE", "year": "2005", "description": "A cool and calming blue-green, Blue Turquoise is reminiscent of the tranquil waters of the ocean, offering a sense of escape and serenity." },
+            { "id": 23, "name": "Tigerlily", "code": "#E2583E", "year": "2004", "description": "A vibrant, warm orange, Tigerlily contains hints of red and yellow, inspired by the flower of the same name, and evokes a sense of power and exoticness." },
+            { "id": 24, "name": "Aqua Sky", "code": "#7BC4C4", "year": "2003", "description": "A soft, calm, and cool blue, Aqua Sky offers a sense of serenity and hope, reflecting the desire for peace and tranquility." },
+            { "id": 25, "name": "True Red", "code": "#BF1932", "year": "2002", "description": "A bold, passionate, and powerful red, True Red embodies strength, love, and deep emotion." },
+            { "id": 26, "name": "Fuchsia Rose", "code": "#C74375", "year": "2001", "description": "A vivid, uplifting pink, Fuchsia Rose is a celebratory and engaging color that radiates positivity and warmth." },
+            { "id": 27, "name": "Cerulean Blue", "code": "#9BB7D4", "year": "2000", "description": "The color of the sky on a serene, crystal clear day, Cerulean Blue was chosen as the color of the millennium, representing tranquility, peace, and the calming effect of nature." },
+            { "id": 28, "name": "Jade Green", "code": "#00A86B", "description": "A prized green reminiscent of the gemstone, symbolizing harmony, balance, prosperity, and healing." },
+            { "id": 29, "name": "Terracotta", "code": "#E2725B", "description": "A warm, earthy reddish-brown clay color that evokes a sense of nature, comfort, and rustic charm." },
+            { "id": 30, "name": "Periwinkle", "code": "#CCCCFF", "description": "A pale indigo hue named after the flower, representing serenity, everlasting love, and gentle calmness." },
+            { "id": 31, "name": "Charcoal Gray", "code": "#36454F", "description": "A deep, dusky gray with a hint of blue, embodying sophistication, strength, and modern elegance." },
+            { "id": 32, "name": "Seafoam Green", "code": "#93E9BE", "description": "A soft, pale green with blue and gray undertones, inspired by ocean water, conveying tranquility and freshness." },
+            { "id": 33, "name": "Cognac", "code": "#9A463D", "description": "A rich, warm reddish-brown, named after the brandy, symbolizing prestige, maturity, and earthy sophistication." },
+            { "id": 34, "name": "Champagne", "code": "#F7E7CE", "description": "A pale, effervescent mix of yellow and orange, evoking celebration, luxury, and understated elegance." },
+            { "id": 35, "name": "Tiffany Blue", "code": "#0ABAB5", "description": "An iconic, trademarked medium robin egg blue, associated with luxury, elegance, and timeless style." },
+            { "id": 36, "name": "Absolute Zero", "code": "#0048BA", "description": "A deep, pure blue, evoking trust, calmness, and a sense of reliability and control." },
+            { "id": 37, "name": "Amaranth", "code": "#E52B50", "description": "A vibrant reddish-rose color, named after the flower, symbolizing immortality, youth, and passion." },
+            { "id": 38, "name": "Amethyst", "code": "#9966CC", "description": "A violet purple reminiscent of the gemstone, often associated with royalty, spirituality, and tranquility." },
+            { "id": 39, "name": "Aureolin", "code": "#FDEE00", "description": "A vibrant, transparent golden-yellow, known for its brilliance and use as an artist's pigment; conveys warmth and cheerfulness." },
+            { "id": 40, "name": "Bistre", "code": "#3D2B1F", "description": "A deep, smoky grayish-brown, historically made from soot, giving a rustic, vintage, and earthy feel." },
+            { "id": 41, "name": "Cobalt Blue", "code": "#0047AB", "description": "A deep, vivid blue, prized for its richness and stability, often conveying authority and serenity." },
+            { "id": 42, "name": "Zaffre", "code": "#0014A8", "description": "A deep, intense blue pigment, historically derived from cobalt ores, suggesting depth and richness." },
+            { "id": 43, "name": "RebeccaPurple", "code": "#663399", "description": "A medium deep purple, named in memory of Rebecca Meyer, conveying dignity and thoughtfulness." },
+            { "id": 44, "name": "Ivory", "code": "#FFFFF0", "description": "A creamy, off-white color, suggesting purity, elegance, and a soft, understated warmth." },
+            { "id": 45, "name": "Silver", "code": "#C0C0C0", "description": "A metallic gray resembling the precious metal, often symbolizing wealth, modernity, and sleek sophistication." },
+            { "id": 46, "name": "Teal", "code": "#008080", "description": "A medium blue-green color, evoking the tranquility of tropical waters and sophisticated balance." },
+            { "id": 47, "name": "Mauve", "code": "#E0B0FF", "description": "A pale purple color, often with grayish or pinkish undertones, conveying gentleness, nostalgia, and quiet charm." },
+            { "id": 48, "name": "Lilac", "code": "#C8A2C8", "description": "A pale to medium violet shade, named after the flower, often associated with youth, first love, and springtime." },
+            { "id": 49, "name": "Ochre", "code": "#CC7722", "description": "An earthy pigment ranging from yellow to deep orange or brown, one of the oldest natural pigments, signifying earth and warmth." },
+            { "id": 50, "name": "Viridian", "code": "#40826D", "description": "A blue-green pigment of medium saturation and relatively dark in value, suggesting lush foliage and cool depth." },
+            { "id": 51, "name": "Wisteria", "code": "#C9A0DC", "description": "A delicate, light violet hue named after the flower, symbolizing grace, refinement, and gentle beauty." },
+            { "id": 52, "name": "Ruby Red", "code": "#E0115F", "description": "A deep, rich red, like the gemstone, symbolizing passion, vitality, wealth, and love." },
+            { "id": 53, "name": "Sapphire Blue", "code": "#0F52BA", "description": "A brilliant deep blue, reminiscent of the precious gem, often associated with wisdom, royalty, and divine favor." },
+            { "id": 54, "name": "Garnet", "code": "#733635", "description": "A deep, muted red with brownish undertones, like the gemstone, symbolizing passion, commitment, and strength." },
+            { "id": 55, "name": "Topaz", "code": "#FFC87C", "description": "A warm, golden yellow-orange hue, like the gemstone, associated with energy, warmth, and abundance." },
+            { "id": 56, "name": "Neon Pink", "code": "#FF6EC7", "description": "A vibrant, fluorescent pink that is bold, energetic, and demands attention." },
+            { "id": 57, "name": "Electric Lime", "code": "#CCFF00", "description": "A bright, intense yellow-green, conveying high energy, excitement, and a modern edge." },
+            { "id": 58, "name": "Laser Lemon", "code": "#FFFF66", "description": "A brilliant, fluorescent greenish-yellow, known for its eye-catching vibrancy and playful energy." },
+            { "id": 59, "name": "Sakura-iro (Cherry Blossom)", "code": "#FEF4F4", "description": "A very pale, delicate pink like cherry blossoms, symbolizing renewal, fleeting beauty, and the arrival of spring in Japan." },
+            { "id": 60, "name": "Ai (Japanese Indigo)", "code": "#165E83", "description": "A deep blue derived from the Japanese indigo plant, representing depth, stability, and traditional craftsmanship." },
+            { "id": 61, "name": "Yamabuki-iro (Golden Yellow)", "code": "#F8B500", "description": "A bright, golden yellow like the Yamabuki (Japanese rose) flower, symbolizing good fortune and the vibrancy of spring." },
+            { "id": 62, "name": "Tokiwa-iro (Evergreen)", "code": "#007B43", "description": "A deep, unchanging green like evergreen trees, signifying permanence, longevity, and steadfastness in Japanese culture." },
+            { "id": 63, "name": "Shu-iro (Vermillion Red)", "code": "#EB6101", "description": "A bright, slightly yellowish red, often seen in shrines and traditional crafts, warding off evil and symbolizing sacredness." },
+            { "id": 64, "name": "Moegi-iro (Sprout Green)", "code": "#90B44B", "description": "A fresh, yellowish-green like young spring sprouts, representing youth, vitality, and new beginnings." },
+            { "id": 65, "name": "Antique Gold (Art Deco)", "code": "#B69F5E", "description": "A deep, metallic gold with warm undertones, characteristic of the Art Deco era, signifying luxury, opulence, and timeless glamour." },
+            { "id": 66, "name": "Oceanic Teal (Art Deco)", "code": "#5A8490", "description": "A sophisticated, muted teal, often used in Art Deco design for its blend of tranquility and luxurious depth." },
+            { "id": 67, "name": "Victorian Deep Red", "code": "#8B0000", "description": "A rich, dark red hue, commonly used in Victorian interiors to create a sense of warmth, opulence, and drama." },
+            { "id": 68, "name": "Majolica Green (Victorian)", "code": "#AEB08F", "description": "An earthy, muted green inspired by Majolica pottery, popular in the Victorian era for its natural and sophisticated feel." },
+            { "id": 69, "name": "Peacock Blue (Victorian)", "code": "#0093A0", "description": "A rich teal or blue-green, reminiscent of peacock feathers, favored in Victorian design for its exoticism and jewel-like intensity." },
+            { "id": 70, "name": "Avocado Green (Mid-Century)", "code": "#568203", "description": "An earthy, muted dark green, iconic to Mid-Century Modern design, reflecting a connection to nature and organic forms." },
+            { "id": 71, "name": "Mustard Yellow (Mid-Century)", "code": "#FFDB58", "description": "A warm, deep yellow with brownish undertones, a staple in Mid-Century Modern palettes, adding a touch of optimistic warmth." },
+            { "id": 72, "name": "MCM Orange (Mid-Century)", "code": "#EB6F59", "description": "A warm, earthy orange, often a vibrant accent in Mid-Century Modern interiors, conveying energy and optimism." },
+            { "id": 73, "name": "Pastel Lavender", "code": "#E6E6FA", "description": "A soft, pale purple with a calming and gentle presence, often used for its soothing and dreamy qualities." },
+            { "id": 74, "name": "Mint Green (Pastel)", "code": "#98FF98", "description": "A light, refreshing green with a cool undertone, associated with cleanliness, spring, and subtle energy." },
+            { "id": 75, "name": "Beige", "code": "#F5F5DC", "description": "A pale sandy fawn color, offering a warm, neutral backdrop that is calm and dependable." },
+            { "id": 76, "name": "Taupe", "code": "#483C32", "description": "A dark grayish-brown or brownish-gray, a versatile and timeless neutral that provides an elegant and grounded feel." },
+            { "id": 77, "name": "Indian Yellow", "code": "#E3A857", "description": "A deep, luminescent orange-yellow, historically a pigment with a complex origin, known for its vibrant warmth." },
+            { "id": 78, "name": "Crimson", "code": "#DC143C", "description": "A strong, deep red color, inclining to purple, associated with power, passion, and richness." },
+            { "id": 79, "name": "Slate Gray", "code": "#708090", "description": "A medium-dark gray with a slight bluish tinge, resembling slate rock, conveying strength and solidity." },
+            { "id": 80, "name": "Olive Green", "code": "#808000", "description": "A dark yellowish-green, like an unripe olive, often associated with peace, nature, and earthiness." },
+            { "id": 81, "name": "Coral Pink", "code": "#F88379", "description": "A pinkish-orange hue reminiscent of marine corals, conveying warmth, vivacity, and a touch of playfulness." },
+            { "id": 82, "name": "Burnt Sienna", "code": "#E97451", "description": "A rich, earthy reddish-brown pigment, known for its warm and natural feel, often used in art." },
+            { "id": 83, "name": "Gold", "code": "#FFD700", "description": "A bright, rich yellow color, like the precious metal, symbolizing wealth, luxury, and prestige." },
+            { "id": 84, "name": "Forest Green", "code": "#228B22", "description": "A dark, rich green, evoking the lushness of a dense forest, symbolizing nature, growth, and tranquility." },
+            { "id": 85, "name": "Sky Blue", "code": "#87CEEB", "description": "A light, clear blue, reminiscent of the daytime sky, often associated with openness, calm, and serenity." }
+        ];
+
+        let currentDataIndex = 0; 
+        let frontElementPointer = 0; 
+        let isRandomMode = false;
+        let randomHistory = [];
+        let currentRandomHistoryIndex = -1;
+
+
+        const cardElements = [
+            document.getElementById('cardElementA'),
+            document.getElementById('cardElementB')
+        ];
+        const swiperContainer = document.getElementById('cardSwiper');
+        const randomModeToggle = document.getElementById('randomModeToggle');
+        const CONTENT_UPDATE_DELAY = 700; 
+        const LUMINANCE_THRESHOLD_FOR_BLOB_BORDER = 225; 
+
+        function getLuminance(hex) {
+            hex = hex.replace("#", "");
+            const r = parseInt(hex.substring(0, 2), 16);
+            const g = parseInt(hex.substring(2, 4), 16);
+            const b = parseInt(hex.substring(4, 6), 16);
+            return 0.299 * r + 0.587 * g + 0.114 * b;
+        }
+
+        function getContrastTextColor(hexBgColor) {
+            const luminance = getLuminance(hexBgColor);
+            return luminance > 140 ? '#333333' : '#FFFFFF';
+        }
+
+        function populateCard(cardElement, dataItem) {
+            const titleEl = cardElement.querySelector('.card-title');
+            const descEl = cardElement.querySelector('.card-description');
+            const footerEl = cardElement.querySelector('.card-footer');
+
+            if (!dataItem) { 
+                titleEl.textContent = "";
+                descEl.textContent = "";
+                footerEl.textContent = "";
+                return;
+            }
+            titleEl.textContent = dataItem.name;
+            descEl.textContent = dataItem.description || `Pantone ${dataItem.code}`;
+            footerEl.textContent = dataItem.year ? `${dataItem.code} - ${dataItem.year}` : dataItem.code; 
+        }
+
+        function styleCard(cardElement, dataItem, isFront) {
+            const contentWrapper = cardElement.querySelector('.card-content-wrapper');
+            const blobElement = cardElement.querySelector('.color-blob');
+            
+            let classes = ['card']; 
+            blobElement.classList.remove('light-outline'); 
+
+            if (isFront) {
+                classes.push('is-front');
+                if (dataItem && dataItem.code) {
+                    contentWrapper.style.color = getContrastTextColor(dataItem.code);
+                    blobElement.style.backgroundColor = dataItem.code;
+                    if (getLuminance(dataItem.code) > LUMINANCE_THRESHOLD_FOR_BLOB_BORDER) {
+                        blobElement.classList.add('light-outline');
+                    }
+                } else { 
+                    contentWrapper.style.color = 'white'; 
+                    blobElement.style.backgroundColor = 'transparent';
+                }
+            } else { 
+                classes.push('is-back');
+                contentWrapper.style.color = ''; 
+                blobElement.style.backgroundColor = 'transparent'; 
+            }
+            cardElement.className = classes.join(' ');
+        }
+
+        function initializeCards() {
+            if (cardData.length === 0) {
+                 swiperContainer.innerHTML = "<p style='color:white; text-align:center;'>No cards to display.</p>";
+                return;
+            }
+            currentDataIndex = 0; 
+            if (isRandomMode) { 
+                randomHistory = [currentDataIndex];
+                currentRandomHistoryIndex = 0;
+            }
+
+            const frontCardElement = cardElements[frontElementPointer];
+            const backCardElement = cardElements[(frontElementPointer + 1) % 2];
+
+            const frontData = cardData[currentDataIndex];
+            const backDataIndex = cardData.length > 1 ? (currentDataIndex + 1) % cardData.length : 0; 
+            const backData = cardData.length > 1 ? cardData[backDataIndex] : null; 
+
+            populateCard(frontCardElement, frontData);
+            styleCard(frontCardElement, frontData, true);
+
+            populateCard(backCardElement, backData); 
+            styleCard(backCardElement, backData, false); 
+        }
+        
+        let isAnimating = false; 
+
+        function cycleCards(direction) {
+            if (cardData.length < 2) return; 
+            if (isAnimating) return; 
+            
+            isAnimating = true;
+
+            const elMovingToBack = cardElements[frontElementPointer];
+            const elMovingToFront = cardElements[(frontElementPointer + 1) % 2];
+
+            let newFrontDataIndex;
+
+            if (isRandomMode) {
+                if (direction === 'forward') {
+                    if (currentRandomHistoryIndex < randomHistory.length - 1) {
+                        currentRandomHistoryIndex++;
+                        newFrontDataIndex = randomHistory[currentRandomHistoryIndex];
+                    } else {
+                        let randomIndex;
+                        do {
+                            randomIndex = Math.floor(Math.random() * cardData.length);
+                        } while (randomIndex === currentDataIndex && cardData.length > 1);
+                        newFrontDataIndex = randomIndex;
+                        randomHistory.push(newFrontDataIndex); 
+                        currentRandomHistoryIndex = randomHistory.length - 1;
+                    }
+                } else { 
+                    if (currentRandomHistoryIndex > 0) {
+                        currentRandomHistoryIndex--;
+                        newFrontDataIndex = randomHistory[currentRandomHistoryIndex];
+                    } else {
+                        isAnimating = false; 
+                        return;
+                    }
+                }
+            } else { 
+                if (direction === 'forward') {
+                    newFrontDataIndex = (currentDataIndex + 1) % cardData.length;
+                } else { 
+                    newFrontDataIndex = (currentDataIndex - 1 + cardData.length) % cardData.length;
+                }
+            }
+            
+            const newFrontData = cardData[newFrontDataIndex];
+            const newPreviewDataIndex = (newFrontDataIndex + 1) % cardData.length;
+            const newPreviewData = cardData[newPreviewDataIndex];
+
+            populateCard(elMovingToFront, newFrontData);
+            styleCard(elMovingToFront, newFrontData, true);
+
+            styleCard(elMovingToBack, cardData[currentDataIndex] , false);
+
+            setTimeout(() => {
+                populateCard(elMovingToBack, newPreviewData);
+            }, CONTENT_UPDATE_DELAY);
+            
+            currentDataIndex = newFrontDataIndex;
+            frontElementPointer = (frontElementPointer + 1) % 2;
+            
+            setTimeout(() => {
+                isAnimating = false;
+            }, 900); 
+        }
+
+        randomModeToggle.addEventListener('change', function() {
+            isRandomMode = this.checked;
+            if (isRandomMode) {
+                randomHistory = [currentDataIndex];
+                currentRandomHistoryIndex = 0;
+            } 
+        });
+
+        swiperContainer.addEventListener('click', () => cycleCards('forward'));
+        swiperContainer.addEventListener('contextmenu', (event) => {
+            event.preventDefault(); 
+            cycleCards('backward');
+        });
+
+        initializeCards();
+    </script>
+
+</body>
+</html>
