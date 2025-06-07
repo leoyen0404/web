@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GridSHIFT v2 - Advanced Bot</title>
+    <style>
+        :root {
+            --grid-size: 8;
+            --tile-size: 60px;
+            --grid-gap: 5px;
+            --board-bg: #2c3e50;
+            --tile-bg: #34495e;
+            --player-color: #e74c3c;
+            --target-color: #2ecc71;
+            --text-color: #ecf0f1;
+            --font-family: 'Consolas', 'Menlo', 'monospace';
+            --move-duration: 0.08s;
+        }
+
+        body {
+            background-color: #1a2530;
+            color: var(--text-color);
+            font-family: var(--font-family);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            text-align: center;
+        }
+
+        #game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        #info-panel {
+            display: flex;
+            justify-content: space-around;
+            width: calc(var(--grid-size) * (var(--tile-size) + var(--grid-gap)));
+            padding: 10px;
+            background-color: var(--tile-bg);
+            border-radius: 10px;
+            font-size: 1.2em;
+        }
+
+        .info-box { display: flex; flex-direction: column; }
+        .info-box span:first-child { font-size: 0.7em; opacity: 0.7; }
+        #current-value { color: var(--player-color); font-weight: bold; }
+        #target-value { color: var(--target-color); font-weight: bold; }
+
+        #grid-wrapper {
+            position: relative;
+            width: calc(var(--grid-size) * (var(--tile-size) + var(--grid-gap)) - var(--grid-gap));
+            height: calc(var(--grid-size) * (var(--tile-size) + var(--grid-gap)) - var(--grid-gap));
+            background-color: var(--board-bg);
+            padding: var(--grid-gap);
+            border-radius: 5px;
+        }
+        
+        #grid-container {
+            display: grid;
+            grid-template-columns: repeat(var(--grid-size), 1fr);
+            grid-template-rows: repeat(var(--grid-size), 1fr);
+            gap: var(--grid-gap);
+            width: 100%;
+            height: 100%;
+        }
+
+        .tile {
+            width: var(--tile-size);
+            height: var(--tile-size);
+            background-color: var(--tile-bg);
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            transition: transform 0.1s ease, opacity 0.2s ease;
+        }
+
+        #player {
+            position: absolute;
+            width: var(--tile-size);
+            height: var(--tile-size);
+            border: 4px solid var(--player-color);
+            box-sizing: border-box;
+            border-radius: 5px;
+            transition: top var(--move-duration) ease-out, left var(--move-duration) ease-out;
+            pointer-events: none;
+        }
+        
+        #instructions {
+            padding: 10px 20px;
+            background-color: var(--tile-bg);
+            border-radius: 10px;
+            font-size: 1.1em;
+            color: #bdc3c7;
+        }
+        #instructions strong { color: var(--player-color); }
+
+        /* Animations */
+        @keyframes pop {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.4); opacity: 0.8; }
+            100% { transform: scale(0.5); opacity: 0; }
+        }
+        .pop-animation { animation: pop 0.3s ease-out forwards; }
+
+        @keyframes flash-success {
+            0%, 100% { background-color: var(--board-bg); }
+            50% { background-color: var(--target-color); }
+        }
+        .flash-success-animation { animation: flash-success 0.4s ease-in-out; }
+        
+        @keyframes shake {
+          10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); }
+          30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+        .shake-animation { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+        
+        /* Overlay & Settings */
+        #overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            display: flex; justify-content: center; align-items: center; flex-direction: column;
+            z-index: 100; transition: opacity 0.5s ease;
+        }
+        #overlay-content { background: var(--board-bg); padding: 40px; border-radius: 15px; max-width: 500px; }
+        #overlay h1 { margin-top: 0; color: var(--target-color); }
+        #overlay p { line-height: 1.6; }
+        #overlay button {
+            background: var(--player-color); color: var(--text-color); border: none;
+            padding: 15px 30px; font-size: 1.2em; font-family: inherit; border-radius: 10px;
+            cursor: pointer; margin-top: 20px; transition: transform 0.2s ease;
+        }
+        #overlay button:hover { transform: scale(1.05); }
+
+        #settings { margin-top: 20px; text-align: left; display: grid; gap: 15px; }
+        .setting-row { display: flex; justify-content: space-between; align-items: center; }
+        .setting-row label { font-weight: bold; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <div id="info-panel">
+            <div class="info-box"><span>SCORE</span><span id="score">0</span></div>
+            <div class="info-box"><span>TARGET</span><span id="target-value">100</span></div>
+            <div class="info-box"><span>YOU</span><span id="current-value">0</span></div>
+            <div class="info-box"><span>TIME</span><span id="timer">60</span></div>
+        </div>
+
+        <div id="grid-wrapper">
+            <div id="grid-container"></div>
+            <div id="player"></div>
+        </div>
+        
+        <div id="instructions">
+            [<strong>←</strong> Subtract] [<strong>→</strong> Add] [<strong>P</strong> Pause]
+        </div>
+    </div>
+    
+    <div id="overlay">
+        <div id="overlay-content">
+            <h1 id="overlay-title">Welcome to GridSHIFT!</h1>
+            <p id="overlay-text">
+                Use the <strong>Arrow Keys</strong> to move. Land on a number from the <strong>left</strong> or <strong>right</strong> to perform a calculation. Match the <strong>TARGET</strong> value to score points and get more time!
+            </p>
+            
+            <div id="settings">
+                <div class="setting-row">
+                    <label for="time-select">Game Time:</label>
+                    <select id="time-select">
+                        <option value="30">30 Seconds</option>
+                        <option value="60" selected>60 Seconds</option>
+                        <option value="90">90 Seconds</option>
+                        <option value="-1">Zen Mode (No Timer)</option>
+                    </select>
+                </div>
+                <div class="setting-row">
+                    <label for="bot-toggle">Enable Bot Mode:</label>
+                    <input type="checkbox" id="bot-toggle">
+                </div>
+                <div class="setting-row hidden" id="bot-latency-row">
+                    <label for="bot-latency">Bot Speed (ms/move):</label>
+                    <input type="range" id="bot-latency" min="50" max="500" value="200">
+                    <span id="latency-value">200ms</span>
+                </div>
+            </div>
+
+            <button id="start-button">Start Game</button>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIG ---
+        const GRID_SIZE = 8;
+        const TILE_SIZE_PX = 60;
+        const GRID_GAP_PX = 5;
+        const TIME_BONUS = 10;
+
+        // --- GAME STATE ---
+        let grid = [];
+        let player = { x: 0, y: 0 };
+        let score = 0;
+        let targetValue = 0;
+        let currentValue = 0;
+        let timer = 60;
+        let initialTime = 60;
+        let isZenMode = false;
+        let timerInterval;
+        let gameActive = false;
+        let isPaused = false;
+        
+        // --- BOT STATE ---
+        let isBotMode = false;
+        let botLatency = 200;
+        let botTimeout;
+
+        // --- DOM ELEMENTS ---
+        const gridContainer = document.getElementById('grid-container');
+        const playerEl = document.getElementById('player');
+        const scoreEl = document.getElementById('score');
+        const targetValueEl = document.getElementById('target-value');
+        const currentValueEl = document.getElementById('current-value');
+        const timerEl = document.getElementById('timer');
+        const gridWrapperEl = document.getElementById('grid-wrapper');
+        const overlayEl = document.getElementById('overlay');
+        const overlayTitleEl = document.getElementById('overlay-title');
+        const overlayTextEl = document.getElementById('overlay-text');
+        const startButton = document.getElementById('start-button');
+        // Settings elements
+        const timeSelect = document.getElementById('time-select');
+        const botToggle = document.getElementById('bot-toggle');
+        const botLatencyRow = document.getElementById('bot-latency-row');
+        const botLatencySlider = document.getElementById('bot-latency');
+        const latencyValueEl = document.getElementById('latency-value');
+        
+        // --- GAME LOGIC ---
+
+        function generateRandomNumber() {
+            return Math.random() < 0.7 ? Math.ceil(Math.random() * 9) : Math.ceil(Math.random() * 25);
+        }
+
+        function createGrid() {
+            gridContainer.innerHTML = '';
+            grid = [];
+            for (let y = 0; y < GRID_SIZE; y++) {
+                const row = [];
+                for (let x = 0; x < GRID_SIZE; x++) {
+                    const tile = document.createElement('div');
+                    tile.classList.add('tile');
+                    tile.id = `tile-${x}-${y}`;
+                    const value = generateRandomNumber();
+                    const tileData = { value: value };
+                    tile.textContent = value;
+                    row.push(tileData);
+                    gridContainer.appendChild(tile);
+                }
+                grid.push(row);
+            }
+        }
+
+        function newTarget() {
+            const steps = 3 + Math.floor(score / 50);
+            let tempValue = 0;
+            for(let i = 0; i < steps; i++) {
+                const num = generateRandomNumber();
+                tempValue += (Math.random() < 0.5 ? num : -num);
+            }
+            targetValue = Math.max(20, Math.min(999, tempValue));
+            currentValue = Math.floor(targetValue / (Math.random() * 2 + 1.5));
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            scoreEl.textContent = score;
+            targetValueEl.textContent = targetValue;
+            currentValueEl.textContent = currentValue;
+            timerEl.textContent = isZenMode ? '∞' : timer;
+
+            const totalTileSize = TILE_SIZE_PX + GRID_GAP_PX;
+            playerEl.style.left = `${player.x * totalTileSize}px`;
+            playerEl.style.top = `${player.y * totalTileSize}px`;
+            
+            currentValueEl.classList.remove('shake-animation');
+            void currentValueEl.offsetWidth;
+            currentValueEl.classList.add('shake-animation');
+        }
+
+        function movePlayer(dx, dy) {
+            if (!gameActive || isPaused) return;
+
+            const newX = player.x + dx;
+            const newY = player.y + dy;
+
+            if (newX >= 0 && newX < GRID_SIZE && newY >= 0 && newY < GRID_SIZE) {
+                player.x = newX;
+                player.y = newY;
+                processTile(player.x, player.y, {dx, dy});
+                updateDisplay();
+                checkWinCondition();
+            }
+        }
+
+        function processTile(x, y, direction) {
+            const tileData = grid[y][x];
+            const tileEl = document.getElementById(`tile-${x}-${y}`);
+            let performedOp = false;
+            
+            if (direction.dx === 1) { // Move right -> Add
+                currentValue += tileData.value;
+                performedOp = true;
+            } else if (direction.dx === -1) { // Move left -> Subtract
+                currentValue -= tileData.value;
+                performedOp = true;
+            }
+
+            if (performedOp) {
+                tileEl.classList.add('pop-animation');
+                setTimeout(() => {
+                    const newValue = generateRandomNumber();
+                    grid[y][x] = { value: newValue };
+                    tileEl.textContent = newValue;
+                    tileEl.classList.remove('pop-animation');
+                }, 300);
+            }
+        }
+        
+        function checkWinCondition() {
+            if (currentValue === targetValue) {
+                score += 10;
+                if (!isZenMode) timer += TIME_BONUS;
+                gridWrapperEl.classList.add('flash-success-animation');
+                setTimeout(() => gridWrapperEl.classList.remove('flash-success-animation'), 400);
+                newTarget();
+            }
+        }
+        
+        function handleKeyPress(e) {
+            if (e.key === 'p' || e.key === 'P') {
+                togglePause();
+                return;
+            }
+
+            if (!gameActive || isPaused || isBotMode) return;
+            
+            switch (e.key) {
+                case 'ArrowUp': movePlayer(0, -1); break;
+                case 'ArrowDown': movePlayer(0, 1); break;
+                case 'ArrowLeft': movePlayer(-1, 0); break;
+                case 'ArrowRight': movePlayer(1, 0); break;
+            }
+            e.preventDefault();
+        }
+        
+        function updateTimer() {
+            if (!gameActive || isPaused || isZenMode) return;
+            timer--;
+            if (timer <= 0) {
+                timer = 0;
+                endGame();
+            }
+            updateDisplay();
+        }
+
+        function startGame() {
+            // Read settings
+            initialTime = parseInt(timeSelect.value);
+            isZenMode = initialTime === -1;
+            timer = isZenMode ? 0 : initialTime;
+            isBotMode = botToggle.checked;
+            botLatency = parseInt(botLatencySlider.value);
+
+            overlayEl.style.opacity = '0';
+            overlayEl.style.pointerEvents = 'none';
+            isPaused = false;
+            
+            score = 0;
+            player = { x: Math.floor(GRID_SIZE / 2), y: Math.floor(GRID_SIZE / 2) };
+            
+            createGrid();
+            newTarget();
+            
+            gameActive = true;
+            clearInterval(timerInterval);
+            if (!isZenMode) timerInterval = setInterval(updateTimer, 1000);
+            
+            clearTimeout(botTimeout);
+            if(isBotMode) runBotCycle();
+        }
+        
+        function endGame() {
+            gameActive = false;
+            clearTimeout(botTimeout);
+            clearInterval(timerInterval);
+            
+            overlayTitleEl.textContent = "Game Over!";
+            overlayTextEl.innerHTML = `You reached a final score of <strong>${score}</strong>. Well done!`;
+            startButton.textContent = "Play Again";
+            
+            overlayEl.style.opacity = '1';
+            overlayEl.style.pointerEvents = 'auto';
+        }
+        
+        function togglePause() {
+            if (!gameActive) return;
+            isPaused = !isPaused;
+            if (isPaused) {
+                clearTimeout(botTimeout);
+                clearInterval(timerInterval);
+                overlayTitleEl.textContent = "Paused";
+                overlayTextEl.innerHTML = "Press 'P' or click Resume to continue.";
+                startButton.textContent = "Resume";
+                overlayEl.style.opacity = '1';
+                overlayEl.style.pointerEvents = 'auto';
+                document.getElementById('settings').classList.add('hidden');
+            } else {
+                if (!isZenMode) timerInterval = setInterval(updateTimer, 1000);
+                if (isBotMode) runBotCycle();
+                overlayEl.style.opacity = '0';
+                overlayEl.style.pointerEvents = 'none';
+                document.getElementById('settings').classList.remove('hidden');
+            }
+        }
+        
+        // --- BOT LOGIC (REWRITTEN) ---
+
+        /**
+         * Finds the best sequence of moves up to a certain depth using Breadth-First Search (BFS).
+         * This allows the bot to "think" several steps ahead.
+         *
+         * @returns {Array|null} An array of move objects {dx, dy}, or null if no path is better than standing still.
+         */
+        function findBestMoveSequence() {
+            const MAX_DEPTH = 6; // How many moves ahead the bot can think.
+            const MAX_NODES = 3000; // Safety limit to prevent freezing on complex scenarios.
+            
+            // The queue for BFS will store states: {x, y, current value, path to get here}
+            const queue = [{
+                x: player.x,
+                y: player.y,
+                val: currentValue,
+                path: []
+            }];
+
+            // Keep track of the best path found so far.
+            // Initialize with the current state (score for doing nothing).
+            let bestFound = {
+                score: Math.abs(targetValue - currentValue),
+                path: null 
+            };
+            
+            // A 'visited' set to avoid redundant computations.
+            // Key: "x,y,value" - a unique identifier for a state.
+            const visited = new Set([`${player.x},${player.y},${currentValue}`]);
+
+            let nodesProcessed = 0;
+
+            while (queue.length > 0 && nodesProcessed < MAX_NODES) {
+                const { x, y, val, path } = queue.shift();
+                nodesProcessed++;
+
+                // If this path resulted in a perfect match, it's the best possible path.
+                // Since BFS explores layer by layer, this will also be one of the shortest paths.
+                if (val === targetValue) {
+                    return path;
+                }
+
+                // If the current path is already at the max depth, don't explore its children.
+                if (path.length >= MAX_DEPTH) {
+                    continue;
+                }
+
+                // Explore all 4 possible moves (neighbors)
+                const moves = [{ dx: 0, dy: -1 }, { dx: 0, dy: 1 }, { dx: -1, dy: 0 }, { dx: 1, dy: 0 }];
+                for (const move of moves) {
+                    const newX = x + move.dx;
+                    const newY = y + move.dy;
+
+                    // Check if the move is within the grid boundaries
+                    if (newX >= 0 && newX < GRID_SIZE && newY >= 0 && newY < GRID_SIZE) {
+                        let newVal = val;
+                        const newPath = [...path, move];
+
+                        // If moving horizontally, perform an operation
+                        if (move.dx === 1) { // Move Right -> Add
+                            newVal += grid[newY][newX].value;
+                        } else if (move.dx === -1) { // Move Left -> Subtract
+                            newVal -= grid[newY][newX].value;
+                        }
+                        
+                        // Prune search if we've already reached this exact state (pos, val)
+                        const visitedKey = `${newX},${newY},${newVal}`;
+                        if (visited.has(visitedKey)) {
+                            continue;
+                        }
+                        visited.add(visitedKey);
+
+                        // Evaluate how good this new state is
+                        const newScore = Math.abs(targetValue - newVal);
+
+                        // If this path is better than the best one we've found so far, update it.
+                        if (newScore < bestFound.score) {
+                            bestFound = { score: newScore, path: newPath };
+                        }
+
+                        // Add the new state to the queue to be explored later.
+                        queue.push({ x: newX, y: newY, val: newVal, path: newPath });
+                    }
+                }
+            }
+            
+            // After the search is complete (or hits a limit), return the best path found.
+            return bestFound.path;
+        }
+
+        function runBotCycle() {
+            if (!gameActive || isPaused) return;
+
+            // Use the multi-step thinking algorithm to find the best path.
+            const bestPath = findBestMoveSequence();
+
+            if (bestPath && bestPath.length > 0) {
+                // If a path was found, execute the first move of that path.
+                const nextMove = bestPath[0];
+                movePlayer(nextMove.dx, nextMove.dy);
+            } else {
+                // Failsafe: if no path is found (e.g., bot is trapped or no move improves score),
+                // make a random valid move to try and break the stalemate.
+                const validMoves = [];
+                if (player.x > 0) validMoves.push({ dx: -1, dy: 0 });
+                if (player.x < GRID_SIZE - 1) validMoves.push({ dx: 1, dy: 0 });
+                if (player.y > 0) validMoves.push({ dx: 0, dy: -1 });
+                if (player.y < GRID_SIZE - 1) validMoves.push({ dx: 0, dy: 1 });
+                
+                if (validMoves.length > 0) {
+                    const randomMove = validMoves[Math.floor(Math.random() * validMoves.length)];
+                    movePlayer(randomMove.dx, randomMove.dy);
+                }
+            }
+
+            // Schedule the next bot move.
+            botTimeout = setTimeout(runBotCycle, botLatency);
+        }
+
+
+        // --- INITIALIZATION & EVENT LISTENERS ---
+        startButton.addEventListener('click', () => {
+            if (isPaused) {
+                togglePause();
+            } else {
+                startGame();
+            }
+        });
+
+        document.addEventListener('keydown', handleKeyPress);
+        
+        botToggle.addEventListener('change', () => {
+            botLatencyRow.classList.toggle('hidden', !botToggle.checked);
+        });
+
+        botLatencySlider.addEventListener('input', () => {
+            latencyValueEl.textContent = `${botLatencySlider.value}ms`;
+            botLatency = parseInt(botLatencySlider.value);
+        });
+    </script>
+
+</body>
+</html>
