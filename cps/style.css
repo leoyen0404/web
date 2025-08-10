@@ -217,12 +217,10 @@ body {
 }
 
 .dynamic-island {
-    /* Define variables for animation */
     --pill-width: 380px;
     --final-height: 140px;
     --circle-size: 44px;
 
-    /* Base styles (closed state) */
     position: relative;
     width: var(--circle-size);
     height: var(--circle-size);
@@ -242,7 +240,6 @@ body {
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
 }
 
-/* Final 'open' state styles */
 .dynamic-island.is-open {
     width: var(--pill-width);
     height: var(--final-height);
@@ -259,95 +256,85 @@ body {
 body.light-theme .dynamic-island { --glass-bg: rgba(255, 255, 255, 0.6); }
 body.dark-theme .dynamic-island { --glass-bg: rgba(44, 44, 46, 0.6); }
 
-
-/* Animation-triggering classes */
 .dynamic-island.is-opening {
     animation: open-sequence 1.5s cubic-bezier(0.45, 0, 0.55, 1) forwards;
+}
+.dynamic-island.is-opening .setting-group > * {
+    opacity: 0; /* Start content as transparent */
+    animation: fade-in 0.4s ease-in forwards;
+}
+.dynamic-island.is-opening .setting-group label {
+    animation-delay: 0.8s; /* Delay for titles */
+}
+.dynamic-island.is-opening .segment-control {
+    animation-delay: 1.1s; /* Delay for controls */
 }
 
 .dynamic-island.is-closing {
     animation: close-sequence 1.5s cubic-bezier(0.45, 0, 0.55, 1) forwards;
 }
+.dynamic-island.is-closing .setting-group > * {
+    animation: fade-out 0.2s ease-out forwards;
+}
 
-/* --- Keyframes for the entire sequence --- */
+
 @keyframes open-sequence {
-    0% { /* Start as hidden circle */
-        transform: translateY(-200%) scale(0.5);
-        opacity: 0;
-        width: var(--circle-size);
-        height: var(--circle-size);
+    0% {
+        transform: translateY(-200%) scale(0.5); opacity: 0;
+        width: var(--circle-size); height: var(--circle-size);
         border-radius: calc(var(--circle-size) / 2);
-        background-color: var(--fg-color);
-        backdrop-filter: blur(0px);
+        background-color: var(--fg-color); backdrop-filter: blur(0px);
     }
-    33% { /* Drop in as circle */
-        transform: translateY(0) scale(1);
-        opacity: 1;
-        width: var(--circle-size);
-        height: var(--circle-size);
+    33% {
+        transform: translateY(0) scale(1); opacity: 1;
+        width: var(--circle-size); height: var(--circle-size);
         border-radius: calc(var(--circle-size) / 2);
-        background-color: var(--fg-color);
-        backdrop-filter: blur(0px);
+        background-color: var(--fg-color); backdrop-filter: blur(0px);
     }
-    66% { /* Expand to pill */
-        width: var(--pill-width);
-        height: var(--circle-size);
+    66% {
+        transform: translateY(0) scale(1); opacity: 1;
+        width: var(--pill-width); height: var(--circle-size);
         border-radius: calc(var(--circle-size) / 2);
     }
-    100% { /* Expand to final rect with glass */
-        width: var(--pill-width);
-        height: var(--final-height);
-        border-radius: 24px;
-        background-color: var(--glass-bg);
+    100% {
+        transform: translateY(0) scale(1); opacity: 1;
+        width: var(--pill-width); height: var(--final-height);
+        border-radius: 24px; background-color: var(--glass-bg);
         backdrop-filter: blur(15px);
     }
 }
 
 @keyframes close-sequence {
-    0% { /* Start as open rect */
-        width: var(--pill-width);
-        height: var(--final-height);
-        border-radius: 24px;
-        background-color: var(--glass-bg);
+    0% {
+        transform: translateY(0) scale(1); opacity: 1;
+        width: var(--pill-width); height: var(--final-height);
+        border-radius: 24px; background-color: var(--glass-bg);
         backdrop-filter: blur(15px);
-        transform: translateY(0) scale(1);
-        opacity: 1;
     }
-    33% { /* Shrink to pill and remove glass */
-        width: var(--pill-width);
-        height: var(--circle-size);
+    33% {
+        transform: translateY(0) scale(1); opacity: 1;
+        width: var(--pill-width); height: var(--circle-size);
         border-radius: calc(var(--circle-size) / 2);
-        background-color: var(--fg-color);
-        backdrop-filter: blur(0px);
+        background-color: var(--fg-color); backdrop-filter: blur(0px);
     }
-    66% { /* Shrink to circle */
-        width: var(--circle-size);
-        height: var(--circle-size);
+    66% {
+        transform: translateY(0) scale(1); opacity: 1;
+        width: var(--circle-size); height: var(--circle-size);
         border-radius: calc(var(--circle-size) / 2);
     }
-    100% { /* Lift up and hide */
-        transform: translateY(-200%) scale(0.5);
-        opacity: 0;
-        width: var(--circle-size);
-        height: var(--circle-size);
+    100% {
+        transform: translateY(-200%) scale(0.5); opacity: 0;
+        width: var(--circle-size); height: var(--circle-size);
     }
 }
 
-/* --- Content Styling --- */
+@keyframes fade-in { to { opacity: 1; } }
+@keyframes fade-out { to { opacity: 0; } }
+
 .island-content {
     position: absolute;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
-    width: 100%;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.island-content.is-visible {
-    opacity: 1;
-    transition-delay: 0.2s; /* Fade in slightly after animation is stable */
+    display: flex; align-items: center; justify-content: center;
+    gap: 1rem; width: 100%;
 }
 
 .setting-group {

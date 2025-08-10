@@ -248,7 +248,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (islandState === 'open') {
             // --- Close the island ---
             islandState = 'closing';
-            islandContent.classList.remove('is-visible'); // Fade out content
+            // Content fade-out is now handled by CSS animations
             dynamicIsland.classList.remove('is-open'); // Remove the resting state
             dynamicIsland.classList.add('is-closing');
         }
@@ -259,7 +259,7 @@ document.addEventListener('DOMContentLoaded', () => {
             islandState = 'open';
             dynamicIsland.classList.remove('is-opening');
             dynamicIsland.classList.add('is-open');
-            islandContent.classList.add('is-visible');
+            // Content fade-in is now handled by CSS animations
         } else if (islandState === 'closing') {
             islandState = 'closed';
             dynamicIsland.classList.remove('is-closing');
