@@ -248,20 +248,21 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (islandState === 'open') {
             // --- Close the island ---
             islandState = 'closing';
-            islandContent.classList.remove('is-visible'); // Fade out content first
+            islandContent.classList.remove('is-visible'); // Fade out content
+            dynamicIsland.classList.remove('is-open'); // Remove the resting state
             dynamicIsland.classList.add('is-closing');
         }
     });
 
-    dynamicIsland.addEventListener('animationend', (event) => {
-        // Check which animation sequence just finished
-        if (event.animationName === 'lift-up') {
-            islandState = 'closed';
-            dynamicIsland.classList.remove('is-closing');
-        } else if (event.animationName === 'expand-rect') {
+    dynamicIsland.addEventListener('animationend', () => {
+        if (islandState === 'opening') {
             islandState = 'open';
             dynamicIsland.classList.remove('is-opening');
-            islandContent.classList.add('is-visible'); // Fade in content
+            dynamicIsland.classList.add('is-open');
+            islandContent.classList.add('is-visible');
+        } else if (islandState === 'closing') {
+            islandState = 'closed';
+            dynamicIsland.classList.remove('is-closing');
         }
     });
 

@@ -217,10 +217,12 @@ body {
 }
 
 .dynamic-island {
+    /* Define variables for animation */
     --pill-width: 380px;
     --final-height: 140px;
     --circle-size: 44px;
 
+    /* Base styles (closed state) */
     position: relative;
     width: var(--circle-size);
     height: var(--circle-size);
@@ -240,84 +242,112 @@ body {
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
 }
 
-/* --- Animation Classes --- */
-.dynamic-island.is-opening {
-    /* Chain of animations for opening sequence */
-    animation: drop-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
-               expand-pill 0.4s 0.5s cubic-bezier(0.45, 0, 0.55, 1) forwards,
-               expand-rect 0.4s 0.9s cubic-bezier(0.45, 0, 0.55, 1) forwards,
-               glass-in 0.6s 0.8s ease-in forwards;
+/* Final 'open' state styles */
+.dynamic-island.is-open {
+    width: var(--pill-width);
+    height: var(--final-height);
+    border-radius: 24px;
+    transform: translateY(0) scale(1);
+    opacity: 1;
+    background-color: var(--glass-bg, rgba(255, 255, 255, 0.6));
 }
-
-.dynamic-island.is-closing {
-    /* Chain of animations for closing sequence */
-    animation: glass-out 0.4s ease-out forwards,
-               shrink-rect 0.4s 0.1s cubic-bezier(0.45, 0, 0.55, 1) forwards,
-               shrink-pill 0.4s 0.5s cubic-bezier(0.45, 0, 0.55, 1) forwards,
-               lift-up 0.5s 0.9s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
-}
-
-/* --- Keyframes --- */
-@keyframes drop-in {
-    to { transform: translateY(0) scale(1); opacity: 1; }
-}
-@keyframes expand-pill {
-    to { width: var(--pill-width); }
-}
-@keyframes expand-rect {
-    to { height: var(--final-height); border-radius: 24px; }
-}
-@keyframes shrink-rect {
-    from { height: var(--final-height); border-radius: 24px; }
-    to { height: var(--circle-size); border-radius: calc(var(--circle-size) / 2); }
-}
-@keyframes shrink-pill {
-    from { width: var(--pill-width); }
-    to { width: var(--circle-size); }
-}
-@keyframes lift-up {
-    to { transform: translateY(-200%) scale(0.5); opacity: 0; }
-}
-
-@keyframes glass-in {
-    from {
-        background-color: var(--fg-color);
-        backdrop-filter: blur(0px);
-    }
-    to {
-        background-color: var(--glass-bg, rgba(255, 255, 255, 0.6));
+@supports (backdrop-filter: blur(15px)) {
+    .dynamic-island.is-open {
         backdrop-filter: blur(15px);
     }
 }
-
-@keyframes glass-out {
-    from {
-        background-color: var(--glass-bg, rgba(255, 255, 255, 0.6));
-        backdrop-filter: blur(15px);
-    }
-    to {
-        background-color: var(--fg-color);
-        backdrop-filter: blur(0px);
-    }
-}
-
-/* Set glass background color based on theme */
 body.light-theme .dynamic-island { --glass-bg: rgba(255, 255, 255, 0.6); }
 body.dark-theme .dynamic-island { --glass-bg: rgba(44, 44, 46, 0.6); }
 
+
+/* Animation-triggering classes */
+.dynamic-island.is-opening {
+    animation: open-sequence 1.5s cubic-bezier(0.45, 0, 0.55, 1) forwards;
+}
+
+.dynamic-island.is-closing {
+    animation: close-sequence 1.5s cubic-bezier(0.45, 0, 0.55, 1) forwards;
+}
+
+/* --- Keyframes for the entire sequence --- */
+@keyframes open-sequence {
+    0% { /* Start as hidden circle */
+        transform: translateY(-200%) scale(0.5);
+        opacity: 0;
+        width: var(--circle-size);
+        height: var(--circle-size);
+        border-radius: calc(var(--circle-size) / 2);
+        background-color: var(--fg-color);
+        backdrop-filter: blur(0px);
+    }
+    33% { /* Drop in as circle */
+        transform: translateY(0) scale(1);
+        opacity: 1;
+        width: var(--circle-size);
+        height: var(--circle-size);
+        border-radius: calc(var(--circle-size) / 2);
+        background-color: var(--fg-color);
+        backdrop-filter: blur(0px);
+    }
+    66% { /* Expand to pill */
+        width: var(--pill-width);
+        height: var(--circle-size);
+        border-radius: calc(var(--circle-size) / 2);
+    }
+    100% { /* Expand to final rect with glass */
+        width: var(--pill-width);
+        height: var(--final-height);
+        border-radius: 24px;
+        background-color: var(--glass-bg);
+        backdrop-filter: blur(15px);
+    }
+}
+
+@keyframes close-sequence {
+    0% { /* Start as open rect */
+        width: var(--pill-width);
+        height: var(--final-height);
+        border-radius: 24px;
+        background-color: var(--glass-bg);
+        backdrop-filter: blur(15px);
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+    33% { /* Shrink to pill and remove glass */
+        width: var(--pill-width);
+        height: var(--circle-size);
+        border-radius: calc(var(--circle-size) / 2);
+        background-color: var(--fg-color);
+        backdrop-filter: blur(0px);
+    }
+    66% { /* Shrink to circle */
+        width: var(--circle-size);
+        height: var(--circle-size);
+        border-radius: calc(var(--circle-size) / 2);
+    }
+    100% { /* Lift up and hide */
+        transform: translateY(-200%) scale(0.5);
+        opacity: 0;
+        width: var(--circle-size);
+        height: var(--circle-size);
+    }
+}
+
 /* --- Content Styling --- */
 .island-content {
+    position: absolute;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 1rem;
     width: 100%;
     opacity: 0;
-    transition: opacity 0.3s 0.1s ease;
+    transition: opacity 0.3s ease;
 }
 
 .island-content.is-visible {
     opacity: 1;
+    transition-delay: 0.2s; /* Fade in slightly after animation is stable */
 }
 
 .setting-group {
