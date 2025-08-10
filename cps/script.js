@@ -25,6 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
         isActive: false,
         isFinished: true,
     };
+    let islandState = 'closed'; // closed, opening, open, closing
     let history = [];
 
     // --- Audio Context for Click Sound ---
@@ -235,14 +236,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Event Listeners ---
     settingsButton.addEventListener('click', () => {
-        const isVisible = dynamicIslandContainer.classList.contains('visible');
-        if (!isVisible) {
-            // First time opening, render the content
-            renderIslandContent();
-            islandContent.style.display = 'flex';
+        if (islandState === 'opening' || islandState === 'closing') {
+            return; // Ignore clicks during animation
         }
-        dynamicIslandContainer.classList.toggle('visible');
-        dynamicIsland.classList.toggle('expanded');
+
+        if (islandState === 'closed') {
+            // --- Open the island ---
+            islandState = 'opening';
+            renderIslandContent(); // Ensure content is ready
+            dynamicIsland.classList.add('is-opening');
+        } else if (islandState === 'open') {
+            // --- Close the island ---
+            islandState = 'closing';
+            islandContent.classList.remove('is-visible'); // Fade out content first
+            dynamicIsland.classList.add('is-closing');
+        }
+    });
+
+    dynamicIsland.addEventListener('animationend', (event) => {
+        // Check which animation sequence just finished
+        if (event.animationName === 'lift-up') {
+            islandState = 'closed';
+            dynamicIsland.classList.remove('is-closing');
+        } else if (event.animationName === 'expand-rect') {
+            islandState = 'open';
+            dynamicIsland.classList.remove('is-opening');
+            islandContent.classList.add('is-visible'); // Fade in content
+        }
     });
 
     clickArea.addEventListener('click', () => {
