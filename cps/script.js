@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const settingsButton = document.getElementById('settings-button');
     const dynamicIsland = document.getElementById('dynamicIsland');
     const islandContent = document.getElementById('islandContent');
+    const dynamicIslandContainer = document.querySelector('.dynamic-island-container');
     const timerDisplay = document.getElementById('timer-display');
     const cpsDisplay = document.getElementById('cps-display');
     const clickArea = document.getElementById('click-area');
@@ -84,7 +85,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 button.textContent = item.label;
                 button.onclick = () => {
                     onchange(item.value);
-                    renderIslandContent(); // Re-render to update UI
+                    // We only re-render the controls, not the whole island
+                    const parentGroup = button.closest('.setting-group');
+                    const newControl = createSegmentControl(items, item.value, label, onchange);
+                    parentGroup.replaceWith(newControl);
                 };
                 control.appendChild(button);
             });
@@ -123,18 +127,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         );
         islandContent.append(durationControl, themeControl, soundControl);
-    };
-
-    const toggleIsland = (forceClose = false) => {
-        const isExpanded = dynamicIsland.classList.contains('expanded');
-        if (forceClose || isExpanded) {
-            dynamicIsland.classList.remove('expanded');
-            islandContent.style.display = 'none';
-        } else {
-            renderIslandContent();
-            dynamicIsland.classList.add('expanded');
-            islandContent.style.display = 'flex';
-        }
     };
 
     // --- History Management ---
@@ -242,9 +234,15 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- Event Listeners ---
-    settingsButton.addEventListener('click', (e) => {
-        e.stopPropagation();
-        toggleIsland();
+    settingsButton.addEventListener('click', () => {
+        const isVisible = dynamicIslandContainer.classList.contains('visible');
+        if (!isVisible) {
+            // First time opening, render the content
+            renderIslandContent();
+            islandContent.style.display = 'flex';
+        }
+        dynamicIslandContainer.classList.toggle('visible');
+        dynamicIsland.classList.toggle('expanded');
     });
 
     clickArea.addEventListener('click', () => {
@@ -261,12 +259,6 @@ document.addEventListener('DOMContentLoaded', () => {
         history = [];
         saveHistory();
         renderHistory();
-    });
-
-    document.addEventListener('click', (e) => {
-        if (!dynamicIsland.contains(e.target)) {
-            toggleIsland(true); // Force close if click is outside
-        }
     });
 
     // --- Initialization ---
