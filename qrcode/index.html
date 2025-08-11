@@ -304,6 +304,11 @@
     <header>
         <h1>QR Code Tool</h1>
         <p>Generate and decode QR codes with ease</p>
+        <div style="margin-top: 1rem;">
+            <button onclick="window.location.href='beta.html'" class="btn" style="background-color: #e67e22; font-size: 0.9rem; padding: 0.5rem 1rem;">
+                🚀 Try Beta Version
+            </button>
+        </div>
     </header>
     
     <main>
@@ -355,9 +360,9 @@
                         </div>
                         
                         <div class="flex-col">
-                            <h3>Binary Representation</h3>
-                            <textarea id="binaryOutput" class="binary-view" readonly></textarea>
-                            <button id="copyBinaryBtn" class="btn copy-btn">Copy Binary</button>
+                            <h3>Decimal Representation</h3>
+                            <textarea id="decimalOutput" class="binary-view" readonly></textarea>
+                            <button id="copyDecimalBtn" class="btn copy-btn">Copy Decimal</button>
                         </div>
                     </div>
                 </div>
@@ -366,11 +371,11 @@
         
         <div id="decode-tab" class="tab-content">
             <div class="card">
-                <h2 class="card-title">Decode QR Code from Binary</h2>
+                <h2 class="card-title">Decode QR Code from Decimal</h2>
                 
                 <div class="form-group">
-                    <label for="binaryInput">Enter binary data:</label>
-                    <textarea id="binaryInput" class="binary-view" placeholder="e.g., 11100001010..."></textarea>
+                    <label for="decimalInput">Enter decimal data:</label>
+                    <textarea id="decimalInput" class="binary-view" placeholder="Paste the decimal data here (format: 006400123450045612345...)"></textarea></textarea>
                 </div>
                 
                 <button id="decodeBtn" class="btn">Generate QR Code</button>
@@ -455,6 +460,79 @@
             }
         }
         
+        // Function to convert binary to decimal chunks
+        function binaryToDecimal(binaryData) {
+            const chunkSize = 16; // Process 16 bits at a time for manageable decimal numbers
+            let result = '';
+            
+            // Store original length for reconstruction
+            const originalLength = binaryData.length;
+            
+            // Pad binary data to be divisible by chunkSize
+            const paddedBinary = binaryData.padEnd(Math.ceil(binaryData.length / chunkSize) * chunkSize, '0');
+            
+            // Add original length as first number (6 digits, padded)
+            result += originalLength.toString().padStart(6, '0');
+            
+            for (let i = 0; i < paddedBinary.length; i += chunkSize) {
+                const chunk = paddedBinary.substr(i, chunkSize);
+                const decimal = parseInt(chunk, 2);
+                // Pad each decimal to 5 digits (max value of 16 bits is 65535)
+                result += decimal.toString().padStart(5, '0');
+            }
+            
+            return result;
+        }
+        
+        // Function to convert decimal chunks back to binary
+        function decimalToBinary(decimalData) {
+            if (!decimalData || decimalData.length < 6) {
+                throw new Error('Invalid decimal data format');
+            }
+            
+            // Extract original length from first 6 digits
+            const originalLength = parseInt(decimalData.substr(0, 6));
+            if (isNaN(originalLength)) {
+                throw new Error('Invalid original length in decimal data');
+            }
+            
+            let binaryData = '';
+            const chunkSize = 16;
+            const remainingData = decimalData.substr(6);
+            
+            // Process each 5-digit decimal number
+            for (let i = 0; i < remainingData.length; i += 5) {
+                const decimalStr = remainingData.substr(i, 5);
+                if (decimalStr.length < 5) break; // Skip incomplete chunks
+                
+                const decimal = parseInt(decimalStr);
+                if (isNaN(decimal)) {
+                    throw new Error(`Invalid decimal number: ${decimalStr}`);
+                }
+                const binary = decimal.toString(2).padStart(chunkSize, '0');
+                binaryData += binary;
+            }
+            
+            // Trim to original length
+            return binaryData.substr(0, originalLength);
+        }
+        
+        // Function to convert QR code to binary
+        function qrToBinary(qr) {
+            // Access QR code modules
+            const qrModules = qr._oQRCode.modules;
+            let binaryData = '';
+            
+            // Convert modules to binary string
+            for (let row = 0; row < qrModules.length; row++) {
+                for (let col = 0; col < qrModules[row].length; col++) {
+                    binaryData += qrModules[row][col] ? '1' : '0';
+                }
+            }
+            
+            return binaryData;
+        }
+        
         // Function to generate QR code
         function generateQRCode() {
             const text = document.getElementById('encodeInput').value.trim();
@@ -481,10 +559,11 @@
                 correctLevel: QRCode.CorrectLevel.H
             });
             
-            // Convert QR code to binary and display
+            // Convert QR code to binary and then to decimal
             setTimeout(() => {
                 const binaryData = qrToBinary(qrCode);
-                document.getElementById('binaryOutput').value = binaryData;
+                const decimalData = binaryToDecimal(binaryData);
+                document.getElementById('decimalOutput').value = decimalData;
                 
                 // Show QR code size info
                 const qrCodeDimension = Math.sqrt(binaryData.length);
@@ -495,83 +574,69 @@
             }, 100);
         }
         
-        // Function to convert QR code to binary
-        function qrToBinary(qr) {
-            // Access QR code modules
-            const qrModules = qr._oQRCode.modules;
-            let binaryData = '';
+        // Function to decode decimal data and display QR code
+        function decodeDecimalToQRCode() {
+            const decimalData = document.getElementById('decimalInput').value.trim();
             
-            // Convert modules to binary string
-            for (let row = 0; row < qrModules.length; row++) {
-                for (let col = 0; col < qrModules[row].length; col++) {
-                    binaryData += qrModules[row][col] ? '1' : '0';
-                }
-            }
-            
-            return binaryData;
-        }
-        
-        // Function to decode binary data and display QR code
-        function decodeBinaryToQRCode() {
-            const binaryData = document.getElementById('binaryInput').value.trim();
-            const binaryRegex = /^[01]+$/;
-            
-            if (!binaryData) {
-                showAlert('decodeAlert', 'Please enter binary data to generate a QR code.', 'danger');
+            if (!decimalData) {
+                showAlert('decodeAlert', 'Please enter decimal data to generate a QR code.', 'danger');
                 return;
             }
             
-            if (!binaryData.match(binaryRegex)) {
-                showAlert('decodeAlert', 'Invalid input! Please enter valid binary data (only 0s and 1s).', 'danger');
-                return;
-            }
-            
-            // Calculate QR code size (should be a perfect square)
-            const qrCodeSize = Math.sqrt(binaryData.length);
-            const isSquare = qrCodeSize === Math.floor(qrCodeSize);
-            
-            if (!isSquare) {
-                showAlert('decodeAlert', `The binary data length (${binaryData.length}) is not a perfect square. Automatically padding to the nearest square.`, 'success');
-            }
-            
-            // Calculate the proper size (rounded up to next perfect square)
-            const properSize = Math.ceil(qrCodeSize);
-            const paddedSize = properSize * properSize;
-            
-            // Pad binary data if necessary
-            const paddedBinaryData = binaryData.padEnd(paddedSize, '0');
-            
-            // Clear previous QR code
-            const decodedQRContainer = document.getElementById('decodedQR');
-            decodedQRContainer.innerHTML = '';
-            
-            // Create table for QR code visualization
-            const table = document.createElement('table');
-            table.className = 'qr-code-table';
-            
-            // Create QR code from binary data
-            for (let i = 0; i < properSize; i++) {
-                const row = document.createElement('tr');
+            try {
+                // Convert decimal back to binary
+                const binaryData = decimalToBinary(decimalData);
                 
-                for (let j = 0; j < properSize; j++) {
-                    const index = i * properSize + j;
-                    const moduleValue = paddedBinaryData[index];
+                // Calculate QR code size (should be a perfect square)
+                const qrCodeSize = Math.sqrt(binaryData.length);
+                const isSquare = qrCodeSize === Math.floor(qrCodeSize);
+                
+                if (!isSquare) {
+                    showAlert('decodeAlert', `The binary data length (${binaryData.length}) is not a perfect square. Automatically padding to the nearest square.`, 'success');
+                }
+                
+                // Calculate the proper size (rounded up to next perfect square)
+                const properSize = Math.ceil(qrCodeSize);
+                const paddedSize = properSize * properSize;
+                
+                // Pad binary data if necessary
+                const paddedBinaryData = binaryData.padEnd(paddedSize, '0');
+                
+                // Clear previous QR code
+                const decodedQRContainer = document.getElementById('decodedQR');
+                decodedQRContainer.innerHTML = '';
+                
+                // Create table for QR code visualization
+                const table = document.createElement('table');
+                table.className = 'qr-code-table';
+                
+                // Create QR code from binary data
+                for (let i = 0; i < properSize; i++) {
+                    const row = document.createElement('tr');
                     
-                    const qrModule = document.createElement('td');
-                    qrModule.className = `qr-module ${moduleValue === '1' ? 'black' : 'white'}`;
-                    row.appendChild(qrModule);
+                    for (let j = 0; j < properSize; j++) {
+                        const index = i * properSize + j;
+                        const moduleValue = paddedBinaryData[index];
+                        
+                        const qrModule = document.createElement('td');
+                        qrModule.className = `qr-module ${moduleValue === '1' ? 'black' : 'white'}`;
+                        row.appendChild(qrModule);
+                    }
+                    
+                    table.appendChild(row);
                 }
                 
-                table.appendChild(row);
+                decodedQRContainer.appendChild(table);
+                
+                // Show QR code info
+                document.getElementById('decodedQRInfo').textContent = `QR Code Size: ${properSize}×${properSize} modules`;
+                
+                // Show output container
+                document.getElementById('decodeOutput').style.display = 'block';
+                
+            } catch (error) {
+                showAlert('decodeAlert', `Error processing decimal data: ${error.message}`, 'danger');
             }
-            
-            decodedQRContainer.appendChild(table);
-            
-            // Show QR code info
-            document.getElementById('decodedQRInfo').textContent = `QR Code Size: ${properSize}×${properSize} modules`;
-            
-            // Show output container
-            document.getElementById('decodeOutput').style.display = 'block';
         }
         
         // Function to download QR code as image
@@ -591,20 +656,20 @@
             document.body.removeChild(link);
         }
         
-        // Function to copy binary data
-        function copyBinaryData() {
-            const binaryOutput = document.getElementById('binaryOutput');
-            binaryOutput.select();
+        // Function to copy decimal data
+        function copyDecimalData() {
+            const decimalOutput = document.getElementById('decimalOutput');
+            decimalOutput.select();
             document.execCommand('copy');
             
-            showAlert('encodeAlert', 'Binary data copied to clipboard!', 'success');
+            showAlert('encodeAlert', 'Decimal data copied to clipboard!', 'success');
         }
         
         // Event listeners
         document.getElementById('generateBtn').addEventListener('click', generateQRCode);
-        document.getElementById('decodeBtn').addEventListener('click', decodeBinaryToQRCode);
+        document.getElementById('decodeBtn').addEventListener('click', decodeDecimalToQRCode);
         document.getElementById('downloadQRBtn').addEventListener('click', downloadQRCode);
-        document.getElementById('copyBinaryBtn').addEventListener('click', copyBinaryData);
+        document.getElementById('copyDecimalBtn').addEventListener('click', copyDecimalData);
         
         // Add enter key event listeners for input fields
         document.getElementById('encodeInput').addEventListener('keyup', event => {
