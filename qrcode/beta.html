@@ -265,6 +265,14 @@
                 <button class="island-button back-button" title="Back"><i data-lucide="x"></i></button>
             </div>
 
+            <!-- Decrypt State -->
+            <div id="decrypt-content" class="island-content">
+                <i data-lucide="key-round" class="text-yellow-400 flex-shrink-0"></i>
+                <input type="password" id="decrypt-pass" class="field min-w-[200px]" placeholder="Enter Passphrase">
+                <button id="confirm-decrypt-button" class="island-button primary" title="Decrypt"><i data-lucide="unlock"></i></button>
+                <button class="island-button back-button" title="Cancel"><i data-lucide="x"></i></button>
+            </div>
+
             <!-- Actions State -->
             <div id="actions-content" class="island-content">
                 <button class="island-button back-button" title="New QR Code"><i data-lucide="arrow-left"></i></button>
@@ -286,7 +294,8 @@
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
     
     <script>
-    document.addEventListener('DOMContentLoaded', () => {
+    // FIX: Changed main event listener to 'load' for better reliability on mobile
+    window.addEventListener('load', () => {
         // --- DOM Elements ---
         const island = document.getElementById('dynamic-island');
         const islandContainer = document.getElementById('island-content-container');
@@ -318,14 +327,16 @@
 
         // --- State Management ---
         let state = {
-            mode: 'initial', // initial, generate, encrypt, generated, scan, scanning
+            mode: 'initial', // initial, generate, encrypt, generated, scan, scanning, decrypting
             qrContent: '',
             isEncrypted: false,
             mediaStream: null,
             isScanning: false,
+            dataToDecrypt: null,
         };
         const enc = new TextEncoder();
         const dec = new TextDecoder();
+        const PAGE_URL = 'https://bw4s.dpdns.org/qrcode/beta.html';
 
         // --- UI Update Logic ---
         function switchIslandContent(targetId) {
@@ -390,6 +401,13 @@
                     videoWrapper.style.display = 'block';
                     startCamera();
                     break;
+                case 'decrypting':
+                    targetIslandContent = 'decrypt-content';
+                    scanView.classList.add('active');
+                    scanOptions.classList.add('hidden');
+                    scanResult.classList.remove('hidden');
+                    scanResult.innerHTML = `<p class="text-gray-400">Enter passphrase below to unlock content.</p>`;
+                    break;
             }
             
             appContainer.style.transform = `scale(${newAppScale})`;
@@ -406,7 +424,11 @@
                     state.mode = 'scan';
                 } else if (state.mode === 'generated' || state.mode === 'encrypt') {
                     state.mode = 'generate';
-                } else {
+                } else if (state.mode === 'decrypting') {
+                    state.mode = 'initial';
+                    state.dataToDecrypt = null;
+                }
+                 else {
                     state.mode = 'initial';
                 }
                 
@@ -425,6 +447,22 @@
         document.getElementById('confirm-encrypt-button').addEventListener('click', () => {
              state.isEncrypted = true;
              generateQrCode();
+        });
+
+        document.getElementById('confirm-decrypt-button').addEventListener('click', async () => {
+            const pass = document.getElementById('decrypt-pass').value;
+            if (!pass || !state.dataToDecrypt) return;
+
+            try {
+                const content = await decryptPayload(state.dataToDecrypt, pass);
+                displayFinalResult(content);
+                showToast('Decryption successful!', 'success');
+                state.mode = 'scan';
+                state.dataToDecrypt = null;
+                document.getElementById('decrypt-pass').value = '';
+            } catch (e) {
+                showToast('Decryption failed. Wrong passphrase?', 'error');
+            }
         });
 
         document.getElementById('download-button').addEventListener('click', downloadQrCode);
@@ -488,24 +526,26 @@
         async function generateQrCode() {
             let content = qrInput.value.trim();
             if (!content) { showToast('Please enter content.', 'error'); return; }
+            let finalQrContent = content;
 
             if (state.isEncrypted) {
                 if (pass1.value !== pass2.value || !pass1.value) {
                     showToast('Passphrases do not match.', 'error'); return;
                 }
                 try {
-                    content = await encryptPayload(content, pass1.value);
+                    const encryptedData = await encryptPayload(content, pass1.value);
+                    finalQrContent = `${PAGE_URL}?data=${encodeURIComponent(encryptedData)}`;
                 } catch (e) {
                     showToast('Encryption failed.', 'error'); return;
                 }
             }
             
-            state.qrContent = content;
+            state.qrContent = finalQrContent;
             qrCodeViewWrapper.innerHTML = '';
-            new QRCode(qrCodeViewWrapper, { text: content, width: 256, height: 256, correctLevel: QRCode.CorrectLevel.H });
+            new QRCode(qrCodeViewWrapper, { text: finalQrContent, width: 256, height: 256, correctLevel: QRCode.CorrectLevel.L });
             
             state.mode = 'generated';
-            state.isEncrypted = false; // Reset for next time
+            state.isEncrypted = false; 
             pass1.value = '';
             pass2.value = '';
             updateUI();
@@ -646,25 +686,45 @@
             } catch (err) { showToast('Clipboard permission denied.', 'error'); }
         }
 
+        // FIX: Improved logic to handle both direct scans and URL-based scans
         async function processScanResult(data) {
             if (state.mode === 'scanning') {
                 stopCamera();
-                switchIslandContent('initial-content');
             }
             
-            let content = data;
-            if (data.startsWith("qrenc:")) {
-                const pass = prompt("Encrypted QR detected. Enter passphrase:");
-                if (pass) {
-                    try { content = await decryptPayload(data, pass); } 
-                    catch (e) { showToast('Decryption failed.', 'error'); return; }
-                } else { showToast('Decryption cancelled.'); return; }
+            let potentialEncryptedData = null;
+
+            try {
+                const url = new URL(data);
+                if ((url.origin + url.pathname) === PAGE_URL) {
+                    const dataParam = url.searchParams.get('data');
+                    if (dataParam) {
+                        potentialEncryptedData = decodeURIComponent(dataParam);
+                    }
+                }
+            } catch (e) {
+                // Not a valid URL, do nothing
+            }
+
+            const dataToTest = potentialEncryptedData || data;
+
+            if (dataToTest.startsWith("qrenc:")) {
+                state.dataToDecrypt = dataToTest;
+                state.mode = 'decrypting';
+                updateUI();
+                showToast('Encrypted QR detected. Enter passphrase.');
+                return;
             }
             
+            displayFinalResult(data);
+        }
+
+        function displayFinalResult(content) {
             scanOptions.classList.add('hidden');
             imagePreviewWrapper.classList.add('hidden');
             scanResult.innerHTML = '';
             scanResult.classList.remove('hidden');
+            scanView.classList.add('active');
             
             const resultText = document.createElement('p');
             resultText.textContent = content;
@@ -695,6 +755,8 @@
                 scanResult.classList.add('hidden');
                 scanOptions.classList.remove('hidden');
                 scanResult.innerHTML = '';
+                state.mode = 'scan';
+                updateUI();
             };
             actions.appendChild(scanAgainBtn);
 
@@ -702,6 +764,7 @@
             scanResult.appendChild(actions);
             lucide.createIcons();
             showToast('QR Code Detected!');
+            switchIslandContent('initial-content');
         }
 
         function showToast(message, type = 'success') {
@@ -718,9 +781,29 @@
             }, 3000);
         }
         
+        function handleUrlData() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const encryptedData = urlParams.get('data');
+
+            if (encryptedData) {
+                const decodedData = decodeURIComponent(encryptedData);
+                if (decodedData.startsWith("qrenc:")) {
+                    state.dataToDecrypt = decodedData;
+                    state.mode = 'decrypting';
+                    updateUI();
+                    showToast('Encrypted data loaded. Enter passphrase.');
+                } else {
+                    state.mode = 'scan';
+                    updateUI();
+                    displayFinalResult(decodedData);
+                }
+            }
+        }
+
         // --- Initial Load ---
         updateUI();
         lucide.createIcons();
+        handleUrlData();
     });
     </script>
 </body>
