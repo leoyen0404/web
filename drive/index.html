@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Password Protected</title>
+</head>
+<body>
+  <script>
+    (function() {
+      var password = prompt("Enter password to continue:", "");
+      var encryptedPassword = "YWdhaW4="; // "again" in base64
+      var encryptedUrl = "aHR0cHM6Ly9vZmZpY2VjeWN1LW15LnNoYXJlcG9pbnQuY29tLzpmOi9nL3BlcnNvbmFsLzExNDI3MTQyX28zNjVzdF9jeWN1X2VkdV90dy9FalFITzJITFhxbE1sbERSSTJTTTRwMEJvWFRTX1lhVk5wSE5qeTBKLVNLV2pnP2U9QTkzQkZr";
+
+      if (password != null) {
+        if (btoa(password) == encryptedPassword) {
+          window.location.href = atob(encryptedUrl);
+        } else {
+          alert("try again");
+          location.reload();
+        }
+      }
+    })();
+  </script>
+</body>
+</html>
