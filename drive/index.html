@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Protected</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0f172a,#1e293b);font-family:system-ui,sans-serif;color:#fff}
+    .card{background:rgba(255,255,255,.05);backdrop-filter:blur(12px);padding:2.5rem;border-radius:1.25rem;width:100%;max-width:360px;box-shadow:0 8px 30px rgba(0,0,0,.6);text-align:center}
+    h2{margin-bottom:1.25rem;font-weight:600;font-size:1.4rem}
+    input{width:100%;padding:.9rem 1rem;border:none;border-radius:.75rem;background:#0f172a;color:#fff;font-size:1rem;margin-bottom:1rem;outline:none;transition:border .2s,box-shadow .2s}
+    input:focus{border:1px solid #22d3ee;box-shadow:0 0 0 3px rgba(34,211,238,.25)}
+    button{width:100%;padding:.9rem 1rem;border:none;border-radius:.75rem;background:#22d3ee;color:#0f172a;font-weight:700;font-size:1rem;cursor:pointer;transition:background .2s,transform .15s}
+    button:hover{background:#06b6d4}
+    button:active{transform:scale(.97)}
+    .err{margin-top:1rem;color:#fca5a5;min-height:1.2em;font-size:.95rem}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Enter Code</h2>
+    <input id="code" type="password" autofocus />
+    <button id="go">OK</button>
+    <div id="msg" class="err"></div>
+  </div>
+
+  <script>
+    const ivB64="SJEtLNwcz6ATkInN";
+    const ctB64="RYpRsIetdcQsHWm+JBZipu4zlpkwpZ3BKpEAMGkCQ6TpicdPLosVdo8SVhePxe3nTIKroK45fa5xOriRWd0XyRZIptx5aFo0Dx1nGEZ8XpXhVak5g0z/Llhih2G6JMv2J9Xk0qokK3DhY8halbJ4YxahoK4ZZHFboqquWGOkMEtqXp+MuS3s7hiSi0Vsm2BoY+y1YBwMnA==";
+
+    function b64ToBytes(b64){const bin=atob(b64);return Uint8Array.from(bin,c=>c.charCodeAt(0))}
+    async function sha256Bytes(d){return new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(d)))}
+    async function keyFrom(c){return crypto.subtle.importKey("raw",await sha256Bytes(c),{name:"AES-GCM",length:256},false,["decrypt"])}
+
+    async function unlock(){
+      const code=document.getElementById("code").value,msg=document.getElementById("msg");msg.textContent="";
+      try{
+        const key=await keyFrom(code);
+        const plain=await crypto.subtle.decrypt({name:"AES-GCM",iv:b64ToBytes(ivB64)},key,b64ToBytes(ctB64));
+        const url=new TextDecoder().decode(plain);
+        if(!/^https?:\/\//i.test(url))throw 0;
+        location.href=url;
+      }catch{msg.textContent="try again"}
+    }
+
+    document.getElementById("go").onclick=unlock;
+    document.getElementById("code").onkeydown=e=>{if(e.key==="Enter")unlock()};
+  </script>
+</body>
+</html>
