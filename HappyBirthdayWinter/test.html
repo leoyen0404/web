@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>輸入密碼顯示訊息</title>
+  <style>
+    :root{--bg:#0f172a;--card:#0b1220;--accent:#8b5cf6;--text:#e6eef8}
+    html,body{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,'Noto Sans TC',Arial}
+    body{display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#071033 0%, #08121b 100%);color:var(--text)}
+    .card{background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.06));padding:28px;border-radius:16px;box-shadow:0 8px 30px rgba(2,6,23,0.6);width:min(520px,92%);text-align:center}
+    h1{margin:0 0 14px;font-size:20px}
+    p{margin:6px 0 18px;color:rgba(230,238,248,0.85)}
+    input{width:100%;padding:12px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:var(--text);outline:none;font-size:15px}
+    button{margin-top:12px;padding:10px 14px;border-radius:10px;border:0;background:linear-gradient(90deg,var(--accent),#06b6d4);color:white;font-weight:600;cursor:pointer}
+    .msg{margin-top:18px;font-size:18px;min-height:48px}
+    .hidden{display:none}
+    .happy{font-size:28px;font-weight:700;letter-spacing:1px;color:#fff;animation:pop .6s cubic-bezier(.2,.9,.3,1)}
+    @keyframes pop{0%{transform:scale(.8);opacity:0}60%{transform:scale(1.06);opacity:1}100%{transform:scale(1)}}
+    .note{margin-top:10px;font-size:12px;color:rgba(230,238,248,0.6)}
+  </style>
+</head>
+<body>
+  <div class="card" role="main">
+    <h1>請輸入存取密碼</h1>
+    <p>輸入正確的密碼後會顯示訊息。</p>
+    <input id="code" autocomplete="off" placeholder="在此輸入密碼" />
+    <button id="submit">送出</button>
+    <div class="msg" id="msg" aria-live="polite"></div>
+  </div>
+
+  <script>
+    // 設定：這裡儲存的是 "testabc123" 的 SHA-256 十六進位雜湊值
+    const STORED_HASH_HEX = '9e2ee742214c2940b9e21149d4e1749d98d8d74e2b0f7453d190b1a7d73308b9';
+
+    const input = document.getElementById('code');
+    const btn = document.getElementById('submit');
+    const msg = document.getElementById('msg');
+
+    // 將 ArrayBuffer 轉成十六進位字串
+    function bufferToHex(buffer) {
+      const bytes = new Uint8Array(buffer);
+      const hex = [];
+      for (let i = 0; i < bytes.length; i++) {
+        const h = bytes[i].toString(16).padStart(2, '0');
+        hex.push(h);
+      }
+      return hex.join('');
+    }
+
+    async function sha256Hex(text) {
+      const enc = new TextEncoder();
+      const data = enc.encode(text);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      return bufferToHex(hashBuffer);
+    }
+
+    btn.addEventListener('click', async () => {
+      const val = input.value || '';
+      msg.textContent = '驗證中…';
+      try {
+        const h = await sha256Hex(val);
+        if (h === STORED_HASH_HEX) {
+          // 顯示生日快樂
+          msg.innerHTML = '<div class="happy">Happy Birthday! 🎉</div>' +
+                          '<div style="margin-top:8px">願你今天充滿歡笑與驚喜。</div>';
+        } else {
+          msg.textContent = '密碼錯誤，請再試一次。';
+        }
+      } catch (e) {
+        msg.textContent = '發生錯誤，請用支援 Web Crypto 的瀏覽器重試。';
+        console.error(e);
+      }
+    });
+
+    // 也支援按下 Enter 鍵
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') btn.click();
+    });
+  </script>
+</body>
+</html>
