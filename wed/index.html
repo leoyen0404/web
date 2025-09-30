@@ -1,190 +1,228 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>C++ Code Viewer</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Prism CSS for syntax highlighting -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        /* M3-inspired expressive button style */
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0.625rem 1.5rem;
-            border-radius: 9999px; /* Large radius for a pill shape */
-            font-weight: 600;
-            font-size: 0.875rem;
-            line-height: 1.25rem;
-            transition: all 0.2s ease-in-out;
-            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
-        }
-        .btn-primary {
-            background-color: #E8DEF8; /* Light purple */
-            color: #1D192B; /* Dark purple text */
-        }
-        .btn-primary:hover {
-            background-color: #D0BCFF; /* Slightly darker purple */
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-        }
-        .btn-secondary {
-            background-color: #F6EDFF;
-            color: #6750A4;
-            border: 1px solid #CAC4D0;
-        }
-         .btn-secondary:hover {
-            background-color: #EADDFF;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-        }
-    </style>
-</head>
-<body class="bg-gray-100 dark:bg-[#121212] flex items-center justify-center min-h-screen p-4">
+<!doctype html>
+<html lang="zh-Hant">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>顯示並下載 C++ 程式碼</title>
+		<style>
+			:root {
+				--bg: #0d1117;
+				--panel: #161b22;
+				--border: #30363d;
+				--text: #c9d1d9;
+				--muted: #8b949e;
+				--accent: #2f81f7;
+				--accent-press: #1f6feb;
+				--success: #2ea043;
+				--radius: 12px;
+				--mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+			}
 
-    <div class="w-full max-w-4xl bg-white dark:bg-[#1E1E1E] rounded-3xl shadow-2xl overflow-hidden">
-        <!-- Header -->
-        <div class="px-6 py-4 bg-gray-50 dark:bg-[#2A2A2A] border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-            <h1 class="text-lg font-semibold text-gray-800 dark:text-gray-200">temp.cpp</h1>
-            <div class="flex items-center space-x-3">
-                <button id="copy-btn" class="btn btn-secondary">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard mr-2" viewBox="0 0 16 16">
-                        <path d="M4 1.5H3a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1h1v-1z"/>
-                        <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
-                    </svg>
-                    <span id="copy-text">Copy</span>
-                </button>
-                <button id="download-btn" class="btn btn-primary">
-                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-download mr-2" viewBox="0 0 16 16">
-                        <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
-                        <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
-                    </svg>
-                    Download traffic.cpp
-                </button>
-            </div>
-        </div>
+			html, body {
+				height: 100%;
+				margin: 0;
+				background: var(--bg);
+				color: var(--text);
+				font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+			}
 
-        <!-- Code Block -->
-        <div class="p-2 bg-[#282C34]">
-            <pre class="rounded-lg" style="max-height: 60vh; overflow: auto;"><code id="code-block" class="language-cpp">//
-//  紅綠燈
-//
+			.page {
+				max-width: 960px;
+				margin: 24px auto;
+				padding: 0 16px 48px;
+			}
 
-#include <iostream>
-#include <wiringPi.h>
+			.header {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				gap: 12px;
+				margin-bottom: 12px;
+			}
 
-using namespace std;
+			.title {
+				font-size: 18px;
+				color: var(--muted);
+				margin: 0;
+			}
 
-const int red = 1;  //GPIO 1
-const int yellow = 4;   //GPIO 4
-const int green = 5;  //GPIO 5
+			.toolbar {
+				display: flex;
+				gap: 8px;
+			}
 
-int main(){
-    if (wiringPiSetup() == -1){ 
-        return 0;
-    }
+			button {
+				appearance: none;
+				border: 1px solid var(--border);
+				background: var(--panel);
+				color: var(--text);
+				padding: 8px 12px;
+				border-radius: 8px;
+				font: inherit;
+				cursor: pointer;
+				transition: background .15s ease, border-color .15s ease, transform .02s ease;
+			}
+			button:hover { border-color: var(--accent); }
+			button:active { transform: translateY(1px); }
+			.primary { background: var(--accent); border-color: var(--accent); }
+			.primary:hover { background: var(--accent-press); border-color: var(--accent-press); }
 
-    pinMode(red, OUTPUT);
-    pinMode(yellow, OUTPUT);
-    pinMode(green, OUTPUT);
+			.code-card {
+				border: 1px solid var(--border);
+				border-radius: var(--radius);
+				overflow: hidden;
+				background: var(--panel);
+				box-shadow: 0 0 0 1px rgba(0,0,0,0.05), 0 8px 24px rgba(0,0,0,0.2);
+			}
 
-    while (1){
-        //green 3s
-        digitalWrite(red, 0);
-        digitalWrite(yellow, 0);
-        digitalWrite(green, 1);
-        delay(3000);
+			pre {
+				margin: 0;
+				padding: 16px;
+				overflow: auto;
+				background: transparent;
+			}
+					code {
+						font-family: var(--mono);
+						font-size: 14px;
+						line-height: 1.55;
+						color: var(--text);
+						white-space: pre-wrap; /* 保留換行並允許自動換行 */
+						tab-size: 4;
+					}
 
-        //green flash x3
-        digitalWrite(red, 0);
-        digitalWrite(yellow, 0);
-        
-        for (int i = 0; i < 3; i++){
-            digitalWrite(green, 1);
-            delay(500);
-            digitalWrite(green, 0);
-            delay(500);
-        }
+			.footer-hint {
+				color: var(--muted);
+				font-size: 13px;
+				margin-top: 12px;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="page">
+			<div class="header">
+				<h1 class="title">pwmled.cpp</h1>
+				<div class="toolbar">
+					<button id="copyBtn" title="Copy to clipboard">Copy</button>
+					<button id="downloadBtn" class="primary" title="Download as pwmled.cpp">Download pwmled.cpp</button>
+				</div>
+			</div>
 
-        //yellow 2s
-        digitalWrite(red, 0);
-        digitalWrite(yellow, 1);
-        digitalWrite(green, 0);
-        delay(2000);
+			<div class="code-card">
+				<pre><code id="code-block" class="language-cpp"></code></pre>
+			</div>
 
-        //red 3s
-        digitalWrite(red, 1);
-        digitalWrite(yellow, 0);
-        digitalWrite(green, 0);
-        delay(3000);
-        
-        digitalWrite(red, 0);
+			<p class="footer-hint">提示：點擊 Copy 可複製整段程式碼；Download 會下載名為 <strong>pwmled.cpp</strong> 的檔案。</p>
+		</div>
 
-    }
-}
-</code></pre>
-        </div>
-    </div>
+		<!-- 將原始 C++ 程式碼放在 text/plain 的腳本中，避免 HTML 轉譯問題 -->
+		<script id="code-src" type="text/plain">//
+	// PWM LED
+	//
+	#include &lt;iostream&gt;
+	#include &lt;wiringPi.h&gt;
+	#include &lt;softPwm.h&gt;
 
-    <!-- Prism JS for syntax highlighting -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
-    
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const copyButton = document.getElementById('copy-btn');
-            const copyText = document.getElementById('copy-text');
-            const downloadButton = document.getElementById('download-btn');
-            const codeBlock = document.getElementById('code-block');
+	using namespace std;
 
-            // Copy functionality
-            copyButton.addEventListener('click', () => {
-                const codeToCopy = codeBlock.innerText;
-                
-                // Using a temporary textarea element for broader browser support
-                const textArea = document.createElement('textarea');
-                textArea.value = codeToCopy;
-                document.body.appendChild(textArea);
-                textArea.select();
-                try {
-                    document.execCommand('copy');
-                    copyText.textContent = 'Copied!';
-                    copyButton.classList.add('bg-green-200', 'text-green-800');
-                    setTimeout(() => {
-                        copyText.textContent = 'Copy';
-                        copyButton.classList.remove('bg-green-200', 'text-green-800');
-                    }, 2000);
-                } catch (err) {
-                    console.error('Failed to copy text: ', err);
-                    copyText.textContent = 'Failed!';
-                     setTimeout(() => {
-                        copyText.textContent = 'Copy';
-                    }, 2000);
-                }
-                document.body.removeChild(textArea);
-            });
+	const int led = 1;
 
-            // Download functionality
-            downloadButton.addEventListener('click', () => {
-                const codeToDownload = codeBlock.innerText;
-                const blob = new Blob([codeToDownload], { type: 'text/plain' });
-                const url = URL.createObjectURL(blob);
-                
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'traffic.cpp';
-                document.body.appendChild(a);
-                a.click();
-                
-                // Clean up by revoking the object URL and removing the element
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            });
-        });
-    </script>
-</body>
+	int main(void) {
+		if (wiringPiSetup() == -1)
+			return 0;
+
+		softPwmCreate(led, 0, 100);
+
+		while (1) {
+			int val;
+			for (val = 0; val &lt;= 100; val++) {
+				softPwmWrite(led, val);
+				delay(20);
+			}
+			for (val = 100; val &gt;= 0; val--) {
+				softPwmWrite(led, val);
+				delay(20);
+			}
+		}
+
+		return 1;
+	}
+	</script>
+
+		<script>
+					(function () {
+						const codeEl = document.getElementById('code-block');
+						const srcEl = document.getElementById('code-src');
+						const copyBtn = document.getElementById('copyBtn');
+						const downloadBtn = document.getElementById('downloadBtn');
+
+						let code = '';
+
+						function setCode(text) {
+							code = (text || '').replace(/\n$/, '');
+							codeEl.innerText = code; // 保留換行
+						}
+
+						function setBusy(btn, label, ms = 1200) {
+					const prev = btn.textContent;
+					btn.textContent = label;
+					btn.disabled = true;
+					setTimeout(() => { btn.textContent = prev; btn.disabled = false; }, ms);
+				}
+
+				async function copyToClipboard(text) {
+					try {
+						if (navigator.clipboard && window.isSecureContext) {
+							await navigator.clipboard.writeText(text);
+							return true;
+						}
+						// 非安全脈絡或權限不足時的降級方案
+						const textarea = document.createElement('textarea');
+						textarea.value = text;
+						textarea.style.position = 'fixed';
+						textarea.style.top = '-1000px';
+						document.body.appendChild(textarea);
+						textarea.focus();
+						textarea.select();
+						const ok = document.execCommand('copy');
+						document.body.removeChild(textarea);
+						return ok;
+					} catch (err) {
+						return false;
+					}
+				}
+
+						copyBtn.addEventListener('click', async () => {
+					const ok = await copyToClipboard(code);
+					setBusy(copyBtn, ok ? 'Copied!' : 'Copy failed');
+				});
+
+				downloadBtn.addEventListener('click', () => {
+					const blob = new Blob([code], { type: 'text/plain;charset=utf-8' });
+					const url = URL.createObjectURL(blob);
+					const a = document.createElement('a');
+					a.href = url;
+					a.download = 'pwmled.cpp';
+					document.body.appendChild(a);
+					a.click();
+					a.remove();
+					setTimeout(() => URL.revokeObjectURL(url), 1000);
+					setBusy(downloadBtn, 'Downloading...');
+				});
+
+						// 嘗試從同目錄動態載入最新的 temp.cpp；若失敗則回退到內嵌版本
+						(async () => {
+							try {
+								const url = 'pwmled.cpp?t=' + Date.now(); // cache-busting 確保拿到最新
+								const res = await fetch(url, { cache: 'no-store' });
+								if (!res.ok) throw new Error('HTTP ' + res.status);
+								const text = await res.text();
+								setCode(text);
+							} catch (e) {
+								// 多數情況是在 file:// 開啟，瀏覽器會阻擋 fetch，此時使用內嵌備援
+								setCode(srcEl.textContent);
+							}
+						})();
+			})();
+		</script>
+	</body>
 </html>
