@@ -127,18 +127,19 @@
 	const int led = 1;
 
 	int main(void) {
-		if (wiringPiSetup() == -1)
+		if (wiringPiSetup() == -1) {
 			return 0;
+		}
 
 		softPwmCreate(led, 0, 100);
 
 		while (1) {
-			int val;
-			for (val = 0; val &lt;= 100; val++) {
+			for (int val = 0; val &lt;= 100; val++) {
 				softPwmWrite(led, val);
 				delay(20);
 			}
-			for (val = 100; val &gt;= 0; val--) {
+
+			for (int val = 100; val &gt;= 0; val--) {
 				softPwmWrite(led, val);
 				delay(20);
 			}
