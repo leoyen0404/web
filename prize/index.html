@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claim Your Prize!</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+        }
+        .card-shadow {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen flex items-center justify-center p-4">
+
+    <!-- Main card container -->
+    <div class="bg-white rounded-2xl p-8 md:p-12 card-shadow w-full max-w-2xl">
+        
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold text-green-600">Claim Your Prize!</h1>
+            <p class="text-gray-500 mt-2">Follow the simple steps below to redeem your reward.</p>
+        </div>
+
+        <!-- Steps container -->
+        <div class="space-y-6">
+
+            <!-- Step 1 -->
+            <div>
+                <h2 class="text-xl font-bold text-gray-800 mb-2"><span class="bg-green-500 text-white rounded-full w-8 h-8 inline-flex items-center justify-center mr-3">1</span>Copy Your Code</h2>
+                <div class="flex items-center space-x-4 bg-gray-100 p-4 rounded-lg">
+                    <code id="prizeCode" class="text-lg font-mono text-gray-700 flex-grow tracking-widest">0008416519444028059743697443118479881790956227576464947504359641704502407058000585214315043409644084264361498225146345018550261399326558315001885030683356201703133129267895645304411496541097920991001031957563777273442037305050545435883724744119674831701236602075878400000</code>
+                    <button id="copyButton" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300">
+                        Copy
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div>
+                <h2 class="text-xl font-bold text-gray-800 mb-2"><span class="bg-green-500 text-white rounded-full w-8 h-8 inline-flex items-center justify-center mr-3">2</span>Visit the Website</h2>
+                <p class="text-gray-600 mb-4">Click the button below to go to the QR code generator page.</p>
+                <a href="http://cbwts.dpdns.org/qrcode" target="_blank" class="block w-full text-center bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-300">
+                    Visit Site
+                </a>
+            </div>
+
+            <!-- Step 3 -->
+            <div>
+                <h2 class="text-xl font-bold text-gray-800 mb-2"><span class="bg-green-500 text-white rounded-full w-8 h-8 inline-flex items-center justify-center mr-3">3</span>Decode and Paste</h2>
+                <p class="text-gray-600 mb-4">On the website, find the "decode" section. Paste the digits you copied into the text box, as shown in the image below.</p>
+                <div class="bg-gray-200 rounded-lg overflow-hidden border-2 border-gray-300">
+                    <!-- Image placeholder: Replace the src with your image path -->
+                    <img src="https://github.com/leoyen0404/web/blob/main/prize/show.png" 
+                         alt="Instructional image showing where to paste the code" 
+                         class="w-full h-auto"
+                         onerror="this.src='https://placehold.co/600x300/e2e8f0/4a5568?text=Image+Not+Found'">
+                </div>
+            </div>
+
+            <!-- Step 4 -->
+            <div>
+                <h2 class="text-xl font-bold text-gray-800 mb-2"><span class="bg-green-500 text-white rounded-full w-8 h-8 inline-flex items-center justify-center mr-3">4</span>Generate the QR Code</h2>
+                <p class="text-gray-600">Once you've pasted the code, click the button to generate your unique QR code.</p>
+            </div>
+
+            <!-- Step 5 -->
+            <div>
+                <h2 class="text-xl font-bold text-gray-800 mb-2"><span class="bg-green-500 text-white rounded-full w-8 h-8 inline-flex items-center justify-center mr-3">5</span>Redeem at McDonald's!</h2>
+                <p class="text-gray-600">Head to your nearest McDonald's and have them scan your newly generated QR code to claim your fantastic prize. Enjoy!</p>
+            </div>
+        </div>
+
+    </div>
+    
+    <!-- Custom success message for copy action -->
+    <div id="copySuccessMessage" class="fixed bottom-5 right-5 bg-green-500 text-white py-2 px-4 rounded-lg shadow-lg opacity-0 transition-opacity duration-300">
+        Code copied to clipboard!
+    </div>
+
+
+    <script>
+        const copyButton = document.getElementById('copyButton');
+        const prizeCode = document.getElementById('prizeCode');
+        const copySuccessMessage = document.getElementById('copySuccessMessage');
+
+        copyButton.addEventListener('click', () => {
+            // A fallback for older browsers.
+            const textArea = document.createElement('textarea');
+            textArea.value = prizeCode.textContent.trim();
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                // Show success message
+                copySuccessMessage.classList.remove('opacity-0');
+                copyButton.textContent = 'Copied!';
+                copyButton.classList.remove('bg-green-500', 'hover:bg-green-600');
+                copyButton.classList.add('bg-indigo-500');
+
+                // Reset after a few seconds
+                setTimeout(() => {
+                    copySuccessMessage.classList.add('opacity-0');
+                    copyButton.textContent = 'Copy';
+                    copyButton.classList.remove('bg-indigo-500');
+                    copyButton.classList.add('bg-green-500', 'hover:bg-green-600');
+                }, 2000);
+            } catch (err) {
+                console.error('Fallback: Oops, unable to copy', err);
+            }
+            document.body.removeChild(textArea);
+        });
+    </script>
+</body>
+</html>
