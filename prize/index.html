@@ -36,8 +36,9 @@
             <div>
                 <h2 class="text-xl font-bold text-gray-800 mb-2"><span class="bg-green-500 text-white rounded-full w-8 h-8 inline-flex items-center justify-center mr-3">1</span>Copy Your Code</h2>
                 <div class="flex items-center space-x-4 bg-gray-100 p-4 rounded-lg">
-                    <code id="prizeCode" class="text-lg font-mono text-gray-700 flex-grow tracking-widest">0008416519444028059743697443118479881790956227576464947504359641704502407058000585214315043409644084264361498225146345018550261399326558315001885030683356201703133129267895645304411496541097920991001031957563777273442037305050545435883724744119674831701236602075878400000</code>
-                    <button id="copyButton" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300">
+                    <!-- This will be populated from num.txt -->
+                    <code id="prizeCode" class="text-lg font-mono text-gray-700 flex-grow tracking-widest break-all">Loading...</code>
+                    <button id="copyButton" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 flex-shrink-0">
                         Copy
                     </button>
                 </div>
@@ -57,8 +58,7 @@
                 <h2 class="text-xl font-bold text-gray-800 mb-2"><span class="bg-green-500 text-white rounded-full w-8 h-8 inline-flex items-center justify-center mr-3">3</span>Decode and Paste</h2>
                 <p class="text-gray-600 mb-4">On the website, find the "decode" section. Paste the digits you copied into the text box, as shown in the image below.</p>
                 <div class="bg-gray-200 rounded-lg overflow-hidden border-2 border-gray-300">
-                    <!-- Image placeholder: Replace the src with your image path -->
-                    <img src="https://github.com/leoyen0404/web/blob/main/prize/show.png" 
+                    <img src="show.png" 
                          alt="Instructional image showing where to paste the code" 
                          class="w-full h-auto"
                          onerror="this.src='https://placehold.co/600x300/e2e8f0/4a5568?text=Image+Not+Found'">
@@ -91,10 +91,34 @@
         const prizeCode = document.getElementById('prizeCode');
         const copySuccessMessage = document.getElementById('copySuccessMessage');
 
+        // Fetch the number from num.txt when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            fetch('num.txt')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Could not find num.txt');
+                    }
+                    return response.text();
+                })
+                .then(text => {
+                    prizeCode.textContent = text.trim();
+                })
+                .catch(error => {
+                    console.error('Error fetching the prize code:', error);
+                    prizeCode.textContent = 'Error loading code.';
+                    prizeCode.classList.add('text-red-500');
+                });
+        });
+
         copyButton.addEventListener('click', () => {
+            const currentCode = prizeCode.textContent.trim();
+            if (currentCode === 'Loading...' || currentCode === 'Error loading code.') {
+                return; // Prevent copying placeholder text
+            }
+            
             // A fallback for older browsers.
             const textArea = document.createElement('textarea');
-            textArea.value = prizeCode.textContent.trim();
+            textArea.value = currentCode;
             document.body.appendChild(textArea);
             textArea.select();
             try {
@@ -120,3 +144,5 @@
     </script>
 </body>
 </html>
+
+
