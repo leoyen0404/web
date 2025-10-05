@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INTERPOL CYBERCRIME DIVISION - ACTIVE TRACE</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', 'Consolas', monospace;
+            background: #000;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        .header-bar {
+            background: #1a1a1a;
+            padding: 15px 30px;
+            border-bottom: 3px solid #fff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .org-logo {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .interpol-badge {
+            font-size: 2em;
+            font-weight: bold;
+        }
+
+        .org-text {
+            text-align: left;
+        }
+
+        .org-name {
+            font-size: 1.3em;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        .org-dept {
+            font-size: 0.8em;
+            color: #aaa;
+            margin-top: 3px;
+        }
+
+        .status-bar {
+            text-align: right;
+        }
+
+        .status-item {
+            font-size: 0.85em;
+            margin: 3px 0;
+        }
+
+        .status-active {
+            color: #fff;
+            background: #000;
+            padding: 2px 8px;
+            border: 1px solid #fff;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto auto auto;
+            gap: 0;
+            height: calc(100vh - 80px);
+        }
+
+        .panel {
+            border: 1px solid #fff;
+            border-top: 3px solid #fff;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .panel::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .panel::-webkit-scrollbar-track {
+            background: #000;
+        }
+
+        .panel::-webkit-scrollbar-thumb {
+            background: #fff;
+        }
+
+        .panel-title {
+            font-size: 1.1em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #fff;
+            letter-spacing: 1px;
+        }
+
+        .terminal-output {
+            font-size: 0.85em;
+            line-height: 1.5;
+        }
+
+        .terminal-line {
+            margin: 3px 0;
+            opacity: 0;
+            animation: fadeIn 0.1s forwards;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        .indent {
+            margin-left: 15px;
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 8px;
+            height: 14px;
+            background: #fff;
+            animation: blink 1s step-end infinite;
+            margin-left: 2px;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        .highlight {
+            background: #fff;
+            color: #000;
+            padding: 1px 4px;
+            font-weight: bold;
+        }
+
+        .critical {
+            animation: flash 0.8s infinite;
+        }
+
+        @keyframes flash {
+            0%, 100% { background: #fff; color: #000; }
+            50% { background: #000; color: #fff; }
+        }
+
+        .map-container {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            background: #000;
+            border: 1px solid #fff;
+            margin: 15px 0;
+        }
+
+        .world-map {
+            width: 100%;
+            height: 100%;
+            background-image: 
+                repeating-linear-gradient(0deg, transparent, transparent 19px, #333 19px, #333 20px),
+                repeating-linear-gradient(90deg, transparent, transparent 19px, #333 19px, #333 20px);
+        }
+
+        .location-marker {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: #fff;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            50% { transform: translate(-50%, -50%) scale(1.5); opacity: 0.5; }
+        }
+
+        .connection-line {
+            position: absolute;
+            height: 2px;
+            background: #fff;
+            transform-origin: left center;
+            animation: drawLine 2s ease-out forwards;
+        }
+
+        @keyframes drawLine {
+            from { width: 0; }
+            to { width: 100%; }
+        }
+
+        .location-label {
+            position: absolute;
+            background: #000;
+            color: #fff;
+            padding: 4px 8px;
+            border: 1px solid #fff;
+            font-size: 0.75em;
+            white-space: nowrap;
+            transform: translate(-50%, -120%);
+        }
+
+        .progress-bar-container {
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .progress-label {
+            min-width: 200px;
+            font-size: 0.85em;
+        }
+
+        .progress-bar {
+            flex: 1;
+            height: 16px;
+            border: 1px solid #fff;
+            position: relative;
+            background: #000;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #fff;
+            width: 0%;
+        }
+
+        .progress-percent {
+            min-width: 40px;
+            text-align: right;
+            font-size: 0.85em;
+        }
+
+        .data-table {
+            margin: 15px 0;
+            font-size: 0.85em;
+        }
+
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #333;
+        }
+
+        .data-label {
+            color: #aaa;
+        }
+
+        .data-value {
+            font-weight: bold;
+        }
+
+        .alert-box {
+            border: 2px solid #fff;
+            padding: 15px;
+            margin: 15px 0;
+            text-align: center;
+            font-weight: bold;
+            animation: borderFlash 1s infinite;
+        }
+
+        @keyframes borderFlash {
+            0%, 100% { border-color: #fff; }
+            50% { border-color: #666; }
+        }
+
+        .large-panel {
+            grid-column: span 2;
+        }
+
+        .decoder-box {
+            border: 1px solid #fff;
+            padding: 15px;
+            margin: 15px 0;
+            background: #0a0a0a;
+        }
+
+        .decoder-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #fff;
+        }
+
+        .decoder-display {
+            font-family: 'Courier New', monospace;
+            font-size: 1.2em;
+            letter-spacing: 3px;
+            text-align: center;
+            padding: 15px 0;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .decoder-char {
+            display: inline-block;
+            min-width: 15px;
+            animation: flicker 0.1s infinite;
+        }
+
+        @keyframes flicker {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .scan-line {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #fff, transparent);
+            animation: scanMove 2s linear infinite;
+        }
+
+        @keyframes scanMove {
+            0% { top: 0; }
+            100% { top: 100%; }
+        }
+
+        .glitch {
+            animation: glitch 0.3s infinite;
+        }
+
+        @keyframes glitch {
+            0%, 100% { transform: translate(0); }
+            25% { transform: translate(-2px, 2px); }
+            50% { transform: translate(2px, -2px); }
+            75% { transform: translate(-2px, -2px); }
+        }
+
+        .data-stream {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 200px;
+            height: 100%;
+            pointer-events: none;
+            opacity: 0.1;
+            overflow: hidden;
+        }
+
+        .stream-column {
+            position: absolute;
+            font-size: 10px;
+            line-height: 1.2;
+            animation: streamDown 8s linear infinite;
+        }
+
+        @keyframes streamDown {
+            0% { top: -100%; }
+            100% { top: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="data-stream" id="dataStream"></div>
+
+    <div class="header-bar">
+        <div class="org-logo">
+            <div class="interpol-badge">◈</div>
+            <div class="org-text">
+                <div class="org-name">INTERPOL - ICPO</div>
+                <div class="org-dept">International Cybercrime Prevention Office</div>
+            </div>
+        </div>
+        <div class="status-bar">
+            <div class="status-item"><span class="status-active">TRACE ACTIVE</span></div>
+            <div class="status-item">Session ID: IC-${Math.floor(Math.random()*999999).toString().padStart(6,'0')}</div>
+            <div class="status-item" id="timestamp"></div>
+        </div>
+    </div>
+
+    <div class="main-grid">
+        <!-- Network Trace Terminal -->
+        <div class="panel">
+            <div class="panel-title">[ NETWORK TRACE - REAL-TIME ]</div>
+            <div class="terminal-output" id="terminal1"></div>
+        </div>
+
+        <!-- System Information -->
+        <div class="panel">
+            <div class="panel-title">[ TARGET INFORMATION ]</div>
+            <div class="data-table" id="targetInfo"></div>
+            <div class="alert-box">
+                <div style="font-size: 1.2em;">⚠ 检测到未授权访问 ⚠</div>
+                <div style="margin-top: 5px; font-size: 0.85em;">UNAUTHORIZED ACCESS DETECTED</div>
+                <div style="margin-top: 10px; font-size: 0.9em;">证据收集进行中 | EVIDENCE COLLECTION IN PROGRESS</div>
+            </div>
+            
+            <!-- Decoder boxes -->
+            <div class="decoder-box">
+                <div class="decoder-title">[ VPN KEY DECODER ]</div>
+                <div class="decoder-display" id="decoder1">INITIALIZING...</div>
+                <div class="progress-bar-container">
+                    <div class="progress-label">Decryption Progress</div>
+                    <div class="progress-bar"><div class="progress-fill" id="decoderProg1"></div></div>
+                    <div class="progress-percent" id="decoderPct1">0%</div>
+                </div>
+            </div>
+
+            <div class="decoder-box">
+                <div class="decoder-title">[ SESSION TOKEN EXTRACTOR ]</div>
+                <div class="decoder-display" id="decoder2">SCANNING...</div>
+                <div class="progress-bar-container">
+                    <div class="progress-label">Extraction Progress</div>
+                    <div class="progress-bar"><div class="progress-fill" id="decoderProg2"></div></div>
+                    <div class="progress-percent" id="decoderPct2">0%</div>
+                </div>
+            </div>
+
+            <div class="terminal-output" id="terminal2"></div>
+        </div>
+
+        <!-- Global Location Tracker -->
+        <div class="panel large-panel">
+            <div class="panel-title">[ GLOBAL LOCATION TRACKER - VPN PENETRATION ]</div>
+            <div class="map-container">
+                <div class="world-map" id="worldMap"></div>
+            </div>
+            <div class="terminal-output" id="terminal3"></div>
+        </div>
+
+        <!-- Database Cross-Reference -->
+        <div class="panel">
+            <div class="panel-title">[ DATABASE CORRELATION ]</div>
+            <div class="terminal-output" id="terminal4"></div>
+        </div>
+
+        <!-- Evidence & Reporting -->
+        <div class="panel">
+            <div class="panel-title">[ EVIDENCE CHAIN & REPORTING ]</div>
+            <div id="progressBars"></div>
+            <div class="terminal-output" id="terminal5"></div>
+        </div>
+    </div>
+
+    <script>
+        // Update timestamp
+        setInterval(() => {
+            document.getElementById('timestamp').textContent = new Date().toISOString();
+        }, 1000);
+
+        // Data stream animation
+        const streamContainer = document.getElementById('dataStream');
+        for (let i = 0; i < 5; i++) {
+            const column = document.createElement('div');
+            column.className = 'stream-column';
+            column.style.left = (i * 40) + 'px';
+            column.style.animationDelay = (i * 0.5) + 's';
+            streamContainer.appendChild(column);
+            
+            setInterval(() => {
+                let text = '';
+                for (let j = 0; j < 50; j++) {
+                    text += Math.random() > 0.5 ? '1' : '0';
+                }
+                column.textContent = text;
+            }, 100);
+        }
+
+        // Decoder function - flashes random chars then settles on final value
+        function runDecoder(displayId, progressId, pctId, finalValue, duration, startDelay) {
+            setTimeout(() => {
+                const display = document.getElementById(displayId);
+                const progFill = document.getElementById(progressId);
+                const progPct = document.getElementById(pctId);
+                const chars = '0123456789ABCDEF@#$%&*';
+                const finalLength = finalValue.length;
+                
+                let elapsed = 0;
+                let progress = 0;
+                const interval = 50;
+                
+                const timer = setInterval(() => {
+                    elapsed += interval;
+                    progress = Math.min((elapsed / duration) * 100, 100);
+                    
+                    // Update progress bar
+                    if (progFill) progFill.style.width = progress + '%';
+                    if (progPct) progPct.textContent = Math.floor(progress) + '%';
+                    
+                    // Flash random characters
+                    if (progress < 100) {
+                        let randomStr = '';
+                        for (let i = 0; i < finalLength; i++) {
+                            randomStr += '<span class="decoder-char">' + chars[Math.floor(Math.random() * chars.length)] + '</span>';
+                        }
+                        display.innerHTML = randomStr;
+                    } else {
+                        // Show final value
+                        display.innerHTML = '<span class="highlight">' + finalValue + '</span>';
+                        clearInterval(timer);
+                    }
+                }, interval);
+            }, startDelay);
+        }
+
+        function print(terminalId, text, delay = 0, className = '') {
+            setTimeout(() => {
+                const terminal = document.getElementById(terminalId);
+                const line = document.createElement('div');
+                line.className = `terminal-line ${className}`;
+                line.innerHTML = text;
+                terminal.appendChild(line);
+                terminal.scrollTop = terminal.scrollHeight;
+            }, delay);
+        }
+
+        function addProgress(label, duration, delay = 0) {
+            setTimeout(() => {
+                const container = document.getElementById('progressBars');
+                const id = 'prog_' + Math.random().toString(36).substr(2, 9);
+                const div = document.createElement('div');
+                div.className = 'progress-bar-container';
+                div.innerHTML = `
+                    <div class="progress-label">${label}</div>
+                    <div class="progress-bar"><div class="progress-fill" id="${id}"></div></div>
+                    <div class="progress-percent" id="${id}_pct">0%</div>
+                `;
+                container.appendChild(div);
+                
+                let progress = 0;
+                const interval = duration / 100;
+                const timer = setInterval(() => {
+                    progress += 1;
+                    const fill = document.getElementById(id);
+                    const pct = document.getElementById(id + '_pct');
+                    if (fill) fill.style.width = progress + '%';
+                    if (pct) pct.textContent = progress + '%';
+                    if (progress >= 100) clearInterval(timer);
+                }, interval);
+            }, delay);
+        }
+
+        // Generate fake data
+        const fakeIP = `${Math.floor(Math.random()*223)+1}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}`;
+        const caseNum = `IC-${new Date().getFullYear()}-${Math.floor(Math.random()*999999).toString().padStart(6,'0')}`;
+
+        // Target info
+        setTimeout(() => {
+            const info = document.getElementById('targetInfo');
+            info.innerHTML = `
+                <div class="data-row"><span class="data-label">User Agent:</span><span class="data-value">${navigator.userAgent.substring(0,40)}...</span></div>
+                <div class="data-row"><span class="data-label">Platform:</span><span class="data-value">${navigator.platform}</span></div>
+                <div class="data-row"><span class="data-label">Screen:</span><span class="data-value">${screen.width}x${screen.height} @ ${screen.colorDepth}bit</span></div>
+                <div class="data-row"><span class="data-label">Timezone:</span><span class="data-value">${Intl.DateTimeFormat().resolvedOptions().timeZone}</span></div>
+                <div class="data-row"><span class="data-label">Language:</span><span class="data-value">${navigator.language}</span></div>
+                <div class="data-row"><span class="data-label">CPU Cores:</span><span class="data-value">${navigator.hardwareConcurrency}</span></div>
+                <div class="data-row"><span class="data-label">Connection IP:</span><span class="data-value highlight">${fakeIP}</span></div>
+                <div class="data-row"><span class="data-label">Case Number:</span><span class="data-value">${caseNum}</span></div>
+            `;
+        }, 1000);
+
+        // Terminal 1 - Network Trace
+        print('terminal1', 'Initializing INTERPOL trace system...', 500);
+        print('terminal1', '正在建立安全监控通道...', 800);
+        print('terminal1', '数据包捕获已启动', 1200);
+        print('terminal1', 'Deep packet inspection: ACTIVE', 1500);
+        print('terminal1', '', 1800);
+        print('terminal1', '> 检测网络拓扑结构...', 2000);
+        print('terminal1', '> TLS握手已捕获', 2400);
+        print('terminal1', '> 证书链分析完成', 2800);
+        print('terminal1', '> SNI (Server Name Indication) logged', 3200);
+        print('terminal1', '', 3500);
+        print('terminal1', '<span class="highlight glitch">ALERT: VPN/Proxy detected | 检测到VPN/代理</span>', 3800);
+        print('terminal1', '> Protocol: OpenVPN over TCP', 4100);
+        print('terminal1', '> 尝试解封装...', 4400);
+        print('terminal1', '> Layer 1: Singapore proxy node', 4900);
+        print('terminal1', '> Layer 2: Germany VPN server', 5600);
+        print('terminal1', '> Layer 3: USA exit node', 6300);
+        print('terminal1', '<span class="highlight critical">真实IP已提取: ' + fakeIP + '</span>', 7200);
+        print('terminal1', '', 7500);
+        print('terminal1', '> ISP识别中...', 7800);
+        print('terminal1', '> 地理定位三角测量中...', 8100);
+        print('terminal1', '<span class="highlight">Физическое местоположение установлено</span>', 9000);
+        print('terminal1', '', 9300);
+        print('terminal1', '> 设备指纹生成完成', 9600);
+
+        // Terminal 2 - System Info
+        print('terminal2', '> 设备指纹识别中...', 2000);
+        print('terminal2', '> Canvas指纹已捕获', 2500);
+        print('terminal2', '> WebGL fingerprint: CAPTURED', 3000);
+        print('terminal2', '> Audio context hash: CAPTURED', 3500);
+        print('terminal2', '> 字体枚举完成', 4000);
+        print('terminal2', '<span class="highlight">唯一设备ID已生成</span>', 4600);
+        print('terminal2', '', 5000);
+        print('terminal2', '> Начато извлечение учетных данных...', 5500);
+        print('terminal2', '> Cookie提取中...', 6000);
+        print('terminal2', '> LocalStorage scan: COMPLETE', 6500);
+
+        // Terminal 3 - Location tracking with map
+        const mapEl = document.getElementById('worldMap');
+        const locations = [
+            { x: '25%', y: '45%', label: 'VPN Entry (Singapore)', delay: 5000 },
+            { x: '48%', y: '35%', label: 'Proxy Node (Frankfurt)', delay: 6500 },
+            { x: '20%', y: '40%', label: 'Exit Node (New York)', delay: 8000 },
+            { x: '68%', y: '52%', label: 'REAL LOCATION', delay: 9500, isReal: true }
+        ];
+
+        locations.forEach((loc, idx) => {
+            setTimeout(() => {
+                const marker = document.createElement('div');
+                marker.className = 'location-marker';
+                marker.style.left = loc.x;
+                marker.style.top = loc.y;
+                if (loc.isReal) marker.style.background = '#fff';
+                
+                const label = document.createElement('div');
+                label.className = 'location-label';
+                label.textContent = loc.label;
+                label.style.left = loc.x;
+                label.style.top = loc.y;
+                
+                mapEl.appendChild(marker);
+                mapEl.appendChild(label);
+
+                if (idx > 0) {
+                    const prevLoc = locations[idx - 1];
+                    const line = document.createElement('div');
+                    line.className = 'connection-line';
+                    const x1 = parseFloat(prevLoc.x);
+                    const y1 = parseFloat(prevLoc.y);
+                    const x2 = parseFloat(loc.x);
+                    const y2 = parseFloat(loc.y);
+                    const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+                    const length = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+                    
+                    line.style.left = prevLoc.x;
+                    line.style.top = prevLoc.y;
+                    line.style.width = length + '%';
+                    line.style.transform = `rotate(${angle}deg)`;
+                    mapEl.appendChild(line);
+                }
+            }, loc.delay);
+        });
+
+        print('terminal3', '> 隧道检测分析中...', 4500);
+        print('terminal3', '> Hop 1: Entry node identified (AS-SINGAPORE)', 5200);
+        print('terminal3', '<span class="indent">└─ IP: 103.28.xxx.xxx</span>', 5400);
+        print('terminal3', '<span class="indent">└─ Provider: DigitalOcean Singapore</span>', 5600);
+        print('terminal3', '', 6000);
+        print('terminal3', '> Hop 2: Intermediate proxy (AS-GERMANY)', 6800);
+        print('terminal3', '<span class="indent">└─ IP: 78.47.xxx.xxx</span>', 7000);
+        print('terminal3', '<span class="indent">└─ Provider: Hetzner Online GmbH</span>', 7200);
+        print('terminal3', '', 7700);
+        print('terminal3', '> Hop 3: Exit node detected (AS-USA)', 8300);
+        print('terminal3', '<span class="indent">└─ IP: 192.241.xxx.xxx</span>', 8500);
+        print('terminal3', '<span class="indent">└─ Provider: DigitalOcean NYC</span>', 8700);
+        print('terminal3', '', 9200);
+        print('terminal3', '<span class="highlight critical">真实IP: ' + fakeIP + '</span>', 9800);
+        print('terminal3', '<span class="indent">└─ ISP: [REDACTED FOR SECURITY]</span>', 10100);
+        print('terminal3', '<span class="indent">└─ ASN: AS' + Math.floor(Math.random()*60000) + '</span>', 10400);
+        print('terminal3', '<span class="indent">└─ 坐标已三角定位</span>', 10700);
+        print('terminal3', '', 11000);
+        print('terminal3', '<span class="highlight">Местоположение подтверждено</span>', 11400);
+
+        // Terminal 4 - Database
+        print('terminal4', 'Querying INTERPOL database...', 3000);
+        print('terminal4', '> Connecting to I-24/7 network...', 3500);
+        print('terminal4', '> 搜索通告数据库...', 4000);
+        print('terminal4', '> 交叉比对指纹...', 4500);
+        print('terminal4', '', 5000);
+        print('terminal4', '<span class="highlight glitch">DATABASE HIT: 2 related cases</span>', 5500);
+        print('terminal4', '<span class="indent">Case #2024-IC-47829 - Financial fraud</span>', 6000);
+        print('terminal4', '<span class="indent">Case #2024-IC-59102 - Identity theft</span>', 6500);
+        print('terminal4', '', 7000);
+        print('terminal4', 'Querying FBI IC3 database...', 7500);
+        print('terminal4', '> 匹配投诉记录...', 8000);
+        print('terminal4', '<span class="highlight">MATCH: Reported in 3 jurisdictions</span>', 8800);
+        print('terminal4', '', 9300);
+        print('terminal4', 'Querying EUROPOL database...', 9800);
+        print('terminal4', '<span class="highlight">Совпадение найдено в базе данных</span>', 10500);
+        print('terminal4', '', 11000);
+        print('terminal4', '> Анализ связанных аккаунтов...', 11500);
+        print('terminal4', '<span class="highlight critical">检测到诈骗团伙特征</span>', 12000);
+
+        // Terminal 5 - Evidence
+        addProgress('数字证据收集', 3000, 6000);
+        addProgress('加密签名', 2500, 6500);
+        addProgress('Secure upload to INTERPOL HQ', 3500, 7000);
+        addProgress('Member country notification', 3000, 7500);
+
+        print('terminal5', '', 11000);
+        print('terminal5', '<span class="highlight">Пакет улик запечатан</span>', 11500);
+        print('terminal5', `Case ${caseNum}: FILED`, 12000);
+        print('terminal5', 'Priority: HIGH', 12300);
+        print('terminal5', '', 12600);
+        print('terminal5', '> National Central Bureau: NOTIFIED', 13000);
+        print('terminal5', '> Local law enforcement: DISPATCHED', 13400);
+        print('terminal5', '> 法律程序已启动', 13800);
+        print('terminal5', '', 14200);
+        print('terminal5', '<span class="highlight critical">Правоохранительные органы уведомлены</span>', 14600);
+        print('terminal5', '', 15000);
+        print('terminal5', '> 证据链完整性: 100%', 15400);
+        print('terminal5', '> Рекомендуется немедленная сдача', 15800);
+
+        // Sound effects
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function beep(freq, duration, delay) {
+            setTimeout(() => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.frequency.value = freq;
+                gain.gain.setValueAtTime(0.03, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+                osc.start(audioCtx.currentTime);
+                osc.stop(audioCtx.currentTime + duration);
+            }, delay);
+        }
+
+        beep(1000, 0.05, 3800);
+        beep(1200, 0.05, 7200);
+        beep(1400, 0.05, 9800);
+        beep(800, 0.1, 14600);
+
+        // Run decoders
+        const fakeKey1 = Array(32).fill(0).map(() => Math.floor(Math.random()*16).toString(16)).join('').toUpperCase();
+        const fakeKey2 = Array(24).fill(0).map(() => Math.floor(Math.random()*16).toString(16)).join('').toUpperCase();
+        
+        runDecoder('decoder1', 'decoderProg1', 'decoderPct1', fakeKey1, 5000, 3000);
+        runDecoder('decoder2', 'decoderProg2', 'decoderPct2', fakeKey2, 4500, 4000);
+
+        // ===== ADDITIONAL MALICIOUS-LOOKING FEATURES =====
+
+        // Prevent closing/leaving the page (scary but harmless)
+        let closeAttempts = 0;
+        window.addEventListener('beforeunload', (e) => {
+            closeAttempts++;
+            if (closeAttempts < 3) {
+                e.preventDefault();
+                e.returnValue = '⚠ 警告：关闭窗口不会停止追踪';
+                beep(400, 0.2, 0);
+                return e.returnValue;
+            }
+        });
+
+        // Fake webcam/microphone access attempt
+        setTimeout(() => {
+            print('terminal2', '', 7000);
+            print('terminal2', '> 检测媒体设备...', 7200);
+            print('terminal2', '<span class="highlight glitch">⚠ Попытка доступа к веб-камере</span>', 7800);
+            print('terminal2', '<span class="indent">└─ Front camera: DETECTED</span>', 8200);
+            print('terminal2', '<span class="indent">└─ Microphone: DETECTED</span>', 8500);
+            print('terminal2', '<span class="highlight critical">Наблюдение за устройством: АКТИВНО</span>', 9200);
+            beep(1500, 0.1, 7800);
+        }, 7000);
+
+        // Fake file system scanning
+        const fakeFiles = [
+            'Documents/passwords.txt',
+            'Desktop/banking_info.xlsx',
+            'Downloads/tax_documents.pdf',
+            'Pictures/ID_scan.jpg',
+            'Documents/crypto_wallet.dat'
+        ];
+        
+        setTimeout(() => {
+            print('terminal4', '', 13000);
+            print('terminal4', '> Сканирование файловой системы...', 13500);
+            fakeFiles.forEach((file, idx) => {
+                print('terminal4', `<span class="indent">└─ Found: ${file}</span>`, 14000 + (idx * 400));
+            });
+            print('terminal4', '<span class="highlight critical">敏感文件已编目: 127 items</span>', 16500);
+            beep(1100, 0.08, 16500);
+        }, 13000);
+
+        // Fake keylogger activation
+        let keystrokes = 0;
+        document.addEventListener('keydown', () => {
+            keystrokes++;
+            if (keystrokes === 1) {
+                setTimeout(() => {
+                    print('terminal2', '', 10000);
+                    print('terminal2', '<span class="highlight glitch">⚠ Регистратор клавиатуры: АКТИВИРОВАН</span>', 10200);
+                    print('terminal2', `<span class="indent">└─ 按键已捕获: <span id="keystrokeCount">1</span></span>`, 10600);
+                }, 0);
+            } else {
+                const counter = document.getElementById('keystrokeCount');
+                if (counter) counter.textContent = keystrokes;
+            }
+        });
+
+        // Fake screenshot capture
+        setTimeout(() => {
+            print('terminal5', '', 16500);
+            print('terminal5', '> 屏幕截图启动...', 17000);
+            print('terminal5', '<span class="highlight">Screenshot saved: evidence_${Date.now()}.png</span>', 17500);
+            print('terminal5', '<span class="indent">└─ Resolution: ' + screen.width + 'x' + screen.height + '</span>', 17800);
+            print('terminal5', '<span class="indent">└─ Uploaded to: INTERPOL-EVIDENCE-SERVER-07</span>', 18100);
+            beep(900, 0.1, 17500);
+        }, 17000);
+
+        // Fake network packet interception
+        setTimeout(() => {
+            print('terminal1', '', 10000);
+            print('terminal1', '> 拦截网络数据包...', 10500);
+            print('terminal1', '<span class="indent">└─ HTTP requests logged: 47</span>', 11000);
+            print('terminal1', '<span class="indent">└─ HTTPS connections: DECRYPTED</span>', 11400);
+            print('terminal1', '<span class="indent">└─ DNS queries captured: 23 domains</span>', 11800);
+            print('terminal1', '<span class="highlight critical">活动连接已监控</span>', 12300);
+        }, 10000);
+
+        // Fake social media account detection
+        setTimeout(() => {
+            const socialAccounts = ['Facebook', 'Instagram', 'Twitter/X', 'LinkedIn', 'WeChat', 'Telegram'];
+            print('terminal4', '', 17000);
+            print('terminal4', '> 社交媒体足迹分析...', 17500);
+            socialAccounts.forEach((platform, idx) => {
+                print('terminal4', `<span class="indent">└─ ${platform}: <span class="highlight">ACCOUNT FOUND</span></span>`, 18000 + (idx * 300));
+            });
+            print('terminal4', '<span class="highlight critical">所有账户已标记调查</span>', 20000);
+            beep(1300, 0.1, 20000);
+        }, 17000);
+
+        // Fake bank account detection
+        setTimeout(() => {
+            print('terminal5', '', 19000);
+            print('terminal5', '> 金融机构交叉检查...', 19500);
+            print('terminal5', '<span class="highlight glitch">⚠ Обнаружено банковских счетов: 3</span>', 20500);
+            print('terminal5', '<span class="indent">└─ 冻结请求已提交</span>', 21000);
+            print('terminal5', '<span class="indent">└─ Ордер на арест активов: В ОЖИДАНИИ</span>', 21500);
+            beep(700, 0.15, 20500);
+        }, 19000);
+
+        // Fake contact list extraction
+        setTimeout(() => {
+            print('terminal3', '', 12000);
+            print('terminal3', '> 提取联系人数据库...', 12500);
+            print('terminal3', '<span class="highlight">邮件联系人已提取: 234</span>', 13200);
+            print('terminal3', '<span class="highlight">电话联系人已提取: 156</span>', 13700);
+            print('terminal3', '<span class="indent">└─ Идентифицировано членов семьи: 8</span>', 14200);
+            print('terminal3', '<span class="indent">└─ 雇主信息已获取</span>', 14700);
+            print('terminal3', '<span class="highlight critical">Уведомление контактов запланировано</span>', 15300);
+        }, 12000);
+
+        // Random screen glitch effect
+        function glitchScreen() {
+            document.body.style.transform = 'translate(' + (Math.random() * 4 - 2) + 'px, ' + (Math.random() * 4 - 2) + 'px)';
+            setTimeout(() => {
+                document.body.style.transform = 'translate(0, 0)';
+            }, 50);
+        }
+
+        // Trigger glitches at key moments
+        setTimeout(() => glitchScreen(), 7200);
+        setTimeout(() => glitchScreen(), 9800);
+        setTimeout(() => glitchScreen(), 14600);
+        setTimeout(() => glitchScreen(), 20500);
+
+        // Fake browser history extraction
+        setTimeout(() => {
+            print('terminal4', '', 21000);
+            print('terminal4', '> 浏览器历史提取...', 21500);
+            print('terminal4', '<span class="indent">└─ URLs catalogued: 1,847</span>', 22000);
+            print('terminal4', '<span class="indent">└─ Search queries logged: 423</span>', 22400);
+            print('terminal4', '<span class="indent">└─ Данные автозаполнения: ЗАХВАЧЕНЫ</span>', 22800);
+            print('terminal4', '<span class="highlight critical">浏览模式已分析</span>', 23300);
+        }, 21000);
+
+        // Fake GPS/location tracking
+        if (navigator.geolocation) {
+            setTimeout(() => {
+                print('terminal3', '', 16000);
+                print('terminal3', '> GPS坐标请求...', 16500);
+                print('terminal3', '<span class="highlight glitch">⚠ Службы определения местоположения: ДОСТУП ПОЛУЧЕН</span>', 17200);
+                print('terminal3', '<span class="indent">└─ Precision: ±10 meters</span>', 17600);
+                print('terminal3', '<span class="indent">└─ 坐标已记录并传输</span>', 18000);
+            }, 16000);
+        }
+
+        // Fake legal document generation
+        setTimeout(() => {
+            print('terminal5', '', 22000);
+            print('terminal5', '> 生成法律文件...', 22500);
+            print('terminal5', '<span class="indent">└─ Ордер на арест: СОСТАВЛЕН</span>', 23200);
+            print('terminal5', '<span class="indent">└─ 扣押令已准备</span>', 23700);
+            print('terminal5', '<span class="indent">└─ Запрос на экстрадицию: В ОЖИДАНИИ</span>', 24200);
+            print('terminal5', '<span class="highlight critical">Судебные действия: НЕИЗБЕЖНЫ</span>', 24800);
+            beep(600, 0.2, 24800);
+        }, 22000);
+
+        // Final warning message
+        setTimeout(() => {
+            print('terminal5', '', 25500);
+            print('terminal5', '<span class="highlight critical" style="font-size: 1.2em;">═══════════════════════════════════════</span>', 26000);
+            print('terminal5', '<span class="highlight critical" style="font-size: 1.2em;">⚠ 最后警告 | ПОСЛЕДНЕЕ ПРЕДУПРЕЖДЕНИЕ ⚠</span>', 26500);
+            print('terminal5', '<span class="highlight critical" style="font-size: 1.2em;">═══════════════════════════════════════</span>', 27000);
+            print('terminal5', '', 27500);
+            print('terminal5', '所有证据已收集并传输。', 28000);
+            print('terminal5', 'Все доказательства собраны и переданы.', 28300);
+            print('terminal5', '', 29000);
+            print('terminal5', '<span class="highlight">Law enforcement dispatch: CONFIRMED</span>', 29500);
+            print('terminal5', '<span class="highlight">预计到达时间: 15-30 分钟</span>', 30000);
+            beep(500, 0.3, 29500);
+        }, 26000);
+
+        // Continuous monitoring indicator
+        setInterval(() => {
+            const randomTerminal = 'terminal' + (Math.floor(Math.random() * 5) + 1);
+            const timestamp = new Date().toLocaleTimeString();
+            const messages = [
+                `[${timestamp}] 监控进行中...`,
+                `[${timestamp}] Data stream: LIVE`,
+                `[${timestamp}] 追踪继续中`,
+                `[${timestamp}] Наблюдение: ПРОДОЛЖАЕТСЯ`
+            ];
+            // Occasionally add a monitoring message (low frequency to avoid spam)
+            if (Math.random() < 0.1) {
+                print(randomTerminal, '<span style="opacity: 0.6;">' + messages[Math.floor(Math.random() * messages.length)] + '</span>', 0);
+            }
+        }, 5000);
+
+        // Disable right-click (adds to the "trapped" feeling)
+        document.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            beep(300, 0.1, 0);
+            return false;
+        });
+
+        // Disable common shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Disable F12, Ctrl+Shift+I, Ctrl+Shift+J (dev tools)
+            if (e.keyCode === 123 || 
+                (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74)) ||
+                (e.metaKey && e.altKey && (e.keyCode === 73 || e.keyCode === 74))) {
+                e.preventDefault();
+                beep(300, 0.1, 0);
+                print('terminal2', '<span class="highlight glitch">⚠ Доступ к инструментам разработчика запрещен</span>', 0);
+                return false;
+            }
+        });
+
+        // Fake RAM/CPU monitoring
+        setTimeout(() => {
+            print('terminal2', '', 11000);
+            print('terminal2', '> 系统资源监控...', 11500);
+            print('terminal2', '<span class="indent">└─ RAM usage: ' + (Math.random() * 4 + 4).toFixed(2) + ' GB</span>', 12000);
+            print('terminal2', '<span class="indent">└─ CPU usage: ' + (Math.random() * 40 + 30).toFixed(1) + '%</span>', 12400);
+            print('terminal2', '<span class="indent">└─ Список процессов: ЗАХВАЧЕН</span>', 12800);
+            print('terminal2', '<span class="highlight">运行应用程序已记录</span>', 13300);
+        }, 11000);
+    </script>
+</body>
+</html>
