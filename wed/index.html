@@ -1,229 +1,314 @@
-<!doctype html>
-<html lang="zh-Hant">
-	<head>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<title>顯示並下載 C++ 程式碼</title>
-		<style>
-			:root {
-				--bg: #0d1117;
-				--panel: #161b22;
-				--border: #30363d;
-				--text: #c9d1d9;
-				--muted: #8b949e;
-				--accent: #2f81f7;
-				--accent-press: #1f6feb;
-				--success: #2ea043;
-				--radius: 12px;
-				--mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-			}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C++ Code Viewer | receiver.cpp</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        /* MD3 Inspired Custom Styles */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f2fa; /* Surface Container Low */
+            color: #1d1b20; /* On Surface */
+        }
 
-			html, body {
-				height: 100%;
-				margin: 0;
-				background: var(--bg);
-				color: var(--text);
-				font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
-			}
+        .main-card {
+            background-color: #fffbfe; /* Surface */
+            border: 1px solid #e7e0ec; /* Outline Variant */
+            border-radius: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.1);
+        }
+        
+        pre {
+            background-color: #f3edf7; /* Surface Container */
+            border-radius: 12px;
+            font-family: 'Roboto Mono', monospace;
+            border: 1px solid #e7e0ec; /* Outline Variant */
+        }
 
-			.page {
-				max-width: 960px;
-				margin: 24px auto;
-				padding: 0 16px 48px;
-			}
+        .action-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 24px;
+            border-radius: 20px;
+            font-weight: 500;
+            font-size: 14px;
+            transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            cursor: pointer;
+            border: 1px solid #79747e; /* Outline */
+            color: #6750a4; /* Primary */
+            background-color: #fffbfe; /* Surface */
+        }
+        
+        .action-button:hover {
+            background-color: #eaddf9; /* Primary Container, but lighter */
+        }
 
-			.header {
-				display: flex;
-				align-items: center;
-				justify-content: space-between;
-				gap: 12px;
-				margin-bottom: 12px;
-			}
+        .action-button:active {
+            background-color: #e0d1f5;
+        }
 
-			.title {
-				font-size: 18px;
-				color: var(--muted);
-				margin: 0;
-			}
+        .action-button svg {
+            width: 18px;
+            height: 18px;
+            fill: #6750a4; /* Primary */
+        }
+        
+        .header {
+            color: #49454f; /* On Surface Variant */
+            font-family: 'Roboto Mono', monospace;
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-6 md:p-8 flex items-center justify-center min-h-screen">
 
-			.toolbar {
-				display: flex;
-				gap: 8px;
-			}
+    <div class="main-card w-full max-w-4xl mx-auto overflow-hidden">
+        <!-- Header Section -->
+        <div class="p-4 sm:p-6 border-b border-gray-200 flex justify-between items-center bg-gray-50 rounded-t-2xl">
+            <h1 class="header text-lg">receiver.cpp</h1>
+            <div class="flex items-center space-x-2">
+                <button id="copy-btn" class="action-button">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"></path></svg>
+                    <span id="copy-text">Copy</span>
+                </button>
+                <button id="download-btn" class="action-button">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path></svg>
+                    <span>Download</span>
+                </button>
+            </div>
+        </div>
 
-			button {
-				appearance: none;
-				border: 1px solid var(--border);
-				background: var(--panel);
-				color: var(--text);
-				padding: 8px 12px;
-				border-radius: 8px;
-				font: inherit;
-				cursor: pointer;
-				transition: background .15s ease, border-color .15s ease, transform .02s ease;
-			}
-			button:hover { border-color: var(--accent); }
-			button:active { transform: translateY(1px); }
-			.primary { background: var(--accent); border-color: var(--accent); }
-			.primary:hover { background: var(--accent-press); border-color: var(--accent-press); }
+        <!-- Code Content -->
+        <div class="p-4 sm:p-6">
+            <pre class="overflow-x-auto p-4 text-sm"><code id="code-content"></code></pre>
+        </div>
+    </div>
+    
+    <script>
+        // --- The C++ code content from receiver.cpp ---
+        const cppCode = `#include <iostream>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <unistd.h>
+#include <cstring>
+#include <wiringPi.h>
+#include <fcntl.h>
+#include <chrono>
 
-			.code-card {
-				border: 1px solid var(--border);
-				border-radius: var(--radius);
-				overflow: hidden;
-				background: var(--panel);
-				box-shadow: 0 0 0 1px rgba(0,0,0,0.05), 0 8px 24px rgba(0,0,0,0.2);
-			}
+using namespace std;
+using namespace std::chrono;
 
-			pre {
-				margin: 0;
-				padding: 16px;
-				overflow: auto;
-				background: transparent;
-			}
-					code {
-						font-family: var(--mono);
-						font-size: 14px;
-						line-height: 1.55;
-						color: var(--text);
-						white-space: pre-wrap; /* 保留換行並允許自動換行 */
-						tab-size: 4;
-					}
+const int port = 8080;
+const int led = 5;     // GPIO5
 
-			.footer-hint {
-				color: var(--muted);
-				font-size: 13px;
-				margin-top: 12px;
-			}
-		</style>
-	</head>
-	<body>
-		<div class="page">
-			<div class="header">
-				<h1 class="title">pwmled.cpp</h1>
-				<div class="toolbar">
-					<button id="copyBtn" title="Copy to clipboard">Copy</button>
-					<button id="downloadBtn" class="primary" title="Download as pwmled.cpp">Download pwmled.cpp</button>
-				</div>
-			</div>
+void clear(char moss[], int arr_size) {
+    for (int i = 0; i < arr_size; i++) {
+        moss[i] = '\\0';
+    }
+}
 
-			<div class="code-card">
-				<pre><code id="code-block" class="language-cpp"></code></pre>
-			</div>
+char checkMorse(char moss[]) {
+    // 修改此function，轉換摩斯密碼為英文或數字
+    
+    if (strcmp(moss, ".-") == 0) return 'A';
+    else if (strcmp(moss, "-...") == 0) return 'B';
+    else if (strcmp(moss, "-.-.") == 0) return 'C';
+    else if (strcmp(moss, "-..") == 0) return 'D';
+    else if (strcmp(moss, ".") == 0) return 'E';
+    else if (strcmp(moss, "..-.") == 0) return 'F';
+    else if (strcmp(moss, "--.") == 0) return 'G';
+    else if (strcmp(moss, "....") == 0) return 'H';
+    else if (strcmp(moss, "..") == 0) return 'I';
+    else if (strcmp(moss, ".---") == 0) return 'J';
+    else if (strcmp(moss, "-.-") == 0) return 'K';
+    else if (strcmp(moss, ".-..") == 0) return 'L';
+    else if (strcmp(moss, "--") == 0) return 'M';
+    else if (strcmp(moss, "-.") == 0) return 'N';
+    else if (strcmp(moss, "---") == 0) return 'O';
+    else if (strcmp(moss, ".--.") == 0) return 'P';
+    else if (strcmp(moss, "--.-") == 0) return 'Q';
+    else if (strcmp(moss, ".-.") == 0) return 'R';
+    else if (strcmp(moss, "...") == 0) return 'S';
+    else if (strcmp(moss, "-") == 0) return 'T';
+    else if (strcmp(moss, "..-") == 0) return 'U';
+    else if (strcmp(moss, "...-") == 0) return 'V';
+    else if (strcmp(moss, ".--") == 0) return 'W';
+    else if (strcmp(moss, "-..-") == 0) return 'X';
+    else if (strcmp(moss, "-.--") == 0) return 'Y';
+    else if (strcmp(moss, "--..") == 0) return 'Z';
+    else if (strcmp(moss, ".----") == 0) return '1';
+    else if (strcmp(moss, "..---") == 0) return '2';
+    else if (strcmp(moss, "...--") == 0) return '3';
+    else if (strcmp(moss, "....-") == 0) return '4';
+    else if (strcmp(moss, ".....") == 0) return '5';
+    else if (strcmp(moss, "-....") == 0) return '6';
+    else if (strcmp(moss, "--...") == 0) return '7';
+    else if (strcmp(moss, "---..") == 0) return '8';
+    else if (strcmp(moss, "----.") == 0) return '9';
+    else if (strcmp(moss, "-----") == 0) return '0';
+    else return '\\0';
+}
 
-			<p class="footer-hint">提示：點擊 Copy 可複製整段程式碼；Download 會下載名為 <strong>pwmled.cpp</strong> 的檔案。</p>
-		</div>
+int main() {
+    int server_fd, new_socket;
+    struct sockaddr_in address;
+    int opt = 1;
+    int addrlen = sizeof(address);
+    char buffer[2] = {0};
+    
+    if (wiringPiSetup() == -1) {
+        printf("\\033[1;31mFailed to setup WiringPi.\\033[0m\\n");
+        fflush(stdout);
+        return 0;
+    }
 
-		<!-- 將原始 C++ 程式碼放在 text/plain 的腳本中，避免 HTML 轉譯問題 -->
-		<script id="code-src" type="text/plain">//
-	// PWM LED
-	//
-	#include &lt;iostream&gt;
-	#include &lt;wiringPi.h&gt;
-	#include &lt;softPwm.h&gt;
+    pinMode(led, OUTPUT);
 
-	using namespace std;
+    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
+        printf("\\033[1;31mSocket failed.\\033[0m\\n");
+        fflush(stdout);
+        exit(1);
+    }
 
-	const int led = 1;
+    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt))) {
+        printf("\\033[1;31msetsockopt failed.\\033[0m\\n");
+        fflush(stdout);
+        exit(1);
+    }
+    address.sin_family = AF_INET;
+    address.sin_addr.s_addr = INADDR_ANY;
+    address.sin_port = htons(port);
 
-	int main(void) {
-		if (wiringPiSetup() == -1) {
-			return 0;
-		}
+    if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
+        printf("\\033[1;31mBind failed.\\033[0m\\n");
+        fflush(stdout);
+        exit(1);
+    }
 
-		softPwmCreate(led, 0, 100);
+    if (listen(server_fd, 3) < 0) {
+        printf("\\033[1;31mListen failed.\\033[0m\\n");
+        fflush(stdout);
+        exit(1);
+    }
 
-		while (1) {
-			for (int val = 0; val &lt;= 100; val++) {
-				softPwmWrite(led, val);
-				delay(20);
-			}
+    cout << "Waiting for connection...\\n";
+    if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t *)&addrlen)) < 0) {
+        printf("\\033[1;31mAccept failed.\\033[0m\\n");
+        fflush(stdout);
+        exit(1);
+    }
 
-			for (int val = 100; val &gt;= 0; val--) {
-				softPwmWrite(led, val);
-				delay(20);
-			}
-		}
+    fcntl(new_socket, F_SETFL, O_NONBLOCK);
 
-		return 1;
-	}
-	</script>
+    printf("\\033[1;32mConnection established.\\033[0m\\n");
 
-		<script>
-					(function () {
-						const codeEl = document.getElementById('code-block');
-						const srcEl = document.getElementById('code-src');
-						const copyBtn = document.getElementById('copyBtn');
-						const downloadBtn = document.getElementById('downloadBtn');
+    bool buttonPressed = false;
+    time_point<system_clock> pressTime, releaseTime;
+    int arr_size = 6, count = 0;
+    char moss[arr_size] = {'\\0'};
+    char ans = '\\0';
 
-						let code = '';
+    while (1) {
+        int valread = read(new_socket, buffer, sizeof(buffer));
+        if (valread > 0) {
+            if (buffer[0] == '1' && !buttonPressed) {  // 按鈕被按下
+                buttonPressed = true;
+                pressTime = system_clock::now();
+                digitalWrite(led, 1);   // LED 亮
+            } else if (buffer[0] == '0' && buttonPressed) {  // 按鈕被釋放
+                buttonPressed = false;
+                releaseTime = system_clock::now();
+                digitalWrite(led, 0);   // LED 滅
 
-						function setCode(text) {
-							code = (text || '').replace(/\n$/, '');
-							codeEl.innerText = code; // 保留換行
-						}
+                auto duration = duration_cast<milliseconds>(releaseTime - pressTime).count();
 
-						function setBusy(btn, label, ms = 1200) {
-					const prev = btn.textContent;
-					btn.textContent = label;
-					btn.disabled = true;
-					setTimeout(() => { btn.textContent = prev; btn.disabled = false; }, ms);
-				}
+                if (duration < 200) {    // 小於 200ms 視為短按（dot）
+                    moss[count] = '.';   // dot(.)
+                    printf(".");
+                    count++;
+                } else {                 // 大於等於 200ms 視為長按（dash）
+                    moss[count] = '-';   // dash(-)
+                    printf("-");
+                    count++;
+                }
+                fflush(stdout);
+            }
+        }
 
-				async function copyToClipboard(text) {
-					try {
-						if (navigator.clipboard && window.isSecureContext) {
-							await navigator.clipboard.writeText(text);
-							return true;
-						}
-						// 非安全脈絡或權限不足時的降級方案
-						const textarea = document.createElement('textarea');
-						textarea.value = text;
-						textarea.style.position = 'fixed';
-						textarea.style.top = '-1000px';
-						document.body.appendChild(textarea);
-						textarea.focus();
-						textarea.select();
-						const ok = document.execCommand('copy');
-						document.body.removeChild(textarea);
-						return ok;
-					} catch (err) {
-						return false;
-					}
-				}
+        // 檢查是否超過1秒無新輸入來確定結束
+        auto currentTime = system_clock::now();
+        auto idleDuration = duration_cast<milliseconds>(currentTime - releaseTime).count();
+        
+        if (!buttonPressed && idleDuration > 500 && count > 0) {
+            ans = checkMorse(moss);
+            if (ans != '\\0') {
+                printf(" -> %c\\n", ans);
+            } else {
+                printf("\\nInvalid Morse code sequence.\\n");
+            }
+            fflush(stdout);
+            clear(moss, arr_size);
+            count = 0;
+        }
 
-						copyBtn.addEventListener('click', async () => {
-					const ok = await copyToClipboard(code);
-					setBusy(copyBtn, ok ? 'Copied!' : 'Copy failed');
-				});
+        if (!buttonPressed && idleDuration > 800 && count > 0) {
+            printf(" ", ans);
+            fflush(stdout);
 
-				downloadBtn.addEventListener('click', () => {
-					const blob = new Blob([code], { type: 'text/plain;charset=utf-8' });
-					const url = URL.createObjectURL(blob);
-					const a = document.createElement('a');
-					a.href = url;
-					a.download = 'pwmled.cpp';
-					document.body.appendChild(a);
-					a.click();
-					a.remove();
-					setTimeout(() => URL.revokeObjectURL(url), 1000);
-					setBusy(downloadBtn, 'Downloading...');
-				});
+        }
+    }
 
-						// 嘗試從同目錄動態載入最新的 temp.cpp；若失敗則回退到內嵌版本
-						(async () => {
-							try {
-								const url = 'pwmled.cpp?t=' + Date.now(); // cache-busting 確保拿到最新
-								const res = await fetch(url, { cache: 'no-store' });
-								if (!res.ok) throw new Error('HTTP ' + res.status);
-								const text = await res.text();
-								setCode(text);
-							} catch (e) {
-								// 多數情況是在 file:// 開啟，瀏覽器會阻擋 fetch，此時使用內嵌備援
-								setCode(srcEl.textContent);
-							}
-						})();
-			})();
-		</script>
-	</body>
+    close(new_socket);
+    close(server_fd);
+    return 0;
+}
+`;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const codeContentEl = document.getElementById('code-content');
+            const copyBtn = document.getElementById('copy-btn');
+            const copyTextEl = document.getElementById('copy-text');
+            const downloadBtn = document.getElementById('download-btn');
+
+            // Set the code content, ensuring HTML characters are not interpreted
+            codeContentEl.textContent = cppCode;
+
+            // --- Copy Button Logic ---
+            copyBtn.addEventListener('click', () => {
+                const textToCopy = codeContentEl.innerText;
+                const tempTextarea = document.createElement('textarea');
+                tempTextarea.value = textToCopy;
+                document.body.appendChild(tempTextarea);
+                tempTextarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(tempTextarea);
+                
+                // --- User feedback ---
+                copyTextEl.textContent = 'Copied!';
+                setTimeout(() => {
+                    copyTextEl.textContent = 'Copy';
+                }, 2000);
+            });
+
+            // --- Download Button Logic ---
+            downloadBtn.addEventListener('click', () => {
+                const blob = new Blob([cppCode], { type: 'text/x-c++src' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'receiver.cpp';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            });
+        });
+    </script>
+</body>
 </html>
