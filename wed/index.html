@@ -3,31 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>C++ Code Viewer | receiver.cpp</title>
+    <title>Code Viewer | Morse Code Project Cheatsheet</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
-        /* MD3 Inspired Custom Styles */
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f7f2fa; /* Surface Container Low */
-            color: #1d1b20; /* On Surface */
+            background-color: #f7f2fa;
+            color: #1d1b20;
         }
 
         .main-card {
-            background-color: #fffbfe; /* Surface */
-            border: 1px solid #e7e0ec; /* Outline Variant */
+            background-color: #fffbfe;
+            border: 1px solid #e7e0ec;
             border-radius: 16px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.1);
         }
         
         pre {
-            background-color: #f3edf7; /* Surface Container */
+            background-color: #f3edf7;
             border-radius: 12px;
             font-family: 'Roboto Mono', monospace;
-            border: 1px solid #e7e0ec; /* Outline Variant */
+            border: 1px solid #e7e0ec;
         }
 
         .action-button {
@@ -39,30 +38,96 @@
             border-radius: 20px;
             font-weight: 500;
             font-size: 14px;
-            transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            transition: background-color 0.2s ease-in-out;
             cursor: pointer;
-            border: 1px solid #79747e; /* Outline */
-            color: #6750a4; /* Primary */
-            background-color: #fffbfe; /* Surface */
+            border: 1px solid #79747e;
+            color: #6750a4;
+            background-color: #fffbfe;
         }
         
         .action-button:hover {
-            background-color: #eaddf9; /* Primary Container, but lighter */
-        }
-
-        .action-button:active {
-            background-color: #e0d1f5;
+            background-color: #eaddf9;
         }
 
         .action-button svg {
             width: 18px;
             height: 18px;
-            fill: #6750a4; /* Primary */
+            fill: #6750a4;
         }
         
         .header {
-            color: #49454f; /* On Surface Variant */
+            color: #49454f;
             font-family: 'Roboto Mono', monospace;
+        }
+
+        .tab-button {
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: 500;
+            font-size: 14px;
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+            border: none;
+            background-color: transparent;
+            color: #49454f;
+        }
+
+        .tab-button.active {
+            background-color: #e8def8;
+            color: #6750a4;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .command-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px;
+            background-color: #f3edf7;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border: 1px solid #e7e0ec;
+        }
+
+        .command-text {
+            flex: 1;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 14px;
+            color: #1d1b20;
+            word-break: break-all;
+        }
+
+        .copy-command-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-weight: 500;
+            font-size: 12px;
+            transition: background-color 0.2s ease-in-out;
+            cursor: pointer;
+            border: 1px solid #79747e;
+            color: #6750a4;
+            background-color: #fffbfe;
+            white-space: nowrap;
+        }
+
+        .copy-command-btn:hover {
+            background-color: #eaddf9;
+        }
+
+        .copy-command-btn svg {
+            width: 16px;
+            height: 16px;
+            fill: #6750a4;
         }
     </style>
 </head>
@@ -70,9 +135,28 @@
 
     <div class="main-card w-full max-w-4xl mx-auto overflow-hidden">
         <!-- Header Section -->
-        <div class="p-4 sm:p-6 border-b border-gray-200 flex justify-between items-center bg-gray-50 rounded-t-2xl">
-            <h1 class="header text-lg">receiver.cpp</h1>
-            <div class="flex items-center space-x-2">
+        <div class="p-4 sm:p-6 border-b border-gray-200 bg-gray-50 rounded-t-2xl">
+            <div class="flex justify-between items-center mb-4">
+                <h1 class="header text-lg" id="file-title">receiver.py</h1>
+                <div class="flex items-center space-x-2">
+                    <button id="tab-code" class="tab-button active">Code</button>
+                    <button id="tab-commands" class="tab-button">Commands</button>
+                </div>
+            </div>
+            
+            <!-- File Selector -->
+            <div id="file-selector" class="mb-4">
+                <label class="text-sm text-gray-600 mr-3">Select File:</label>
+                <select id="file-select" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    <option value="receiver-py">receiver.py</option>
+                    <option value="receiver-sos">receiver_with_sos.cpp (🚨 SOS Feature)</option>
+                    <option value="sender-sos">sender_with_sos.cpp (🚨 SOS Feature)</option>
+                    <option value="sender">sender.cpp (Original)</option>
+                </select>
+            </div>
+            
+            <!-- Code View Actions -->
+            <div id="code-actions" class="flex items-center justify-end space-x-2">
                 <button id="copy-btn" class="action-button">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"></path></svg>
                     <span id="copy-text">Copy</span>
@@ -85,230 +169,71 @@
         </div>
 
         <!-- Code Content -->
-        <div class="p-4 sm:p-6">
+        <div id="code-content-section" class="tab-content active p-4 sm:p-6">
             <pre class="overflow-x-auto p-4 text-sm"><code id="code-content"></code></pre>
+        </div>
+
+        <!-- Commands Content -->
+        <div id="commands-content-section" class="tab-content p-4 sm:p-6">
+            <div class="command-item">
+                <div class="command-text">git clone https://github.com/jason89923/lab08.git</div>
+                <button class="copy-command-btn" data-command="git clone https://github.com/jason89923/lab08.git">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"></path></svg>
+                </button>
+            </div>
+
+            <div class="command-item">
+                <div class="command-text">g++ sender_with_sos.cpp -o sender -lwiringPi</div>
+                <button class="copy-command-btn" data-command="g++ sender_with_sos.cpp -o sender -lwiringPi">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"></path></svg>
+                </button>
+            </div>
+
+            <div class="command-item">
+                <div class="command-text">g++ receiver_with_sos.cpp -o receiver -lwiringPi</div>
+                <button class="copy-command-btn" data-command="g++ receiver_with_sos.cpp -o receiver -lwiringPi">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"></path></svg>
+                </button>
+            </div>
+
+            <div class="command-item">
+                <div class="command-text">pip install flask_cors --break-system-packages</div>
+                <button class="copy-command-btn" data-command="pip install flask_cors --break-system-packages">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"></path></svg>
+                </button>
+            </div>
+
+            <div class="command-item">
+                <div class="command-text">pip install flask_socketio --break-system-packages</div>
+                <button class="copy-command-btn" data-command="pip install flask_socketio --break-system-packages">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"></path></svg>
+                </button>
+            </div>
+
+            <div class="command-item">
+                <div class="command-text">python3 receiver.py</div>
+                <button class="copy-command-btn" data-command="python3 receiver.py">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"></path></svg>
+                </button>
+            </div>
+
+            <div class="command-item">
+                <div class="command-text">./receiver</div>
+                <button class="copy-command-btn" data-command="./receiver">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"></path></svg>
+                </button>
+            </div>
+
+            <div class="command-item">
+                <div class="command-text">./sender</div>
+                <button class="copy-command-btn" data-command="./sender">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"></path></svg>
+                </button>
+            </div>
         </div>
     </div>
     
-    <script>
-        // --- The C++ code content from receiver.cpp ---
-        const cppCode = `#include <iostream>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <unistd.h>
-#include <cstring>
-#include <wiringPi.h>
-#include <fcntl.h>
-#include <chrono>
-
-using namespace std;
-using namespace std::chrono;
-
-const int port = 8080;
-const int led = 5;     // GPIO5
-
-void clear(char moss[], int arr_size) {
-    for (int i = 0; i < arr_size; i++) {
-        moss[i] = '\\0';
-    }
-}
-
-char checkMorse(char moss[]) {
-    // 修改此function，轉換摩斯密碼為英文或數字
-    
-    if (strcmp(moss, ".-") == 0) return 'A';
-    else if (strcmp(moss, "-...") == 0) return 'B';
-    else if (strcmp(moss, "-.-.") == 0) return 'C';
-    else if (strcmp(moss, "-..") == 0) return 'D';
-    else if (strcmp(moss, ".") == 0) return 'E';
-    else if (strcmp(moss, "..-.") == 0) return 'F';
-    else if (strcmp(moss, "--.") == 0) return 'G';
-    else if (strcmp(moss, "....") == 0) return 'H';
-    else if (strcmp(moss, "..") == 0) return 'I';
-    else if (strcmp(moss, ".---") == 0) return 'J';
-    else if (strcmp(moss, "-.-") == 0) return 'K';
-    else if (strcmp(moss, ".-..") == 0) return 'L';
-    else if (strcmp(moss, "--") == 0) return 'M';
-    else if (strcmp(moss, "-.") == 0) return 'N';
-    else if (strcmp(moss, "---") == 0) return 'O';
-    else if (strcmp(moss, ".--.") == 0) return 'P';
-    else if (strcmp(moss, "--.-") == 0) return 'Q';
-    else if (strcmp(moss, ".-.") == 0) return 'R';
-    else if (strcmp(moss, "...") == 0) return 'S';
-    else if (strcmp(moss, "-") == 0) return 'T';
-    else if (strcmp(moss, "..-") == 0) return 'U';
-    else if (strcmp(moss, "...-") == 0) return 'V';
-    else if (strcmp(moss, ".--") == 0) return 'W';
-    else if (strcmp(moss, "-..-") == 0) return 'X';
-    else if (strcmp(moss, "-.--") == 0) return 'Y';
-    else if (strcmp(moss, "--..") == 0) return 'Z';
-    else if (strcmp(moss, ".----") == 0) return '1';
-    else if (strcmp(moss, "..---") == 0) return '2';
-    else if (strcmp(moss, "...--") == 0) return '3';
-    else if (strcmp(moss, "....-") == 0) return '4';
-    else if (strcmp(moss, ".....") == 0) return '5';
-    else if (strcmp(moss, "-....") == 0) return '6';
-    else if (strcmp(moss, "--...") == 0) return '7';
-    else if (strcmp(moss, "---..") == 0) return '8';
-    else if (strcmp(moss, "----.") == 0) return '9';
-    else if (strcmp(moss, "-----") == 0) return '0';
-    else return '\\0';
-}
-
-int main() {
-    int server_fd, new_socket;
-    struct sockaddr_in address;
-    int opt = 1;
-    int addrlen = sizeof(address);
-    char buffer[2] = {0};
-    
-    if (wiringPiSetup() == -1) {
-        printf("\\033[1;31mFailed to setup WiringPi.\\033[0m\\n");
-        fflush(stdout);
-        return 0;
-    }
-
-    pinMode(led, OUTPUT);
-
-    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
-        printf("\\033[1;31mSocket failed.\\033[0m\\n");
-        fflush(stdout);
-        exit(1);
-    }
-
-    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt))) {
-        printf("\\033[1;31msetsockopt failed.\\033[0m\\n");
-        fflush(stdout);
-        exit(1);
-    }
-    address.sin_family = AF_INET;
-    address.sin_addr.s_addr = INADDR_ANY;
-    address.sin_port = htons(port);
-
-    if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
-        printf("\\033[1;31mBind failed.\\033[0m\\n");
-        fflush(stdout);
-        exit(1);
-    }
-
-    if (listen(server_fd, 3) < 0) {
-        printf("\\033[1;31mListen failed.\\033[0m\\n");
-        fflush(stdout);
-        exit(1);
-    }
-
-    cout << "Waiting for connection...\\n";
-    if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t *)&addrlen)) < 0) {
-        printf("\\033[1;31mAccept failed.\\033[0m\\n");
-        fflush(stdout);
-        exit(1);
-    }
-
-    fcntl(new_socket, F_SETFL, O_NONBLOCK);
-
-    printf("\\033[1;32mConnection established.\\033[0m\\n");
-
-    bool buttonPressed = false;
-    time_point<system_clock> pressTime, releaseTime;
-    int arr_size = 6, count = 0;
-    char moss[arr_size] = {'\\0'};
-    char ans = '\\0';
-
-    while (1) {
-        int valread = read(new_socket, buffer, sizeof(buffer));
-        if (valread > 0) {
-            if (buffer[0] == '1' && !buttonPressed) {  // 按鈕被按下
-                buttonPressed = true;
-                pressTime = system_clock::now();
-                digitalWrite(led, 1);   // LED 亮
-            } else if (buffer[0] == '0' && buttonPressed) {  // 按鈕被釋放
-                buttonPressed = false;
-                releaseTime = system_clock::now();
-                digitalWrite(led, 0);   // LED 滅
-
-                auto duration = duration_cast<milliseconds>(releaseTime - pressTime).count();
-
-                if (duration < 200) {    // 小於 200ms 視為短按（dot）
-                    moss[count] = '.';   // dot(.)
-                    printf(".");
-                    count++;
-                } else {                 // 大於等於 200ms 視為長按（dash）
-                    moss[count] = '-';   // dash(-)
-                    printf("-");
-                    count++;
-                }
-                fflush(stdout);
-            }
-        }
-
-        // 檢查是否超過1秒無新輸入來確定結束
-        auto currentTime = system_clock::now();
-        auto idleDuration = duration_cast<milliseconds>(currentTime - releaseTime).count();
-        
-        if (!buttonPressed && idleDuration > 500 && count > 0) {
-            ans = checkMorse(moss);
-            if (ans != '\\0') {
-                printf(" -> %c\\n", ans);
-            } else {
-                printf("\\nInvalid Morse code sequence.\\n");
-            }
-            fflush(stdout);
-            clear(moss, arr_size);
-            count = 0;
-        }
-
-        if (!buttonPressed && idleDuration > 800 && count > 0) {
-            printf(" ", ans);
-            fflush(stdout);
-
-        }
-    }
-
-    close(new_socket);
-    close(server_fd);
-    return 0;
-}
-`;
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const codeContentEl = document.getElementById('code-content');
-            const copyBtn = document.getElementById('copy-btn');
-            const copyTextEl = document.getElementById('copy-text');
-            const downloadBtn = document.getElementById('download-btn');
-
-            // Set the code content, ensuring HTML characters are not interpreted
-            codeContentEl.textContent = cppCode;
-
-            // --- Copy Button Logic ---
-            copyBtn.addEventListener('click', () => {
-                const textToCopy = codeContentEl.innerText;
-                const tempTextarea = document.createElement('textarea');
-                tempTextarea.value = textToCopy;
-                document.body.appendChild(tempTextarea);
-                tempTextarea.select();
-                document.execCommand('copy');
-                document.body.removeChild(tempTextarea);
-                
-                // --- User feedback ---
-                copyTextEl.textContent = 'Copied!';
-                setTimeout(() => {
-                    copyTextEl.textContent = 'Copy';
-                }, 2000);
-            });
-
-            // --- Download Button Logic ---
-            downloadBtn.addEventListener('click', () => {
-                const blob = new Blob([cppCode], { type: 'text/x-c++src' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'receiver.cpp';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            });
-        });
-    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="cheatsheet-data.js"></script>
 </body>
 </html>
