@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Billing Dashboard</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    <style>
+        /* Custom styles for a modern look */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5; /* Light gray background */
+        }
+        .card {
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .btn-primary {
+            background-color: #4f46e5;
+            color: white;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            transition: background-color 0.2s;
+        }
+        .btn-primary:hover {
+            background-color: #4338ca;
+        }
+        /* Custom scrollbar for transaction list */
+        .transaction-list::-webkit-scrollbar {
+            width: 8px;
+        }
+        .transaction-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        .transaction-list::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        .transaction-list::-webkit-scrollbar-thumb:hover {
+            background: #a0aec0;
+        }
+        .sort-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: background-color 0.2s, color 0.2s;
+            border: 1px solid #e2e8f0;
+        }
+        .sort-btn.active {
+            background-color: #4f46e5;
+            color: white;
+            border-color: #4f46e5;
+        }
+        .sort-btn:not(.active) {
+            background-color: white;
+            color: #475569;
+        }
+         .sort-btn:not(.active):hover {
+            background-color: #f8fafc;
+        }
+    </style>
+</head>
+<body class="antialiased text-slate-700">
+    <div class="min-h-screen p-4 sm:p-6 lg:p-8">
+        <div class="max-w-7xl mx-auto">
+            <!-- Header section -->
+            <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+                <div>
+                    <h1 class="text-3xl font-bold text-slate-800">Billing Dashboard</h1>
+                    <p class="text-slate-500 mt-1">An overview of your financial activity.</p>
+                </div>
+                <div class="flex items-center gap-4">
+                     <input type="file" id="fileInput" accept=".json" class="hidden">
+                     <button id="importButton" class="btn-primary flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        Import JSON
+                     </button>
+                </div>
+            </header>
+
+            <!-- Placeholder for before data is loaded -->
+            <div id="placeholder" class="text-center py-20">
+                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="mx-auto text-slate-400 mb-4"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h16"/><path d="M16 14h-4"/><path d="M14 12v4"/><path d="M12 6h.01"/><path d="M16 6h.01"/><path d="M12 10h.01"/><path d="M16 10h.01"/></svg>
+                <h2 class="text-xl font-semibold text-slate-600">No Data Loaded</h2>
+                <p class="text-slate-500 mt-2">Please import your billing JSON file to view the dashboard.</p>
+            </div>
+
+            <!-- Main dashboard content (hidden by default) -->
+            <main id="dashboardContent" class="hidden space-y-6">
+                 <!-- Metric Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="card p-6">
+                        <label for="monthlyAllowance" class="text-sm font-medium text-slate-500">Monthly Allowance</label>
+                        <div class="relative mt-1">
+                            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                <span class="text-slate-500 sm:text-sm">$</span>
+                            </div>
+                            <input type="number" id="monthlyAllowance" class="block w-full rounded-md border-0 py-2 pl-7 pr-2 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm" placeholder="0.00">
+                        </div>
+                    </div>
+                    <div id="totalBalanceCard" class="card p-6 flex items-start justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-slate-500">Total Balance</p>
+                            <p id="totalBalance" class="text-3xl font-bold text-slate-800 mt-1">$0.00</p>
+                        </div>
+                        <div class="p-3 bg-indigo-100 rounded-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                        </div>
+                    </div>
+                     <div id="totalExpenseCard" class="card p-6 flex items-start justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-slate-500">Total Expense</p>
+                            <p id="totalExpense" class="text-3xl font-bold text-red-600 mt-1">$0.00</p>
+                        </div>
+                         <div class="p-3 bg-red-100 rounded-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Monthly Breakdown Chart -->
+                <div class="card p-6">
+                    <h3 class="text-lg font-semibold text-slate-800 mb-4">Monthly Expense Breakdown</h3>
+                    <div class="h-80"><canvas id="monthlyChart"></canvas></div>
+                </div>
+
+                <!-- All Transactions -->
+                <div class="card p-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                        <h3 class="text-lg font-semibold text-slate-800">All Transactions</h3>
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm font-medium text-slate-500">Sort by:</span>
+                            <button id="sortByDateBtn" class="sort-btn active">Date</button>
+                            <button id="sortByAmountBtn" class="sort-btn">Price</button>
+                        </div>
+                    </div>
+                    <div class="h-96 overflow-y-auto transaction-list pr-2">
+                         <ul id="transactionList" class="space-y-4">
+                            <!-- Transactions will be injected here by JS -->
+                         </ul>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // DOM element references
+        const importButton = document.getElementById('importButton');
+        const fileInput = document.getElementById('fileInput');
+        const placeholder = document.getElementById('placeholder');
+        const dashboardContent = document.getElementById('dashboardContent');
+        const sortByDateBtn = document.getElementById('sortByDateBtn');
+        const sortByAmountBtn = document.getElementById('sortByAmountBtn');
+        const monthlyAllowanceInput = document.getElementById('monthlyAllowance');
+
+        // State
+        let monthlyChartInstance = null;
+        let allTransactions = [];
+        let currentSort = 'date';
+
+        // Auto-load bill.json on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            fetch('bill.json')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('bill.json not found');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (!Array.isArray(data)) throw new Error("JSON is not an array.");
+                    processAndDisplayData(data);
+                })
+                .catch(error => {
+                    console.log('bill.json not found or invalid, waiting for manual import.');
+                });
+        });
+
+        // Event listeners
+        importButton.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', handleFileSelect, false);
+        monthlyAllowanceInput.addEventListener('input', recalculateAndRedraw);
+        sortByDateBtn.addEventListener('click', () => sortAndRenderTransactions('date'));
+        sortByAmountBtn.addEventListener('click', () => sortAndRenderTransactions('amount'));
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (!Array.isArray(data)) throw new Error("JSON is not an array.");
+                    processAndDisplayData(data);
+                } catch (error) {
+                    console.error('Error parsing JSON file:', error);
+                    alert('Invalid JSON file. Please make sure the file is correctly formatted.');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function processAndDisplayData(transactions) {
+            // Filter out income transactions, keeping only expenses
+            allTransactions = transactions.filter(t => t.type === 'expense');
+            
+            placeholder.classList.add('hidden');
+            dashboardContent.classList.remove('hidden');
+
+            recalculateAndRedraw();
+            sortAndRenderTransactions('date'); // Initial sort and render
+        }
+        
+        function recalculateAndRedraw() {
+            if (allTransactions.length === 0) return;
+
+            const monthlyAllowance = parseFloat(monthlyAllowanceInput.value) || 0;
+            
+            const monthlyData = prepareMonthlyData(allTransactions);
+            const numberOfMonths = monthlyData.labels.length;
+            const totalAllowance = monthlyAllowance * numberOfMonths;
+
+            const totalExpense = allTransactions.reduce((sum, t) => sum + Math.abs(t.amount), 0);
+            const totalBalance = totalAllowance - totalExpense;
+            
+            updateMetrics(totalBalance, totalExpense);
+            createMonthlyChart(monthlyData);
+        }
+
+        function updateMetrics(balance, expense) {
+            const formatCurrency = (amount) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+            document.getElementById('totalBalance').textContent = formatCurrency(balance);
+            document.getElementById('totalExpense').textContent = formatCurrency(Math.abs(expense));
+        }
+        
+        function sortAndRenderTransactions(sortBy) {
+            currentSort = sortBy;
+
+            if (sortBy === 'date') {
+                allTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+            } else if (sortBy === 'amount') {
+                allTransactions.sort((a, b) => Math.abs(b.amount) - Math.abs(a.amount));
+            }
+            
+            updateSortButtons();
+            updateTransactionList(allTransactions);
+        }
+        
+        function updateSortButtons() {
+            if (currentSort === 'date') {
+                sortByDateBtn.classList.add('active');
+                sortByAmountBtn.classList.remove('active');
+            } else {
+                sortByDateBtn.classList.remove('active');
+                sortByAmountBtn.classList.add('active');
+            }
+        }
+
+        function updateTransactionList(transactions) {
+            const listElement = document.getElementById('transactionList');
+            listElement.innerHTML = '';
+
+            if (transactions.length === 0) {
+                 listElement.innerHTML = `<li class="text-slate-500 text-center py-4">No transactions found.</li>`;
+                 return;
+            }
+
+            const expenseIcon = `<div class="p-2 bg-red-100 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>`;
+
+            transactions.forEach(t => {
+                const li = document.createElement('li');
+                li.className = 'flex items-center justify-between gap-4';
+                li.innerHTML = `
+                    <div class="flex items-center gap-3 min-w-0">
+                        ${expenseIcon}
+                        <div class="min-w-0">
+                            <p class="font-medium text-slate-800 truncate">${t.description}</p>
+                            <p class="text-sm text-slate-500">${new Date(t.date).toLocaleString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                        </div>
+                    </div>
+                    <p class="font-semibold text-red-600 flex-shrink-0">$${Math.abs(t.amount).toFixed(2)}</p>
+                `;
+                listElement.appendChild(li);
+            });
+        }
+        
+        function prepareMonthlyData(transactions) {
+            const monthlyTotals = {};
+            transactions.forEach(t => {
+                const month = new Date(t.date).toLocaleString('default', { month: 'short', year: '2-digit' });
+                if (!monthlyTotals[month]) {
+                    monthlyTotals[month] = { expense: 0, date: new Date(t.date) };
+                }
+                monthlyTotals[month].expense += Math.abs(t.amount);
+            });
+
+            const sortedMonths = Object.keys(monthlyTotals).sort((a, b) => monthlyTotals[a].date - monthlyTotals[b].date);
+
+            return {
+                labels: sortedMonths,
+                expenseData: sortedMonths.map(month => monthlyTotals[month].expense),
+            };
+        }
+        
+        function createMonthlyChart(monthlyData) {
+            const ctx = document.getElementById('monthlyChart').getContext('2d');
+            if (monthlyChartInstance) monthlyChartInstance.destroy();
+            monthlyChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: monthlyData.labels,
+                    datasets: [
+                        {
+                            label: 'Expense',
+                            data: monthlyData.expenseData,
+                            backgroundColor: 'rgba(220, 38, 38, 0.6)',
+                            borderColor: 'rgba(220, 38, 38, 1)',
+                            borderWidth: 1,
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#e2e8f0' } },
+                        x: { grid: { display: false } }
+                    },
+                    plugins: { 
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
+
