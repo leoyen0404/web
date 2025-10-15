@@ -1,0 +1,608 @@
+[
+  {
+    "date": "2025-10-14",
+    "description": "飯糰",
+    "amount": -35,
+    "type": "expense"
+  },
+  {
+    "date": "2025-10-13",
+    "description": "麥當勞",
+    "amount": -50,
+    "type": "expense"
+  },
+  {
+    "date": "2025-10-13",
+    "description": "打拋豬蓋飯",
+    "amount": -100,
+    "type": "expense"
+  },
+  {
+    "date": "2025-10-09",
+    "description": "玉米蛋堡",
+    "amount": -40,
+    "type": "expense"
+  },
+  {
+    "date": "2025-10-07",
+    "description": "炒飯+菜",
+    "amount": -110,
+    "type": "expense"
+  },
+  {
+    "date": "2025-10-07",
+    "description": "麥當勞",
+    "amount": -50,
+    "type": "expense"
+  },
+  {
+    "date": "2025-10-07",
+    "description": "麵包",
+    "amount": -28,
+    "type": "expense"
+  },
+  {
+    "date": "2025-10-03",
+    "description": "拉麵",
+    "amount": -145,
+    "type": "expense"
+  },
+  {
+    "date": "2025-10-03",
+    "description": "麥當勞",
+    "amount": -50,
+    "type": "expense"
+  },
+  {
+    "date": "2025-10-02",
+    "description": "早午餐",
+    "amount": -95,
+    "type": "expense"
+  },
+  {
+    "date": "2025-10-01",
+    "description": "便當",
+    "amount": -95,
+    "type": "expense"
+  },
+  {
+    "date": "2025-10-01",
+    "description": "湯麵",
+    "amount": -55,
+    "type": "expense"
+  },
+  {
+    "date": "2025-10-01",
+    "description": "income",
+    "amount": 10000,
+    "type": "income"
+  },
+  {
+    "date": "2025-09-30",
+    "description": "鐵板bar",
+    "amount": -120,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-30",
+    "description": "飯糰",
+    "amount": -45,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-30",
+    "description": "蛋包飯",
+    "amount": -139,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-26",
+    "description": "麵包",
+    "amount": -25,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-26",
+    "description": "烤肉飯",
+    "amount": -95,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-26",
+    "description": "退票手續費",
+    "amount": -39,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-25",
+    "description": "燻雞蛋堡",
+    "amount": -60,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-24",
+    "description": "咖哩",
+    "amount": -100,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-24",
+    "description": "火鍋",
+    "amount": -140,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-23",
+    "description": "衛生紙 酒精 垃圾袋",
+    "amount": -193,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-23",
+    "description": "麵包 飯糰",
+    "amount": -64,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-22",
+    "description": "鍋燒意麵",
+    "amount": -90,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-21",
+    "description": "拌麵",
+    "amount": -40,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-21",
+    "description": "鐵板麵+bar",
+    "amount": -120,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-21",
+    "description": "蛋包飯",
+    "amount": -139,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-20",
+    "description": "果汁",
+    "amount": -65,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-19",
+    "description": "飯糰",
+    "amount": -39,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-18",
+    "description": "麵包",
+    "amount": -25,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-18",
+    "description": "鐵板麵 bar",
+    "amount": -120,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-18",
+    "description": "洗+烘",
+    "amount": -50,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-18",
+    "description": "薯餅堡",
+    "amount": -50,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-17",
+    "description": "飲料",
+    "amount": -19,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-17",
+    "description": "飯糰",
+    "amount": -25,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-17",
+    "description": "早午餐",
+    "amount": -120,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-16",
+    "description": "健檢",
+    "amount": -600,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-16",
+    "description": "肉燥麵",
+    "amount": -45,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-15",
+    "description": "炸排骨飯",
+    "amount": -100,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-15",
+    "description": "蛋包飯",
+    "amount": -139,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-14",
+    "description": "麥當勞",
+    "amount": -50,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-14",
+    "description": "全家",
+    "amount": -55,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-12",
+    "description": "飯糰",
+    "amount": -35,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-12",
+    "description": "烤肉飯",
+    "amount": -95,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-11",
+    "description": "飯糰",
+    "amount": -25,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-11",
+    "description": "蘑菇麵",
+    "amount": -45,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-11",
+    "description": "炒飯+菜",
+    "amount": -110,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-11",
+    "description": "果汁",
+    "amount": -35,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-10",
+    "description": "煎餃",
+    "amount": -60,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-10",
+    "description": "小火鍋",
+    "amount": -139,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-09",
+    "description": "早午餐",
+    "amount": -80,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-09",
+    "description": "鐵板燒",
+    "amount": -150,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-09",
+    "description": "飯糰",
+    "amount": -25,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-09",
+    "description": "電池",
+    "amount": -139,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-08",
+    "description": "炒飯",
+    "amount": -70,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-08",
+    "description": "麵包",
+    "amount": -28,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-08",
+    "description": "麵+菜",
+    "amount": -80,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-07",
+    "description": "鐵板燒",
+    "amount": -150,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-07",
+    "description": "蛋包飯",
+    "amount": -159,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-07",
+    "description": "麥當勞",
+    "amount": -50,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-03",
+    "description": "吉事蛋堡",
+    "amount": -35,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-03",
+    "description": "早午餐",
+    "amount": -100,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-03",
+    "description": "社費",
+    "amount": -450,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-03",
+    "description": "社費",
+    "amount": -500,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-02",
+    "description": "麵+菜",
+    "amount": -80,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-02",
+    "description": "吉事蛋堡",
+    "amount": -35,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-02",
+    "description": "烤肉飯",
+    "amount": -95,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-02",
+    "description": "小火鍋",
+    "amount": -135,
+    "type": "expense"
+  },
+  {
+    "date": "2025-09-01",
+    "description": "小籠包",
+    "amount": -70,
+    "type": "expense"
+  },
+  {
+    "date": "2025-08-31",
+    "description": "飯糰",
+    "amount": -35,
+    "type": "expense"
+  },
+  {
+    "date": "2025-08-31",
+    "description": "麥當勞",
+    "amount": -50,
+    "type": "expense"
+  },
+  {
+    "date": "2025-08-29",
+    "description": "蛋餅",
+    "amount": -25,
+    "type": "expense"
+  },
+  {
+    "date": "2025-08-29",
+    "description": "炒飯",
+    "amount": -100,
+    "type": "expense"
+  },
+  {
+    "date": "2025-08-29",
+    "description": "餅乾",
+    "amount": -25,
+    "type": "expense"
+  },
+  {
+    "date": "2025-08-29",
+    "description": "果汁",
+    "amount": -40,
+    "type": "expense"
+  },
+  {
+    "date": "2025-08-28",
+    "description": "咖哩",
+    "amount": -100,
+    "type": "expense"
+  },
+  {
+    "date": "2025-08-28",
+    "description": "飯糰",
+    "amount": -39,
+    "type": "expense"
+  },
+  {
+    "date": "2025-08-28",
+    "description": "乾麵+菜",
+    "amount": -110,
+    "type": "expense"
+  },
+  {
+    "date": "2025-08-27",
+    "description": "火鍋",
+    "amount": -150,
+    "type": "expense"
+  },
+  {
+    "date": "2025-08-27",
+    "description": "麥當勞",
+    "amount": -50,
+    "type": "expense"
+  },
+  {
+    "date": "2025-08-25",
+    "description": "飯糰",
+    "amount": -35,
+    "type": "expense"
+  },
+  {
+    "date": "2025-08-25",
+    "description": "鍋貼",
+    "amount": -70,
+    "type": "expense"
+  },
+  {
+    "date": "2025-08-25",
+    "description": "鐵板燒",
+    "amount": -150,
+    "type": "expense"
+  },
+  {
+    "date": "2025-08-24",
+    "description": "瓶子",
+    "amount": -59,
+    "type": "expense"
+  },
+  {
+    "date": "2025-08-24",
+    "description": "洗碗機",
+    "amount": -79,
+    "type": "expense"
+  },
+  {
+    "date": "2025-08-24",
+    "description": "洗衣粉",
+    "amount": -89,
+    "type": "expense"
+  },
+  {
+    "date": "2025-08-24",
+    "description": "飯糰",
+    "amount": -25,
+    "type": "expense"
+  },
+  {
+    "date": "2025-08-22",
+    "description": "蛋餅",
+    "amount": -40,
+    "type": "expense"
+  },
+  {
+    "date": "2025-08-22",
+    "description": "subway",
+    "amount": -128,
+    "type": "expense"
+  },
+  {
+    "date": "2025-08-21",
+    "description": "培根薯餅蛋吐司",
+    "amount": -60,
+    "type": "expense"
+  },
+  {
+    "date": "2025-08-21",
+    "description": "拌麵",
+    "amount": -80,
+    "type": "expense"
+  },
+  {
+    "date": "2025-08-20",
+    "description": "蛋餅",
+    "amount": -40,
+    "type": "expense"
+  },
+  {
+    "date": "2025-08-20",
+    "description": "拌麵",
+    "amount": -65,
+    "type": "expense"
+  },
+  {
+    "date": "2025-08-20",
+    "description": "炒飯",
+    "amount": -70,
+    "type": "expense"
+  },
+  {
+    "date": "2025-08-19",
+    "description": "咖喱飯+蛋餅(breakfast)",
+    "amount": -140,
+    "type": "expense"
+  },
+  {
+    "date": "2025-08-19",
+    "description": "拌麵",
+    "amount": -30,
+    "type": "expense"
+  },
+  {
+    "date": "2025-08-18",
+    "description": "蛋餅",
+    "amount": -40,
+    "type": "expense"
+  },
+  {
+    "date": "2025-08-18",
+    "description": "鍋貼",
+    "amount": -70,
+    "type": "expense"
+  },
+  {
+    "date": "2025-08-17",
+    "description": "蛋炒飯",
+    "amount": -60,
+    "type": "expense"
+  },
+  {
+    "date": "2025-08-17",
+    "description": "冰水",
+    "amount": -10,
+    "type": "expense"
+  }
+]
