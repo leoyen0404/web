@@ -1,0 +1,821 @@
+[
+  {
+    "id": 1761192996995,
+    "description": "早午餐",
+    "type": "expense",
+    "amount": -105,
+    "date": "2025-10-23"
+  },
+  {
+    "description": "早午餐",
+    "id": 1761100034044,
+    "amount": -89,
+    "type": "expense",
+    "date": "2025-10-22"
+  },
+  {
+    "id": 1761024015158,
+    "description": "餛飩麵",
+    "type": "expense",
+    "date": "2025-10-21",
+    "amount": -70
+  },
+  {
+    "description": "麥當勞",
+    "date": "2025-10-21",
+    "id": 1761047457979,
+    "type": "expense",
+    "amount": -50
+  },
+  {
+    "amount": -120,
+    "id": 1760957503240,
+    "date": "2025-10-20",
+    "type": "expense",
+    "description": "炒飯"
+  },
+  {
+    "description": "滷豬排蓋飯",
+    "amount": -95,
+    "date": "2025-10-20",
+    "id": 1760957543146,
+    "type": "expense"
+  },
+  {
+    "type": "expense",
+    "id": 1760849426991,
+    "description": "滷肉飯套餐",
+    "amount": -155,
+    "date": "2025-10-19"
+  },
+  {
+    "date": "2025-10-19",
+    "amount": -112,
+    "description": "潛艇堡+檸檬汁",
+    "id": 1760860974974,
+    "type": "expense"
+  },
+  {
+    "amount": -45,
+    "type": "expense",
+    "description": "三明治",
+    "id": 1760749328901,
+    "date": "2025-10-18"
+  },
+  {
+    "id": 1760749371027,
+    "description": "粥",
+    "type": "expense",
+    "date": "2025-10-18",
+    "amount": -75
+  },
+  {
+    "date": "2025-10-18",
+    "type": "expense",
+    "description": "鐵板麵",
+    "id": 1760797650621,
+    "amount": -120
+  },
+  {
+    "date": "2025-10-18",
+    "type": "expense",
+    "description": "飲料",
+    "id": 1760797663019,
+    "amount": -10
+  },
+  {
+    "amount": -139,
+    "id": 1760679680875,
+    "description": "蛋包飯",
+    "type": "expense",
+    "date": "2025-10-17"
+  },
+  {
+    "amount": -100,
+    "id": 1760679690288,
+    "date": "2025-10-17",
+    "description": "咖哩",
+    "type": "expense"
+  },
+  {
+    "type": "expense",
+    "amount": -95,
+    "description": "烤肉飯",
+    "date": "2025-10-16",
+    "id": 1760588598866
+  },
+  {
+    "amount": -50,
+    "type": "expense",
+    "id": 1760536604274,
+    "description": "水餃",
+    "date": "2025-10-15"
+  },
+  {
+    "type": "expense",
+    "description": "飯糰",
+    "id": "imported-1760536458481-0",
+    "date": "2025-10-14",
+    "amount": -35
+  },
+  {
+    "id": "imported-1760536458481-1",
+    "type": "expense",
+    "description": "麥當勞",
+    "date": "2025-10-13",
+    "amount": -50
+  },
+  {
+    "type": "expense",
+    "amount": -100,
+    "description": "打拋豬蓋飯",
+    "date": "2025-10-13",
+    "id": "imported-1760536458481-2"
+  },
+  {
+    "date": "2025-10-09",
+    "id": "imported-1760536458481-3",
+    "type": "expense",
+    "description": "玉米蛋堡",
+    "amount": -40
+  },
+  {
+    "date": "2025-10-07",
+    "type": "expense",
+    "id": "imported-1760536458481-4",
+    "amount": -110,
+    "description": "炒飯+菜"
+  },
+  {
+    "date": "2025-10-07",
+    "description": "麥當勞",
+    "id": "imported-1760536458481-5",
+    "type": "expense",
+    "amount": -50
+  },
+  {
+    "id": "imported-1760536458481-6",
+    "type": "expense",
+    "amount": -28,
+    "date": "2025-10-07",
+    "description": "麵包"
+  },
+  {
+    "date": "2025-10-03",
+    "amount": -145,
+    "description": "拉麵",
+    "type": "expense",
+    "id": "imported-1760536458481-7"
+  },
+  {
+    "description": "麥當勞",
+    "type": "expense",
+    "date": "2025-10-03",
+    "amount": -50,
+    "id": "imported-1760536458481-8"
+  },
+  {
+    "description": "早午餐",
+    "amount": -95,
+    "id": "imported-1760536458481-9",
+    "date": "2025-10-02",
+    "type": "expense"
+  },
+  {
+    "description": "便當",
+    "id": "imported-1760536458481-10",
+    "type": "expense",
+    "date": "2025-10-01",
+    "amount": -95
+  },
+  {
+    "id": "imported-1760536458481-11",
+    "type": "expense",
+    "amount": -55,
+    "description": "湯麵",
+    "date": "2025-10-01"
+  },
+  {
+    "description": "income",
+    "type": "income",
+    "amount": 10000,
+    "date": "2025-10-01",
+    "id": "imported-1760536458481-12"
+  },
+  {
+    "type": "expense",
+    "description": "鐵板bar",
+    "amount": -120,
+    "id": "imported-1760536458481-13",
+    "date": "2025-09-30"
+  },
+  {
+    "amount": -45,
+    "id": "imported-1760536458481-14",
+    "description": "飯糰",
+    "type": "expense",
+    "date": "2025-09-30"
+  },
+  {
+    "description": "蛋包飯",
+    "id": "imported-1760536458481-15",
+    "type": "expense",
+    "date": "2025-09-30",
+    "amount": -139
+  },
+  {
+    "date": "2025-09-26",
+    "amount": -25,
+    "type": "expense",
+    "description": "麵包",
+    "id": "imported-1760536458481-16"
+  },
+  {
+    "date": "2025-09-26",
+    "type": "expense",
+    "id": "imported-1760536458481-17",
+    "amount": -95,
+    "description": "烤肉飯"
+  },
+  {
+    "description": "退票手續費",
+    "amount": -39,
+    "date": "2025-09-26",
+    "id": "imported-1760536458481-18",
+    "type": "expense"
+  },
+  {
+    "id": "imported-1760536458481-19",
+    "description": "燻雞蛋堡",
+    "type": "expense",
+    "amount": -60,
+    "date": "2025-09-25"
+  },
+  {
+    "description": "咖哩",
+    "date": "2025-09-24",
+    "id": "imported-1760536458481-20",
+    "type": "expense",
+    "amount": -100
+  },
+  {
+    "amount": -140,
+    "id": "imported-1760536458481-21",
+    "type": "expense",
+    "date": "2025-09-24",
+    "description": "火鍋"
+  },
+  {
+    "amount": -193,
+    "date": "2025-09-23",
+    "type": "expense",
+    "description": "衛生紙 酒精 垃圾袋",
+    "id": "imported-1760536458481-22"
+  },
+  {
+    "type": "expense",
+    "id": "imported-1760536458481-23",
+    "amount": -64,
+    "description": "麵包 飯糰",
+    "date": "2025-09-23"
+  },
+  {
+    "type": "expense",
+    "amount": -90,
+    "date": "2025-09-22",
+    "id": "imported-1760536458481-24",
+    "description": "鍋燒意麵"
+  },
+  {
+    "description": "拌麵",
+    "amount": -40,
+    "id": "imported-1760536458481-25",
+    "date": "2025-09-21",
+    "type": "expense"
+  },
+  {
+    "amount": -120,
+    "id": "imported-1760536458481-26",
+    "date": "2025-09-21",
+    "description": "鐵板麵+bar",
+    "type": "expense"
+  },
+  {
+    "type": "expense",
+    "id": "imported-1760536458481-27",
+    "date": "2025-09-21",
+    "amount": -139,
+    "description": "蛋包飯"
+  },
+  {
+    "id": "imported-1760536458481-28",
+    "date": "2025-09-20",
+    "type": "expense",
+    "description": "果汁",
+    "amount": -65
+  },
+  {
+    "date": "2025-09-19",
+    "description": "飯糰",
+    "type": "expense",
+    "id": "imported-1760536458481-29",
+    "amount": -39
+  },
+  {
+    "date": "2025-09-18",
+    "description": "麵包",
+    "id": "imported-1760536458481-30",
+    "amount": -25,
+    "type": "expense"
+  },
+  {
+    "description": "鐵板麵 bar",
+    "amount": -120,
+    "date": "2025-09-18",
+    "type": "expense",
+    "id": "imported-1760536458481-31"
+  },
+  {
+    "type": "expense",
+    "date": "2025-09-18",
+    "amount": -50,
+    "description": "洗+烘",
+    "id": "imported-1760536458481-32"
+  },
+  {
+    "description": "薯餅堡",
+    "date": "2025-09-18",
+    "id": "imported-1760536458481-33",
+    "amount": -50,
+    "type": "expense"
+  },
+  {
+    "type": "expense",
+    "description": "飲料",
+    "amount": -19,
+    "id": "imported-1760536458481-34",
+    "date": "2025-09-17"
+  },
+  {
+    "type": "expense",
+    "description": "飯糰",
+    "date": "2025-09-17",
+    "amount": -25,
+    "id": "imported-1760536458481-35"
+  },
+  {
+    "id": "imported-1760536458481-36",
+    "type": "expense",
+    "date": "2025-09-17",
+    "amount": -120,
+    "description": "早午餐"
+  },
+  {
+    "amount": -600,
+    "description": "健檢",
+    "type": "expense",
+    "date": "2025-09-16",
+    "id": "imported-1760536458481-37"
+  },
+  {
+    "date": "2025-09-16",
+    "id": "imported-1760536458481-38",
+    "type": "expense",
+    "description": "肉燥麵",
+    "amount": -45
+  },
+  {
+    "date": "2025-09-15",
+    "id": "imported-1760536458481-39",
+    "amount": -100,
+    "description": "炸排骨飯",
+    "type": "expense"
+  },
+  {
+    "amount": -139,
+    "date": "2025-09-15",
+    "type": "expense",
+    "description": "蛋包飯",
+    "id": "imported-1760536458481-40"
+  },
+  {
+    "description": "麥當勞",
+    "type": "expense",
+    "id": "imported-1760536458481-41",
+    "date": "2025-09-14",
+    "amount": -50
+  },
+  {
+    "amount": -55,
+    "type": "expense",
+    "date": "2025-09-14",
+    "description": "全家",
+    "id": "imported-1760536458481-42"
+  },
+  {
+    "id": "imported-1760536458481-43",
+    "description": "飯糰",
+    "amount": -35,
+    "type": "expense",
+    "date": "2025-09-12"
+  },
+  {
+    "date": "2025-09-12",
+    "id": "imported-1760536458481-44",
+    "amount": -95,
+    "type": "expense",
+    "description": "烤肉飯"
+  },
+  {
+    "type": "expense",
+    "id": "imported-1760536458481-45",
+    "amount": -25,
+    "date": "2025-09-11",
+    "description": "飯糰"
+  },
+  {
+    "amount": -45,
+    "id": "imported-1760536458481-46",
+    "type": "expense",
+    "date": "2025-09-11",
+    "description": "蘑菇麵"
+  },
+  {
+    "description": "炒飯+菜",
+    "date": "2025-09-11",
+    "id": "imported-1760536458481-47",
+    "amount": -110,
+    "type": "expense"
+  },
+  {
+    "amount": -35,
+    "date": "2025-09-11",
+    "id": "imported-1760536458481-48",
+    "description": "果汁",
+    "type": "expense"
+  },
+  {
+    "description": "煎餃",
+    "type": "expense",
+    "date": "2025-09-10",
+    "id": "imported-1760536458481-49",
+    "amount": -60
+  },
+  {
+    "id": "imported-1760536458481-50",
+    "date": "2025-09-10",
+    "amount": -139,
+    "description": "小火鍋",
+    "type": "expense"
+  },
+  {
+    "description": "早午餐",
+    "date": "2025-09-09",
+    "type": "expense",
+    "amount": -80,
+    "id": "imported-1760536458481-51"
+  },
+  {
+    "type": "expense",
+    "amount": -150,
+    "date": "2025-09-09",
+    "description": "鐵板燒",
+    "id": "imported-1760536458481-52"
+  },
+  {
+    "type": "expense",
+    "description": "飯糰",
+    "amount": -25,
+    "id": "imported-1760536458481-53",
+    "date": "2025-09-09"
+  },
+  {
+    "type": "expense",
+    "date": "2025-09-09",
+    "amount": -139,
+    "description": "電池",
+    "id": "imported-1760536458481-54"
+  },
+  {
+    "date": "2025-09-08",
+    "amount": -70,
+    "id": "imported-1760536458481-55",
+    "description": "炒飯",
+    "type": "expense"
+  },
+  {
+    "description": "麵包",
+    "amount": -28,
+    "type": "expense",
+    "date": "2025-09-08",
+    "id": "imported-1760536458481-56"
+  },
+  {
+    "id": "imported-1760536458481-57",
+    "type": "expense",
+    "description": "麵+菜",
+    "date": "2025-09-08",
+    "amount": -80
+  },
+  {
+    "amount": -150,
+    "type": "expense",
+    "date": "2025-09-07",
+    "description": "鐵板燒",
+    "id": "imported-1760536458481-58"
+  },
+  {
+    "type": "expense",
+    "description": "蛋包飯",
+    "date": "2025-09-07",
+    "id": "imported-1760536458481-59",
+    "amount": -159
+  },
+  {
+    "type": "expense",
+    "description": "麥當勞",
+    "id": "imported-1760536458481-60",
+    "amount": -50,
+    "date": "2025-09-07"
+  },
+  {
+    "id": "imported-1760536458481-61",
+    "date": "2025-09-03",
+    "description": "吉事蛋堡",
+    "amount": -35,
+    "type": "expense"
+  },
+  {
+    "amount": -100,
+    "id": "imported-1760536458481-62",
+    "description": "早午餐",
+    "date": "2025-09-03",
+    "type": "expense"
+  },
+  {
+    "type": "expense",
+    "description": "社費",
+    "amount": -450,
+    "id": "imported-1760536458481-63",
+    "date": "2025-09-03"
+  },
+  {
+    "description": "社費",
+    "id": "imported-1760536458481-64",
+    "amount": -500,
+    "date": "2025-09-03",
+    "type": "expense"
+  },
+  {
+    "description": "麵+菜",
+    "date": "2025-09-02",
+    "id": "imported-1760536458481-65",
+    "type": "expense",
+    "amount": -80
+  },
+  {
+    "type": "expense",
+    "date": "2025-09-02",
+    "id": "imported-1760536458481-66",
+    "amount": -35,
+    "description": "吉事蛋堡"
+  },
+  {
+    "amount": -95,
+    "type": "expense",
+    "description": "烤肉飯",
+    "date": "2025-09-02",
+    "id": "imported-1760536458481-67"
+  },
+  {
+    "type": "expense",
+    "amount": -135,
+    "description": "小火鍋",
+    "date": "2025-09-02",
+    "id": "imported-1760536458481-68"
+  },
+  {
+    "amount": -70,
+    "description": "小籠包",
+    "type": "expense",
+    "date": "2025-09-01",
+    "id": "imported-1760536458481-69"
+  },
+  {
+    "date": "2025-08-31",
+    "id": "imported-1760536458481-70",
+    "description": "飯糰",
+    "type": "expense",
+    "amount": -35
+  },
+  {
+    "description": "麥當勞",
+    "amount": -50,
+    "id": "imported-1760536458481-71",
+    "date": "2025-08-31",
+    "type": "expense"
+  },
+  {
+    "date": "2025-08-29",
+    "id": "imported-1760536458481-72",
+    "amount": -25,
+    "type": "expense",
+    "description": "蛋餅"
+  },
+  {
+    "id": "imported-1760536458481-73",
+    "date": "2025-08-29",
+    "description": "炒飯",
+    "amount": -100,
+    "type": "expense"
+  },
+  {
+    "type": "expense",
+    "description": "餅乾",
+    "date": "2025-08-29",
+    "id": "imported-1760536458481-74",
+    "amount": -25
+  },
+  {
+    "type": "expense",
+    "id": "imported-1760536458481-75",
+    "date": "2025-08-29",
+    "amount": -40,
+    "description": "果汁"
+  },
+  {
+    "description": "咖哩",
+    "amount": -100,
+    "type": "expense",
+    "id": "imported-1760536458481-76",
+    "date": "2025-08-28"
+  },
+  {
+    "amount": -39,
+    "date": "2025-08-28",
+    "description": "飯糰",
+    "id": "imported-1760536458481-77",
+    "type": "expense"
+  },
+  {
+    "amount": -110,
+    "description": "乾麵+菜",
+    "date": "2025-08-28",
+    "type": "expense",
+    "id": "imported-1760536458481-78"
+  },
+  {
+    "amount": -150,
+    "description": "火鍋",
+    "type": "expense",
+    "date": "2025-08-27",
+    "id": "imported-1760536458481-79"
+  },
+  {
+    "type": "expense",
+    "description": "麥當勞",
+    "id": "imported-1760536458481-80",
+    "date": "2025-08-27",
+    "amount": -50
+  },
+  {
+    "id": "imported-1760536458481-81",
+    "amount": -35,
+    "description": "飯糰",
+    "date": "2025-08-25",
+    "type": "expense"
+  },
+  {
+    "amount": -70,
+    "id": "imported-1760536458481-82",
+    "date": "2025-08-25",
+    "description": "鍋貼",
+    "type": "expense"
+  },
+  {
+    "description": "鐵板燒",
+    "type": "expense",
+    "date": "2025-08-25",
+    "id": "imported-1760536458481-83",
+    "amount": -150
+  },
+  {
+    "amount": -59,
+    "date": "2025-08-24",
+    "type": "expense",
+    "description": "瓶子",
+    "id": "imported-1760536458481-84"
+  },
+  {
+    "id": "imported-1760536458481-85",
+    "date": "2025-08-24",
+    "description": "洗碗機",
+    "amount": -79,
+    "type": "expense"
+  },
+  {
+    "description": "洗衣粉",
+    "amount": -89,
+    "id": "imported-1760536458481-86",
+    "date": "2025-08-24",
+    "type": "expense"
+  },
+  {
+    "description": "飯糰",
+    "date": "2025-08-24",
+    "id": "imported-1760536458481-87",
+    "amount": -25,
+    "type": "expense"
+  },
+  {
+    "description": "蛋餅",
+    "type": "expense",
+    "id": "imported-1760536458481-88",
+    "amount": -40,
+    "date": "2025-08-22"
+  },
+  {
+    "amount": -128,
+    "date": "2025-08-22",
+    "id": "imported-1760536458481-89",
+    "type": "expense",
+    "description": "subway"
+  },
+  {
+    "type": "expense",
+    "date": "2025-08-21",
+    "description": "培根薯餅蛋吐司",
+    "id": "imported-1760536458481-90",
+    "amount": -60
+  },
+  {
+    "id": "imported-1760536458481-91",
+    "type": "expense",
+    "amount": -80,
+    "description": "拌麵",
+    "date": "2025-08-21"
+  },
+  {
+    "date": "2025-08-20",
+    "id": "imported-1760536458481-92",
+    "description": "蛋餅",
+    "amount": -40,
+    "type": "expense"
+  },
+  {
+    "amount": -65,
+    "date": "2025-08-20",
+    "description": "拌麵",
+    "type": "expense",
+    "id": "imported-1760536458481-93"
+  },
+  {
+    "id": "imported-1760536458481-94",
+    "amount": -70,
+    "description": "炒飯",
+    "type": "expense",
+    "date": "2025-08-20"
+  },
+  {
+    "description": "咖喱飯+蛋餅(breakfast)",
+    "date": "2025-08-19",
+    "amount": -140,
+    "type": "expense",
+    "id": "imported-1760536458481-95"
+  },
+  {
+    "description": "拌麵",
+    "type": "expense",
+    "date": "2025-08-19",
+    "id": "imported-1760536458481-96",
+    "amount": -30
+  },
+  {
+    "description": "蛋餅",
+    "date": "2025-08-18",
+    "amount": -40,
+    "id": "imported-1760536458481-97",
+    "type": "expense"
+  },
+  {
+    "description": "鍋貼",
+    "date": "2025-08-18",
+    "type": "expense",
+    "amount": -70,
+    "id": "imported-1760536458481-98"
+  },
+  {
+    "date": "2025-08-17",
+    "amount": -60,
+    "id": "imported-1760536458481-99",
+    "type": "expense",
+    "description": "蛋炒飯"
+  },
+  {
+    "id": "imported-1760536458481-100",
+    "description": "冰水",
+    "date": "2025-08-17",
+    "amount": -10,
+    "type": "expense"
+  }
+]
