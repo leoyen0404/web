@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LightSensing C++ Code</title>
+    <title>Interrupt C++ Code</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts (Roboto) and Material Symbols -->
@@ -48,210 +48,50 @@
     <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden">
         <!-- Header -->
         <div class="p-5 border-b border-gray-200">
-            <h1 class="text-xl font-medium text-gray-800">LightSensing C++ Code</h1>
-            <p class="text-gray-600 text-sm mt-1">File: light_sensing.cpp</p>
+            <h1 class="text-xl font-medium text-gray-800">Interrupt C++ Code</h1>
+            <p class="text-gray-600 text-sm mt-1">File: interrupt.cpp</p>
         </div>
 
         <!-- Code Block -->
         <div class="p-5 bg-gray-50">
-            <pre class="bg-gray-900 text-white text-sm p-4 rounded-lg overflow-x-auto"><code id="code-block">#include &lt;iostream&gt;
+            <pre class="bg-gray-900 text-white text-sm p-4 rounded-lg overflow-x-auto"><code id="code-block">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
 #include &lt;wiringPi.h&gt;
-#include &lt;mcp3004.h&gt;
 
-using namespace std;
+#define BUTTONPIN 1
 
-#define BASE 200
-#define SPI_CHAN 0
-const int channel = 0;
+volatile int counter = 0;
 
-// --- 新增: 定義 LED 腳位 ---
-// 
-// **請修改為您實際連接的 GPIO 腳位**
-const int RED_LED_PIN = 28;   // 假設紅燈接在 GPIO 28
-const int GREEN_LED_PIN = 29; // 假設綠燈接在 GPIO 29
-
-// **請修改為您測試後的亮度分界值**
-const int BRIGHTNESS_THRESHOLD = 500; // 範例值: 500
-// --- 結束 ---
+void myinterrupt(void) {
+    counter++;
+    printf("counter = %d\n", counter);
+}
 
 int main(void) {
-  cout &lt;&lt; "Light Sensing" &lt;&lt; endl;
-
-  if (wiringPiSetup() == -1)
-    return 0;
-
-  mcp3004Setup(BASE, SPI_CHAN);
-
-  // --- 新增: 設定 LED 腳位為輸出 ---
-  pinMode(RED_LED_PIN, OUTPUT);
-  pinMode(GREEN_LED_PIN, OUTPUT);
-  // --- 結束 ---
-
-  while (1) {
-    int x = analogRead(BASE + channel);
-    cout &lt;&lt; "Analog Value = " &lt;&lt; x &lt;&lt; endl;
-
-    // --- 修改: 根據亮度控制 LED ---
-    if (x < BRIGHTNESS_THRESHOLD) {
-      // 較暗: 亮紅燈, 滅綠燈
-      digitalWrite(RED_LED_PIN, HIGH);
-      digitalWrite(GREEN_LED_PIN, LOW);
-    } else {
-      // 較亮: 滅紅燈, 亮綠燈
-      digitalWrite(RED_LED_PIN, LOW);
-      digitalWrite(GREEN_LED_PIN, HIGH);
+    if (wiringPiSetup() == -1) {
+        return 1;
     }
-    // --- 結束 ---
 
-    delay(500);
-  }
-  
-  return 1;
+    pinMode(BUTTONPIN, INPUT);
+    pullUpDnControl(BUTTONPIN, PUD_DOWN);
+
+    if (wiringPiISR(BUTTONPIN, INT_EDGE_RISING, &myinterrupt) < 0) {
+        return 1;
+    }
+
+    while (1) {
+        delay(1000);
+    }
+
+    return 0;
 }
 </code></pre>
         </div>
 
-        <!-- NEW SECTION: Circuit Diagram -->
+        <!-- NEW SECTION: Compile Command -->
         <div class="p-5 border-t border-gray-200">
-            <h2 class="text-lg font-medium text-gray-800 mb-4">Complete Circuit Diagram</h2>
-            <p class="text-sm text-gray-600 mb-4">
-                This diagram shows all components: the MCP3008 for analog input and the two LEDs for output.
-                <br>
-                (Code uses WiringPi pins <strong class="text-indigo-600">28 (Red)</strong> & <strong class="text-indigo-600">29 (Green)</strong>, which are physical pins <strong class="text-indigo-600">38 (GPIO 20)</strong> & <strong class="text-indigo-600">40 (GPIO 21)</strong> respectively).
-            </p>
-            <div class="w-full bg-white border border-gray-200 p-4 rounded-lg overflow-x-auto">
-                <svg width="100%" viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" style="font-family: 'Roboto', sans-serif; font-size: 10px;">
-                    <!-- Styles -->
-                    <style>
-                        .label { font-size: 10px; font-family: 'Roboto', sans-serif; }
-                        .title { font-size: 12px; font-weight: 500; }
-                        .wire { fill: none; stroke-width: 2; }
-                        .rpi { fill: #c5e1a5; stroke: #558b2f; }
-                        .mcp { fill: #e0e0e0; stroke: #424242; }
-                        .comp { fill: none; stroke: #000; stroke-width: 1.5; }
-                        .vcc { stroke: #d32f2f; } /* Red for VCC */
-                        .gnd { stroke: #424242; } /* Black for GND */
-                        .spi { stroke: #0288d1; } /* Blue for SPI */
-                        .signal { stroke: #f57c00; } /* Orange for analog signal */
-                        .led-r { stroke: #d32f2f; } /* Red for LED */
-                        .led-g { stroke: #388e3c; } /* Green for LED */
-                    </style>
-
-                    <!-- VCC and GND Rails -->
-                    <line x1="150" y1="20" x2="580" y2="20" class="wire vcc" />
-                    <text x="500" y="35" class="label" fill="#d32f2f">3.3V Rail</text>
-                    <line x1="150" y1="380" x2="580" y2="380" class="wire gnd" />
-                    <text x="500" y="375" class="label" fill="#424242">GND Rail</text>
-
-                    <!-- Raspberry Pi (Simplified) -->
-                    <rect x="20" y="50" width="100" height="300" rx="5" class="rpi" />
-                    <text x="35" y="40" class="title">Raspberry Pi</text>
-                    <!-- RPi Pins -->
-                    <text x="30" y="70" class="label">Pin 1 (3.3V)</text>
-                    <line x1="120" y1="70" x2="150" y2="70" class="wire vcc" />
-                    <line x1="150" y1="20" x2="150" y2="70" class="wire vcc" />
-                    
-                    <text x="30" y="90" class="label">Pin 6 (GND)</text>
-                    <line x1="120" y1="90" x2="150" y2="90" class="wire gnd" />
-                    <line x1="150" y1="380" x2="150" y2="90" class="wire gnd" />
-
-                    <text x="30" y="120" class="label">Pin 24 (CE0)</text>
-                    <line x1="120" y1="120" x2="180" y2="120" class="wire spi" />
-                    <text x="30" y="140" class="label">Pin 19 (MOSI)</text>
-                    <line x1="120" y1="140" x2="180" y2="140" class="wire spi" />
-                    <text x="30" y="160" class="label">Pin 21 (MISO)</text>
-                    <line x1="120" y1="160" x2="180" y2="160" class="wire spi" />
-                    <text x="30" y="180" class="label">Pin 23 (SCLK)</text>
-                    <line x1="120" y1="180" x2="180" y2="180" class="wire spi" />
-                    
-                    <text x="30" y="210" class="label">Pin 38 (wPi 28)</text>
-                    <line x1="120" y1="210" x2="450" y2="210" class="wire led-r" />
-                    <text x="30" y="230" class="label">Pin 40 (wPi 29)</text>
-                    <line x1="120" y1="230" x2="450" y2="270" class="wire led-g" />
-
-                    <!-- MCP3008 -->
-                    <rect x="180" y="50" width="100" height="300" rx="5" class="mcp" />
-                    <text x="205" y="40" class="title">MCP3008</text>
-                    <!-- MCP3008 Pins -->
-                    <text x="210" y="70" class="label">16 VDD</text>
-                    <line x1="190" y1="70" x2="190" y2="20" class="wire vcc" />
-                    <text x="210" y="90" class="label">15 VREF</text>
-                    <line x1="210" y1="90" x2="210" y2="20" class="wire vcc" />
-                    <text x="210" y="110" class="label">14 AGND</text>
-                    <line x1="190" y1="110" x2="190" y2="380" class="wire gnd" />
-                    <text x="210" y="130" class="label">13 CLK</text>
-                    <line x1="180" y1="180" x2="180" y2="130" class="wire spi" />
-                    <text x="210" y="150" class="label">12 DOUT</text>
-                    <line x1="180" y1="160" x2="180" y2="150" class="wire spi" />
-                    <text x="210" y="170" class="label">11 DIN</text>
-                    <line x1="180" y1="140" x2="180" y2="170" class="wire spi" />
-                    <text x="210" y="190" class="label">10 CS</text>
-                    <line x1="180" y1="120" x2="180" y2="190" class="wire spi" />
-                    <text x="210" y="210" class="label">9 DGND</text>
-                    <line x1="210" y1="210" x2="210" y2="380" class="wire gnd" />
-                    <text x="210" y="330" class="label">1 CH0</text>
-                    <line x1="250" y1="330" x2="330" y2="330" class="wire signal" />
-
-                    <!-- LDR Circuit -->
-                    <text x="350" y="250" class="title">Input Circuit</text>
-                    <!-- LDR -->
-                    <rect x="330" y="280" width="40" height="20" class="comp" style="stroke:none; fill: #fff;"/>
-                    <circle cx="350" cy="290" r="13" class="comp" />
-                    <line x1="342" y1="282" x2="358" y2="298" class="comp" stroke-width="1"/>
-                    <text x="380" y="295" class="label">LDR</text>
-                    <line x1="330" y1="290" x2="330" y2="20" class="wire vcc" /> <!-- VCC to LDR -->
-                    <line x1="370" y1="290" x2="390" y2="290" class="wire signal" />
-                    <!-- 10K Resistor -->
-                    <rect x="330" y="340" width="40" height="20" class="comp" />
-                    <text x="380" y="355" class="label">10KΩ Resistor</text>
-                    <line x1="330" y1="350" x2="330" y2="380" class="wire gnd" /> <!-- GND to Resistor -->
-                    <line x1="370" y1="350" x2="390" y2="350" class="wire signal" />
-                    <!-- Junction -->
-                    <line x1="390" y1="290" x2="390" y2="350" class="wire signal" />
-                    <line x1="330" y1="330" x2="390" y2="330" class="wire signal" />
-                    <circle cx="390" cy="330" r="2" fill="#f57c00" /> <!-- Junction dot -->
-                    <text x="400" y="335" class="label">To CH0</text>
-
-                    <!-- LED Circuits -->
-                    <text x="470" y="100" class="title">Output Circuit</text>
-                    <!-- Red LED -->
-                    <text x="490" y="195" class="label">Red LED</text>
-                    <text x="420" y="215" class="label">330Ω</text>
-                    <rect x="440" y="205" width="30" height="15" class="comp" /> <!-- Resistor -->
-                    <!-- LED Symbol -->
-                    <line x1="470" y1="212.5" x2="490" y2="212.5" class="comp" />
-                    <polygon points="490,205 490,220 505,212.5" class="comp" fill="#f44336" />
-                    <line x1="505" y1="212.5" x2="525" y2="212.5" class="comp" />
-                    <line x1="505" y1="205" x2="505" y2="220" class="comp" stroke-width="1" />
-                    <!-- Arrows -->
-                    <line x1="498" y1="200" x2="505" y2="193" class="comp" stroke="#f44336" stroke-width="1"/>
-                    <line x1="502" y1="200" x2="509" y2="193" class="comp" stroke="#f44336" stroke-width="1"/>
-                    
-                    <!-- Red LED Wires -->
-                    <line x1="470" y1="212.5" x2="470" y2="210" class="wire led-r" /> <!-- From RPi -->
-                    <line x1="525" y1="212.5" x2="525" y2="380" class="wire gnd" /> <!-- To GND -->
-                    <line x1="450" y1="210" x2="440" y2="210" class="wire led-r" />
-                    
-                    <!-- Green LED -->
-                    <text x="490" y="255" class="label">Green LED</text>
-                    <text x="420" y="275" class="label">330Ω</text>
-                    <rect x="440" y="265" width="30" height="15" class="comp" /> <!-- Resistor -->
-                    <!-- LED Symbol -->
-                    <line x1="470" y1="272.5" x2="490" y2="272.5" class="comp" />
-                    <polygon points="490,265 490,280 505,272.5" class="comp" fill="#4caf50" />
-                    <line x1="505" y1="272.5" x2="525" y2="272.5" class="comp" />
-                    <line x1="505" y1="265" x2="505" y2="280" class="comp" stroke-width="1" />
-                    <!-- Arrows -->
-                    <line x1="498" y1="260" x2="505" y2="253" class="comp" stroke="#4caf50" stroke-width="1"/>
-                    <line x1="502" y1="260" x2="509" y2="253" class="comp" stroke="#4caf50" stroke-width="1"/>
-                    
-                    <!-- Green LED Wires -->
-                    <line x1="470" y1="272.5" x2="470" y2="270" class="wire led-g" /> <!-- From RPi -->
-                    <line x1="525" y1="272.5" x2="525" y2="380" class="wire gnd" /> <!-- To GND -->
-                    <line x1="450" y1="270" x2="440" y2="270" class="wire led-g" />
-
-                </svg>
-            </div>
+            <h2 class="text-lg font-medium text-gray-800 mb-3">Compile Command</h2>
+            <pre class="bg-gray-200 text-gray-800 text-sm p-3 rounded-lg overflow-x-auto"><code>g++ -o interrupt interrupt.cpp -lwiringPi</code></pre>
         </div>
 
 
@@ -307,7 +147,7 @@ int main(void) {
         // --- Download Function ---
         downloadButton.addEventListener('click', () => {
             const codeText = codeBlock.innerText;
-            const filename = 'light_sensing.cpp';
+            const filename = 'interrupt.cpp'; // Updated filename
 
             // Create a Blob with the correct MIME type and charset
             // This is critical for preventing format issues
@@ -342,5 +182,3 @@ int main(void) {
 
 </body>
 </html>
-
-
