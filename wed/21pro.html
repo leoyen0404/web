@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>My Second Website</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            /* 初始狀態：盡量保持與原始 HTML 相同的預設樣式 */
+            body {
+                transition: background-color 1.5s cubic-bezier(0.075, 0.82, 0.165, 1), color 1.5s ease;
+                margin: 8px; /* Browser default */
+            }
+            
+            table {
+                transition: all 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                transform-origin: center top;
+            }
+
+            h1 {
+                transition: all 1s ease;
+            }
+
+            /* 隱藏的觸發按鈕樣式 (或者我們可以讓點擊標題觸發) */
+            .trigger-area {
+                cursor: pointer;
+            }
+
+            /* =========================================
+               PRO MODE (Apple-style Elegance + Cool Stuff)
+               ========================================= */
+            body.pro-mode {
+                background-color: #000000;
+                color: #f5f5f7;
+                font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                height: 100vh;
+                margin: 0;
+                overflow: hidden;
+            }
+
+            body.pro-mode h1 {
+                font-weight: 100;
+                font-size: 3rem;
+                letter-spacing: -0.005em;
+                background: linear-gradient(135deg, #fff 0%, #8e8e93 100%);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                margin-bottom: 40px;
+                text-shadow: 0 10px 30px rgba(255, 255, 255, 0.1);
+                transform: translateY(-20px);
+            }
+
+            body.pro-mode table {
+                border: none !important; /* Override default border attribute */
+                background: rgba(28, 28, 30, 0.6);
+                backdrop-filter: blur(20px);
+                -webkit-backdrop-filter: blur(20px);
+                border-radius: 24px;
+                box-shadow: 
+                    0 20px 40px rgba(0,0,0,0.6),
+                    0 0 0 1px rgba(255,255,255,0.1) inset;
+                padding: 40px;
+                border-spacing: 0;
+                width: 300px;
+                transform: scale(1.1);
+            }
+
+            /* 針對舊版瀏覽器或效能較差裝置的 Fallback */
+            @supports not (backdrop-filter: blur(20px)) {
+                body.pro-mode table {
+                    background: #1c1c1e;
+                }
+            }
+
+            body.pro-mode caption {
+                font-size: 4rem;
+                font-weight: 700;
+                margin-bottom: 20px;
+                background: linear-gradient(to right, #00c6ff, #0072ff);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                text-shadow: 0 0 30px rgba(0, 114, 255, 0.4);
+                letter-spacing: -2px;
+            }
+
+            body.pro-mode td {
+                border: none;
+                padding: 16px 24px;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+                font-size: 17px;
+                color: #86868b;
+                text-align: left;
+            }
+
+            body.pro-mode td:nth-child(2) {
+                color: #f5f5f7;
+                font-weight: 500;
+                text-align: right;
+            }
+
+            body.pro-mode tr:last-child td {
+                border-bottom: none;
+            }
+
+            /* 背景動畫效果 (輕量級) */
+            .ambient-light {
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                width: 100vw;
+                height: 100vh;
+                background: radial-gradient(circle at 50% 50%, rgba(0, 114, 255, 0.15), transparent 60%);
+                transform: translate(-50%, -50%) scale(0);
+                transition: transform 2s ease-out;
+                z-index: -1;
+                pointer-events: none;
+            }
+
+            body.pro-mode .ambient-light {
+                transform: translate(-50%, -50%) scale(1.5);
+            }
+
+            /* 提示文字 */
+            .hint {
+                position: fixed;
+                bottom: 20px;
+                font-size: 12px;
+                color: #ccc;
+                opacity: 0.5;
+                font-family: sans-serif;
+            }
+            body.pro-mode .hint {
+                display: none;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="ambient-light"></div>
+        
+        <!-- 點擊標題觸發變身 -->
+        <h1 onclick="toggleMode()" class="trigger-area">Welcome to our Website</h1>
+        
+        <table border="2" id="contentTable">
+            <tr>
+                <!-- 點擊 Caption 也可以觸發 -->
+                <caption align="center" onclick="toggleMode()" class="trigger-area">21</caption>
+            </tr>
+            <tr>
+                <td>姓名</td>
+                <td align="center">楊博鈞</td>
+            </tr>
+            <tr>
+                <td>學號</td>
+                <td align="center">11427143</td>
+            </tr>
+            <tr>
+                <td>姓名</td>
+                <td align="center">嚴丰澧</td>
+            </tr>
+            <tr>
+                <td>學號</td>
+                <td align="center">11427142</td>
+            </tr>
+        </table>
+
+        <div class="hint">Click the title or "21" to transform</div>
+
+        <script>
+            function toggleMode() {
+                const body = document.body;
+                const table = document.getElementById('contentTable');
+                
+                body.classList.toggle('pro-mode');
+
+                // 處理 border 屬性，因為 CSS 無法完全覆蓋 HTML 屬性的渲染行為
+                if (body.classList.contains('pro-mode')) {
+                    // 延遲一點點讓過渡更平滑，或者直接移除
+                    table.removeAttribute('border');
+                } else {
+                    // 恢復原始狀態
+                    table.setAttribute('border', '2');
+                }
+            }
+        </script>
+    </body>
+</html>
