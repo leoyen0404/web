@@ -1,0 +1,748 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Lab 15 Guide — Packet Capture × C × CGI</title>
+    <style>
+      :root { color-scheme: light; }
+      body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; background: #f6f8fa; color: #111; }
+      .wrap { max-width: 980px; margin: 28px auto; padding: 0 16px; }
+      .top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+      .title { font-size: 20px; font-weight: 700; }
+      .nav a { margin-right: 10px; text-decoration: none; color: #111827; border-bottom: 1px dotted #9ca3af; }
+      .panel { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; margin-bottom: 14px; }
+      .ph { padding: 12px 14px; background: #f9fafb; border-bottom: 1px solid #e5e7eb; font-weight: 700; }
+      .pc { padding: 14px; line-height: 1.7; }
+      ul { margin: 8px 0 0 18px; }
+      code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+      pre { background: #0b1020; color: #e5e7eb; padding: 12px; border-radius: 10px; overflow-x: auto; }
+      .note { font-size: 13px; color: #374151; }
+      .muted { color: #6b7280; }
+      .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; border: 1px solid #e5e7eb; background: #f9fafb; font-size: 12px; }
+      .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+
+      .actions { display: flex; gap: 10px; flex-wrap: wrap; margin: 10px 0 0; }
+      button.btn { appearance: none; border: 1px solid #d1d5db; background: #fff; color: #111; padding: 8px 10px; border-radius: 10px; cursor: pointer; font-size: 14px; }
+      button.btn:hover { background: #f9fafb; }
+      button.btn.primary { background: #111827; border-color: #111827; color: #fff; }
+      button.btn.primary:hover { filter: brightness(0.95); }
+      .status { font-size: 12px; color: #6b7280; margin-top: 8px; }
+
+      textarea.code { width: 100%; min-height: 160px; resize: vertical; padding: 12px; border-radius: 10px; border: 1px solid #e5e7eb; background: #0b1020; color: #e5e7eb; font-size: 12px; line-height: 1.5; }
+      .filebox { margin-top: 10px; }
+      .filehead { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+      .fname { font-weight: 700; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="top">
+        <div class="title">Lab 15 Guide — Packet Capture × C × CGI</div>
+        <div class="nav">
+          <a href="#overview">Overview</a>
+          <a href="#download">Copy/Download</a>
+          <a href="#pi">Pi Setup</a>
+          <a href="#run">Run</a>
+          <a href="#troubleshoot">Troubleshoot</a>
+          <a href="#files">Files</a>
+          <a href="#notes">Notes</a>
+        </div>
+      </div>
+
+      <div id="overview" class="panel">
+        <div class="ph">Overview</div>
+        <div class="pc">
+          <div class="grid">
+            <div>
+              <div class="pill">Flow</div>
+              <ul>
+                <li><code>tcpdump</code> 擷取封包 → 輸出文字 log</li>
+                <li><code>parse_http.cgi</code>（C/CGI）讀 log → 產生 HTML</li>
+                <li>瀏覽器開 <code>/cgi-bin/parse_http.cgi</code> 看到封包列表</li>
+              </ul>
+            </div>
+            <div>
+              <div class="pill">Advanced</div>
+              <ul>
+                <li>自動 refresh：每 5 秒更新</li>
+                <li>支援參數：<code>?limit=20</code></li>
+                <li>表格已美化、且偏工具感（低成本 CSS）</li>
+              </ul>
+            </div>
+          </div>
+          <p class="note muted">這個頁面是靜態指南（GitHub Pages）。真正的介面是 CGI 產生的 HTML，不需要額外的 .html 才能在 Pi 上跑。</p>
+        </div>
+      </div>
+
+      <div id="download" class="panel">
+        <div class="ph">Copy/Download（在 Pi 的 Chrome 直接用）</div>
+        <div class="pc">
+          <p class="note">你說「沒有磁碟/隨身碟」：所以這頁把需要的檔案與指令都內嵌在 HTML 裡。你可以：</p>
+          <ul>
+            <li>按 <b>Copy</b> 直接複製指令到剪貼簿 → 貼到 Pi 終端機</li>
+            <li>按 <b>Download</b> 直接下載檔案（會存到 Chrome Downloads）</li>
+          </ul>
+
+          <div class="filebox">
+            <div class="filehead">
+              <div class="fname">Pi Quick Commands（一次跑起來）</div>
+              <div class="actions">
+                <button class="btn primary" onclick="copyText('cmd-all')">Copy</button>
+              </div>
+            </div>
+            <textarea id="cmd-all" class="code" readonly>sudo apt-get update
+sudo apt-get install -y apache2 tcpdump
+
+sudo a2enmod cgi
+sudo systemctl restart apache2
+
+sudo mkdir -p /var/www/logs
+sudo chmod 777 /var/www/logs
+
+sudo mkdir -p /usr/lib/cgi-bin
+
+# compile CGI
+gcc parse_http.c -O2 -o parse_http.cgi
+sudo mv parse_http.cgi /usr/lib/cgi-bin/
+sudo chmod +x /usr/lib/cgi-bin/parse_http.cgi
+
+# start capture (choose interface: wlan0 / eth0)
+sudo tcpdump -i wlan0 tcp port 80 -n -l > /var/www/logs/http.log &
+
+# verify
+sudo pgrep -a tcpdump
+hostname -I
+
+# open (from your laptop/phone)
+# http://&lt;Pi_IP&gt;/cgi-bin/parse_http.cgi
+# http://&lt;Pi_IP&gt;/cgi-bin/parse_http.cgi?limit=20
+
+# stop capture
+# sudo pkill tcpdump</textarea>
+            <div class="status" id="st-cmd-all"></div>
+          </div>
+
+          <div class="filebox">
+            <div class="filehead">
+              <div class="fname">Download Files（下載後在 Pi 端編譯/部署）</div>
+              <div class="actions">
+                <button class="btn" onclick="downloadText('src-parse_http.c','parse_http.c')">Download parse_http.c</button>
+                <button class="btn" onclick="downloadText('src-deploy.sh','deploy.sh')">Download deploy.sh</button>
+                <button class="btn" onclick="downloadText('src-tcpdump_http80.sh','tcpdump_http80.sh')">Download tcpdump_http80.sh</button>
+                <button class="btn" onclick="downloadText('src-tcpdump_80_443.sh','tcpdump_80_443.sh')">Download tcpdump_80_443.sh</button>
+              </div>
+            </div>
+            <p class="note muted">下載後通常在 <code>~/Downloads</code>。你可以在終端機：<code>cd ~/Downloads</code> 然後編譯/執行。</p>
+          </div>
+        </div>
+      </div>
+
+      <div id="pi" class="panel">
+        <div class="ph">Pi Setup (Apache + CGI + tcpdump)</div>
+        <div class="pc">
+          <p class="note">以下指令可直接貼到 Raspberry Pi 執行。</p>
+          <pre><code>sudo apt-get update
+sudo apt-get install -y apache2 tcpdump
+
+# enable CGI
+sudo a2enmod cgi
+sudo systemctl restart apache2
+
+# log directory
+sudo mkdir -p /var/www/logs
+sudo chmod 777 /var/www/logs
+
+# cgi-bin directory
+sudo mkdir -p /usr/lib/cgi-bin</code></pre>
+        </div>
+      </div>
+
+      <div id="run" class="panel">
+        <div class="ph">Run (Deploy CGI + Start Capture)</div>
+        <div class="pc">
+          <p class="note">假設你把專案資料夾（含 <code>pi/</code>）放在 Pi 上。</p>
+          <pre><code># deploy CGI
+cd &lt;your-folder&gt;/pi
+chmod +x *.sh
+./deploy.sh
+
+# start capture (default wlan0; change to eth0 if needed)
+./tcpdump_http80.sh wlan0
+# OR capture 80+443 (TCP)
+# ./tcpdump_80_443.sh wlan0
+
+# open in browser
+# http://&lt;Pi_IP&gt;/cgi-bin/parse_http.cgi
+# http://&lt;Pi_IP&gt;/cgi-bin/parse_http.cgi?limit=20</code></pre>
+        </div>
+      </div>
+
+      <div id="troubleshoot" class="panel">
+        <div class="ph">Troubleshooting</div>
+        <div class="pc">
+          <ul>
+            <li><b>tcpdump 沒在跑：</b> <code>sudo pgrep -a tcpdump</code></li>
+            <li><b>log 沒資料：</b> <code>sudo tail -n 20 /var/www/logs/http.log</code>，再用 <code>curl http://example.com</code> 產生 HTTP 流量</li>
+            <li><b>介面抓錯：</b> <code>ip a</code> 確認是 <code>wlan0</code> 或 <code>eth0</code></li>
+            <li><b>HTTPS 443 抓不到：</b> 可能是 QUIC/UDP 443。
+              <ul>
+                <li>驗證：<code>sudo tcpdump -i &lt;iface&gt; udp port 443 -n -l</code></li>
+                <li>或在 Chrome：<code>chrome://flags/#enable-quic</code> → Disabled</li>
+              </ul>
+            </li>
+            <li><b>CGI 500：</b> <code>sudo tail -n 100 /var/log/apache2/error.log</code></li>
+          </ul>
+        </div>
+      </div>
+
+      <div id="files" class="panel">
+        <div class="ph">Files（可 Copy / Download）</div>
+        <div class="pc">
+          <p class="note">你可以直接 Copy/Download 以下檔案內容。若你用這頁下載腳本，記得在 Pi 端 <code>chmod +x *.sh</code>。</p>
+
+          <div class="filebox">
+            <div class="filehead">
+              <div class="fname">parse_http.c</div>
+              <div class="actions">
+                <button class="btn primary" onclick="copyText('src-parse_http.c')">Copy</button>
+                <button class="btn" onclick="downloadText('src-parse_http.c','parse_http.c')">Download</button>
+              </div>
+            </div>
+            <textarea id="src-parse_http.c" class="code" readonly>// parse_http.c
+// CGI 程式：讀取 /tmp/http.log，封包列表輸出成 HTML 表格
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// LOG_PATH: default to Raspberry Pi path; when running on macOS locally, you can
+// keep a test file in the same folder (see FALLBACK_LOG_PATH).
+#ifndef LOG_PATH
+#define LOG_PATH   "/var/www/logs/http.log"
+#endif
+
+// When LOG_PATH cannot be opened, optionally fall back to a local test log.
+// Set to "" (empty string) to disable fallback.
+#ifndef FALLBACK_LOG_PATH
+#define FALLBACK_LOG_PATH   "test_http.log"
+#endif
+
+#define AUTO_REFRESH_SECONDS 5
+#define DEFAULT_LIMIT 50
+#define MAX_LINES  200          // 最多保留幾行
+#define MAX_LEN    512          // 每行最大長度
+
+struct PacketInfo {
+    char time[64];
+    char srcHost[64];
+    char srcPort[16];
+    char dstHost[64];
+    char dstPort[16];
+    char info[256];
+};
+
+struct Stats {
+    int total;
+    int httpCount;  // port 80
+    int httpsCount; // port 443
+    int otherCount; // other port
+};
+
+// 簡單 trim 前後空白與換行
+void trim(char *s) {
+    if (!s) return;
+    // trim tail
+    int len = (int)strlen(s);
+    while (len > 0 && (s[len-1] == '\n' || s[len-1] == '\r' || s[len-1] == ' ' || s[len-1] == '\t')) {
+        s[len-1] = '\0';
+        len--;
+    }
+    // trim head
+    char *p = s;
+    while (*p == ' ' || *p == '\t') p++;
+    if (p != s) memmove(s, p, strlen(p) + 1);
+}
+
+static int clamp_int(int v, int lo, int hi) {
+    if (v < lo) return lo;
+    if (v > hi) return hi;
+    return v;
+}
+
+// Read integer query param from QUERY_STRING, e.g. ?limit=20
+static int get_query_int(const char *key, int defaultValue) {
+    const char *qs = getenv("QUERY_STRING");
+    if (!qs || !*qs || !key || !*key) return defaultValue;
+
+    size_t keyLen = strlen(key);
+    const char *p = qs;
+    while (*p) {
+        const char *k = p;
+        const char *eq = strchr(k, '=');
+        if (!eq) break;
+        const char *amp = strchr(eq + 1, '&');
+        size_t curKeyLen = (size_t)(eq - k);
+
+        if (curKeyLen == keyLen && strncmp(k, key, keyLen) == 0) {
+            char buf[32];
+            size_t valLen = amp ? (size_t)(amp - (eq + 1)) : strlen(eq + 1);
+            if (valLen >= sizeof(buf)) valLen = sizeof(buf) - 1;
+            memcpy(buf, eq + 1, valLen);
+            buf[valLen] = '\0';
+            return atoi(buf);
+        }
+
+        p = amp ? (amp + 1) : (eq + 1 + strlen(eq + 1));
+    }
+
+    return defaultValue;
+}
+
+static void print_html_escaped(const char *s) {
+    if (!s) return;
+    for (const unsigned char *p = (const unsigned char *)s; *p; p++) {
+        switch (*p) {
+            case '&': fputs("&amp;", stdout); break;
+            case '<': fputs("&lt;", stdout); break;
+            case '>': fputs("&gt;", stdout); break;
+            case '"': fputs("&quot;", stdout); break;
+            case '\'': fputs("&#39;", stdout); break;
+            default: fputc(*p, stdout); break;
+        }
+    }
+}
+
+// 從 "192.168.0.10.54321" 類型字串拆成 主機 + port
+// 將結果寫入 host, port；若格式不合，host=原字串，port="?"
+void split_addr_port(const char *in, char *host, size_t hostSize,
+                     char *port, size_t portSize) {
+    if (!in || !host || !port) return;
+
+    char buf[MAX_LEN];
+    strncpy(buf, in, sizeof(buf) - 1);
+    buf[sizeof(buf) - 1] = '\0';
+
+    // 有些結尾會有 ':'，例如 "140.113.1.1.80:"
+    trim(buf);
+    size_t len = strlen(buf);
+    if (len > 0 && buf[len-1] == ':') {
+        buf[len-1] = '\0';
+    }
+
+    // 找最後一個 '.'
+    char *lastDot = strrchr(buf, '.');
+    if (!lastDot || lastDot == buf) {
+        // 找不到就全部當 host
+        strncpy(host, buf, hostSize - 1);
+        host[hostSize - 1] = '\0';
+        strncpy(port, "?", portSize - 1);
+        port[portSize - 1] = '\0';
+        return;
+    }
+
+    *lastDot = '\0'; // 分割
+    const char *hostPart = buf;
+    const char *portPart = lastDot + 1;
+
+    strncpy(host, hostPart, hostSize - 1);
+    host[hostSize - 1] = '\0';
+    strncpy(port, portPart, portSize - 1);
+    port[portSize - 1] = '\0';
+}
+
+// 對單行 tcpdump log 做 parsing，成功回傳 1，失敗回傳 0
+int parse_line(const char *srcLine,
+               char *timeBuf, size_t timeSize,
+               char *srcHost, size_t srcHostSize,
+               char *srcPort, size_t srcPortSize,
+               char *dstHost, size_t dstHostSize,
+               char *dstPort, size_t dstPortSize,
+               char *infoBuf, size_t infoSize) {
+    if (!srcLine) return 0;
+
+    char line[MAX_LEN];
+    strncpy(line, srcLine, sizeof(line) - 1);
+    line[sizeof(line) - 1] = '\0';
+
+    trim(line);
+    if (strlen(line) == 0) return 0;
+
+    // 逐段切 token
+    // 預期格式：
+    // time  IP  src  >  dst  :  ...
+    char *token = NULL;
+    char *saveptr = NULL;
+
+    token = strtok_r(line, " ", &saveptr);   // time
+    if (!token) return 0;
+    strncpy(timeBuf, token, timeSize - 1);
+    timeBuf[timeSize - 1] = '\0';
+
+    token = strtok_r(NULL, " ", &saveptr);   // "IP" 或 "IP6" 之類
+    if (!token) return 0;
+    if (strcmp(token, "IP") != 0 && strcmp(token, "IP6") != 0) {
+        // 不是 IP 封包，略過
+        return 0;
+    }
+
+    token = strtok_r(NULL, " ", &saveptr);   // src
+    if (!token) return 0;
+    char srcRaw[128];
+    strncpy(srcRaw, token, sizeof(srcRaw) - 1);
+    srcRaw[sizeof(srcRaw) - 1] = '\0';
+
+    token = strtok_r(NULL, " ", &saveptr);   // ">" 或其他
+    if (!token) return 0;
+
+    token = strtok_r(NULL, " ", &saveptr);   // dst
+    if (!token) return 0;
+    char dstRaw[128];
+    strncpy(dstRaw, token, sizeof(dstRaw) - 1);
+    dstRaw[sizeof(dstRaw) - 1] = '\0';
+
+    // 剩餘內容整段當 info
+    char *rest = strtok_r(NULL, "", &saveptr);  // 剩下整行
+    if (!rest) rest = "";
+
+    // 進一步拆 host / port
+    split_addr_port(srcRaw, srcHost, srcHostSize, srcPort, srcPortSize);
+    split_addr_port(dstRaw, dstHost, dstHostSize, dstPort, dstPortSize);
+
+    strncpy(infoBuf, rest, infoSize - 1);
+    infoBuf[infoSize - 1] = '\0';
+    trim(infoBuf);
+
+    return 1;
+}
+
+int classify_by_port (int srcPortInt, int dstPortInt) {
+    if (srcPortInt == 80 || dstPortInt == 80) return 1;
+    if (srcPortInt == 443 || dstPortInt == 443) return 2;
+    return 0;
+}
+
+struct Stats update_stats(struct Stats s, int srcPortInt, int dstPortInt) {
+    s.total++;
+    int pktType = classify_by_port(srcPortInt, dstPortInt);
+    if (pktType == 1) s.httpCount++;
+    else if (pktType == 2) s.httpsCount++;
+    else s.otherCount++;
+    return s;
+}
+
+int main(void) {
+    printf("Content-type: text/html\n\n");
+    printf("<!DOCTYPE html>\n");
+    printf("<html><head><meta charset='utf-8'>");
+    printf("<meta name='viewport' content='width=device-width, initial-scale=1.0'>");
+    printf("<meta http-equiv='refresh' content='%d'>", AUTO_REFRESH_SECONDS);
+    printf("<title>Packet Analyzer</title>");
+    printf("<style>");
+    printf("*{box-sizing:border-box}body{margin:0;background:#f6f8fa;color:#111;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif}");
+    printf(".wrap{max-width:1200px;margin:24px auto;padding:0 16px}");
+    printf(".bar{background:#111827;color:#fff;border-radius:10px;padding:16px 18px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}");
+    printf(".title{font-weight:700;font-size:18px}");
+    printf(".meta{font-size:12px;opacity:.85;line-height:1.5}");
+    printf(".cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:16px 0}");
+    printf(".card{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:12px}");
+    printf(".card .n{font-size:22px;font-weight:700;margin-bottom:4px}");
+    printf(".card .k{font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:.08em}");
+    printf(".panel{background:#fff;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden}");
+    printf(".panel-h{padding:12px 14px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}");
+    printf(".panel-h .left{font-weight:700}");
+    printf(".panel-h .right{font-size:12px;color:#6b7280}");
+    printf("table{width:100%%;border-collapse:collapse}");
+    printf("th,td{padding:10px 12px;border-bottom:1px solid #f0f2f5;vertical-align:top}");
+    printf("th{background:#f9fafb;font-size:12px;color:#374151;text-transform:uppercase;letter-spacing:.06em}");
+    printf("tr:nth-child(even) td{background:#fcfcfd}");
+    printf(".mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,'Liberation Mono','Courier New',monospace}");
+    printf(".tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;border:1px solid #e5e7eb;background:#f9fafb;color:#374151}");
+    printf(".tag.http{border-color:#bbf7d0;background:#f0fdf4;color:#166534}");
+    printf(".tag.https{border-color:#fde68a;background:#fffbeb;color:#92400e}");
+    printf(".tag.other{border-color:#fecaca;background:#fef2f2;color:#991b1b}");
+    printf(".foot{margin:14px 2px;color:#6b7280;font-size:12px;line-height:1.6}");
+    printf(".btn{display:inline-block;padding:8px 12px;border:1px solid #d1d5db;background:#fff;border-radius:8px;color:#111;text-decoration:none}");
+    printf(".btn:hover{background:#f9fafb}");
+    printf("</style>");
+    printf("</head><body>");
+    printf("<div class='wrap'>");
+
+    int limit = get_query_int("limit", DEFAULT_LIMIT);
+    limit = clamp_int(limit, 1, MAX_LINES);
+
+    FILE *fp = fopen(LOG_PATH, "r");
+    const char *usedPath = LOG_PATH;
+    if (!fp && FALLBACK_LOG_PATH[0] != '\0') {
+        fp = fopen(FALLBACK_LOG_PATH, "r");
+        usedPath = FALLBACK_LOG_PATH;
+    }
+
+    printf("<div class='bar'>");
+    printf("<div class='title'>Packet Analyzer</div>");
+    printf("<div class='meta'>Auto refresh: %ds<br>Limit: %d<br>Log: ", AUTO_REFRESH_SECONDS, limit);
+    print_html_escaped(usedPath);
+    printf("</div></div>");
+
+    if (!fp) {
+        printf("<div class='panel' style='margin-top:16px;padding:18px;'>");
+        printf("<div style='font-weight:700;margin-bottom:6px;'>Cannot open log file</div>");
+        printf("<div class='mono' style='color:#6b7280;'>");
+        print_html_escaped(LOG_PATH);
+        if (FALLBACK_LOG_PATH[0] != '\0') {
+            printf(" (fallback: ");
+            print_html_escaped(FALLBACK_LOG_PATH);
+            printf(")");
+        }
+        printf("</div>");
+        printf("<div class='foot'>Check: tcpdump is running, file path exists, and permissions allow writing/reading.</div>");
+        printf("</div></div></body></html>");
+        return 0;
+    }
+
+    char buffer[MAX_LEN];
+    static char lines[MAX_LINES][MAX_LEN];
+    int count = 0;
+
+    while (fgets(buffer, sizeof(buffer), fp) != NULL) {
+        int index = count % MAX_LINES;
+        strncpy(lines[index], buffer, MAX_LEN - 1);
+        lines[index][MAX_LEN - 1] = '\0';
+        count++;
+    }
+    fclose(fp);
+
+    if (count == 0) {
+        printf("<div class='panel' style='margin-top:16px;padding:18px;'>");
+        printf("<div style='font-weight:700;margin-bottom:6px;'>No packets yet</div>");
+        printf("<div class='foot'>Waiting for tcpdump to write data...</div>");
+        printf("</div></div></body></html>");
+        return 0;
+    }
+
+    int available = (count < MAX_LINES) ? count : MAX_LINES;
+    int total = (limit < available) ? limit : available;
+    int startIndex = (count - total) % MAX_LINES;
+    if (startIndex < 0) startIndex += MAX_LINES;
+
+    struct PacketInfo packets[MAX_LINES];
+    int packetCount = 0;
+    struct Stats stats = {0, 0, 0, 0};
+
+    for (int i = 0; i < total; i++) {
+        int idx = (startIndex + i) % MAX_LINES;
+        const char *line = lines[idx];
+
+        char timeBuf[64] = "";
+        char srcHost[64] = "";
+        char srcPort[16] = "";
+        char dstHost[64] = "";
+        char dstPort[16] = "";
+        char infoBuf[256] = "";
+
+        if (!parse_line(line, timeBuf, sizeof(timeBuf),
+                        srcHost, sizeof(srcHost),
+                        srcPort, sizeof(srcPort),
+                        dstHost, sizeof(dstHost),
+                        dstPort, sizeof(dstPort),
+                        infoBuf, sizeof(infoBuf)))
+            continue;
+
+        int srcPortInt = atoi(srcPort);
+        int dstPortInt = atoi(dstPort);
+
+        stats = update_stats(stats, srcPortInt, dstPortInt);
+
+        strcpy(packets[packetCount].time,    timeBuf);
+        strcpy(packets[packetCount].srcHost, srcHost);
+        strcpy(packets[packetCount].srcPort, srcPort);
+        strcpy(packets[packetCount].dstHost, dstHost);
+        strcpy(packets[packetCount].dstPort, dstPort);
+        strcpy(packets[packetCount].info,    infoBuf);
+
+        packetCount++;
+    }
+
+    printf("<div class='cards'>");
+    printf("<div class='card'><div class='n'>%d</div><div class='k'>Total</div></div>", stats.total);
+    printf("<div class='card'><div class='n'>%d</div><div class='k'>HTTP :80</div></div>", stats.httpCount);
+    printf("<div class='card'><div class='n'>%d</div><div class='k'>HTTPS :443</div></div>", stats.httpsCount);
+    printf("<div class='card'><div class='n'>%d</div><div class='k'>Other</div></div>", stats.otherCount);
+    printf("</div>");
+
+    printf("<div class='panel'>");
+    printf("<div class='panel-h'>");
+    printf("<div class='left'>Packet List</div>");
+    printf("<div class='right'>Try <span class='mono'>?limit=20</span> | <a class='btn' href='?limit=%d'>limit=%d</a> <a class='btn' href='?limit=50'>limit=50</a> <a class='btn' href='?limit=200'>limit=200</a></div>", total, total);
+    printf("</div>");
+    printf("<table>\n");
+    printf("<tr><th>#</th><th>Time</th><th>Source</th><th>Destination</th><th>Info</th></tr>\n");
+
+    for (int i = 0; i < packetCount; i++) {
+        int srcPortInt = atoi(packets[i].srcPort);
+        int dstPortInt = atoi(packets[i].dstPort);
+        int pktType = classify_by_port(srcPortInt, dstPortInt);
+
+        const char *tagClass = "other";
+        if (pktType == 1) tagClass = "http";
+        else if (pktType == 2) tagClass = "https";
+
+        printf("<tr>");
+        printf("<td class='mono'>%d</td>", i + 1);
+        printf("<td class='mono'>");
+        print_html_escaped(packets[i].time);
+        printf("</td>");
+
+        printf("<td><div class='mono'>");
+        print_html_escaped(packets[i].srcHost);
+        printf("</div><span class='tag %s'>:", tagClass);
+        print_html_escaped(packets[i].srcPort);
+        printf("</span></td>");
+
+        printf("<td><div class='mono'>");
+        print_html_escaped(packets[i].dstHost);
+        printf("</div><span class='tag %s'>:", tagClass);
+        print_html_escaped(packets[i].dstPort);
+        printf("</span></td>");
+
+        printf("<td class='mono'>");
+        print_html_escaped(packets[i].info);
+        printf("</td>");
+        printf("</tr>\n");
+    }
+
+    printf("</table>\n");
+    printf("</div>");
+
+    printf("<div class='foot'>");
+    printf("Notes: tcpdump should be running and writing to the log. Page auto-refreshes every %d seconds. ", AUTO_REFRESH_SECONDS);
+    printf("<a class='btn' href='javascript:location.reload()'>Refresh now</a>");
+    printf("</div>");
+
+    printf("</div></body></html>");
+    return 0;
+}</textarea>
+          </div>
+
+          <div class="filebox">
+            <div class="filehead">
+              <div class="fname">deploy.sh</div>
+              <div class="actions">
+                <button class="btn primary" onclick="copyText('src-deploy.sh')">Copy</button>
+                <button class="btn" onclick="downloadText('src-deploy.sh','deploy.sh')">Download</button>
+              </div>
+            </div>
+            <textarea id="src-deploy.sh" class="code" readonly>#!/usr/bin/env bash
+set -euo pipefail
+
+# Build & deploy CGI
+# Run: ./deploy.sh
+
+gcc parse_http.c -O2 -o parse_http.cgi
+sudo mkdir -p /usr/lib/cgi-bin
+sudo mv parse_http.cgi /usr/lib/cgi-bin/
+sudo chmod +x /usr/lib/cgi-bin/parse_http.cgi
+
+echo "Deployed: /usr/lib/cgi-bin/parse_http.cgi"</textarea>
+          </div>
+
+          <div class="filebox">
+            <div class="filehead">
+              <div class="fname">tcpdump_http80.sh</div>
+              <div class="actions">
+                <button class="btn primary" onclick="copyText('src-tcpdump_http80.sh')">Copy</button>
+                <button class="btn" onclick="downloadText('src-tcpdump_http80.sh','tcpdump_http80.sh')">Download</button>
+              </div>
+            </div>
+            <textarea id="src-tcpdump_http80.sh" class="code" readonly>#!/usr/bin/env bash
+set -euo pipefail
+
+IFACE=${1:-wlan0}
+
+sudo mkdir -p /var/www/logs
+sudo chmod 777 /var/www/logs
+
+echo "Starting tcpdump on ${IFACE} (tcp port 80) -> /var/www/logs/http.log"
+echo "Stop with: sudo pkill tcpdump"
+
+sudo tcpdump -i "${IFACE}" tcp port 80 -n -l > /var/www/logs/http.log</textarea>
+          </div>
+
+          <div class="filebox">
+            <div class="filehead">
+              <div class="fname">tcpdump_80_443.sh</div>
+              <div class="actions">
+                <button class="btn primary" onclick="copyText('src-tcpdump_80_443.sh')">Copy</button>
+                <button class="btn" onclick="downloadText('src-tcpdump_80_443.sh','tcpdump_80_443.sh')">Download</button>
+              </div>
+            </div>
+            <textarea id="src-tcpdump_80_443.sh" class="code" readonly>#!/usr/bin/env bash
+set -euo pipefail
+
+IFACE=${1:-wlan0}
+
+sudo mkdir -p /var/www/logs
+sudo chmod 777 /var/www/logs
+
+echo "Starting tcpdump on ${IFACE} (tcp port 80 or tcp port 443) -> /var/www/logs/http.log"
+echo "Note: HTTPS may use QUIC (udp/443) so tcp/443 can be empty."
+echo "Stop with: sudo pkill tcpdump"
+
+sudo tcpdump -i "${IFACE}" 'tcp port 80 or tcp port 443' -n -l > /var/www/logs/http.log</textarea>
+          </div>
+        </div>
+      </div>
+
+      <div id="notes" class="panel">
+        <div class="ph">Guide Template (put other stuff here)</div>
+        <div class="pc">
+          <p class="note">你可以把其他實驗內容、截圖連結、報告段落直接貼在這一區。</p>
+          <ul>
+            <li><b>Demo link:</b> <span class="muted">(paste your Pi CGI URL here)</span></li>
+            <li><b>Screenshots:</b> <span class="muted">(paste images / links here)</span></li>
+            <li><b>What I learned:</b> <span class="muted">(bullet points)</span></li>
+            <li><b>Known issues:</b> <span class="muted">(bullet points)</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <p class="note muted">Back: <a href="index.html">index</a></p>
+    </div>
+
+    <script>
+      function copyText(id) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const text = el.value ?? el.textContent ?? "";
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).catch(() => fallbackCopy(el));
+        } else {
+          fallbackCopy(el);
+        }
+      }
+
+      function fallbackCopy(el) {
+        try {
+          el.focus();
+          el.select();
+          document.execCommand('copy');
+        } catch (_) {}
+      }
+
+      function downloadText(id, filename) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const text = el.value ?? el.textContent ?? "";
+        const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 500);
+      }
+    </script>
+  </body>
+</html>
