@@ -1,0 +1,465 @@
+:root {
+    --bg-color: #f0f4f8;
+    --text-color: #333;
+    --primary-blue: #005587;
+    /* SDG Blue */
+    --accent-blue: #007bb5;
+    --light-blue-bg: #e6f2f8;
+    --road-color: #4a6fa5;
+
+    --pillar-1-color: #4db6ac;
+    /* Teal */
+    --pillar-2-color: #64b5f6;
+    /* Blue */
+    --pillar-3-color: #ffb74d;
+    /* Orange */
+    --pillar-4-color: #e57373;
+    /* Red */
+
+    --font-main: 'Outfit', sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: var(--font-main);
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    line-height: 1.5;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    background: white;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+}
+
+/* HEADER */
+.main-header {
+    display: flex;
+    align-items: center;
+    padding: 40px;
+    gap: 30px;
+}
+
+.header-icon {
+    width: 150px;
+    height: 150px;
+    flex-shrink: 0;
+}
+
+.header-content h1 {
+    font-size: 2.5rem;
+    color: #1a237e;
+    margin-bottom: 20px;
+    line-height: 1.2;
+}
+
+.subtitle-box {
+    background-color: var(--light-blue-bg);
+    padding: 20px;
+    border-radius: 10px;
+    border-left: 5px solid var(--primary-blue);
+}
+
+.subtitle-box h2 {
+    font-size: 1.2rem;
+    color: var(--primary-blue);
+    margin-bottom: 10px;
+}
+
+/* CHALLENGES SECTION */
+.challenges-section {
+    position: relative;
+    padding: 40px 20px;
+    background: linear-gradient(to bottom, #fff 0%, #f9f9f9 100%);
+    overflow: hidden;
+}
+
+.section-title-banner {
+    background-color: #1a237e;
+    color: white;
+    padding: 15px 30px;
+    border-radius: 30px;
+    display: inline-block;
+    margin-bottom: 40px;
+    position: relative;
+    z-index: 2;
+}
+
+.road-container {
+    position: relative;
+    min-height: 1300px;
+    /* Increased height for better spacing */
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+    /* SVG Background for the winding road */
+    background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 1000 1300" xmlns="http://www.w3.org/2000/svg"><path d="M500,0 Q500,100 300,200 T100,400 T300,600 T700,800 T900,1000 T500,1300" fill="none" stroke="%234a6fa5" stroke-width="100" opacity="0.8" /><path d="M500,0 Q500,100 300,200 T100,400 T300,600 T700,800 T900,1000 T500,1300" fill="none" stroke="%2364b5f6" stroke-width="80" /></svg>');
+    background-repeat: no-repeat;
+    background-position: center top;
+    background-size: 100% 100%;
+}
+
+.challenge-card {
+    position: absolute;
+    width: 350px;
+    padding: 25px;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    z-index: 2;
+    transition: transform 0.3s ease;
+}
+
+.challenge-card:hover {
+    transform: translateY(-5px);
+}
+
+.challenge-card h3,
+.challenge-card h4 {
+    color: var(--primary-blue);
+    margin-bottom: 10px;
+    font-size: 1.1rem;
+}
+
+.desc-text {
+    font-size: 0.9rem;
+    color: #555;
+    margin-top: 10px;
+}
+
+/* Specific Card Positioning to align with the SVG path */
+/* Path roughly: Center -> Left -> Right -> Left -> Right -> Center */
+
+/* 1. Structural Violence (Top Left) */
+.card-left:nth-of-type(1) {
+    top: 50px;
+    left: 0;
+}
+
+/* 2. Bullying (Top Right) */
+.card-right:nth-of-type(2) {
+    top: 250px;
+    right: 0;
+}
+
+/* 3. Digital Threats (Middle Right) */
+.card-right:nth-of-type(3) {
+    top: 550px;
+    right: 0;
+}
+
+/* 4. Corruption (Middle Left) */
+.card-left:nth-of-type(4) {
+    top: 800px;
+    left: 0;
+}
+
+/* 5. Democratic Trust (Bottom Right) */
+.card-right:nth-of-type(5) {
+    top: 1050px;
+    right: 50px;
+}
+
+/* Visual Elements inside cards */
+.human-icon {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #e57373;
+}
+
+.pie-chart-mockup {
+    width: 100px;
+    height: 100px;
+    background: conic-gradient(#e57373 0% 33%, #eee 33% 100%);
+    border-radius: 50%;
+    margin: 10px auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #333;
+    position: relative;
+}
+
+.pie-chart-mockup span {
+    background: white;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+.screen-icon {
+    width: 100%;
+    height: 80px;
+    background: #333;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    position: relative;
+    overflow: hidden;
+    border: 2px solid #555;
+}
+
+.screen-glitch {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    animation: glitch 2s infinite;
+}
+
+@keyframes glitch {
+    0% {
+        transform: translateX(-100%);
+    }
+
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+.stat-circle {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 8px solid #ddd;
+    border-top-color: #333;
+    /* 31% approx */
+    border-right-color: #333;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 10px auto;
+}
+
+.stat-circle .big-num {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #333;
+}
+
+.stat-circle .label {
+    font-size: 0.6rem;
+    text-align: center;
+    max-width: 80%;
+}
+
+
+/* STRATEGY SECTION */
+.strategy-section {
+    padding: 50px 20px;
+    text-align: center;
+    position: relative;
+    z-index: 5;
+    /* Ensure pillars sit on top of the road end */
+    margin-top: -50px;
+    /* Overlap with road slightly */
+}
+
+.strategy-banner {
+    background-color: #ffb74d;
+    color: #333;
+    padding: 15px 40px;
+    border-radius: 30px;
+    display: inline-block;
+    margin-bottom: 60px;
+    font-weight: bold;
+    font-size: 1.2rem;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.pillars-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    align-items: stretch;
+}
+
+.pillar {
+    flex: 1;
+    background: white;
+    border-radius: 20px 20px 0 0;
+    /* Rounded top */
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+}
+
+.pillar:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+}
+
+/* Curved Top Effect */
+.pillar-top {
+    height: 80px;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* Create a wave/curve effect at the top if possible, or just solid color */
+    border-bottom: 5px solid rgba(0, 0, 0, 0.1);
+}
+
+.pillar-1 .pillar-top {
+    background: linear-gradient(135deg, var(--pillar-1-color), #80cbc4);
+}
+
+.pillar-2 .pillar-top {
+    background: linear-gradient(135deg, var(--pillar-2-color), #90caf9);
+}
+
+.pillar-3 .pillar-top {
+    background: linear-gradient(135deg, var(--pillar-3-color), #ffcc80);
+}
+
+.pillar-4 .pillar-top {
+    background: linear-gradient(135deg, var(--pillar-4-color), #ef9a9a);
+}
+
+.icon-circle {
+    background: white;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.8rem;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    border: 3px solid white;
+}
+
+.pillar-body {
+    padding: 50px 20px 30px;
+    /* Extra top padding for icon overlap */
+    flex-grow: 1;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+}
+
+.pillar-1 .pillar-body {
+    background-color: rgba(77, 182, 172, 0.1);
+    border-bottom: 8px solid var(--pillar-1-color);
+}
+
+.pillar-2 .pillar-body {
+    background-color: rgba(100, 181, 246, 0.1);
+    border-bottom: 8px solid var(--pillar-2-color);
+}
+
+.pillar-3 .pillar-body {
+    background-color: rgba(255, 183, 77, 0.1);
+    border-bottom: 8px solid var(--pillar-3-color);
+}
+
+.pillar-4 .pillar-body {
+    background-color: rgba(229, 115, 115, 0.1);
+    border-bottom: 8px solid var(--pillar-4-color);
+}
+
+.pillar h3 {
+    font-size: 1rem;
+    margin-bottom: 15px;
+    text-align: center;
+    text-transform: uppercase;
+    color: #333;
+    font-weight: 800;
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pillar-intro {
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 20px;
+    text-align: center;
+    color: #555;
+    font-style: italic;
+}
+
+.pillar ul {
+    list-style-type: none;
+    /* Remove default bullets */
+    padding-left: 0;
+    font-size: 0.85rem;
+    flex-grow: 1;
+}
+
+.pillar li {
+    margin-bottom: 12px;
+    position: relative;
+    padding-left: 15px;
+}
+
+.pillar li::before {
+    content: '•';
+    color: #333;
+    position: absolute;
+    left: 0;
+    font-weight: bold;
+}
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+    .road-container {
+        background: none;
+        /* Remove SVG road on mobile */
+        min-height: auto;
+        padding-bottom: 40px;
+    }
+
+    .challenge-card {
+        position: relative;
+        width: 100%;
+        max-width: 500px;
+        margin: 20px auto;
+        top: auto !important;
+        left: auto !important;
+        right: auto !important;
+        text-align: left;
+        /* Reset text alignment */
+    }
+
+    .pillars-container {
+        flex-direction: column;
+    }
+
+    .pillar {
+        margin-bottom: 20px;
+    }
+
+    .main-header {
+        flex-direction: column;
+        text-align: center;
+        padding: 20px;
+    }
+
+    .header-icon {
+        margin-bottom: 20px;
+    }
+
+    .subtitle-box {
+        text-align: left;
+    }
+}
