@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voxel Train Scene</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #87CEEB; }
+        canvas { display: block; }
+        #loading {
+            position: absolute; top: 50%; left: 50%; 
+            transform: translate(-50%, -50%); 
+            font-family: monospace; font-size: 24px; color: white;
+            text-shadow: 1px 1px 0 #000; pointer-events: none;
+        }
+    </style>
+
+    <style>
+      /* Hides common overlay IDs and classes used in Three.js examples and generated code */
+      #info, #loading, #ui, #instructions, .label, .overlay, #description {
+        display: none !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        visibility: hidden !important;
+      }
+      /* Ensure the body doesn't show selected text cursor interaction outside canvas */
+      body {
+        user-select: none !important;
+      }
+    </style>
+  </head>
+<body>
+    <div id="loading">Constructing Voxels...</div>
+    <!-- Import Three.js as an ES module -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // --- Configuration ---
+        const VOXEL_SIZE = 5;
+        const PALETTE = {
+            grass: 0x6DAA47,
+            grassDark: 0x599136, // Side of grass block
+            dirt: 0x705335,
+            trainOrange: 0xF28C28,
+            trainBlack: 0x222222,
+            trainGrey: 0x666666,
+            glass: 0x333333,
+            trackWood: 0x5C4033,
+            trackMetal: 0x888888,
+            stone: 0x999999,
+            sky: 0xA3D8F4,
+            log: 0x5C4033,
+            logTop: 0x8B6946
+        };
+
+        // --- Setup Scene ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(PALETTE.sky);
+        // Add fog to blend the horizon
+        scene.fog = new THREE.Fog(PALETTE.sky, 100, 450);
+
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(-64, 48, 80);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        document.body.appendChild(renderer.domElement);
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.maxPolarAngle = Math.PI / 2 - 0.05; // Prevent going under ground
+        controls.target.set(20, 0, 0);
+
+        // --- Lighting ---
+        const ambientLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.6);
+        scene.add(ambientLight);
+
+        const sunLight = new THREE.DirectionalLight(0xffffff, 1.2);
+        sunLight.position.set(-50, 100, 50);
+        sunLight.castShadow = true;
+        sunLight.shadow.mapSize.width = 2048;
+        sunLight.shadow.mapSize.height = 2048;
+        sunLight.shadow.camera.near = 0.5;
+        sunLight.shadow.camera.far = 500;
+        const d = 150;
+        sunLight.shadow.camera.left = -d;
+        sunLight.shadow.camera.right = d;
+        sunLight.shadow.camera.top = d;
+        sunLight.shadow.camera.bottom = -d;
+        scene.add(sunLight);
+
+        // --- Voxel Builder Helper ---
+        // We use a shared geometry to reduce overhead, but individual meshes for simplicity in this script.
+        const boxGeo = new THREE.BoxGeometry(VOXEL_SIZE, VOXEL_SIZE, VOXEL_SIZE);
+        
+        // Material Cache to avoid recreating materials
+        const materials = {};
+        function getMaterial(color) {
+            if (!materials[color]) {
+                materials[color] = new THREE.MeshStandardMaterial({ 
+                    color: color, 
+                    roughness: 0.8,
+                    flatShading: true // Gives that voxel look
+                });
+            }
+            return materials[color];
+        }
+
+        const meshGroup = new THREE.Group();
+        scene.add(meshGroup);
+
+        function placeVoxel(x, y, z, color, parent = meshGroup, scaleY = 1) {
+            const mesh = new THREE.Mesh(boxGeo, getMaterial(color));
+            
+            // Adjust position based on scale
+            const yOffset = (scaleY - 1) * VOXEL_SIZE / 2;
+            
+            mesh.position.set(x * VOXEL_SIZE, (y * VOXEL_SIZE) + yOffset, z * VOXEL_SIZE);
+            
+            if (scaleY !== 1) {
+                mesh.scale.y = scaleY;
+            }
+
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            parent.add(mesh);
+            return mesh;
+        }
+
+        // --- Scene Construction ---
+
+        function buildTerrain() {
+            // Base ground
+            for (let x = -30; x < 50; x++) {
+                for (let z = -20; z < 30; z++) {
+                    // Random slight variations in height for "natural" look
+                    let y = -1;
+                    
+                    // The "Hill" on the right side of the image
+                    if (z > 5 && x > -10) {
+                        y = 0; // Step up
+                        if (z > 10 && x > 0) y = 1; // Another step
+                    }
+
+                    // Create the grass block
+                    placeVoxel(x, y, z, PALETTE.grass);
+                    // Add dirt below if exposed (simplified)
+                    if (y > -1) placeVoxel(x, y-1, z, PALETTE.dirt);
+                }
+            }
+        }
+
+        function buildTracks() {
+            const zTrack = -2; // Z position of the track center
+            const startX = -30;
+            const endX = 50;
+
+            for (let x = startX; x < endX; x++) {
+                // Gravel bed
+                placeVoxel(x, 0, zTrack, PALETTE.stone);
+                placeVoxel(x, 0, zTrack + 1, PALETTE.stone);
+                placeVoxel(x, 0, zTrack - 1, PALETTE.stone);
+
+                // Wooden Sleepers (ties) every 2 blocks
+                if (x % 2 === 0) {
+                    const sleeper = placeVoxel(x, 0.2, zTrack, PALETTE.trackWood);
+                    sleeper.scale.set(0.6, 0.2, 3);
+                }
+
+                // Rails
+                const rail1 = placeVoxel(x, 0.4, zTrack - 0.8, PALETTE.trackMetal);
+                rail1.scale.set(1.05, 0.2, 0.2); // Overlap slightly to connect
+                const rail2 = placeVoxel(x, 0.4, zTrack + 0.8, PALETTE.trackMetal);
+                rail2.scale.set(1.05, 0.2, 0.2);
+            }
+        }
+
+        function buildTrain() {
+            const trainGroup = new THREE.Group();
+            scene.add(trainGroup);
+            
+            // Position train on tracks
+            const tx = 0; 
+            const ty = 1; // On top of gravel
+            const tz = -2;
+
+            // -- Chassis (Black) --
+            for (let x = 0; x < 24; x++) {
+                for (let z = -1; z <= 1; z++) {
+                    placeVoxel(x, 0, z, PALETTE.trainBlack, trainGroup);
+                }
+            }
+            // Bogies/Wheels detail (simplified)
+            placeVoxel(3, -0.5, -1.2, 0x111111, trainGroup).scale.set(3, 1, 0.5);
+            placeVoxel(3, -0.5, 1.2, 0x111111, trainGroup).scale.set(3, 1, 0.5);
+            placeVoxel(18, -0.5, -1.2, 0x111111, trainGroup).scale.set(3, 1, 0.5);
+            placeVoxel(18, -0.5, 1.2, 0x111111, trainGroup).scale.set(3, 1, 0.5);
+
+
+            // -- Body Construction --
+            
+            // Front Nose (Angled/Short)
+            for(let z=-1; z<=1; z++) {
+                placeVoxel(0, 1, z, PALETTE.trainOrange, trainGroup);
+                placeVoxel(0, 2, z, PALETTE.trainOrange, trainGroup);
+                // Yellow stripes on bottom front
+                placeVoxel(-0.1, 0, z, 0xFFD700, trainGroup).scale.set(0.2, 0.5, 0.8);
+            }
+
+            // Main Body (Orange)
+            for (let x = 1; x < 23; x++) {
+                for (let z = -1; z <= 1; z++) {
+                    // Height 1, 2, 3
+                    placeVoxel(x, 1, z, PALETTE.trainOrange, trainGroup);
+                    placeVoxel(x, 2, z, PALETTE.trainOrange, trainGroup);
+                    placeVoxel(x, 3, z, PALETTE.trainOrange, trainGroup);
+                }
+            }
+
+            // -- Cab Area (Front) --
+            // Black surround for windows
+            for (let x = 1; x <= 4; x++) {
+                for (let z = -1; z <= 1; z++) {
+                    // Replace orange with black at window level
+                    if (z === -1 || z === 1 || x === 1) {
+                        placeVoxel(x, 3, z, PALETTE.trainBlack, trainGroup);
+                    }
+                    // Roof over cab
+                    placeVoxel(x, 4, z, PALETTE.trainBlack, trainGroup);
+                }
+            }
+            // Windshield Glass
+            placeVoxel(1, 3, -0.5, PALETTE.glass, trainGroup).scale.set(1.1, 0.8, 0.8);
+            placeVoxel(1, 3, 0.5, PALETTE.glass, trainGroup).scale.set(1.1, 0.8, 0.8);
+            
+            // Side Windows
+            placeVoxel(2, 3, 1.1, PALETTE.glass, trainGroup).scale.set(0.8, 0.8, 0.1);
+            placeVoxel(3, 3, 1.1, PALETTE.glass, trainGroup).scale.set(0.8, 0.8, 0.1);
+
+            // -- Rear Body Details --
+            // Roof Vents (Grey)
+            for(let x=6; x<20; x+=2) {
+                placeVoxel(x, 4, 0, PALETTE.trainGrey, trainGroup).scale.set(1.5, 0.5, 2);
+            }
+
+            // Side Grates (Grey texture effect via blocks)
+            for(let x=10; x<18; x+=2) {
+                placeVoxel(x, 2.5, 1.1, 0xCC7020, trainGroup).scale.set(1, 1, 0.1); // Slightly darker orange
+            }
+            
+            // "R" Logo (Approximation)
+            placeVoxel(2, 1.5, 1.1, 0xFFFFFF, trainGroup).scale.set(1, 0.5, 0.1);
+
+            trainGroup.position.set(0, 1 * VOXEL_SIZE, -2 * VOXEL_SIZE);
+        }
+
+        function buildCatenary() {
+            // The overhead wire structures
+            const poleXLocations = [-20, 10, 40];
+            const poleZ = -6;
+
+            poleXLocations.forEach(x => {
+                const poleGroup = new THREE.Group();
+                scene.add(poleGroup);
+
+                // Vertical Pole
+                for(let y=0; y<12; y++) {
+                    placeVoxel(x, y, poleZ, PALETTE.stone, poleGroup).scale.set(0.6, 1, 0.6);
+                }
+                
+                // Horizontal Beam
+                for(let z=0; z<8; z++) {
+                     placeVoxel(x, 10, poleZ + z, PALETTE.stone, poleGroup).scale.set(0.4, 0.4, 1);
+                }
+
+                // Wires (Thin blocks)
+                const wireZ1 = -2; // Track center
+                const wire = placeVoxel(0, 9.5, wireZ1, 0x333333, scene); 
+                // Stretch wire across the whole scene for simplicity
+                wire.position.set(10 * VOXEL_SIZE, 9.5 * VOXEL_SIZE, wireZ1 * VOXEL_SIZE); 
+                wire.scale.set(200, 0.05, 0.05);
+            });
+        }
+
+        function buildProps() {
+            // Foreground Logs (Left)
+            const logGroup = new THREE.Group();
+            logGroup.position.set(-35, 0, 15);
+            scene.add(logGroup);
+
+            // Tall thick log structure
+            placeVoxel(0, 0, 0, PALETTE.log, logGroup).scale.set(1.5, 6, 1.5);
+            placeVoxel(2, 0, 1, PALETTE.log, logGroup).scale.set(1.5, 4, 1.5);
+
+            // Scattered small logs
+            placeVoxel(10, 0.5, 5, PALETTE.log, scene).scale.set(1, 1, 2); // Lying down
+            placeVoxel(12, 0.5, 8, PALETTE.log, scene).scale.set(1, 1, 1.5);
+            
+            // Stacks of wood (cubes)
+            placeVoxel(5, 0, 10, PALETTE.log, scene);
+            placeVoxel(6.5, 0, 10, PALETTE.log, scene);
+            placeVoxel(5.8, 1, 10, PALETTE.log, scene); // Stacked on top
+
+            placeVoxel(15, 1, 15, PALETTE.log, scene); // On the hill
+            placeVoxel(16, 1, 15, PALETTE.log, scene);
+        }
+
+        // --- Execution ---
+
+        buildTerrain();
+        buildTracks();
+        buildTrain();
+        buildCatenary();
+        buildProps();
+
+        document.getElementById('loading').style.display = 'none';
+
+        // --- Animation Loop ---
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // Handle Resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        animate();
+
+    </script>
+</body>
+</html>
