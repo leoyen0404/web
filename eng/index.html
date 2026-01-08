@@ -1,454 +1,474 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { Search, Star, BookOpen, GraduationCap, ChevronRight, Filter, Book, Trash2, List } from 'lucide-react';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hyper Note Vocab App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        [v-cloak] { display: none; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 font-sans pb-20">
+    <div id="app">
+        <!-- Header -->
+        <header class="sticky top-0 z-30 bg-white border-b border-slate-200 shadow-sm">
+            <div class="max-w-4xl mx-auto px-4 py-4">
+                <div class="flex items-center justify-between mb-4">
+                    <h1 class="text-xl font-bold flex items-center gap-2 text-indigo-600">
+                        <i data-lucide="book-open" class="w-6 h-6"></i>
+                        <span>Hyper Note <span class="text-slate-400 font-light italic">Vocab</span></span>
+                    </h1>
+                    <div class="flex gap-2">
+                        <button id="toggle-view" class="p-2 rounded-lg bg-slate-100 text-slate-600 transition-colors flex items-center gap-2 text-sm font-medium hover:bg-slate-200">
+                            <i data-lucide="list" class="w-4 h-4"></i>
+                            <span id="view-mode-text">Single List Mode</span>
+                        </button>
+                        <button id="clear-hard" class="p-2 text-slate-400 hover:text-red-500 transition-colors" title="Clear highlights">
+                            <i data-lucide="trash-2" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </div>
 
-// --- DATA ---
-const VOCAB_DATA = [
-  {
-    unit: 3,
-    articles: [
-      {
-        id: "u3a1",
-        title: "Article 1: The Uncommon Cold",
-        vocabPreview: [
-          { word: "nasty", trans: "嚴重的；極其令人不快的", def: "severe or extremely unpleasant" },
-          { word: "accelerate", trans: "加速", def: "to cause to happen sooner or faster" },
-          { word: "enzyme", trans: "酶；酵素", def: "a substance produced by living cells that makes certain reactions happen" },
-          { word: "antibody", trans: "抗體", def: "a protein that defend the body from infection" },
-          { word: "molecular", trans: "分子的", def: "of or related to the smallest possible amount of a substance" },
-          { word: "mutation", trans: "突變", def: "a change in the genetic material of an organism" }
-        ],
-        academicList: [
-          { word: "pharmaceutical", trans: "製藥的", def: "related to the preparation of chemicals for medical use" },
-          { word: "over-the-counter", trans: "成藥；非處方藥", def: "sold legally without a doctor's permission" },
-          { word: "prescription", trans: "處方箋", def: "a note from a doctor stating what medicine you need" },
-          { word: "vaccine", trans: "疫苗", def: "a medicine that helps build resistance to disease" },
-          { word: "disparate", trans: "迥然不同的", def: "not alike; cannot be compared" },
-          { word: "obsolete", trans: "淘汰的；過時的", def: "no longer produced or used; out of date" },
-          { word: "efficacy", trans: "功效；效驗", def: "effectiveness; how well something works" }
-        ]
-      },
-      {
-        id: "u3a2",
-        title: "Article 2: Gene Therapy",
-        vocabPreview: [
-          { word: "defect", trans: "缺陷；瑕疵", def: "a flaw, problem, or inconsistency" },
-          { word: "reproduce", trans: "複製；再生", def: "to copy; to make again" },
-          { word: "manipulation", trans: "操縱；控制", def: "the act of moving or changing something with your hands or with a machine" },
-          { word: "cloning", trans: "克隆；生物複製", def: "creating a genetically identical copy of an organism" },
-          { word: "prevalence", trans: "流行；普遍", def: "the quality or state of being common or widespread" },
-          { word: "genetics", trans: "遺傳學", def: "the scientific study of genes and their effects on variation" }
-        ],
-        academicList: [
-          { word: "genome", trans: "基因組", def: "the complete set of genetic material in an organism's cell" },
-          { word: "recipient", trans: "接受者", def: "a person who receives something" },
-          { word: "cystic fibrosis", trans: "囊腫性纖維化", def: "a genetic lung disease" },
-          { word: "embryo", trans: "胚胎", def: "a human or animal in the early stages of development before it is born" },
-          { word: "inflammatory", trans: "發炎的", def: "causing the body to become swollen, painful, etc." },
-          { word: "malaria", trans: "瘧疾", def: "a disease affecting the red blood cells transmitted by mosquitoes" },
-          { word: "endemic", trans: "地方性的", def: "belonging or native to a particular people or country" },
-          { word: "confer on", trans: "授予；賦予", def: "to give to" }
-        ]
-      }
-    ]
-  },
-  {
-    unit: 4,
-    articles: [
-      {
-        id: "u4a1",
-        title: "Article 1: Teenage Runaways",
-        vocabPreview: [
-          { word: "precede", trans: "在…之前發生", def: "to come before" },
-          { word: "precipitate", trans: "促成；加速發生", def: "to cause to happen" },
-          { word: "trauma", trans: "創傷；外傷", def: "a very difficult or unpleasant experience" },
-          { word: "motive", trans: "動機", def: "a reason for doing something" },
-          { word: "diagnostic", trans: "診斷的", def: "used to help identify a disease, illness, or problem" },
-          { word: "psychiatric", trans: "精神病的", def: "of or relating to a branch of medicine dealing with mental disorders" }
-        ],
-        academicList: [
-          { word: "plight", trans: "苦境；困境", def: "a difficult or unfortunate situation" },
-          { word: "habitual", trans: "習慣性的", def: "done regularly or repeatedly" },
-          { word: "ward", trans: "受監護人", def: "a person under the protection of someone else" },
-          { word: "vagrancy", trans: "流浪", def: "the state of being homeless and living in public places" },
-          { word: "petty theft", trans: "小偷小摸", def: "the stealing of small amounts of money or items" },
-          { word: "predatory", trans: "掠奪性的", def: "wrongly harming or using others for pleasure or profit" },
-          { word: "hygiene", trans: "衛生", def: "things one does to keep oneself clean to stay healthy" },
-          { word: "intolerable", trans: "無法忍受的", def: "impossible to put up with; unbearable" },
-          { word: "chronic", trans: "慢性的", def: "continuing or occurring again and again for a long time" },
-          { word: "vicious circle", trans: "惡性循環", def: "a repeating situation in which one problem causes another" }
-        ]
-      },
-      {
-        id: "u4a2",
-        title: "Article 2: Tough on Drugs",
-        vocabPreview: [
-          { word: "widespread", trans: "廣泛的；普遍的", def: "common to a large area, numerous situations, or many people" },
-          { word: "tolerance", trans: "寬容；忍受", def: "acceptance of beliefs or behavior outside of a social norm" },
-          { word: "communist", trans: "共產主義的", def: "government system where state owns all property" },
-          { word: "gram", trans: "公克", def: "a unit of weight equal to 1/1,000 of a kilogram" },
-          { word: "justification", trans: "正當理由", def: "a reasonable cause for a position or course of action" },
-          { word: "susceptible", trans: "易受影響的", def: "easily affected, influenced, or harmed by something" }
-        ],
-        academicList: [
-          { word: "trafficking", trans: "非法販運", def: "transportation and selling of goods, especially illegal goods" },
-          { word: "wield", trans: "行使；運用", def: "to exercise; to carry out" },
-          { word: "ordinance", trans: "條例；法令", def: "a law" },
-          { word: "measure", trans: "措施", def: "a step taken as a means to an end" },
-          { word: "abolition", trans: "廢除", def: "the act of officially ending or doing away with" },
-          { word: "dissent", trans: "異議", def: "difference of opinion" },
-          { word: "narcotic", trans: "麻醉劑；毒品", def: "a drug that affects your mood and behavior, usually illegal" },
-          { word: "detention", trans: "拘留", def: "being kept in a prison or similar place" },
-          { word: "mandatory", trans: "強制性的", def: "required by law" },
-          { word: "common law", trans: "習慣法；判例法", def: "legal system based on judges' decisions" },
-          { word: "hub", trans: "樞紐；中心", def: "a center of activity" }
-        ]
-      }
-    ]
-  },
-  {
-    unit: 5,
-    articles: [
-      {
-        id: "u5a1",
-        title: "Article 1: Deforestation",
-        vocabPreview: [
-          { word: "tropical", trans: "熱帶的", def: "of or relating to a warm climate near the equator" },
-          { word: "sustainable", trans: "永續的", def: "possible to continue or maintain" },
-          { word: "precipitation", trans: "降水量", def: "rainfall or snowfall" },
-          { word: "intensive", trans: "密集的；強化的", def: "highly concentrated or accelerated" },
-          { word: "agriculture", trans: "農業", def: "farming and the raising of livestock" },
-          { word: "vegetation", trans: "植被", def: "plants" }
-        ],
-        academicList: [
-          { word: "temperate", trans: "溫帶的", def: "having a moderate climate without extreme temperatures" },
-          { word: "logging", trans: "伐木業", def: "cutting down trees for wood" },
-          { word: "slash", trans: "砍伐", def: "to cut violently" },
-          { word: "lie fallow", trans: "休耕", def: "to be left unused (of farmland)" },
-          { word: "optimum", trans: "最優的", def: "the best possible" },
-          { word: "depleted", trans: "耗盡的", def: "used up" },
-          { word: "evaporation", trans: "蒸發", def: "the process of changing from a liquid into a gas" },
-          { word: "canopy", trans: "林冠", def: "the highest layer of branches in a forest" },
-          { word: "foliage", trans: "葉子", def: "the leaves on trees and plants" },
-          { word: "vanish", trans: "消失", def: "to disappear" }
-        ]
-      },
-      {
-        id: "u5a2",
-        title: "Article 2: Food Security and Food Supply",
-        vocabPreview: [
-          { word: "breakdown", trans: "故障；崩潰", def: "the failure or end of something" },
-          { word: "unstable", trans: "不穩定的", def: "not fixed or safe and likely to change" },
-          { word: "stabilize", trans: "使穩定", def: "to stop something changing or getting worse" },
-          { word: "mechanical", trans: "機械的", def: "related to or operated by machinery" },
-          { word: "convergence", trans: "匯聚", def: "two or more things meeting at a particular point" },
-          { word: "marginal", def: "small and not significant", trans: "邊緣的；微小的" }
-        ],
-        academicList: [
-          { word: "seemingly", trans: "看似", def: "appearing to be something, especially when this is not true" },
-          { word: "prolonged", trans: "長期的", def: "continuing for a long time" },
-          { word: "exporter", trans: "出口商", def: "person, country, or business that sells goods to another country" },
-          { word: "scarcity", trans: "短缺", def: "a lack of something" },
-          { word: "restriction", trans: "限制", def: "an official limit on something" },
-          { word: "hoard", trans: "囤積", def: "to collect large amounts of something and keep it for yourself" },
-          { word: "stockpile", trans: "儲備", def: "to store a large supply of something for future use" },
-          { word: "unaffordable", trans: "負擔不起的", def: "too expensive for people to be able to pay for" },
-          { word: "infrastructure", trans: "基礎設施", def: "basic systems that a country uses in order to work effectively" },
-          { word: "undernourished", trans: "營養不良的", def: "not eating enough food to be in good health" },
-          { word: "initiative", trans: "倡議；新方案", def: "a new plan or process to achieve something or solve a problem" }
-        ]
-      }
-    ]
-  }
-];
-
-// --- MAIN COMPONENT ---
-export default function App() {
-  const [viewMode, setViewMode] = useState('unit'); // 'unit' or 'all'
-  const [activeUnit, setActiveUnit] = useState(3);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [hardWords, setHardWords] = useState(() => {
-    const saved = localStorage.getItem('hyperNote_hardWords');
-    return saved ? JSON.parse(saved) : [];
-  });
-  const [showHardOnly, setShowHardOnly] = useState(false);
-
-  // Sync hard words to storage
-  useEffect(() => {
-    localStorage.setItem('hyperNote_hardWords', JSON.stringify(hardWords));
-  }, [hardWords]);
-
-  const toggleHard = (word) => {
-    setHardWords(prev => 
-      prev.includes(word) ? prev.filter(w => w !== word) : [...prev, word]
-    );
-  };
-
-  const clearHardWords = () => {
-    if(window.confirm("Clear all highlighted words?")) {
-        setHardWords([]);
-    }
-  };
-
-  // Grouped results for Unit View
-  const filteredArticles = useMemo(() => {
-    if (viewMode !== 'unit') return [];
-    const unit = VOCAB_DATA.find(u => u.unit === activeUnit);
-    if (!unit) return [];
-
-    return unit.articles.map(article => {
-      const filterFn = (item) => {
-        const matchesSearch = item.word.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                             item.def.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                             item.trans.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesHard = !showHardOnly || hardWords.includes(item.word);
-        return matchesSearch && matchesHard;
-      };
-
-      return {
-        ...article,
-        vocabPreview: article.vocabPreview.filter(filterFn),
-        academicList: article.academicList.filter(filterFn)
-      };
-    }).filter(article => article.vocabPreview.length > 0 || article.academicList.length > 0);
-  }, [activeUnit, searchQuery, hardWords, showHardOnly, viewMode]);
-
-  // Flattened results for "All Words" list mode
-  const allFlattenedWords = useMemo(() => {
-    const list = [];
-    VOCAB_DATA.forEach(unit => {
-      unit.articles.forEach(article => {
-        [...article.vocabPreview, ...article.academicList].forEach(word => {
-            const matchesSearch = word.word.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                                 word.def.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                 word.trans.toLowerCase().includes(searchQuery.toLowerCase());
-            const matchesHard = !showHardOnly || hardWords.includes(word.word);
-            
-            if (matchesSearch && matchesHard) {
-                list.push({ ...word, source: `U${unit.unit} - ${article.title.split(':')[0]}` });
-            }
-        });
-      });
-    });
-    // Deduplicate and sort
-    return Array.from(new Map(list.map(item => [item.word, item])).values())
-                .sort((a, b) => a.word.localeCompare(b.word));
-  }, [searchQuery, hardWords, showHardOnly]);
-
-  const totalHardCount = hardWords.length;
-
-  return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans pb-20">
-      {/* Header */}
-      <header className="sticky top-0 z-30 bg-white border-b border-slate-200 shadow-sm">
-        <div className="max-w-4xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-xl font-bold flex items-center gap-2 text-indigo-600">
-              <BookOpen className="w-6 h-6" />
-              <span>Hyper Note <span className="text-slate-400 font-light italic">Vocab</span></span>
-            </h1>
-            <div className="flex gap-2">
-                <button 
-                  onClick={() => setViewMode(viewMode === 'unit' ? 'all' : 'unit')}
-                  className={`p-2 rounded-lg transition-colors flex items-center gap-2 text-sm font-medium ${
-                    viewMode === 'all' ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 text-slate-600'
-                  }`}
-                  title="Toggle List View"
-                >
-                    <List className="w-4 h-4" />
-                    {viewMode === 'all' ? 'Single List Mode' : 'Unit View'}
-                </button>
-                <button 
-                    onClick={clearHardWords}
-                    className="p-2 text-slate-400 hover:text-red-500 transition-colors"
-                    title="Clear highlights"
-                >
-                    <Trash2 className="w-5 h-5" />
-                </button>
-            </div>
-          </div>
-
-          {/* Controls */}
-          <div className="space-y-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <input 
-                type="text" 
-                placeholder="Search word, definition, or translation..."
-                className="w-full pl-10 pr-4 py-2 bg-slate-100 border-transparent focus:bg-white focus:ring-2 focus:ring-indigo-500 rounded-xl transition-all outline-none"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-            
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
-              {viewMode === 'unit' && [3, 4, 5].map(u => (
-                <button
-                  key={u}
-                  onClick={() => setActiveUnit(u)}
-                  className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
-                    activeUnit === u 
-                      ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200' 
-                      : 'bg-white text-slate-600 border border-slate-200 hover:border-indigo-300'
-                  }`}
-                >
-                  Unit {u}
-                </button>
-              ))}
-              
-              <div className="h-6 w-px bg-slate-200 mx-2" />
-              
-              <button
-                onClick={() => setShowHardOnly(!showHardOnly)}
-                className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
-                  showHardOnly 
-                    ? 'bg-amber-100 text-amber-700 border border-amber-300' 
-                    : 'bg-white text-slate-600 border border-slate-200'
-                }`}
-              >
-                <Star className={`w-4 h-4 ${showHardOnly ? 'fill-amber-500 text-amber-500' : ''}`} />
-                Hard Words ({totalHardCount})
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Content */}
-      <main className="max-w-4xl mx-auto px-4 pt-6">
-        {viewMode === 'unit' ? (
-            // UNIT VIEW MODE
-            filteredArticles.length === 0 ? (
-                <EmptyState />
-            ) : (
-                <div className="space-y-8">
-                {filteredArticles.map((article) => (
-                    <section key={article.id} className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-                    <div className="bg-slate-50 border-b border-slate-200 px-6 py-3">
-                        <h2 className="text-lg font-bold text-slate-800">{article.title}</h2>
+                <div class="space-y-3">
+                    <div class="relative">
+                        <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+                        <input 
+                            type="text" 
+                            id="search-input"
+                            placeholder="Search word, definition, or translation..."
+                            class="w-full pl-10 pr-4 py-2 bg-slate-100 border-transparent focus:bg-white focus:ring-2 focus:ring-indigo-500 rounded-xl transition-all outline-none"
+                        >
                     </div>
                     
-                    <div className="p-6 space-y-8">
-                        {article.vocabPreview.length > 0 && (
-                        <WordSection title="Vocabulary Preview" icon={<Book className="w-4 h-4"/>} color="text-indigo-600" words={article.vocabPreview} hardWords={hardWords} toggleHard={toggleHard} />
-                        )}
-
-                        {article.academicList.length > 0 && (
-                        <WordSection title="Academic Word List" icon={<GraduationCap className="w-4 h-4"/>} color="text-emerald-600" words={article.academicList} hardWords={hardWords} toggleHard={toggleHard} />
-                        )}
-                    </div>
-                    </section>
-                ))}
-                </div>
-            )
-        ) : (
-            // ALL WORDS LIST MODE
-            allFlattenedWords.length === 0 ? (
-                <EmptyState />
-            ) : (
-                <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-                    <div className="bg-indigo-50 border-b border-indigo-100 px-6 py-3 flex justify-between items-center">
-                        <h2 className="text-lg font-bold text-indigo-900 flex items-center gap-2">
-                            <List className="w-5 h-5" />
-                            All Vocabulary ({allFlattenedWords.length})
-                        </h2>
-                        <span className="text-xs text-indigo-400 bg-white px-2 py-1 rounded border border-indigo-100">Alphabetical</span>
-                    </div>
-                    <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {allFlattenedWords.map(word => (
-                            <WordCard 
-                                key={word.word} 
-                                item={word} 
-                                isHard={hardWords.includes(word.word)} 
-                                onToggle={() => toggleHard(word.word)}
-                                showSource 
-                            />
-                        ))}
+                    <div class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+                        <div id="unit-tabs" class="flex gap-2">
+                            <!-- Unit buttons injected here -->
+                        </div>
+                        <div class="h-6 w-px bg-slate-200 mx-2"></div>
+                        <button id="hard-filter-toggle" class="flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium transition-all bg-white text-slate-600 border border-slate-200">
+                            <i data-lucide="star" id="hard-star-icon" class="w-4 h-4"></i>
+                            Hard Words (<span id="hard-count">0</span>)
+                        </button>
                     </div>
                 </div>
-            )
-        )}
-      </main>
-
-      {/* Floating Action Hint */}
-      {totalHardCount > 0 && !showHardOnly && (
-        <div className="fixed bottom-6 right-6 z-40">
-          <button 
-            onClick={() => setShowHardOnly(true)}
-            className="bg-amber-500 text-white px-6 py-3 rounded-full shadow-lg shadow-amber-200 flex items-center gap-2 font-bold animate-bounce hover:bg-amber-600 transition-colors"
-          >
-            Review {totalHardCount} Hard Words
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function WordSection({ title, icon, color, words, hardWords, toggleHard }) {
-    return (
-        <div>
-            <h3 className={`flex items-center gap-2 ${color} font-semibold mb-4 text-sm uppercase tracking-wider`}>
-                {icon}
-                {title}
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {words.map(item => (
-                    <WordCard 
-                    key={item.word} 
-                    item={item} 
-                    isHard={hardWords.includes(item.word)} 
-                    onToggle={() => toggleHard(item.word)} 
-                    />
-                ))}
             </div>
-        </div>
-    );
-}
+        </header>
 
-function EmptyState() {
-    return (
-        <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-            <Filter className="w-12 h-12 mb-4 opacity-20" />
-            <p className="text-lg">No words found matches your criteria.</p>
-        </div>
-    );
-}
+        <!-- Main Content -->
+        <main id="content" class="max-w-4xl mx-auto px-4 pt-6">
+            <!-- Articles or List will be injected here -->
+        </main>
 
-function WordCard({ item, isHard, onToggle, showSource }) {
-  return (
-    <div 
-      className={`group relative p-4 rounded-xl border transition-all duration-200 flex flex-col justify-between ${
-        isHard 
-          ? 'bg-amber-50 border-amber-200 ring-1 ring-amber-100' 
-          : 'bg-white border-slate-100 hover:border-indigo-100 hover:shadow-md shadow-sm'
-      }`}
-    >
-      <button 
-        onClick={onToggle}
-        className="absolute top-3 right-3 p-1.5 rounded-full hover:bg-white transition-colors z-10"
-      >
-        <Star className={`w-4 h-4 transition-colors ${isHard ? 'fill-amber-500 text-amber-500' : 'text-slate-300 group-hover:text-amber-400'}`} />
-      </button>
-
-      <div>
-        <div className="flex items-baseline gap-2 flex-wrap mb-1">
-            <h4 className={`text-lg font-bold transition-colors ${isHard ? 'text-amber-900' : 'text-slate-800'}`}>
-            {item.word}
-            </h4>
-            <span className={`text-sm font-medium ${isHard ? 'text-amber-600' : 'text-indigo-500'}`}>
-                {item.trans}
-            </span>
+        <!-- Floating Action -->
+        <div id="review-bubble" class="fixed bottom-6 right-6 z-40 hidden">
+            <button id="trigger-hard-view" class="bg-amber-500 text-white px-6 py-3 rounded-full shadow-lg shadow-amber-200 flex items-center gap-2 font-bold animate-bounce hover:bg-amber-600 transition-colors">
+                Review <span id="bubble-count">0</span> Hard Words
+                <i data-lucide="chevron-right" class="w-4 h-4"></i>
+            </button>
         </div>
-        <p className={`text-sm leading-relaxed mb-2 ${isHard ? 'text-amber-700/80' : 'text-slate-500'}`}>
-          {item.def}
-        </p>
-        {showSource && (
-            <div className="mt-auto pt-2 border-t border-slate-50 text-[10px] uppercase tracking-widest text-slate-300 font-bold">
-                {item.source}
-            </div>
-        )}
-      </div>
     </div>
-  );
-}
+
+    <script>
+        // --- DATA ---
+        const VOCAB_DATA = [
+            {
+                unit: 3,
+                articles: [
+                    {
+                        id: "u3a1",
+                        title: "Article 1: The Uncommon Cold",
+                        vocabPreview: [
+                            { word: "nasty", trans: "嚴重的；極其令人不快的", def: "severe or extremely unpleasant" },
+                            { word: "accelerate", trans: "加速", def: "to cause to happen sooner or faster" },
+                            { word: "enzyme", trans: "酶；酵素", def: "a substance produced by living cells that makes certain reactions happen" },
+                            { word: "antibody", trans: "抗體", def: "a protein that defend the body from infection" },
+                            { word: "molecular", trans: "分子的", def: "of or related to the smallest possible amount of a substance" },
+                            { word: "mutation", trans: "突變", def: "a change in the genetic material of an organism" }
+                        ],
+                        academicList: [
+                            { word: "pharmaceutical", trans: "製藥的", def: "related to the preparation of chemicals for medical use" },
+                            { word: "over-the-counter", trans: "成藥；非處方藥", def: "sold legally without a doctor's permission" },
+                            { word: "prescription", trans: "處方箋", def: "a note from a doctor stating what medicine you need" },
+                            { word: "vaccine", trans: "疫苗", def: "a medicine that helps build resistance to disease" },
+                            { word: "disparate", trans: "迥然不同的", def: "not alike; cannot be compared" },
+                            { word: "obsolete", trans: "淘汰的；過時的", def: "no longer produced or used; out of date" },
+                            { word: "efficacy", trans: "功效；效驗", def: "effectiveness; how well something works" }
+                        ]
+                    },
+                    {
+                        id: "u3a2",
+                        title: "Article 2: Gene Therapy",
+                        vocabPreview: [
+                            { word: "defect", trans: "缺陷；瑕疵", def: "a flaw, problem, or inconsistency" },
+                            { word: "reproduce", trans: "複製；再生", def: "to copy; to make again" },
+                            { word: "manipulation", trans: "操縱；控制", def: "the act of moving or changing something with your hands or with a machine" },
+                            { word: "cloning", trans: "克隆；生物複製", def: "creating a genetically identical copy of an organism" },
+                            { word: "prevalence", trans: "流行；普遍", def: "the quality or state of being common or widespread" },
+                            { word: "genetics", trans: "遺傳學", def: "the scientific study of genes and their effects on variation" }
+                        ],
+                        academicList: [
+                            { word: "genome", trans: "基因組", def: "the complete set of genetic material in an organism's cell" },
+                            { word: "recipient", trans: "接受者", def: "a person who receives something" },
+                            { word: "cystic fibrosis", trans: "囊腫性纖維化", def: "a genetic lung disease" },
+                            { word: "embryo", trans: "胚胎", def: "a human or animal in the early stages of development before it is born" },
+                            { word: "inflammatory", trans: "發炎的", def: "causing the body to become swollen, painful, etc." },
+                            { word: "malaria", trans: "瘧疾", def: "a disease affecting the red blood cells transmitted by mosquitoes" },
+                            { word: "endemic", trans: "地方性的", def: "belonging or native to a particular people or country" },
+                            { word: "confer on", trans: "授予；賦予", def: "to give to" }
+                        ]
+                    }
+                ]
+            },
+            {
+                unit: 4,
+                articles: [
+                    {
+                        id: "u4a1",
+                        title: "Article 1: Teenage Runaways",
+                        vocabPreview: [
+                            { word: "precede", trans: "在…之前發生", def: "to come before" },
+                            { word: "precipitate", trans: "促成；加速發生", def: "to cause to happen" },
+                            { word: "trauma", trans: "創傷；外傷", def: "a very difficult or unpleasant experience" },
+                            { word: "motive", trans: "動機", def: "a reason for doing something" },
+                            { word: "diagnostic", trans: "診斷的", def: "used to help identify a disease, illness, or problem" },
+                            { word: "psychiatric", trans: "精神病的", def: "of or relating to a branch of medicine dealing with mental disorders" }
+                        ],
+                        academicList: [
+                            { word: "plight", trans: "苦境；困境", def: "a difficult or unfortunate situation" },
+                            { word: "habitual", trans: "習慣性的", def: "done regularly or repeatedly" },
+                            { word: "ward", trans: "受監護人", def: "a person under the protection of someone else" },
+                            { word: "vagrancy", trans: "流浪", def: "the state of being homeless and living in public places" },
+                            { word: "petty theft", trans: "小偷小摸", def: "the stealing of small amounts of money or items" },
+                            { word: "predatory", trans: "掠奪性的", def: "wrongly harming or using others for pleasure or profit" },
+                            { word: "hygiene", trans: "衛生", def: "things one does to keep oneself clean to stay healthy" },
+                            { word: "intolerable", trans: "無法忍受的", def: "impossible to put up with; unbearable" },
+                            { word: "chronic", trans: "慢性的", def: "continuing or occurring again and again for a long time" },
+                            { word: "vicious circle", trans: "惡性循環", def: "a repeating situation in which one problem causes another" }
+                        ]
+                    },
+                    {
+                        id: "u4a2",
+                        title: "Article 2: Tough on Drugs",
+                        vocabPreview: [
+                            { word: "widespread", trans: "廣泛的；普遍的", def: "common to a large area, numerous situations, or many people" },
+                            { word: "tolerance", trans: "寬容；忍受", def: "acceptance of beliefs or behavior outside of a social norm" },
+                            { word: "communist", trans: "共產主義的", def: "government system where state owns all property" },
+                            { word: "gram", trans: "公克", def: "a unit of weight equal to 1/1,000 of a kilogram" },
+                            { word: "justification", trans: "正當理由", def: "a reasonable cause for a position or course of action" },
+                            { word: "susceptible", trans: "易受影響的", def: "easily affected, influenced, or harmed by something" }
+                        ],
+                        academicList: [
+                            { word: "trafficking", trans: "非法販運", def: "transportation and selling of goods, especially illegal goods" },
+                            { word: "wield", trans: "行使；運用", def: "to exercise; to carry out" },
+                            { word: "ordinance", trans: "條例；法令", def: "a law" },
+                            { word: "measure", trans: "措施", def: "a step taken as a means to an end" },
+                            { word: "abolition", trans: "廢除", def: "the act of officially ending or doing away with" },
+                            { word: "dissent", trans: "異議", def: "difference of opinion" },
+                            { word: "narcotic", trans: "麻醉劑；毒品", def: "a drug that affects your mood and behavior, usually illegal" },
+                            { word: "detention", trans: "拘留", def: "being kept in a prison or similar place" },
+                            { word: "mandatory", trans: "強制性的", def: "required by law" },
+                            { word: "common law", trans: "習慣法；判例法", def: "legal system based on judges' decisions" },
+                            { word: "hub", trans: "樞紐；中心", def: "a center of activity" }
+                        ]
+                    }
+                ]
+            },
+            {
+                unit: 5,
+                articles: [
+                    {
+                        id: "u5a1",
+                        title: "Article 1: Deforestation",
+                        vocabPreview: [
+                            { word: "tropical", trans: "熱帶的", def: "of or relating to a warm climate near the equator" },
+                            { word: "sustainable", trans: "永續的", def: "possible to continue or maintain" },
+                            { word: "precipitation", trans: "降水量", def: "rainfall or snowfall" },
+                            { word: "intensive", trans: "密集的；強化的", def: "highly concentrated or accelerated" },
+                            { word: "agriculture", trans: "農業", def: "farming and the raising of livestock" },
+                            { word: "vegetation", trans: "植被", def: "plants" }
+                        ],
+                        academicList: [
+                            { word: "temperate", trans: "溫帶的", def: "having a moderate climate without extreme temperatures" },
+                            { word: "logging", trans: "伐木業", def: "cutting down trees for wood" },
+                            { word: "slash", trans: "砍伐", def: "to cut violently" },
+                            { word: "lie fallow", trans: "休耕", def: "to be left unused (of farmland)" },
+                            { word: "optimum", trans: "最優的", def: "the best possible" },
+                            { word: "depleted", trans: "耗盡的", def: "used up" },
+                            { word: "evaporation", trans: "蒸發", def: "the process of changing from a liquid into a gas" },
+                            { word: "canopy", trans: "林冠", def: "the highest layer of branches in a forest" },
+                            { word: "foliage", trans: "葉子", def: "the leaves on trees and plants" },
+                            { word: "vanish", trans: "消失", def: "to disappear" }
+                        ]
+                    },
+                    {
+                        id: "u5a2",
+                        title: "Article 2: Food Security and Food Supply",
+                        vocabPreview: [
+                            { word: "breakdown", trans: "故障；崩潰", def: "the failure or end of something" },
+                            { word: "unstable", trans: "不穩定的", def: "not fixed or safe and likely to change" },
+                            { word: "stabilize", trans: "使穩定", def: "to stop something changing or getting worse" },
+                            { word: "mechanical", trans: "機械的", def: "related to or operated by machinery" },
+                            { word: "convergence", trans: "匯聚", def: "two or more things meeting at a particular point" },
+                            { word: "marginal", trans: "邊緣的；微小的", def: "small and not significant" }
+                        ],
+                        academicList: [
+                            { word: "seemingly", trans: "看似", def: "appearing to be something, especially when this is not true" },
+                            { word: "prolonged", trans: "長期的", def: "continuing for a long time" },
+                            { word: "exporter", trans: "出口商", def: "person, country, or business that sells goods to another country" },
+                            { word: "scarcity", trans: "短缺", def: "a lack of something" },
+                            { word: "restriction", trans: "限制", def: "an official limit on something" },
+                            { word: "hoard", trans: "囤積", def: "to collect large amounts of something and keep it for yourself" },
+                            { word: "stockpile", trans: "儲備", def: "to store a large supply of something for future use" },
+                            { word: "unaffordable", trans: "負擔不起的", def: "too expensive for people to be able to pay for" },
+                            { word: "infrastructure", trans: "基礎設施", def: "basic systems that a country uses in order to work effectively" },
+                            { word: "undernourished", trans: "營養不良的", def: "not eating enough food to be in good health" },
+                            { word: "initiative", trans: "倡議；新方案", def: "a new plan or process to achieve something or solve a problem" }
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        // --- STATE ---
+        let viewMode = 'unit'; // 'unit' or 'all'
+        let activeUnit = 3;
+        let searchQuery = "";
+        let showHardOnly = false;
+        let hardWords = JSON.parse(localStorage.getItem('hyperNote_hardWords')) || [];
+
+        // --- DOM ELEMENTS ---
+        const searchInput = document.getElementById('search-input');
+        const unitTabs = document.getElementById('unit-tabs');
+        const contentArea = document.getElementById('content');
+        const toggleViewBtn = document.getElementById('toggle-view');
+        const viewModeText = document.getElementById('view-mode-text');
+        const clearHardBtn = document.getElementById('clear-hard');
+        const hardFilterToggle = document.getElementById('hard-filter-toggle');
+        const hardStarIcon = document.getElementById('hard-star-icon');
+        const hardCountEl = document.getElementById('hard-count');
+        const reviewBubble = document.getElementById('review-bubble');
+        const bubbleCountEl = document.getElementById('bubble-count');
+        const triggerHardBtn = document.getElementById('trigger-hard-view');
+
+        // --- RENDER FUNCTIONS ---
+        function renderTabs() {
+            unitTabs.innerHTML = '';
+            if (viewMode === 'all') return;
+
+            [3, 4, 5].forEach(u => {
+                const btn = document.createElement('button');
+                btn.className = `px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
+                    activeUnit === u 
+                        ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200' 
+                        : 'bg-white text-slate-600 border border-slate-200 hover:border-indigo-300'
+                }`;
+                btn.textContent = `Unit ${u}`;
+                btn.onclick = () => {
+                    activeUnit = u;
+                    render();
+                };
+                unitTabs.appendChild(btn);
+            });
+        }
+
+        function createWordCard(item, showSource = false) {
+            const isHard = hardWords.includes(item.word);
+            const card = document.createElement('div');
+            card.className = `group relative p-4 rounded-xl border transition-all duration-200 flex flex-col justify-between ${
+                isHard 
+                    ? 'bg-amber-50 border-amber-200 ring-1 ring-amber-100' 
+                    : 'bg-white border-slate-100 hover:border-indigo-100 hover:shadow-md shadow-sm'
+            }`;
+
+            card.innerHTML = `
+                <button class="star-btn absolute top-3 right-3 p-1.5 rounded-full hover:bg-white transition-colors z-10">
+                    <i data-lucide="star" class="w-4 h-4 transition-colors ${isHard ? 'fill-amber-500 text-amber-500' : 'text-slate-300 group-hover:text-amber-400'}"></i>
+                </button>
+                <div>
+                    <div class="flex items-baseline gap-2 flex-wrap mb-1">
+                        <h4 class="text-lg font-bold transition-colors ${isHard ? 'text-amber-900' : 'text-slate-800'}">${item.word}</h4>
+                        <span class="text-sm font-medium ${isHard ? 'text-amber-600' : 'text-indigo-500'}">${item.trans}</span>
+                    </div>
+                    <p class="text-sm leading-relaxed mb-2 ${isHard ? 'text-amber-700/80' : 'text-slate-500'}">${item.def}</p>
+                    ${showSource ? `<div class="mt-auto pt-2 border-t border-slate-50 text-[10px] uppercase tracking-widest text-slate-300 font-bold">${item.source}</div>` : ''}
+                </div>
+            `;
+
+            card.querySelector('.star-btn').onclick = (e) => {
+                e.stopPropagation();
+                toggleHard(item.word);
+            };
+
+            return card;
+        }
+
+        function render() {
+            renderTabs();
+            contentArea.innerHTML = '';
+            
+            // Sync UI State
+            hardCountEl.textContent = hardWords.length;
+            bubbleCountEl.textContent = hardWords.length;
+            viewModeText.textContent = viewMode === 'all' ? 'Unit View' : 'Single List Mode';
+            
+            if (showHardOnly) {
+                hardFilterToggle.className = "flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium transition-all bg-amber-100 text-amber-700 border border-amber-300";
+                hardStarIcon.classList.add('fill-amber-500', 'text-amber-500');
+            } else {
+                hardFilterToggle.className = "flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium transition-all bg-white text-slate-600 border border-slate-200";
+                hardStarIcon.classList.remove('fill-amber-500', 'text-amber-500');
+            }
+
+            if (hardWords.length > 0 && !showHardOnly) {
+                reviewBubble.classList.remove('hidden');
+            } else {
+                reviewBubble.classList.add('hidden');
+            }
+
+            const filterFn = (item) => {
+                const q = searchQuery.toLowerCase();
+                const matchesSearch = item.word.toLowerCase().includes(q) || 
+                                     item.def.toLowerCase().includes(q) ||
+                                     item.trans.toLowerCase().includes(q);
+                const matchesHard = !showHardOnly || hardWords.includes(item.word);
+                return matchesSearch && matchesHard;
+            };
+
+            if (viewMode === 'unit') {
+                const unit = VOCAB_DATA.find(u => u.unit === activeUnit);
+                let hasResults = false;
+
+                unit.articles.forEach(article => {
+                    const previewWords = article.vocabPreview.filter(filterFn);
+                    const academicWords = article.academicList.filter(filterFn);
+
+                    if (previewWords.length > 0 || academicWords.length > 0) {
+                        hasResults = true;
+                        const section = document.createElement('section');
+                        section.className = "bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm mb-8";
+                        
+                        let html = `
+                            <div class="bg-slate-50 border-b border-slate-200 px-6 py-3">
+                                <h2 class="text-lg font-bold text-slate-800">${article.title}</h2>
+                            </div>
+                            <div class="p-6 space-y-8">
+                        `;
+
+                        if (previewWords.length > 0) {
+                            html += `<div><h3 class="flex items-center gap-2 text-indigo-600 font-semibold mb-4 text-sm uppercase tracking-wider"><i data-lucide="book" class="w-4 h-4"></i>Vocabulary Preview</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-3" id="preview-${article.id}"></div></div>`;
+                        }
+                        if (academicWords.length > 0) {
+                            html += `<div><h3 class="flex items-center gap-2 text-emerald-600 font-semibold mb-4 text-sm uppercase tracking-wider"><i data-lucide="graduation-cap" class="w-4 h-4"></i>Academic Word List</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-3" id="academic-${article.id}"></div></div>`;
+                        }
+
+                        html += `</div>`;
+                        section.innerHTML = html;
+                        contentArea.appendChild(section);
+
+                        const pGrid = section.querySelector(`#preview-${article.id}`);
+                        if (pGrid) previewWords.forEach(w => pGrid.appendChild(createWordCard(w)));
+                        
+                        const aGrid = section.querySelector(`#academic-${article.id}`);
+                        if (aGrid) academicWords.forEach(w => aGrid.appendChild(createWordCard(w)));
+                    }
+                });
+
+                if (!hasResults) renderEmpty();
+            } else {
+                // ALL WORDS VIEW
+                const list = [];
+                VOCAB_DATA.forEach(u => u.articles.forEach(a => {
+                    [...a.vocabPreview, ...a.academicList].forEach(w => {
+                        if (filterFn(w)) {
+                            list.push({ ...w, source: `U${u.unit} - ${a.title.split(':')[0]}` });
+                        }
+                    });
+                }));
+
+                const sortedList = Array.from(new Map(list.map(item => [item.word, item])).values())
+                                        .sort((a, b) => a.word.localeCompare(b.word));
+
+                if (sortedList.length === 0) {
+                    renderEmpty();
+                } else {
+                    const container = document.createElement('div');
+                    container.className = "bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm";
+                    container.innerHTML = `
+                        <div class="bg-indigo-50 border-b border-indigo-100 px-6 py-3 flex justify-between items-center">
+                            <h2 class="text-lg font-bold text-indigo-900 flex items-center gap-2">
+                                <i data-lucide="list" class="w-5 h-5"></i>
+                                All Vocabulary (${sortedList.length})
+                            </h2>
+                            <span class="text-xs text-indigo-400 bg-white px-2 py-1 rounded border border-indigo-100">Alphabetical</span>
+                        </div>
+                        <div class="p-4 grid grid-cols-1 md:grid-cols-2 gap-3" id="all-list-grid"></div>
+                    `;
+                    contentArea.appendChild(container);
+                    const grid = container.querySelector('#all-list-grid');
+                    sortedList.forEach(w => grid.appendChild(createWordCard(w, true)));
+                }
+            }
+
+            lucide.createIcons();
+        }
+
+        function renderEmpty() {
+            contentArea.innerHTML = `
+                <div class="flex flex-col items-center justify-center py-20 text-slate-400">
+                    <i data-lucide="filter" class="w-12 h-12 mb-4 opacity-20"></i>
+                    <p class="text-lg">No words found matches your criteria.</p>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        // --- ACTIONS ---
+        function toggleHard(word) {
+            if (hardWords.includes(word)) {
+                hardWords = hardWords.filter(w => w !== word);
+            } else {
+                hardWords.push(word);
+            }
+            localStorage.setItem('hyperNote_hardWords', JSON.stringify(hardWords));
+            render();
+        }
+
+        searchInput.oninput = (e) => {
+            searchQuery = e.target.value;
+            render();
+        };
+
+        toggleViewBtn.onclick = () => {
+            viewMode = viewMode === 'unit' ? 'all' : 'unit';
+            render();
+        };
+
+        hardFilterToggle.onclick = () => {
+            showHardOnly = !showHardOnly;
+            render();
+        };
+
+        triggerHardBtn.onclick = () => {
+            showHardOnly = true;
+            render();
+        };
+
+        clearHardBtn.onclick = () => {
+            if (confirm("Clear all highlighted words?")) {
+                hardWords = [];
+                localStorage.setItem('hyperNote_hardWords', JSON.stringify(hardWords));
+                render();
+            }
+        };
+
+        // --- INIT ---
+        window.onload = () => {
+            render();
+        };
+    </script>
+</body>
+</html>
