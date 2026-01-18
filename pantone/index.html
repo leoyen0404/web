@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pantone 2026 Color Showcase</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;800&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap');
+
+        :root {
+            --color-cloud-dancer: #F0EEE9;
+            --text-primary: #1a1a1a;
+            --text-secondary: rgba(0, 0, 0, 0.6);
+        }
+
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--color-cloud-dancer);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* --- Liquid Glass Nav Styles (Preserved & Enhanced) --- */
+        .liquid-nav-wrapper {
+            position: fixed;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            perspective: 1000px;
+            pointer-events: auto;
+        }
+
+        nav.liquid-nav {
+            width: 776px;
+            height: 64px;
+            background-color: rgba(255, 255, 255, 0.45);
+            backdrop-filter: blur(12px) url("#filter_liquidGlass");
+            -webkit-backdrop-filter: blur(12px) url("#filter_liquidGlass");
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 32px;
+            box-shadow:
+                0 20px 40px rgba(0, 0, 0, 0.05),
+                inset 0 0 20px rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.4s ease;
+        }
+
+        nav.liquid-nav:hover {
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        nav.liquid-nav ul {
+            display: flex;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            gap: 40px;
+        }
+
+        nav.liquid-nav ul li a {
+            text-decoration: none;
+            color: #111;
+            font-size: 14px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            transition: opacity 0.3s ease;
+            position: relative;
+        }
+
+        nav.liquid-nav ul li a:hover {
+            opacity: 0.6;
+        }
+
+        @media (max-width: 850px) {
+            nav.liquid-nav {
+                width: 90vw;
+                height: auto;
+                padding: 1rem 0;
+            }
+
+            nav.liquid-nav ul {
+                gap: 20px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+
+        /* SVG Filter visually hidden */
+        .filter-container {
+            position: absolute;
+            width: 0;
+            height: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        /* --- Showcase Layout --- */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            padding: 120px 20px 60px;
+            text-align: center;
+        }
+
+        .hero-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(3rem, 10vw, 8rem);
+            font-weight: 400;
+            line-height: 0.9;
+            margin: 0;
+            opacity: 0;
+            animation: fadeInDb 1.5s ease-out forwards 0.2s;
+            color: #222;
+        }
+
+        .hero-title span {
+            display: block;
+            font-family: 'Inter', sans-serif;
+            font-weight: 800;
+            font-size: 0.25em;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+
+        .hero-subtitle {
+            margin-top: 2rem;
+            max-width: 600px;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: var(--text-secondary);
+            opacity: 0;
+            animation: fadeInDb 1.5s ease-out forwards 0.5s;
+        }
+
+        @keyframes fadeInDb {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+        }
+
+        /* Color Grid */
+        .palette-section {
+            padding: 4rem 5%;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .palette-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 40px;
+            padding-bottom: 100px;
+        }
+
+        .color-card {
+            background: #fff;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .color-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+            z-index: 2;
+        }
+
+        .swatch {
+            height: 250px;
+            width: 100%;
+            position: relative;
+        }
+
+        .swatch::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to bottom, transparent 80%, rgba(0, 0, 0, 0.05));
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .color-card:hover .swatch::after {
+            opacity: 1;
+        }
+
+        .info {
+            padding: 24px;
+            background: #fff;
+            flex-grow: 1;
+        }
+
+        .pantone-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: #999;
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .color-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 500;
+            margin: 0 0 4px 0;
+            color: #222;
+        }
+
+        .color-code {
+            font-family: 'Inter', monospace;
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 8px;
+            display: block;
+        }
+
+        /* Copy notification */
+        .copy-feedback {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.8);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            opacity: 0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 10;
+        }
+
+        .color-card:active .copy-feedback {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            opacity: 0.6;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- LIQUID FLUID NAV -->
+    <div class="liquid-nav-wrapper">
+        <nav class="liquid-nav">
+            <ul>
+                <li><a href="#hero">Overview</a></li>
+                <li><a href="#palette">The Palette</a></li>
+                <li><a href="#">Simulate</a></li>
+                <li><a href="#">Download</a></li>
+            </ul>
+        </nav>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="hero" class="hero">
+        <h1 class="hero-title">
+            <span>Pantone 2026</span>
+            Cloud Dancer
+        </h1>
+        <p class="hero-subtitle">
+            An ethereal collection simulating the fluidity of light and glass.
+            Experience the fragility and strength of the new era of color.
+        </p>
+    </div>
+
+    <section id="palette" class="palette-section">
+        <div class="palette-grid" id="grid">
+            <!-- Dynamic Colors Injected Here -->
+        </div>
+    </section>
+
+    <footer>
+        Pantone Color Showcase Demo • 2026 Design System
+    </footer>
+
+    <!-- SVG FILTER (DO NOT REMOVE) -->
+    <div class="filter-container">
+        <svg xmlns="http://www.w3.org/2000/svg" color-interpolation-filters="sRGB">
+            <defs>
+                <filter id="filter_liquidGlass" x="-10%" y="-10%" width="120%" height="120%">
+                    <feGaussianBlur in="SourceGraphic" stdDeviation="1" result="blurredSource"></feGaussianBlur>
+                    <feImage
+                        href="data:image/webp;base64,UklGRkoDAABXRUJQVlA4WAoAAAAQAAAABwMAPwAAQUxQSCoAAAABHyAkIP7fRXcjImIJZtq2qUaxKp+RK728jej/BDj4e8L/89/8tx05+AtWUDgg+gIAABAeAJ0BKggDQAA+bTaXR6QjIiEhuAwAgA2JZW7hdKDTVqZFc//6Lf9uADXAOweeqzI4ufqWciX/SJqndDDw/iap3Qw8P4mqd0MPD+JqndDDw/iap3Qw8P4mqd0MPD+JqndDDw9p08eOM+jl5g+/hPjkRGXMImU0TZBiy59SvcPokqfTr3D6JKn069w+iSp9OvcPokqfTr3D6JKn069o0PKmJr9sEajUajUajUajUajUajUajUajUajUajUajR43EdtA82iwgIkYi2/y5DYUjbSLGfoBG10Ojj4/xNU7oYeH8TVO6GHh/E1Tuhh4fxNU7oYeDd4mk53bHb8fu3uCgAD+basgV0aI1Uxazn1LlhaTDelUpD//0Yf/9NI//jd9Hf2Afd3gvVS2AEKOvLg0PmYZQbjJVslyCmjQ+cf+tHbUrBIrRMqyTIAWdXfLU/7JC9T4DXCvALfAw9C+PaI31XQP6qNR242NGo7cbGjUduNjRqO3Gxo1HbjY0ajtxsaNSJZ8aAiiWFDqFJtG9DwOsoNJUvfghLUTVOMiCX+/12YyQAD1QTQT7HkVPR02Vn6biXYnmXwuBI1tI9DGJGImgIynAnqOYd9ZkxHmlzDgqVpyMiOdAdf/JMTq0cnVo5OrRydWjk6tHJ1aOTq0cnVo5OrRydWanoA7YxL5gBTYgr/cEtv/BaJYSX9/ceEn/4lL8raqxhrJD+NZ+smXI/L4pTF33s9nwccJm/I7RIpdms9ykgAAAAAADa49EVv0tAN5d1WLxoyIfswml97F80l5qK4aWVmEYT1dxwPHyUUD0lUcdHIDlNPyFfTyZv5vyhtsQ/BVqEPCBQnc9xzfih8o60nPmEMNOZFTQNoxksL8tWUBs5PIv/h4a1FNVOmYymyM91CIkJmfs+ukzP2fXSZn7PrpMz9n10mZ+z66TM/Z9dHi4a64/GNfSXma8KxtLuBFE0vMRQ5Y3iw7xO0AwLkpKGjCcHtWzxEjMDW3Hq0xTZFjvgrnBv2MxVMh94Ff4Q+gAA=="
+                        x="0" y="0" width="776" height="64" result="displacementMap"></feImage>
+                    <feDisplacementMap in="blurredSource" in2="displacementMap" scale="74.65" xChannelSelector="R"
+                        yChannelSelector="G" result="displaced"></feDisplacementMap>
+                    <feColorMatrix in="displaced" type="saturate" values="6" result="displacedSaturated">
+                    </feColorMatrix>
+                    <feImage
+                        href="data:image/webp;base64,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"
+                        x="0" y="0" width="776" height="64" result="specularLayer"></feImage>
+                    <feComposite in="displacedSaturated" in2="specularLayer" operator="in" result="specularSaturated">
+                    </feComposite>
+                    <feComponentTransfer in="specularLayer" result="specularFaded">
+                        <feFuncA type="linear" slope="0.4"></feFuncA>
+                    </feComponentTransfer>
+                    <feBlend in="specularSaturated" in2="displaced" mode="normal" result="withSaturation"></feBlend>
+                    <feBlend in="specularFaded" in2="withSaturation" mode="normal"></feBlend>
+                </filter>
+            </defs>
+        </svg>
+    </div>
+
+    <script>
+        // Data for Colors
+        const colors = [
+            { name: "Cloud Dancer", id: "11-4201", hex: "#F0EEE9", featured: true },
+            { name: "Lemon Icing", id: "11-0515", hex: "#F8F4C6" },
+            { name: "Nimbus Cloud", id: "13-4108", hex: "#D5D5D8" },
+            { name: "Raindrops on Roses", id: "11-1400", hex: "#EBD8DB" },
+            { name: "Ice Melt", id: "13-4306", hex: "#D3E4F1" },
+            { name: "Peach Dust", id: "12-1107", hex: "#F5DCC8" },
+            { name: "Almost Aqua", id: "13-6006", hex: "#CAD3C1" },
+            { name: "Orchid Tint", id: "13-3802", hex: "#DBD2DB" },
+            { name: "Veiled Vista", id: "12-6000", hex: "#C8E4CA" },
+            { name: "Baltic Sea", id: "14-4320", hex: "#79B5DB" },
+            { name: "Golden Mist", id: "13-0624", hex: "#D5CD94" },
+            { name: "Quiet Violet", id: "16-3610", hex: "#A693AC" },
+            { name: "Cloud Cover", id: "16-1523", hex: "#999393" },
+            { name: "Hematite", id: "17-5800", hex: "#686461" },
+            { name: "Blue Fusion", id: "18-4218", hex: "#596E88" }
+        ];
+
+        const grid = document.getElementById('grid');
+
+        // Render Colors
+        colors.forEach(color => {
+            const card = document.createElement('div');
+            card.className = 'color-card';
+            card.innerHTML = `
+                <div class="swatch" style="background-color: ${color.hex};"></div>
+                <div class="info">
+                    <span class="pantone-label">PANTONE ${color.id}</span>
+                    <h3 class="color-name">${color.name}</h3>
+                    <span class="color-code">${color.hex}</span>
+                </div>
+                <div class="copy-feedback">Copied!</div>
+            `;
+
+            // Clipboard functionality
+            card.addEventListener('click', () => {
+                navigator.clipboard.writeText(color.hex);
+                // The visual feedback is handled by CSS :active for simplicity in this demo,
+                // but we could add a class here for a timed animation if desired.
+            });
+
+            grid.appendChild(card);
+        });
+
+        // --- Original Liquid Nav Interaction Script ---
+        const nav = document.querySelector('.liquid-nav');
+        const wrapper = document.querySelector('.liquid-nav-wrapper');
+
+        document.addEventListener('mousemove', (e) => {
+            const x = (e.clientX - window.innerWidth / 2) / 60; // Reduced sensitivity
+            const y = (e.clientY - window.innerHeight / 2) / 60;
+
+            if (nav) {
+                nav.style.transform = `rotateX(${-y}deg) rotateY(${x}deg)`;
+            }
+        });
+
+        document.addEventListener('mouseleave', () => {
+            if (nav) nav.style.transform = `rotateX(0deg) rotateY(0deg)`;
+        });
+    </script>
+</body>
+
+</html>
