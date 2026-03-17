@@ -14,6 +14,10 @@
 
         :root {
             --ease-out-quart: cubic-bezier(0.22, 1, 0.36, 1);
+            --ease-out-soft: cubic-bezier(0.2, 0.7, 0.2, 1);
+            --radius-frame: 24px;
+            --radius-inner: 12px;
+            --radius-button: 14px;
         }
 
         html[data-theme='dark'] {
@@ -53,6 +57,8 @@
             top: 1.5rem;
             right: 1.5rem;
             z-index: 2000;
+            min-width: 44px;
+            min-height: 44px;
         }
 
         .app-container {
@@ -62,15 +68,17 @@
             justify-content: center;
             min-height: 100vh;
             padding: 1rem;
-            padding-bottom: 200px;
-            transition: transform 0.6s var(--ease-out-quart);
+            padding-bottom: 210px;
+            transition: transform 0.55s var(--ease-out-soft);
+            will-change: transform;
         }
 
         #qr-code-view {
-            transition: all 0.6s var(--ease-out-quart);
+            transition: opacity 0.45s var(--ease-out-soft), transform 0.55s var(--ease-out-quart);
             transform: scale(0.8) translateY(20px);
             opacity: 0;
             pointer-events: none;
+            will-change: opacity, transform;
         }
         #qr-code-view.active {
             transform: scale(1) translateY(0);
@@ -80,11 +88,13 @@
         #qr-code-view-wrapper {
             background-color: white;
             padding: 16px;
-            border-radius: 24px;
+            border-radius: var(--radius-frame);
+            overflow: hidden;
             box-shadow: 0 20px 40px rgba(0,0,0,0.4);
         }
         #qr-code-view-wrapper canvas, #qr-code-view-wrapper img {
-             border-radius: 8px;
+             border-radius: var(--radius-inner);
+             display: block;
         }
 
         #scan-view {
@@ -129,30 +139,68 @@
         /* --- Dynamic Island --- */
         #dynamic-island {
             position: fixed;
-            bottom: 2rem;
+            bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem);
             left: 50%;
             transform: translateX(-50%);
             background-color: var(--island-bg);
             border: 1px solid var(--border-color);
-            box-shadow: 0 10px 50px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 36px rgba(0,0,0,0.32), 0 0 0 1px rgba(148, 163, 184, 0.2);
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.5s var(--ease-out-quart);
+            transition: width 0.45s var(--ease-out-quart), height 0.45s var(--ease-out-quart), border-radius 0.45s var(--ease-out-quart), transform 0.3s var(--ease-out-soft), background-color 0.3s ease, border-color 0.3s ease;
             z-index: 1000;
-            padding: 12px;
+            padding: 12px 14px;
+            max-width: min(94vw, 720px);
+            will-change: width, height, border-radius, transform;
+            overflow: visible;
         }
+        #dynamic-island.keyboard-open { transform: translateX(-50%) translateY(-8px); }
         #island-content-container {
             position: relative;
             display: flex;
             align-items: center;
             justify-content: center;
+            width: 100%;
+            max-width: 100%;
+            overflow: hidden;
+            padding: 6px 10px;
+            box-sizing: border-box;
+        }
+        #scan-drop-hint {
+            user-select: none;
+            white-space: nowrap;
+        }
+        #scan-drop-hint-floating {
+            position: fixed;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: calc(env(safe-area-inset-bottom, 0px) + 5.9rem);
+            z-index: 999;
+            color: var(--text-secondary);
+            font-size: 12px;
+            background-color: color-mix(in srgb, var(--island-bg) 82%, transparent);
+            border: 1px solid var(--border-color);
+            border-radius: 999px;
+            padding: 4px 10px;
+            backdrop-filter: blur(4px);
+            pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+        #scan-drop-hint-floating.hidden {
+            opacity: 0;
+            transform: translateX(-50%) translateY(6px);
+        }
+        body.drop-ready {
+            box-shadow: inset 0 0 0 2px rgba(45, 160, 255, 0.45);
         }
         .island-content {
             display: flex;
             align-items: center;
             gap: 0.5rem;
             transition: opacity 0.25s ease, transform 0.25s ease;
+            white-space: nowrap;
+            padding: 0 1px;
         }
         .island-content:not(.active) {
             opacity: 0;
@@ -165,7 +213,7 @@
             background-color: var(--field-bg);
             border: 1px solid var(--border-color);
             color: var(--text-secondary);
-            border-radius: 16px;
+            border-radius: var(--radius-button);
             padding: 10px;
             cursor: pointer;
             transition: all 0.2s ease;
@@ -173,6 +221,18 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            min-width: 42px;
+            min-height: 42px;
+            line-height: 0;
+            overflow: visible;
+        }
+        .island-button i,
+        .island-button svg {
+            width: 20px;
+            height: 20px;
+            display: block;
+            flex-shrink: 0;
+            overflow: visible;
         }
         .island-button:hover:not(:disabled) {
             background-color: var(--accent-color);
@@ -191,17 +251,92 @@
         }
 
         .field {
-            width: 100%;
+            width: auto;
+            min-width: 120px;
+            max-width: 320px;
             background: transparent;
             border: none;
             outline: none;
             color: var(--text-primary);
             font-size: 16px;
             padding: 8px;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .field::placeholder { color: var(--text-secondary); }
 
         .hidden { display: none !important; }
+
+        @media (max-width: 640px) {
+            #theme-toggle {
+                top: calc(env(safe-area-inset-top, 0px) + 0.75rem);
+                right: 0.75rem;
+            }
+            .app-container {
+                justify-content: flex-start;
+                padding-top: 6.25rem;
+                padding-bottom: 170px;
+            }
+            #dynamic-island {
+                bottom: calc(env(safe-area-inset-bottom, 0px) + 1.2rem);
+                padding: 10px;
+                max-width: calc(100vw - 6px);
+                transition: width 0.32s var(--ease-out-quart), height 0.32s var(--ease-out-quart), border-radius 0.32s var(--ease-out-quart), transform 0.18s var(--ease-out-soft), background-color 0.25s ease, border-color 0.25s ease;
+            }
+            #scan-drop-hint-floating {
+                bottom: calc(env(safe-area-inset-bottom, 0px) + 6.4rem);
+                font-size: 11px;
+            }
+            #qr-code-view { margin-top: 0.4rem; }
+            #generate-content,
+            #encrypt-content,
+            #decrypt-content {
+                white-space: nowrap;
+                flex-wrap: nowrap;
+                justify-content: flex-start;
+                gap: 0.35rem;
+            }
+            #generate-content #qr-input,
+            #decrypt-content #decrypt-pass,
+            #encrypt-content #enc-pass1,
+            #encrypt-content #enc-pass2 {
+                min-width: 90px;
+                width: auto;
+                flex: 1 1 auto;
+                max-width: 32vw;
+                background-color: transparent;
+                border: none;
+                border-radius: 0;
+                padding: 8px;
+            }
+            #generate-content #qr-input,
+            #decrypt-content #decrypt-pass {
+                min-width: 130px;
+                max-width: 44vw;
+            }
+            #encrypt-content #enc-pass1,
+            #encrypt-content #enc-pass2 {
+                min-width: 90px;
+                max-width: 24vw;
+            }
+            #qr-code-view-wrapper {
+                padding: 12px;
+                border-radius: 20px;
+            }
+            #qr-code-view-wrapper canvas,
+            #qr-code-view-wrapper img {
+                width: min(72vw, 280px) !important;
+                height: auto !important;
+                border-radius: 10px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation: none !important;
+                transition: none !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -212,7 +347,7 @@
         
         <div id="scan-view">
             <div id="video-wrapper"><video id="video" playsinline></video></div>
-            <div id="scan-options">
+            <div id="scan-options" class="hidden">
                 <div id="drop-zone" class="scan-card">
                     <div class="flex flex-col items-center gap-2">
                         <i data-lucide="upload-cloud" class="w-10 h-10 text-gray-400"></i>
@@ -230,27 +365,25 @@
             </div>
             <div id="image-preview-wrapper" class="hidden w-full flex flex-col items-center gap-4">
                 <img id="image-preview" class="max-w-full max-h-[400px] rounded-xl border" />
-                <button id="clear-preview-button" class="island-button">
-                    <i data-lucide="x"></i>
-                    <span class="ml-2">Clear Image</span>
-                </button>
             </div>
             <div id="scan-result" class="scan-card w-full p-4 text-center hidden break-all"></div>
             <canvas id="scan-canvas" class="hidden"></canvas>
         </div>
     </div>
 
+    <div id="scan-drop-hint-floating" class="hidden">Drop image anywhere</div>
+
     <div id="dynamic-island">
         <div id="island-content-container">
             <!-- Initial State: Mode Toggle -->
             <div id="initial-content" class="island-content active">
-                <button id="to-generate-mode" class="island-button primary" title="Generate QR Code"><i data-lucide="pen-tool"></i></button>
+                <button id="to-generate-mode" class="island-button" title="Generate QR Code"><i data-lucide="pen-tool"></i></button>
                 <button id="to-scan-mode" class="island-button" title="Scan QR Code"><i data-lucide="scan-line"></i></button>
             </div>
 
             <!-- Generate State: Input -->
             <div id="generate-content" class="island-content">
-                <input type="text" id="qr-input" class="field min-w-[200px]" placeholder="Type a link or text...">
+                <input type="text" id="qr-input" class="field" placeholder="Type a link or text...">
                 <button id="encrypt-toggle" class="island-button" title="Encrypt"><i data-lucide="lock"></i></button>
                 <button id="generate-button" class="island-button primary" title="Generate"><i data-lucide="arrow-right"></i></button>
                 <button class="island-button back-button" title="Back"><i data-lucide="x"></i></button>
@@ -259,8 +392,8 @@
             <!-- Encrypt State -->
             <div id="encrypt-content" class="island-content">
                 <i data-lucide="key-round" class="text-yellow-400 flex-shrink-0"></i>
-                <input type="password" id="enc-pass1" class="field min-w-[150px]" placeholder="Passphrase">
-                <input type="password" id="enc-pass2" class="field min-w-[150px]" placeholder="Confirm">
+                <input type="password" id="enc-pass1" class="field" placeholder="Passphrase">
+                <input type="password" id="enc-pass2" class="field" placeholder="Confirm">
                 <button id="confirm-encrypt-button" class="island-button primary" title="Confirm & Generate"><i data-lucide="check"></i></button>
                 <button class="island-button back-button" title="Back"><i data-lucide="x"></i></button>
             </div>
@@ -268,7 +401,7 @@
             <!-- Decrypt State -->
             <div id="decrypt-content" class="island-content">
                 <i data-lucide="key-round" class="text-yellow-400 flex-shrink-0"></i>
-                <input type="password" id="decrypt-pass" class="field min-w-[200px]" placeholder="Enter Passphrase">
+                <input type="password" id="decrypt-pass" class="field" placeholder="Enter Passphrase">
                 <button id="confirm-decrypt-button" class="island-button primary" title="Decrypt"><i data-lucide="unlock"></i></button>
                 <button class="island-button back-button" title="Cancel"><i data-lucide="x"></i></button>
             </div>
@@ -279,6 +412,14 @@
                 <button id="download-button" class="island-button" title="Download PNG"><i data-lucide="download"></i></button>
                 <button id="copy-img-button" class="island-button" title="Copy Image"><i data-lucide="image"></i></button>
                 <button id="copy-text-button" class="island-button" title="Copy Text"><i data-lucide="clipboard-copy"></i></button>
+            </div>
+
+            <!-- Scan State: Menu -->
+            <div id="scan-menu-content" class="island-content">
+                <button class="island-button back-button" title="Back"><i data-lucide="x"></i></button>
+                <button id="island-start-cam-button" class="island-button primary" title="Start Camera"><i data-lucide="camera"></i></button>
+                <button id="island-browse-button" class="island-button" title="Browse Image"><i data-lucide="upload-cloud"></i></button>
+                <button id="island-paste-button" class="island-button" title="Paste Image/Text"><i data-lucide="clipboard"></i></button>
             </div>
 
             <!-- Scan State: Actions -->
@@ -292,6 +433,7 @@
     <!-- Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
     
     <script>
     // FIX: Changed main event listener to 'load' for better reliability on mobile
@@ -313,7 +455,6 @@
         const dropZone = document.getElementById('drop-zone');
         const imagePreviewWrapper = document.getElementById('image-preview-wrapper');
         const imagePreview = document.getElementById('image-preview');
-        const clearPreviewButton = document.getElementById('clear-preview-button');
 
         const fileInput = document.createElement('input');
         fileInput.type = 'file';
@@ -324,19 +465,58 @@
         const qrInput = document.getElementById('qr-input');
         const pass1 = document.getElementById('enc-pass1');
         const pass2 = document.getElementById('enc-pass2');
+        const decryptPass = document.getElementById('decrypt-pass');
+        const toGenerateModeBtn = document.getElementById('to-generate-mode');
+        const toScanModeBtn = document.getElementById('to-scan-mode');
+        const floatingDropHint = document.getElementById('scan-drop-hint-floating');
+        const islandBrowseButton = document.getElementById('island-browse-button');
 
         // --- State Management ---
         let state = {
             mode: 'initial', // initial, generate, encrypt, generated, scan, scanning, decrypting
             qrContent: '',
-            isEncrypted: false,
             mediaStream: null,
             isScanning: false,
             dataToDecrypt: null,
+            pendingInitialCleanup: false,
+            hasImagePreview: false,
         };
         const enc = new TextEncoder();
         const dec = new TextDecoder();
-        const PAGE_URL = 'https://bw4s.dpdns.org/qrcode/beta.html';
+        const PAGE_URL = `${window.location.origin}${window.location.pathname}`;
+
+        function recalcActiveIsland() {
+            const active = islandContainer.querySelector('.island-content.active');
+            if (active) switchIslandContent(active.id);
+        }
+
+        function updateModeButtons() {
+            const scanActive = state.mode === 'scan' || state.mode === 'scanning' || state.mode === 'decrypting';
+            toScanModeBtn.classList.toggle('primary', scanActive);
+            toGenerateModeBtn.classList.toggle('primary', !scanActive);
+            floatingDropHint.classList.toggle('hidden', !scanActive);
+        }
+
+        function syncScanBrowseClearButton() {
+            const shouldShowClear = state.mode === 'scan' && state.hasImagePreview && !imagePreviewWrapper.classList.contains('hidden') && !!imagePreview.src;
+            setBrowseButtonMode(shouldShowClear);
+        }
+
+        function setBrowseButtonMode(isClearMode) {
+            islandBrowseButton.title = isClearMode ? 'Clear Image' : 'Browse Image';
+            islandBrowseButton.innerHTML = `<i data-lucide="${isClearMode ? 'trash-2' : 'upload-cloud'}"></i>`;
+            islandBrowseButton.classList.toggle('primary', isClearMode);
+            lucide.createIcons();
+        }
+
+        function clearImagePreview() {
+            imagePreviewWrapper.classList.add('hidden');
+            imagePreview.src = '';
+            fileInput.value = '';
+            state.hasImagePreview = false;
+            state.mode = 'scan';
+            updateUI();
+        }
 
         // --- UI Update Logic ---
         function switchIslandContent(targetId) {
@@ -355,8 +535,15 @@
             if (targetElement) {
                 const contentWidth = targetElement.scrollWidth;
                 const contentHeight = targetElement.scrollHeight;
-                island.style.width = `${contentWidth + 24}px`;
-                island.style.borderRadius = `${(contentHeight + 24) / 2}px`;
+                const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+                const shellPadding = viewportWidth <= 640 ? 28 : 32;
+                const maxIslandWidth = Math.max(260, viewportWidth - 6);
+                const nextWidth = Math.min(contentWidth + shellPadding + 6, maxIslandWidth);
+                const nextHeight = contentHeight + shellPadding;
+
+                island.style.width = `${nextWidth}px`;
+                island.style.height = `${nextHeight}px`;
+                island.style.borderRadius = `${Math.round(nextHeight / 2)}px`;
             }
         }
 
@@ -365,7 +552,7 @@
             scanView.classList.remove('active');
             videoWrapper.style.display = 'none';
             scanResult.classList.add('hidden');
-            scanOptions.classList.remove('hidden');
+            scanOptions.classList.add('hidden');
             imagePreviewWrapper.classList.add('hidden');
             stopCamera();
 
@@ -388,30 +575,41 @@
                     newAppScale = 0.95;
                     break;
                 case 'scan':
-                    targetIslandContent = 'initial-content';
+                    targetIslandContent = 'scan-menu-content';
                     scanView.classList.add('active');
-                    scanOptions.classList.remove('hidden');
                     scanResult.classList.add('hidden');
-                    imagePreviewWrapper.classList.add('hidden');
+                    if (state.hasImagePreview && imagePreview.src) {
+                        imagePreviewWrapper.classList.remove('hidden');
+                    } else {
+                        imagePreviewWrapper.classList.add('hidden');
+                    }
                     break;
                 case 'scanning':
                     targetIslandContent = 'scan-actions-content';
                     scanView.classList.add('active');
-                    scanOptions.classList.add('hidden');
                     videoWrapper.style.display = 'block';
                     startCamera();
                     break;
                 case 'decrypting':
                     targetIslandContent = 'decrypt-content';
                     scanView.classList.add('active');
-                    scanOptions.classList.add('hidden');
                     scanResult.classList.remove('hidden');
                     scanResult.innerHTML = `<p class="text-gray-400">Enter passphrase below to unlock content.</p>`;
                     break;
             }
             
             appContainer.style.transform = `scale(${newAppScale})`;
+            updateModeButtons();
             switchIslandContent(targetIslandContent);
+            syncScanBrowseClearButton();
+
+            if (state.pendingInitialCleanup && state.mode === 'initial') {
+                state.pendingInitialCleanup = false;
+                setTimeout(() => {
+                    qrCodeViewWrapper.innerHTML = '';
+                    qrInput.value = '';
+                }, 240);
+            }
         }
 
         // --- Event Listeners ---
@@ -433,20 +631,18 @@
                 }
                 
                 if (state.mode === 'initial') {
-                    qrCodeViewWrapper.innerHTML = '';
-                    qrInput.value = '';
+                    state.pendingInitialCleanup = true;
                 }
                 updateUI();
             });
         });
 
-        document.getElementById('generate-button').addEventListener('click', generateQrCode);
-        qrInput.addEventListener('keyup', e => e.key === 'Enter' && generateQrCode());
+        document.getElementById('generate-button').addEventListener('click', () => generateQrCode(false));
+        qrInput.addEventListener('keyup', e => e.key === 'Enter' && generateQrCode(false));
 
         document.getElementById('encrypt-toggle').addEventListener('click', () => { state.mode = 'encrypt'; updateUI(); });
         document.getElementById('confirm-encrypt-button').addEventListener('click', () => {
-             state.isEncrypted = true;
-             generateQrCode();
+               generateQrCode(true);
         });
 
         document.getElementById('confirm-decrypt-button').addEventListener('click', async () => {
@@ -469,19 +665,53 @@
         document.getElementById('copy-img-button').addEventListener('click', copyQrImage);
         document.getElementById('copy-text-button').addEventListener('click', copyQrText);
         
-        document.getElementById('start-cam-button').addEventListener('click', () => { state.mode = 'scanning'; updateUI(); });
-        document.getElementById('browse-button').addEventListener('click', () => fileInput.click());
-        fileInput.addEventListener('change', (e) => handleImageFile(e.target.files[0]));
-        document.getElementById('paste-button').addEventListener('click', handlePaste);
-        clearPreviewButton.addEventListener('click', () => {
-            imagePreviewWrapper.classList.add('hidden');
-            scanOptions.classList.remove('hidden');
+        document.getElementById('island-start-cam-button').addEventListener('click', () => { state.mode = 'scanning'; updateUI(); });
+        islandBrowseButton.addEventListener('click', () => {
+            if (!imagePreviewWrapper.classList.contains('hidden')) {
+                clearImagePreview();
+                return;
+            }
+            fileInput.click();
         });
+        fileInput.addEventListener('change', (e) => handleImageFile(e.target.files[0]));
+        document.getElementById('island-paste-button').addEventListener('click', handlePaste);
 
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => dropZone.addEventListener(eventName, e => {e.preventDefault(); e.stopPropagation();}, false));
         ['dragenter', 'dragover'].forEach(eventName => dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false));
         ['dragleave', 'drop'].forEach(eventName => dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false));
         dropZone.addEventListener('drop', (e) => handleImageFile(e.dataTransfer.files[0]), false);
+
+        const canAcceptDroppedImage = () => ['scan', 'scanning', 'decrypting'].includes(state.mode);
+        let dragDepth = 0;
+
+        document.addEventListener('dragenter', (e) => {
+            if (!canAcceptDroppedImage()) return;
+            if (!e.dataTransfer?.types?.includes('Files')) return;
+            e.preventDefault();
+            dragDepth += 1;
+            document.body.classList.add('drop-ready');
+        });
+        document.addEventListener('dragover', (e) => {
+            if (!canAcceptDroppedImage()) return;
+            if (!e.dataTransfer?.types?.includes('Files')) return;
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'copy';
+        });
+        document.addEventListener('dragleave', (e) => {
+            if (!canAcceptDroppedImage()) return;
+            if (!e.dataTransfer?.types?.includes('Files')) return;
+            e.preventDefault();
+            dragDepth = Math.max(0, dragDepth - 1);
+            if (dragDepth === 0) document.body.classList.remove('drop-ready');
+        });
+        document.addEventListener('drop', (e) => {
+            if (!canAcceptDroppedImage()) return;
+            if (!e.dataTransfer?.files?.length) return;
+            e.preventDefault();
+            dragDepth = 0;
+            document.body.classList.remove('drop-ready');
+            handleImageFile(e.dataTransfer.files[0]);
+        });
 
         const themeToggle = document.getElementById('theme-toggle');
         function applyTheme(theme) {
@@ -496,10 +726,46 @@
         });
         applyTheme(localStorage.getItem('qr-theme') || 'dark');
 
+        [qrInput, pass1, pass2, decryptPass].forEach(input => {
+            input.addEventListener('focus', () => requestAnimationFrame(recalcActiveIsland));
+        });
+
+        let keyboardBlurTimer = null;
+        let focusedInputCount = 0;
+
+        document.addEventListener('focusin', (e) => {
+            if (!e.target.matches('input')) return;
+            if (keyboardBlurTimer) clearTimeout(keyboardBlurTimer);
+            focusedInputCount += 1;
+            island.classList.add('keyboard-open');
+            requestAnimationFrame(recalcActiveIsland);
+        });
+        document.addEventListener('focusout', (e) => {
+            if (!e.target.matches('input')) return;
+            if (keyboardBlurTimer) clearTimeout(keyboardBlurTimer);
+            focusedInputCount = Math.max(0, focusedInputCount - 1);
+            keyboardBlurTimer = setTimeout(() => {
+                if (focusedInputCount === 0 && (!document.activeElement || !document.activeElement.matches('input'))) {
+                    island.classList.remove('keyboard-open');
+                }
+                recalcActiveIsland();
+            }, 160);
+        });
+        window.addEventListener('resize', () => {
+            recalcActiveIsland();
+        });
+
         // --- Crypto Functions ---
+        function getSubtleCrypto() {
+            if (!window.crypto) return null;
+            return window.crypto.subtle || window.crypto.webkitSubtle || null;
+        }
+
         async function deriveKey(passphrase, salt) {
-            const baseKey = await crypto.subtle.importKey("raw", enc.encode(passphrase), { name: "PBKDF2" }, false, ["deriveKey"]);
-            return crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations: 250000, hash: "SHA-256" }, baseKey, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+            const subtle = getSubtleCrypto();
+            if (!subtle) throw new Error('WebCrypto unavailable');
+            const baseKey = await subtle.importKey("raw", enc.encode(passphrase), { name: "PBKDF2" }, false, ["deriveKey"]);
+            return subtle.deriveKey({ name: "PBKDF2", salt, iterations: 250000, hash: "SHA-256" }, baseKey, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
         }
         function bufToBase64url(buf) { return btoa(String.fromCharCode(...new Uint8Array(buf))).replaceAll("+", "-").replaceAll("/", "_").replace(/=+$/, ""); }
         function base64urlToBuf(s) {
@@ -508,27 +774,47 @@
             return new Uint8Array(str.length).map((_, i) => str.charCodeAt(i)).buffer;
         }
         async function encryptPayload(plaintext, passphrase) {
-            const salt = crypto.getRandomValues(new Uint8Array(16));
-            const iv = crypto.getRandomValues(new Uint8Array(12));
-            const key = await deriveKey(passphrase, salt);
-            const cipher = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, enc.encode(plaintext));
-            return "qrenc:" + btoa(JSON.stringify({ v: 1, a: "A256GCM", s: bufToBase64url(salt), i: bufToBase64url(iv), c: bufToBase64url(cipher) }));
+            const subtle = getSubtleCrypto();
+            if (subtle && window.crypto?.getRandomValues) {
+                const salt = window.crypto.getRandomValues(new Uint8Array(16));
+                const iv = window.crypto.getRandomValues(new Uint8Array(12));
+                const key = await deriveKey(passphrase, salt);
+                const cipher = await subtle.encrypt({ name: "AES-GCM", iv }, key, enc.encode(plaintext));
+                return "qrenc:" + btoa(JSON.stringify({ v: 1, a: "A256GCM", s: bufToBase64url(salt), i: bufToBase64url(iv), c: bufToBase64url(cipher) }));
+            }
+
+            if (typeof CryptoJS !== 'undefined') {
+                const cipherText = CryptoJS.AES.encrypt(plaintext, passphrase).toString();
+                return "qrenc:" + btoa(JSON.stringify({ v: 2, a: "CJS-AES", c: cipherText }));
+            }
+
+            throw new Error('No encryption backend available');
         }
         async function decryptPayload(token, passphrase) {
             if (!token.startsWith("qrenc:")) throw new Error("Not encrypted QR");
             const j = JSON.parse(atob(token.slice(6)));
+            if (j.a === 'CJS-AES') {
+                if (typeof CryptoJS === 'undefined') throw new Error('CryptoJS unavailable');
+                const bytes = CryptoJS.AES.decrypt(j.c, passphrase);
+                const plainText = bytes.toString(CryptoJS.enc.Utf8);
+                if (!plainText) throw new Error('Bad passphrase');
+                return plainText;
+            }
+
+            const subtle = getSubtleCrypto();
+            if (!subtle) throw new Error('WebCrypto unavailable');
             const key = await deriveKey(passphrase, base64urlToBuf(j.s));
-            const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: base64urlToBuf(j.i) }, key, base64urlToBuf(j.c));
+            const plain = await subtle.decrypt({ name: "AES-GCM", iv: base64urlToBuf(j.i) }, key, base64urlToBuf(j.c));
             return dec.decode(plain);
         }
 
         // --- Core Functionality ---
-        async function generateQrCode() {
+        async function generateQrCode(shouldEncrypt = false) {
             let content = qrInput.value.trim();
             if (!content) { showToast('Please enter content.', 'error'); return; }
             let finalQrContent = content;
 
-            if (state.isEncrypted) {
+            if (shouldEncrypt) {
                 if (pass1.value !== pass2.value || !pass1.value) {
                     showToast('Passphrases do not match.', 'error'); return;
                 }
@@ -536,7 +822,7 @@
                     const encryptedData = await encryptPayload(content, pass1.value);
                     finalQrContent = `${PAGE_URL}?data=${encodeURIComponent(encryptedData)}`;
                 } catch (e) {
-                    showToast('Encryption failed.', 'error'); return;
+                    showToast('Encryption failed on this device.', 'error'); return;
                 }
             }
             
@@ -545,7 +831,6 @@
             new QRCode(qrCodeViewWrapper, { text: finalQrContent, width: 256, height: 256, correctLevel: QRCode.CorrectLevel.L });
             
             state.mode = 'generated';
-            state.isEncrypted = false; 
             pass1.value = '';
             pass2.value = '';
             updateUI();
@@ -560,23 +845,73 @@
             link.click();
         }
 
+        function canvasToBlob(canvas, type = 'image/png') {
+            return new Promise((resolve, reject) => {
+                canvas.toBlob((blob) => {
+                    if (!blob) {
+                        reject(new Error('Failed to create image blob'));
+                        return;
+                    }
+                    resolve(blob);
+                }, type);
+            });
+        }
+
+        async function copyTextWithFallback(text) {
+            if (navigator.clipboard?.writeText) {
+                try {
+                    await navigator.clipboard.writeText(text);
+                    return true;
+                } catch (_) {}
+            }
+
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.setAttribute('readonly', '');
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            textarea.style.left = '-9999px';
+            document.body.appendChild(textarea);
+            textarea.select();
+            textarea.setSelectionRange(0, textarea.value.length);
+            const copied = document.execCommand('copy');
+            document.body.removeChild(textarea);
+            return copied;
+        }
+
         async function copyQrImage() {
             const canvas = qrCodeViewWrapper.querySelector('canvas');
             if (!canvas) return;
             try {
-                canvas.toBlob(async (blob) => {
+                const blob = await canvasToBlob(canvas, 'image/png');
+
+                if (window.ClipboardItem && navigator.clipboard?.write) {
                     await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
                     showToast('QR code image copied!');
-                });
-            } catch (err) { showToast('Failed to copy image.', 'error'); }
+                    return;
+                }
+
+                if (navigator.canShare && navigator.share && navigator.canShare({ files: [new File([blob], 'qrcode.png', { type: 'image/png' })] })) {
+                    await navigator.share({ files: [new File([blob], 'qrcode.png', { type: 'image/png' })], title: 'QR Code' });
+                    showToast('Image shared.');
+                    return;
+                }
+
+                downloadQrCode();
+                showToast('Clipboard not supported. Image downloaded.');
+            } catch (err) {
+                showToast('Failed to copy image on this device.', 'error');
+            }
         }
 
         async function copyQrText() {
             if (!state.qrContent) return;
-            try {
-                await navigator.clipboard.writeText(state.qrContent);
+            const copied = await copyTextWithFallback(state.qrContent);
+            if (copied) {
                 showToast('QR code text copied!');
-            } catch (err) { showToast('Failed to copy text.', 'error'); }
+            } else {
+                showToast('Failed to copy text.', 'error');
+            }
         }
         
         // --- Scanning Logic ---
@@ -631,8 +966,9 @@
             const reader = new FileReader();
             reader.onload = e => {
                 imagePreview.src = e.target.result;
-                scanOptions.classList.add('hidden');
                 imagePreviewWrapper.classList.remove('hidden');
+                state.hasImagePreview = true;
+                syncScanBrowseClearButton();
 
                 const img = new Image();
                 img.onload = () => {
@@ -654,7 +990,9 @@
                 img.onerror = () => {
                     showToast('Could not load the image file.', 'error');
                     imagePreviewWrapper.classList.add('hidden');
-                    scanOptions.classList.remove('hidden');
+                    state.hasImagePreview = false;
+                    state.mode = 'scan';
+                    updateUI();
                 };
                 img.src = e.target.result;
             };
@@ -696,11 +1034,9 @@
 
             try {
                 const url = new URL(data);
-                if ((url.origin + url.pathname) === PAGE_URL) {
-                    const dataParam = url.searchParams.get('data');
-                    if (dataParam) {
-                        potentialEncryptedData = decodeURIComponent(dataParam);
-                    }
+                const dataParam = url.searchParams.get('data');
+                if (dataParam) {
+                    potentialEncryptedData = decodeURIComponent(dataParam);
                 }
             } catch (e) {
                 // Not a valid URL, do nothing
@@ -720,8 +1056,8 @@
         }
 
         function displayFinalResult(content) {
-            scanOptions.classList.add('hidden');
             imagePreviewWrapper.classList.add('hidden');
+            state.hasImagePreview = false;
             scanResult.innerHTML = '';
             scanResult.classList.remove('hidden');
             scanView.classList.add('active');
@@ -736,7 +1072,10 @@
             const copyBtn = document.createElement('button');
             copyBtn.innerHTML = '<i data-lucide="copy"></i><span class="ml-2">Copy</span>';
             copyBtn.className = 'island-button';
-            copyBtn.onclick = () => { navigator.clipboard.writeText(content); showToast('Copied to clipboard!'); };
+            copyBtn.onclick = async () => {
+                const copied = await copyTextWithFallback(content);
+                showToast(copied ? 'Copied to clipboard!' : 'Failed to copy text.', copied ? 'success' : 'error');
+            };
             actions.appendChild(copyBtn);
 
             try {
@@ -753,7 +1092,6 @@
             scanAgainBtn.className = 'island-button';
             scanAgainBtn.onclick = () => {
                 scanResult.classList.add('hidden');
-                scanOptions.classList.remove('hidden');
                 scanResult.innerHTML = '';
                 state.mode = 'scan';
                 updateUI();
@@ -764,7 +1102,9 @@
             scanResult.appendChild(actions);
             lucide.createIcons();
             showToast('QR Code Detected!');
-            switchIslandContent('initial-content');
+            state.mode = 'scan';
+            updateModeButtons();
+            switchIslandContent('scan-menu-content');
         }
 
         function showToast(message, type = 'success') {
