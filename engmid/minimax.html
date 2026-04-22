@@ -1590,4 +1590,724 @@
         <!-- Bottom Navigation -->
         <nav class="bottom-nav" role="navigation" aria-label="Main navigation">
             <a class="nav-item active" data-page="home">
-                <span class="material-icons-round">home</span>*
+                <span class="material-icons-round">home</span>
+                <span>Home</span>
+            </a>
+            <a class="nav-item" data-page="review">
+                <span class="material-icons-round">school</span>
+                <span>Review</span>
+            </a>
+            <a class="nav-item" data-page="progress">
+                <span class="material-icons-round">bar_chart</span>
+                <span>Progress</span>
+            </a>
+            <a class="nav-item" data-page="settings">
+                <span class="material-icons-round">tune</span>
+                <span>Settings</span>
+            </a>
+        </nav>
+        
+        <!-- FAB -->
+        <button class="fab" id="shuffleBtn" aria-label="Shuffle review">
+            <span class="material-icons-round">shuffle</span>
+        </button>
+        
+        <!-- Modal Overlay -->
+        <div class="modal-overlay" id="modalOverlay"></div>
+        
+        <!-- Word Detail Bottom Sheet -->
+        <div class="bottom-sheet" id="wordSheet">
+            <div class="sheet-handle"></div>
+            <div class="sheet-header">
+                <h3 class="sheet-title" id="sheetTitle">Word Detail</h3>
+                <button class="icon-btn" id="closeSheet" aria-label="Close">
+                    <span class="material-icons-round">close</span>
+                </button>
+            </div>
+            <div class="sheet-content" id="wordSheetContent">
+                <!-- Word details will be dynamically rendered -->
+            </div>
+        </div>
+        
+        <!-- Settings Bottom Sheet -->
+        <div class="bottom-sheet" id="settingsSheet">
+            <div class="sheet-handle"></div>
+            <div class="sheet-header">
+                <h3 class="sheet-title">Settings</h3>
+                <button class="icon-btn" id="closeSettings" aria-label="Close">
+                    <span class="material-icons-round">close</span>
+                </button>
+            </div>
+            <div class="sheet-content">
+                <div class="settings-section">
+                    <h4 class="settings-title">Appearance</h4>
+                    <div class="settings-row">
+                        <div>
+                            <div class="settings-label">Dark Mode</div>
+                            <div class="settings-description">Use dark theme for better viewing in low light</div>
+                        </div>
+                        <div class="toggle-switch" id="darkModeToggle" role="switch" aria-checked="false"></div>
+                    </div>
+                    <div class="settings-row">
+                        <div class="settings-label">Compact Cards</div>
+                        <div class="toggle-switch" id="compactToggle" role="switch" aria-checked="false"></div>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h4 class="settings-title">Display</h4>
+                    <div class="settings-row" style="flex-direction: column; align-items: flex-start;">
+                        <div class="settings-label" style="margin-bottom: 12px;">Default View Mode</div>
+                        <div class="view-mode-selector">
+                            <button class="view-mode-btn active" data-mode="grid">
+                                <span class="material-icons-round">grid_view</span>
+                                <span>Grid</span>
+                            </button>
+                            <button class="view-mode-btn" data-mode="list">
+                                <span class="material-icons-round">view_agenda</span>
+                                <span>List</span>
+                            </button>
+                            <button class="view-mode-btn" data-mode="compact">
+                                <span class="material-icons-round">view_day</span>
+                                <span>Compact</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h4 class="settings-title">Data</h4>
+                    <div class="settings-row" style="flex-direction: column; align-items: flex-start;">
+                        <div class="settings-label" style="margin-bottom: 8px;">Reset Progress</div>
+                        <div class="settings-description" style="margin-bottom: 12px;">This will clear all your learning progress. This action cannot be undone.</div>
+                        <button class="word-action-btn secondary" id="resetProgressBtn" style="width: 100%;">
+                            <span class="material-icons-round">restart_alt</span>
+                            Reset All Progress
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Review Quiz Sheet -->
+        <div class="bottom-sheet" id="quizSheet">
+            <div class="sheet-handle"></div>
+            <div class="sheet-header">
+                <h3 class="sheet-title">Quick Review</h3>
+                <button class="icon-btn" id="closeQuiz" aria-label="Close">
+                    <span class="material-icons-round">close</span>
+                </button>
+            </div>
+            <div class="sheet-content">
+                <div class="quiz-container" id="quizContainer">
+                    <!-- Quiz will be dynamically rendered -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // === Application State ===
+        const state = {
+            vocabulary: null,
+            currentView: localStorage.getItem('viewMode') || 'grid',
+            currentFilter: 'all',
+            searchQuery: '',
+            darkMode: localStorage.getItem('darkMode') === 'true',
+            mastered: JSON.parse(localStorage.getItem('masteredWords')) || {},
+            expandedUnits: new Set(),
+            currentQuizIndex: 0,
+            quizWords: []
+        };
+
+        // === Initialize Application ===
+        async function init() {
+            try {
+                const response = await fetch('vocab.json');
+                if (!response.ok) throw new Error('Failed to load vocabulary');
+                state.vocabulary = await response.json();
+                
+                applyTheme();
+                renderAll();
+                setupEventListeners();
+                loadPreferences();
+            } catch (error) {
+                console.error('Error loading vocabulary:', error);
+                showErrorState();
+            }
+        }
+
+        // === Theme Management ===
+        function applyTheme() {
+            document.documentElement.setAttribute('data-theme', state.darkMode ? 'dark' : 'light');
+            const themeIcon = document.querySelector('#themeToggle .material-icons-round');
+            themeIcon.textContent = state.darkMode ? 'light_mode' : 'dark_mode';
+            document.getElementById('darkModeToggle').classList.toggle('active', state.darkMode);
+        }
+
+        function toggleTheme() {
+            state.darkMode = !state.darkMode;
+            localStorage.setItem('darkMode', state.darkMode);
+            applyTheme();
+        }
+
+        // === Data Processing ===
+        function getAllWords() {
+            const words = [];
+            state.vocabulary.units.forEach(unit => {
+                unit.vocabulary_preview.forEach(word => {
+                    words.push({ ...word, type: 'preview', unit: unit.title });
+                });
+                unit.nawl.forEach(word => {
+                    words.push({ ...word, type: 'nawl', unit: unit.title });
+                });
+            });
+            return words;
+        }
+
+        function getFilteredWords() {
+            let words = getAllWords();
+            
+            // Apply filter
+            if (state.currentFilter !== 'all') {
+                words = words.filter(w => w.type === state.currentFilter);
+            }
+            
+            // Apply search
+            if (state.searchQuery) {
+                const query = state.searchQuery.toLowerCase();
+                words = words.filter(w => 
+                    w.word.toLowerCase().includes(query) ||
+                    w.definition.toLowerCase().includes(query)
+                );
+            }
+            
+            return words;
+        }
+
+        function getWordsByUnit(unitIndex) {
+            const unit = state.vocabulary.units[unitIndex];
+            const words = [];
+            
+            unit.vocabulary_preview.forEach(word => {
+                words.push({ ...word, type: 'preview' });
+            });
+            unit.nawl.forEach(word => {
+                words.push({ ...word, type: 'nawl' });
+            });
+            
+            return words;
+        }
+
+        // === Statistics ===
+        function updateStats() {
+            const allWords = getAllWords();
+            const total = allWords.length;
+            const mastered = Object.keys(state.mastered).length;
+            const learning = total - mastered;
+            const units = state.vocabulary ? state.vocabulary.units.length : 0;
+            const completionPercent = total > 0 ? Math.round((mastered / total) * 100) : 0;
+            
+            document.getElementById('totalWords').textContent = total;
+            document.getElementById('masteredWords').textContent = mastered;
+            document.getElementById('learningWords').textContent = learning;
+            document.getElementById('totalUnits').textContent = units;
+            
+            // Progress bars
+            document.getElementById('totalProgress').style.width = '100%';
+            document.getElementById('masteredProgress').style.width = `${completionPercent}%`;
+            document.getElementById('learningProgress').style.width = `${100 - completionPercent}%`;
+            document.getElementById('unitsProgress').style.width = '100%';
+            
+            // Progress ring
+            const circumference = 2 * Math.PI * 78;
+            const offset = circumference - (completionPercent / 100) * circumference;
+            document.getElementById('progressRingFill').style.strokeDashoffset = offset;
+            document.getElementById('progressPercent').textContent = `${completionPercent}%`;
+        }
+
+        // === Rendering ===
+        function renderAll() {
+            renderUnits();
+            updateStats();
+        }
+
+        function renderUnits() {
+            const container = document.getElementById('unitsContainer');
+            
+            if (!state.vocabulary) {
+                container.innerHTML = '';
+                return;
+            }
+            
+            const words = getFilteredWords();
+            const unitGroups = {};
+            
+            // Group words by unit
+            words.forEach(word => {
+                if (!unitGroups[word.unit]) {
+                    unitGroups[word.unit] = [];
+                }
+                unitGroups[word.unit].push(word);
+            });
+            
+            // Render units
+            let html = '';
+            state.vocabulary.units.forEach((unit, index) => {
+                const unitWords = unitGroups[unit.title] || [];
+                if (unitWords.length === 0 && state.searchQuery) return; // Skip empty units in search
+                
+                const isExpanded = state.expandedUnits.has(index);
+                const previewCount = unit.vocabulary_preview.length;
+                const nawlCount = unit.nawl.length;
+                
+                html += `
+                    <div class="unit-card ${isExpanded ? 'expanded' : ''}" data-unit-index="${index}">
+                        <div class="unit-header" onclick="toggleUnit(${index})">
+                            <div class="unit-icon">
+                                <span class="material-icons-round">menu_book</span>
+                            </div>
+                            <div class="unit-info">
+                                <div class="unit-title">${unit.title}</div>
+                                <div class="unit-meta">${previewCount} Preview + ${nawlCount} NAWL words</div>
+                            </div>
+                            <button class="unit-toggle" aria-label="Toggle unit">
+                                <span class="material-icons-round">expand_more</span>
+                            </button>
+                        </div>
+                        <div class="unit-content">
+                            <div class="vocab-type-tabs">
+                                <button class="vocab-tab active" data-vocab-type="all" onclick="filterVocabType(event, ${index})">All (${unitWords.length})</button>
+                                <button class="vocab-tab" data-vocab-type="preview" onclick="filterVocabType(event, ${index})">Preview (${previewCount})</button>
+                                <button class="vocab-tab" data-vocab-type="nawl" onclick="filterVocabType(event, ${index})">NAWL (${nawlCount})</button>
+                            </div>
+                            <div class="vocab-grid ${state.currentView}-view" id="vocab-grid-${index}">
+                                ${unitWords.map((word, wordIndex) => renderVocabCard(word, wordIndex)).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html || '<div class="empty-state"><div class="empty-state-icon"><span class="material-icons-round">search_off</span></div><h3 class="empty-state-title">No results found</h3><p class="empty-state-text">Try adjusting your search or filter criteria.</p></div>';
+            
+            document.getElementById('unitsSubtitle').textContent = `${words.length} words found`;
+        }
+
+        function renderVocabCard(word, index) {
+            const isMastered = state.mastered[word.word] === true;
+            
+            return `
+                <div class="vocab-card ${word.type === 'nawl' ? 'nawl' : ''}" 
+                     data-word="${word.word}"
+                     onclick="showWordDetail('${word.word.replace(/'/g, "\\'")}', '${word.type}', '${word.unit.replace(/'/g, "\\'")}')">
+                    <div class="vocab-header">
+                        <span class="vocab-word">${word.word}</span>
+                        <span class="vocab-pos">${word.pos}</span>
+                    </div>
+                    <div class="vocab-definition">${word.definition}</div>
+                    <div class="vocab-card-actions">
+                        <button class="vocab-card-btn ${isMastered ? 'mastered' : ''}" 
+                                onclick="event.stopPropagation(); toggleMastered('${word.word.replace(/'/g, "\\'")}')">
+                            <span class="material-icons-round">${isMastered ? 'check_circle' : 'radio_button_unchecked'}</span>
+                            ${isMastered ? 'Mastered' : 'Mark Complete'}
+                        </button>
+                        <button class="vocab-card-btn" onclick="event.stopPropagation(); startQuizFromWord('${word.word.replace(/'/g, "\\'")}')">
+                            <span class="material-icons-round">school</span>
+                            Quiz
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderWordDetail(wordObj, type, unit) {
+            const isMastered = state.mastered[wordObj.word] === true;
+            
+            return `
+                <div class="word-detail animate-fade-in">
+                    <div class="word-detail-header">
+                        <div class="word-detail-word">${wordObj.word}</div>
+                        <div class="word-detail-pos">${wordObj.pos}</div>
+                    </div>
+                    
+                    <div class="word-detail-section">
+                        <div class="word-detail-section-title">Definition</div>
+                        <div class="word-detail-definition">${wordObj.definition}</div>
+                    </div>
+                    
+                    <div class="word-detail-section">
+                        <div class="word-detail-section-title">Category</div>
+                        <div class="vocab-pos" style="display: inline-block; margin-top: 8px;">${type.toUpperCase()}</div>
+                    </div>
+                    
+                    <div class="word-detail-section">
+                        <div class="word-detail-section-title">Unit</div>
+                        <p style="color: var(--md-on-surface-variant);">${unit}</p>
+                    </div>
+                    
+                    <div class="word-detail-section">
+                        <div class="word-detail-section-title">Status</div>
+                        <p style="color: ${isMastered ? 'var(--md-success)' : 'var(--md-warning)'};">
+                            <span class="material-icons-round" style="vertical-align: middle; margin-right: 4px;">
+                                ${isMastered ? 'check_circle' : 'pending'}
+                            </span>
+                            ${isMastered ? 'Mastered' : 'Learning'}
+                        </p>
+                    </div>
+                    
+                    <div class="word-detail-actions">
+                        <button class="word-action-btn primary" onclick="toggleMastered('${wordObj.word.replace(/'/g, "\\'")}'); closeBottomSheet();">
+                            <span class="material-icons-round">${isMastered ? 'undo' : 'check'}</span>
+                            ${isMastered ? 'Mark as Learning' : 'Mark as Mastered'}
+                        </button>
+                        <button class="word-action-btn secondary" onclick="startQuizFromWord('${wordObj.word.replace(/'/g, "\\'")}')">
+                            <span class="material-icons-round">school</span>
+                            Practice
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // === Quiz Functions ===
+        function startQuiz(words = null) {
+            state.quizWords = words || getAllWords().sort(() => Math.random() - 0.5);
+            state.currentQuizIndex = 0;
+            openQuizSheet();
+        }
+
+        function startQuizFromWord(word) {
+            const allWords = getAllWords();
+            const wordIndex = allWords.findIndex(w => w.word === word);
+            if (wordIndex !== -1) {
+                // Put the word first, then shuffle the rest
+                const wordObj = allWords[wordIndex];
+                state.quizWords = [wordObj, ...allWords.filter((_, i) => i !== wordIndex).sort(() => Math.random() - 0.5)];
+                state.currentQuizIndex = 0;
+                openQuizSheet();
+            }
+        }
+
+        function renderQuiz() {
+            if (state.currentQuizIndex >= state.quizWords.length) {
+                // Quiz complete
+                const knownCount = state.quizWords.filter(w => state.mastered[w.word]).length;
+                document.getElementById('quizContainer').innerHTML = `
+                    <div class="quiz-card">
+                        <div class="empty-state-icon" style="margin: 0 auto 16px;">
+                            <span class="material-icons-round" style="font-size: 48px;">emoji_events</span>
+                        </div>
+                        <h3 style="margin-bottom: 8px;">Quiz Complete!</h3>
+                        <p style="color: var(--md-on-surface-variant);">
+                            You reviewed ${state.quizWords.length} words.<br>
+                            ${knownCount} marked as mastered.
+                        </p>
+                    </div>
+                    <div class="quiz-actions">
+                        <button class="quiz-btn" onclick="startQuiz()">
+                            <span class="material-icons-round">replay</span>
+                            Review Again
+                        </button>
+                        <button class="quiz-btn" onclick="closeQuizSheet()">
+                            <span class="material-icons-round">close</span>
+                            Close
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+            
+            const word = state.quizWords[state.currentQuizIndex];
+            const progress = ((state.currentQuizIndex + 1) / state.quizWords.length) * 100;
+            
+            document.getElementById('quizContainer').innerHTML = `
+                <div class="quiz-progress">
+                    <div class="quiz-progress-text">${state.currentQuizIndex + 1} of ${state.quizWords.length}</div>
+                    <div class="quiz-progress-bar">
+                        <div class="quiz-progress-fill" style="width: ${progress}%"></div>
+                    </div>
+                </div>
+                
+                <div class="quiz-card">
+                    <div class="quiz-word">${word.word}</div>
+                    <div class="quiz-pos">${word.pos}</div>
+                    <div class="quiz-definition">${word.definition}</div>
+                </div>
+                
+                <div class="quiz-actions">
+                    <button class="quiz-btn dont-know" onclick="markQuizWord(false)">
+                        <span class="material-icons-round">close</span>
+                        Don't Know
+                    </button>
+                    <button class="quiz-btn know" onclick="markQuizWord(true)">
+                        <span class="material-icons-round">check</span>
+                        Know It
+                    </button>
+                </div>
+            `;
+        }
+
+        function markQuizWord(known) {
+            const word = state.quizWords[state.currentQuizIndex];
+            if (known) {
+                state.mastered[word.word] = true;
+                saveMastered();
+            }
+            state.currentQuizIndex++;
+            renderQuiz();
+        }
+
+        // === Event Handlers ===
+        function toggleUnit(index) {
+            if (state.expandedUnits.has(index)) {
+                state.expandedUnits.delete(index);
+            } else {
+                state.expandedUnits.add(index);
+            }
+            
+            const card = document.querySelector(`[data-unit-index="${index}"]`);
+            card.classList.toggle('expanded');
+        }
+
+        function showWordDetail(word, type, unit) {
+            // Find the word object
+            let wordObj = null;
+            for (const unit of state.vocabulary.units) {
+                const found = unit.vocabulary_preview.find(w => w.word === word);
+                if (found) {
+                    wordObj = found;
+                    break;
+                }
+                const foundNAWL = unit.nawl.find(w => w.word === word);
+                if (foundNAWL) {
+                    wordObj = foundNAWL;
+                    break;
+                }
+            }
+            
+            if (wordObj) {
+                document.getElementById('wordSheetContent').innerHTML = renderWordDetail(wordObj, type, unit);
+                openBottomSheet('wordSheet');
+            }
+        }
+
+        function toggleMastered(word) {
+            state.mastered[word] = !state.mastered[word];
+            saveMastered();
+            renderAll();
+        }
+
+        function filterVocabType(event, unitIndex) {
+            // Update active tab
+            const tabs = event.target.parentElement.querySelectorAll('.vocab-tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            const filter = event.target.dataset.vocabType;
+            const unit = state.vocabulary.units[unitIndex];
+            const grid = document.getElementById(`vocab-grid-${unitIndex}`);
+            
+            let words = [];
+            if (filter === 'all') {
+                words = getWordsByUnit(unitIndex);
+            } else if (filter === 'preview') {
+                words = unit.vocabulary_preview.map(w => ({ ...w, type: 'preview' }));
+            } else {
+                words = unit.nawl.map(w => ({ ...w, type: 'nawl' }));
+            }
+            
+            grid.innerHTML = words.map((word, i) => renderVocabCard(word, i)).join('');
+        }
+
+        // === UI State Functions ===
+        function openBottomSheet(sheetId) {
+            document.getElementById('modalOverlay').classList.add('active');
+            document.getElementById(sheetId).classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeBottomSheet(sheetId = null) {
+            document.getElementById('modalOverlay').classList.remove('active');
+            if (sheetId) {
+                document.getElementById(sheetId).classList.remove('active');
+            } else {
+                document.querySelectorAll('.bottom-sheet').forEach(sheet => {
+                    sheet.classList.remove('active');
+                });
+            }
+            document.body.style.overflow = '';
+        }
+
+        function openQuizSheet() {
+            renderQuiz();
+            openBottomSheet('quizSheet');
+        }
+
+        function closeQuizSheet() {
+            closeBottomSheet('quizSheet');
+            renderAll();
+        }
+
+        function showErrorState() {
+            document.getElementById('unitsContainer').innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <span class="material-icons-round">error_outline</span>
+                    </div>
+                    <h3 class="empty-state-title">Unable to load vocabulary</h3>
+                    <p class="empty-state-text">Please make sure vocal.json is in the same directory.</p>
+                </div>
+            `;
+        }
+
+        // === Data Persistence ===
+        function saveMastered() {
+            localStorage.setItem('masteredWords', JSON.stringify(state.mastered));
+        }
+
+        function loadPreferences() {
+            const savedView = localStorage.getItem('viewMode');
+            if (savedView) {
+                state.currentView = savedView;
+                document.querySelectorAll('.view-toggle-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.view === savedView);
+                });
+            }
+        }
+
+        // === Event Listeners Setup ===
+        function setupEventListeners() {
+            // Theme toggle
+            document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+            
+            // Settings
+            document.getElementById('settingsBtn').addEventListener('click', () => openBottomSheet('settingsSheet'));
+            document.getElementById('closeSettings').addEventListener('click', () => closeBottomSheet('settingsSheet'));
+            
+            // Dark mode in settings
+            document.getElementById('darkModeToggle').addEventListener('click', () => {
+                toggleTheme();
+            });
+            
+            // Modal overlay click to close
+            document.getElementById('modalOverlay').addEventListener('click', () => {
+                closeBottomSheet();
+            });
+            
+            // Close word sheet
+            document.getElementById('closeSheet').addEventListener('click', () => closeBottomSheet('wordSheet'));
+            
+            // Search
+            document.getElementById('searchInput').addEventListener('input', (e) => {
+                state.searchQuery = e.target.value;
+                renderUnits();
+            });
+            
+            // Filter chips
+            document.getElementById('filterChips').addEventListener('click', (e) => {
+                const chip = e.target.closest('.chip');
+                if (chip) {
+                    document.querySelectorAll('#filterChips .chip').forEach(c => c.classList.remove('active'));
+                    chip.classList.add('active');
+                    state.currentFilter = chip.dataset.filter;
+                    renderUnits();
+                }
+            });
+            
+            // View toggle
+            document.querySelectorAll('.view-toggle-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.view-toggle-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    state.currentView = btn.dataset.view;
+                    localStorage.setItem('viewMode', state.currentView);
+                    document.querySelectorAll('.vocab-grid').forEach(grid => {
+                        grid.className = `vocab-grid ${state.currentView}-view`;
+                    });
+                });
+            });
+            
+            // Bottom navigation
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const page = item.dataset.page;
+                    
+                    // Update active state
+                    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                    item.classList.add('active');
+                    
+                    // Scroll to section
+                    if (page === 'home') {
+                        document.getElementById('performanceSection').scrollIntoView({ behavior: 'smooth' });
+                    } else if (page === 'review') {
+                        startQuiz();
+                    } else if (page === 'progress') {
+                        document.getElementById('performanceSection').scrollIntoView({ behavior: 'smooth' });
+                    } else if (page === 'settings') {
+                        openBottomSheet('settingsSheet');
+                    }
+                });
+            });
+            
+            // FAB shuffle
+            document.getElementById('shuffleBtn').addEventListener('click', () => {
+                startQuiz();
+            });
+            
+            // Settings view mode buttons
+            document.querySelectorAll('.view-mode-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const mode = btn.dataset.mode;
+                    state.currentView = mode;
+                    localStorage.setItem('viewMode', mode);
+                    
+                    // Update all view mode selectors
+                    document.querySelectorAll('.view-mode-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    
+                    document.querySelectorAll('.view-toggle-btn').forEach(b => {
+                        b.classList.toggle('active', b.dataset.view === mode);
+                    });
+                    
+                    document.querySelectorAll('.vocab-grid').forEach(grid => {
+                        grid.className = `vocab-grid ${mode}-view`;
+                    });
+                });
+            });
+            
+            // Reset progress
+            document.getElementById('resetProgressBtn').addEventListener('click', () => {
+                if (confirm('Are you sure you want to reset all progress? This cannot be undone.')) {
+                    state.mastered = {};
+                    saveMastered();
+                    renderAll();
+                    closeBottomSheet('settingsSheet');
+                }
+            });
+            
+            // Close quiz
+            document.getElementById('closeQuiz').addEventListener('click', closeQuizSheet);
+            
+            // Keyboard accessibility
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    closeBottomSheet();
+                }
+            });
+            
+            // Prefers reduced motion
+            const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+            if (prefersReducedMotion.matches) {
+                document.documentElement.style.setProperty('--transition-fast', '0ms');
+                document.documentElement.style.setProperty('--transition-normal', '0ms');
+                document.documentElement.style.setProperty('--transition-slow', '0ms');
+            }
+        }
+
+        // === Start Application ===
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
