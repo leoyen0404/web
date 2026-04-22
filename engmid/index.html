@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AI Navigation Hub</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .container {
+      background: #fff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    h1 {
+      margin-bottom: 20px;
+      color: #333;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      margin: 10px 0;
+    }
+    a {
+      display: block;
+      padding: 12px;
+      background: #0078d7;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 8px;
+      transition: background 0.3s;
+    }
+    a:hover {
+      background: #005a9e;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Choose Your AI</h1>
+    <ul id="nav-list"></ul>
+  </div>
+
+  <script>
+    // Define your pages here
+    const pages = [
+      { name: "GPT", url: "gpt.html" },
+      { name: "Gemini", url: "gemini.html" },
+      { name: "Claude", url: "claude.html" },
+      { name: "Kimi", url: "kimi.html" }
+    ];
+
+    // Dynamically generate navigation
+    const navList = document.getElementById("nav-list");
+    pages.forEach(page => {
+      const li = document.createElement("li");
+      const link = document.createElement("a");
+      link.textContent = page.name;
+      link.href = page.url;
+      li.appendChild(link);
+      navList.appendChild(li);
+    });
+  </script>
+</body>
+</html>
