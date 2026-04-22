@@ -1,73 +1,371 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AI Navigation Hub</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f6f8;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
+    :root {
+      --bg-1: #0f172a;
+      --bg-2: #111827;
+      --card: rgba(255, 255, 255, 0.08);
+      --card-border: rgba(255, 255, 255, 0.14);
+      --text: #e5e7eb;
+      --muted: #94a3b8;
+      --accent-1: #7c3aed;
+      --accent-2: #06b6d4;
+      --accent-3: #22c55e;
+      --shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
     }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+    }
+
+    body {
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(124, 58, 237, 0.35), transparent 35%),
+        radial-gradient(circle at top right, rgba(6, 182, 212, 0.25), transparent 30%),
+        radial-gradient(circle at bottom, rgba(34, 197, 94, 0.18), transparent 28%),
+        linear-gradient(135deg, var(--bg-1), var(--bg-2));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px;
+      overflow: hidden;
+    }
+
+    .background-blur {
+      position: fixed;
+      inset: -20%;
+      background:
+        linear-gradient(120deg, rgba(124, 58, 237, 0.15), transparent 40%),
+        linear-gradient(240deg, rgba(6, 182, 212, 0.12), transparent 45%);
+      filter: blur(60px);
+      pointer-events: none;
+      z-index: 0;
+    }
+
     .container {
-      background: #fff;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      position: relative;
+      z-index: 1;
+      width: min(100%, 920px);
+      padding: 36px;
+      border: 1px solid var(--card-border);
+      border-radius: 28px;
+      background: rgba(15, 23, 42, 0.72);
+      backdrop-filter: blur(18px);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .container::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.08), transparent 35%);
+      pointer-events: none;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 24px;
+      align-items: center;
+      margin-bottom: 28px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: var(--muted);
+      font-size: 0.92rem;
+      letter-spacing: 0.02em;
+      margin-bottom: 16px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent-2), var(--accent-1));
+      box-shadow: 0 0 0 6px rgba(6, 182, 212, 0.12);
+    }
+
+    h1 {
+      margin: 0 0 12px;
+      font-size: clamp(2rem, 4vw, 3.4rem);
+      line-height: 1.05;
+      letter-spacing: -0.04em;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+      font-size: 1.05rem;
+      line-height: 1.7;
+      max-width: 52ch;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .stat {
+      padding: 18px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.08);
       text-align: center;
     }
-    h1 {
-      margin-bottom: 20px;
-      color: #333;
+
+    .stat-number {
+      display: block;
+      font-size: 1.7rem;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 6px;
     }
+
+    .stat-label {
+      font-size: 0.92rem;
+      color: var(--muted);
+    }
+
+    .panel {
+      margin-top: 10px;
+      padding: 22px;
+      border-radius: 24px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+      gap: 16px;
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 1.1rem;
+      color: #fff;
+    }
+
+    .panel-note {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
     ul {
       list-style: none;
       padding: 0;
+      margin: 0;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
     }
+
     li {
-      margin: 10px 0;
+      margin: 0;
     }
+
     a {
-      display: block;
-      padding: 12px;
-      background: #0078d7;
-      color: #fff;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 16px 18px;
+      min-height: 72px;
+      border-radius: 18px;
       text-decoration: none;
-      border-radius: 8px;
-      transition: background 0.3s;
+      color: #fff;
+      background: linear-gradient(135deg, rgba(124, 58, 237, 0.95), rgba(6, 182, 212, 0.9));
+      border: 1px solid rgba(255,255,255,0.12);
+      box-shadow: 0 16px 36px rgba(0,0,0,0.22);
+      transform: translateY(0);
+      transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+      overflow: hidden;
     }
+
+    a::after {
+      content: "→";
+      font-size: 1.2rem;
+      font-weight: 700;
+      opacity: 0.95;
+    }
+
+    a::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(120deg, rgba(255,255,255,0.18), transparent 45%);
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
     a:hover {
-      background: #005a9e;
+      transform: translateY(-3px);
+      box-shadow: 0 22px 48px rgba(0,0,0,0.3);
+      filter: saturate(1.08);
+    }
+
+    a:hover::before {
+      opacity: 1;
+    }
+
+    .name {
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+    }
+
+    .chip {
+      font-size: 0.78rem;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.16);
+      border: 1px solid rgba(255,255,255,0.16);
+      color: rgba(255,255,255,0.92);
+      white-space: nowrap;
+    }
+
+    .footer {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 0.88rem;
+      text-align: center;
+    }
+
+    @media (max-width: 800px) {
+      .hero {
+        grid-template-columns: 1fr;
+      }
+
+      ul {
+        grid-template-columns: 1fr;
+      }
+
+      .stats {
+        grid-template-columns: 1fr 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .container {
+        padding: 22px;
+        border-radius: 22px;
+      }
+
+      .panel {
+        padding: 16px;
+      }
+
+      .stats {
+        grid-template-columns: 1fr;
+      }
+
+      .panel-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
     }
   </style>
 </head>
 <body>
+  <div class="background-blur"></div>
+
   <div class="container">
-    <h1>Choose Your AI</h1>
-    <ul id="nav-list"></ul>
+    <div class="hero">
+      <div>
+        <div class="eyebrow">
+          <span class="dot"></span>
+          AI Navigation Hub
+        </div>
+        <h1>Choose your AI</h1>
+        <p class="subtitle">
+          A clean launchpad for your AI tools. Open the model you want instantly and keep everything organized in one elegant place.
+        </p>
+      </div>
+
+      <div class="stats" aria-label="Navigation summary">
+        <div class="stat">
+          <span class="stat-number">7</span>
+          <span class="stat-label">AI pages</span>
+        </div>
+        <div class="stat">
+          <span class="stat-number">1</span>
+          <span class="stat-label">Simple hub</span>
+        </div>
+        <div class="stat">
+          <span class="stat-number">100%</span>
+          <span class="stat-label">Quick access</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <h2 class="panel-title">Available AI pages</h2>
+        <div class="panel-note">Tap a card to open</div>
+      </div>
+
+      <ul id="nav-list"></ul>
+    </div>
+
+    <div class="footer">
+      Built for fast switching between your favorite AI assistants.
+    </div>
   </div>
 
   <script>
-    // Define your pages here
     const pages = [
-      { name: "GPT", url: "gpt.html" },
-      { name: "Gemini", url: "gemini.html" },
-      { name: "Claude", url: "claude.html" },
-      { name: "Kimi", url: "kimi.html" }
+      { name: "GPT", url: "gpt.html", tag: "OpenAI" },
+      { name: "Gemini", url: "gemini.html", tag: "Google" },
+      { name: "Claude", url: "claude.html", tag: "Anthropic" },
+      { name: "Kimi", url: "kimi.html", tag: "Moonshot" },
+      { name: "Qwen", url: "qwen.html", tag: "Alibaba" },
+      { name: "GLM", url: "glm.html", tag: "Zhipu" },
+      { name: "MiniMax", url: "minimax.html", tag: "MiniMax" }
     ];
 
-    // Dynamically generate navigation
     const navList = document.getElementById("nav-list");
+
     pages.forEach(page => {
       const li = document.createElement("li");
+
       const link = document.createElement("a");
-      link.textContent = page.name;
       link.href = page.url;
+      link.setAttribute("aria-label", `Open ${page.name}`);
+
+      const name = document.createElement("span");
+      name.className = "name";
+      name.textContent = page.name;
+
+      const chip = document.createElement("span");
+      chip.className = "chip";
+      chip.textContent = page.tag;
+
+      link.appendChild(name);
+      link.appendChild(chip);
       li.appendChild(link);
       navList.appendChild(li);
     });
