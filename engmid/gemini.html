@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        /* Custom scrollbar for a polished look */
+        /* Custom scrollbar */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
@@ -17,123 +17,115 @@
         .fade-in { animation: fadeIn 0.3s ease-out; }
         .slide-in-right { animation: slideInRight 0.3s ease-out; }
         
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        @keyframes slideInRight {
-            from { transform: translateX(20px); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideInRight { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
-        /* Prevent text selection during swipe */
         .touch-pan-y { touch-action: pan-y; }
+        
+        /* Loading Spinner */
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #6366f1;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 font-sans overflow-hidden selection:bg-indigo-100 selection:text-indigo-900">
 
     <div id="app" class="flex h-screen w-full relative">
-        <!-- Rendered Content Will Go Here -->
+        <div class="flex flex-col items-center justify-center w-full h-full text-slate-400">
+            <div class="loader mb-4"></div>
+            <p class="text-sm font-medium">Loading vocabulary...</p>
+        </div>
     </div>
 
     <script>
-        // --- VOCABULARY DATA ---
-        const vocabData = [
-            // Unit 6 - Lie Detectors
-            { id: 1, word: "minimal", pos: "adjective", def: "very small in amount", unit: "Unit 6 - Lie Detectors", category: "Vocabulary Preview" },
-            { id: 2, word: "conduction", pos: "noun", def: "the movement of heat or electricity through something", unit: "Unit 6 - Lie Detectors", category: "Vocabulary Preview" },
-            { id: 3, word: "accurately", pos: "adverb", def: "correctly", unit: "Unit 6 - Lie Detectors", category: "Vocabulary Preview" },
-            { id: 4, word: "punish", pos: "verb", def: "to discipline; to penalize", unit: "Unit 6 - Lie Detectors", category: "Vocabulary Preview" },
-            { id: 5, word: "likelihood", pos: "noun", def: "probability", unit: "Unit 6 - Lie Detectors", category: "Vocabulary Preview" },
-            { id: 6, word: "reliability", pos: "noun", def: "trustworthiness; consistency", unit: "Unit 6 - Lie Detectors", category: "Vocabulary Preview" },
-            { id: 7, word: "intimidate", pos: "verb", def: "to fill someone with fear", unit: "Unit 6 - Lie Detectors", category: "NAWL" },
-            { id: 8, word: "jagged", pos: "adjective", def: "uneven; having sharp points", unit: "Unit 6 - Lie Detectors", category: "NAWL" },
-            { id: 9, word: "identical", pos: "adjective", def: "exactly the same", unit: "Unit 6 - Lie Detectors", category: "NAWL" },
-            { id: 10, word: "apprehensive", pos: "adjective", def: "nervous; anxious", unit: "Unit 6 - Lie Detectors", category: "NAWL" },
-            { id: 11, word: "perspiration", pos: "noun", def: "sweat", unit: "Unit 6 - Lie Detectors", category: "NAWL" },
-            { id: 12, word: "compress", pos: "verb", def: "to press or squeeze", unit: "Unit 6 - Lie Detectors", category: "NAWL" },
-            { id: 13, word: "wrist", pos: "noun", def: "the part of the body where the hand joins the arm", unit: "Unit 6 - Lie Detectors", category: "NAWL" },
-            { id: 14, word: "deduce", pos: "verb", def: "to reach a conclusion by reasoning", unit: "Unit 6 - Lie Detectors", category: "NAWL" },
-
-            // Unit 6 - Patents
-            { id: 15, word: "viable", pos: "adjective", def: "having a reasonable chance of succeeding", unit: "Unit 6 - Patents", category: "Vocabulary Preview" },
-            { id: 16, word: "specialty", pos: "noun", def: "an area of expertise", unit: "Unit 6 - Patents", category: "Vocabulary Preview" },
-            { id: 17, word: "obtain", pos: "verb", def: "to get or acquire", unit: "Unit 6 - Patents", category: "Vocabulary Preview" },
-            { id: 18, word: "adaptation", pos: "noun", def: "a change to an existing design or concept", unit: "Unit 6 - Patents", category: "Vocabulary Preview" },
-            { id: 19, word: "theorem", pos: "noun", def: "a formula or general statement in the sciences", unit: "Unit 6 - Patents", category: "Vocabulary Preview" },
-            { id: 20, word: "machinery", pos: "noun", def: "man-made moving devices", unit: "Unit 6 - Patents", category: "Vocabulary Preview" },
-            { id: 21, word: "backbreaking", pos: "adjective", def: "involving extremely hard physical work", unit: "Unit 6 - Patents", category: "NAWL" },
-            { id: 22, word: "thereof", pos: "adverb", def: "of the thing that has been mentioned", unit: "Unit 6 - Patents", category: "NAWL" },
-            { id: 23, word: "gear", pos: "noun", def: "a mechanism that performs a specific function in a machine", unit: "Unit 6 - Patents", category: "NAWL" },
-            { id: 24, word: "relativity", pos: "noun", def: "the theory that motion depends on the observer's position", unit: "Unit 6 - Patents", category: "NAWL" },
-            { id: 25, word: "procedure", pos: "noun", def: "a series of actions done in a set order", unit: "Unit 6 - Patents", category: "NAWL" },
-            { id: 26, word: "database", pos: "noun", def: "an organized collection of information stored electronically", unit: "Unit 6 - Patents", category: "NAWL" },
-            { id: 27, word: "stimulate", pos: "verb", def: "to encourage or increase activity", unit: "Unit 6 - Patents", category: "NAWL" },
-            { id: 28, word: "file", pos: "verb", def: "to officially submit a legal document", unit: "Unit 6 - Patents", category: "NAWL" },
-
-            // Unit 7 - Ever-Evolving English
-            { id: 29, word: "standardize", pos: "verb", def: "to make consistent according to rules", unit: "Unit 7 - English", category: "Vocabulary Preview" },
-            { id: 30, word: "vowel", pos: "noun", def: "an open-mouthed speech sound", unit: "Unit 7 - English", category: "Vocabulary Preview" },
-            { id: 31, word: "profound", pos: "adjective", def: "deep or having great importance", unit: "Unit 7 - English", category: "Vocabulary Preview" },
-            { id: 32, word: "pronounce", pos: "verb", def: "to say a word aloud correctly", unit: "Unit 7 - English", category: "Vocabulary Preview" },
-            { id: 33, word: "consensus", pos: "noun", def: "general agreement", unit: "Unit 7 - English", category: "Vocabulary Preview" },
-            { id: 34, word: "linguistic", pos: "adjective", def: "relating to language", unit: "Unit 7 - English", category: "Vocabulary Preview" },
-            { id: 35, word: "case", pos: "noun", def: "a grammatical form showing a word's role in a sentence", unit: "Unit 7 - English", category: "NAWL" },
-            { id: 36, word: "conqueror", pos: "noun", def: "a person who takes control by force", unit: "Unit 7 - English", category: "NAWL" },
-            { id: 37, word: "aristocracy", pos: "noun", def: "the upper ruling class, often hereditary", unit: "Unit 7 - English", category: "NAWL" },
-            { id: 38, word: "dub", pos: "verb", def: "to name or call something", unit: "Unit 7 - English", category: "NAWL" },
-            { id: 39, word: "usage", pos: "noun", def: "the way language is used", unit: "Unit 7 - English", category: "NAWL" },
-            { id: 40, word: "rudiments", pos: "noun", def: "basic principles or foundations", unit: "Unit 7 - English", category: "NAWL" },
-            { id: 41, word: "prescriptive", pos: "adjective", def: "enforcing strict rules", unit: "Unit 7 - English", category: "NAWL" },
-            { id: 42, word: "linguist", pos: "noun", def: "a person who scientifically studies language", unit: "Unit 7 - English", category: "NAWL" },
-            { id: 43, word: "lexicon", pos: "noun", def: "the vocabulary of a language", unit: "Unit 7 - English", category: "NAWL" },
-            { id: 44, word: "flux", pos: "noun", def: "continuous change", unit: "Unit 7 - English", category: "NAWL" },
-
-            // Unit 7 - Pride and Prejudice
-            { id: 45, word: "admission", pos: "noun", def: "the act of confessing something", unit: "Unit 7 - Pride & Prejudice", category: "Vocabulary Preview" },
-            { id: 46, word: "inferiority", pos: "noun", def: "the state of being lower in status or rank", unit: "Unit 7 - Pride & Prejudice", category: "Vocabulary Preview" },
-            { id: 47, word: "evident", pos: "adjective", def: "clearly seen or obvious", unit: "Unit 7 - Pride & Prejudice", category: "Vocabulary Preview" },
-            { id: 48, word: "disturbance", pos: "noun", def: "interruption or upset", unit: "Unit 7 - Pride & Prejudice", category: "Vocabulary Preview" },
-            { id: 49, word: "duration", pos: "noun", def: "length of time something lasts", unit: "Unit 7 - Pride & Prejudice", category: "Vocabulary Preview" },
-            { id: 50, word: "unconsciously", pos: "adverb", def: "without awareness", unit: "Unit 7 - Pride & Prejudice", category: "Vocabulary Preview" },
-            { id: 51, word: "rouse", pos: "verb", def: "to awaken or stir", unit: "Unit 7 - Pride & Prejudice", category: "NAWL" },
-            { id: 52, word: "banish", pos: "verb", def: "to send away or remove", unit: "Unit 7 - Pride & Prejudice", category: "NAWL" },
-            { id: 53, word: "repress", pos: "verb", def: "to hold back emotions", unit: "Unit 7 - Pride & Prejudice", category: "NAWL" },
-            { id: 54, word: "ardently", pos: "adverb", def: "with strong feeling or passion", unit: "Unit 7 - Pride & Prejudice", category: "NAWL" },
-            { id: 55, word: "color", pos: "verb", def: "to blush", unit: "Unit 7 - Pride & Prejudice", category: "NAWL" },
-            { id: 56, word: "insensible", pos: "adjective", def: "unaware or unmindful", unit: "Unit 7 - Pride & Prejudice", category: "NAWL" },
-            { id: 57, word: "endeavor", pos: "noun", def: "an effort or attempt", unit: "Unit 7 - Pride & Prejudice", category: "NAWL" },
-            { id: 58, word: "countenance", pos: "noun", def: "facial expression", unit: "Unit 7 - Pride & Prejudice", category: "NAWL" },
-            { id: 59, word: "bestow", pos: "verb", def: "to give as a gift or honor", unit: "Unit 7 - Pride & Prejudice", category: "NAWL" },
-            { id: 60, word: "mantelpiece", pos: "noun", def: "a shelf above a fireplace", unit: "Unit 7 - Pride & Prejudice", category: "NAWL" },
-            { id: 61, word: "composure", pos: "noun", def: "calm control of one's emotions", unit: "Unit 7 - Pride & Prejudice", category: "NAWL" }
-        ];
-
-        const units = ['All', ...new Set(vocabData.map(w => w.unit))];
-
         // --- APP STATE ---
         const state = {
+            vocabData: [],
+            units: [],
             learnedWords: new Set(),
-            viewMode: 'grid', // 'grid' | 'table' | 'compact'
+            viewMode: 'grid', 
             searchQuery: '',
             selectedUnit: 'All',
             selectedWordId: null,
             isMobileMenuOpen: false,
-            savedScrollPos: 0 // <--- Tracks scroll position
+            savedScrollPos: 0,
+            isLoading: true
         };
 
-        // Load progress
-        const savedProgress = localStorage.getItem('vocabLearned_html');
-        if (savedProgress) {
-            state.learnedWords = new Set(JSON.parse(savedProgress));
+        // --- DATA INITIALIZATION ---
+        async function initData() {
+            try {
+                const response = await fetch('vocab.json');
+                const data = await response.json();
+                
+                const flatData = [];
+                let idCounter = 1;
+
+                data.units.forEach(unit => {
+                    // Process Vocabulary Preview
+                    if (unit.vocabulary_preview) {
+                        unit.vocabulary_preview.forEach(item => {
+                            flatData.push({
+                                id: idCounter++,
+                                word: item.word,
+                                pos: item.pos,
+                                def: item.definition,
+                                unit: unit.title,
+                                category: 'Vocabulary Preview'
+                            });
+                        });
+                    }
+                    // Process NAWL
+                    if (unit.nawl) {
+                        unit.nawl.forEach(item => {
+                            flatData.push({
+                                id: idCounter++,
+                                word: item.word,
+                                pos: item.pos,
+                                def: item.definition,
+                                unit: unit.title,
+                                category: 'NAWL'
+                            });
+                        });
+                    }
+                });
+
+                state.vocabData = flatData;
+                state.units = ['All', ...new Set(flatData.map(w => w.unit))];
+                state.isLoading = false;
+
+                // Load saved progress
+                const savedProgress = localStorage.getItem('vocabLearned_json_v1');
+                if (savedProgress) {
+                    state.learnedWords = new Set(JSON.parse(savedProgress));
+                }
+
+                render();
+            } catch (error) {
+                console.error("Failed to load vocab.json:", error);
+                document.getElementById('app').innerHTML = `
+                    <div class="flex flex-col items-center justify-center w-full h-full text-slate-500 p-8 text-center">
+                        <i data-lucide="alert-circle" class="text-red-500 mb-4 w-12 h-12"></i>
+                        <h2 class="text-xl font-bold mb-2">Data Load Failed</h2>
+                        <p class="text-sm max-w-xs">Make sure <strong>vocab.json</strong> is in the same directory as this file.</p>
+                        <button onclick="location.reload()" class="mt-6 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium">Retry</button>
+                    </div>
+                `;
+                lucide.createIcons();
+            }
         }
 
         function saveProgress() {
-            localStorage.setItem('vocabLearned_html', JSON.stringify(Array.from(state.learnedWords)));
+            localStorage.setItem('vocabLearned_json_v1', JSON.stringify(Array.from(state.learnedWords)));
         }
 
         // --- SVG ICONS HELPERS ---
-        // Generating inline SVGs for loops prevents icon flashing during quick re-renders
         const svgCheckCircle = (size = 24, classes = "") => `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${classes}"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>`;
         const svgCircle = (size = 24, classes = "") => `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${classes}"><circle cx="12" cy="12" r="10"/></svg>`;
 
@@ -145,7 +137,7 @@
                 adjective: "bg-purple-50 text-purple-700 border-purple-200",
                 adverb: "bg-amber-50 text-amber-700 border-amber-200",
             };
-            const colorClass = colors[pos] || "bg-slate-50 text-slate-700 border-slate-200";
+            const colorClass = colors[pos?.toLowerCase()] || "bg-slate-50 text-slate-700 border-slate-200";
             return `<span class="px-2 py-0.5 text-xs font-medium rounded-md border inline-block ${colorClass}">${pos}</span>`;
         }
 
@@ -156,7 +148,7 @@
         }
 
         function getFilteredWords() {
-            return vocabData.filter(word => {
+            return state.vocabData.filter(word => {
                 const searchLower = state.searchQuery.toLowerCase();
                 const matchesSearch = word.word.toLowerCase().includes(searchLower) || word.def.toLowerCase().includes(searchLower);
                 const matchesUnit = state.selectedUnit === 'All' || word.unit === state.selectedUnit;
@@ -165,82 +157,53 @@
         }
 
         // --- GLOBAL ACTIONS ---
-        window.toggleMobileMenu = function(open) {
-            state.isMobileMenuOpen = open;
-            render();
-        }
-
-        window.setSearchQuery = function(val) {
-            state.searchQuery = val;
-            render();
-        }
-
-        window.setSelectedUnit = function(unit) {
-            state.selectedUnit = unit;
-            state.isMobileMenuOpen = false;
-            // Reset scroll when changing units
+        window.toggleMobileMenu = (open) => { state.isMobileMenuOpen = open; render(); }
+        window.setSearchQuery = (val) => { state.searchQuery = val; render(); }
+        window.setSelectedUnit = (unit) => { 
+            state.selectedUnit = unit; 
+            state.isMobileMenuOpen = false; 
             state.savedScrollPos = 0; 
-            render();
+            render(); 
         }
-
-        window.setViewMode = function(mode) {
-            // Save scroll before changing view mode to keep position relatively stable
+        window.setViewMode = (mode) => {
             const scrollEl = document.getElementById('scroll-container');
             if (scrollEl && !state.selectedWordId) state.savedScrollPos = scrollEl.scrollTop;
-            
             state.viewMode = mode;
             render();
         }
-
-        window.toggleLearned = function(id, event) {
+        window.toggleLearned = (id, event) => {
             if (event) event.stopPropagation();
-            
-            // Preserve scroll explicitly when toggling a word in the list view
             const scrollEl = document.getElementById('scroll-container');
             const currentScroll = scrollEl ? scrollEl.scrollTop : state.savedScrollPos;
-
             if (state.learnedWords.has(id)) state.learnedWords.delete(id);
             else state.learnedWords.add(id);
-            
             saveProgress();
             render();
-
-            // Restore scroll immediately after render finishes replacing HTML
             const newScrollEl = document.getElementById('scroll-container');
             if (newScrollEl && !state.selectedWordId) newScrollEl.scrollTop = currentScroll;
         }
-
-        window.openWordDetail = function(id) {
-            // CRUCIAL: Save exact scroll position before navigating away
+        window.openWordDetail = (id) => {
             const scrollEl = document.getElementById('scroll-container');
             if (scrollEl) state.savedScrollPos = scrollEl.scrollTop;
-            
             state.selectedWordId = id;
             render();
         }
-
-        window.closeWordDetail = function() {
+        window.closeWordDetail = () => {
             state.selectedWordId = null;
             render();
-            // CRUCIAL: Restore scroll position after returning to list
             setTimeout(() => {
                 const scrollEl = document.getElementById('scroll-container');
                 if (scrollEl) scrollEl.scrollTop = state.savedScrollPos;
             }, 0);
         }
-
-        window.navigateDetail = function(direction) {
+        window.navigateDetail = (direction) => {
             const filtered = getFilteredWords();
             const currentIndex = filtered.findIndex(w => w.id === state.selectedWordId);
-            if (direction === 'next' && currentIndex < filtered.length - 1) {
-                state.selectedWordId = filtered[currentIndex + 1].id;
-            } else if (direction === 'prev' && currentIndex > 0) {
-                state.selectedWordId = filtered[currentIndex - 1].id;
-            }
+            if (direction === 'next' && currentIndex < filtered.length - 1) state.selectedWordId = filtered[currentIndex + 1].id;
+            else if (direction === 'prev' && currentIndex > 0) state.selectedWordId = filtered[currentIndex - 1].id;
             render();
         }
 
-        // Keyboard navigation
         window.addEventListener('keydown', (e) => {
             if (!state.selectedWordId) return;
             if (e.key === 'Escape') closeWordDetail();
@@ -250,16 +213,12 @@
 
         // --- RENDER LOGIC ---
         function renderSidebar() {
-            const progressPercentage = Math.round((state.learnedWords.size / vocabData.length) * 100) || 0;
-            
-            const overlay = state.isMobileMenuOpen 
-                ? `<div class="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-40 md:hidden transition-opacity" onclick="toggleMobileMenu(false)"></div>` 
-                : '';
-
+            const progressPercentage = Math.round((state.learnedWords.size / state.vocabData.length) * 100) || 0;
+            const overlay = state.isMobileMenuOpen ? `<div class="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-40 md:hidden transition-opacity" onclick="toggleMobileMenu(false)"></div>` : '';
             const sidebarClasses = state.isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full';
 
-            const unitsHtml = units.map(unit => {
-                const count = unit === 'All' ? vocabData.length : vocabData.filter(w => w.unit === unit).length;
+            const unitsHtml = state.units.map(unit => {
+                const count = unit === 'All' ? state.vocabData.length : state.vocabData.filter(w => w.unit === unit).length;
                 const isSelected = state.selectedUnit === unit;
                 return `
                     <button onclick="setSelectedUnit('${unit}')" class="w-full flex items-center justify-between px-3 py-2 text-sm rounded-md transition-colors ${isSelected ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}">
@@ -278,285 +237,147 @@
                                 <i data-lucide="book-open" class="text-indigo-600"></i>
                                 <h1 class="text-xl font-bold tracking-tight text-slate-900">Vocab Mastery</h1>
                             </div>
-                            <button class="md:hidden p-2 -mr-2 text-slate-500 hover:text-slate-900 rounded-lg hover:bg-slate-100" onclick="toggleMobileMenu(false)">
+                            <button class="md:hidden p-2 -mr-2 text-slate-500 hover:text-slate-900 rounded-lg" onclick="toggleMobileMenu(false)">
                                 <i data-lucide="x" class="w-5 h-5"></i>
                             </button>
                         </div>
                         <div class="space-y-2">
-                            <div class="flex justify-between text-xs font-medium text-slate-500">
-                                <span>Overall Progress</span>
-                                <span>${state.learnedWords.size} / ${vocabData.length} (${progressPercentage}%)</span>
-                            </div>
+                            <div class="flex justify-between text-xs font-medium text-slate-500"><span>Progress</span><span>${state.learnedWords.size}/${state.vocabData.length}</span></div>
                             <div class="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                                <div class="h-full bg-indigo-500 transition-all duration-500 ease-out" style="width: ${progressPercentage}%"></div>
+                                <div class="h-full bg-indigo-500 transition-all duration-500" style="width: ${progressPercentage}%"></div>
                             </div>
                         </div>
                     </div>
                     <div class="p-4 flex-1 overflow-y-auto space-y-6">
                         <div class="relative">
                             <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4"></i>
-                            <input type="text" placeholder="Search words..." value="${state.searchQuery}" oninput="setSearchQuery(this.value)" class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
+                            <input type="text" placeholder="Search..." value="${state.searchQuery}" oninput="setSearchQuery(this.value)" class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
                         </div>
-                        <div>
-                            <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                                <i data-lucide="filter" class="w-3 h-3"></i> Units
-                            </h3>
-                            <div class="space-y-1">
-                                ${unitsHtml}
-                            </div>
-                        </div>
+                        <div class="space-y-1">${unitsHtml}</div>
                     </div>
                 </aside>
             `;
         }
 
-        function renderToolbar(filteredCount) {
-            const title = state.selectedUnit === 'All' ? 'All Vocabulary' : state.selectedUnit;
-            
-            const btn = (id, icon, title) => `
-                <button onclick="setViewMode('${id}')" title="${title}" class="p-1.5 rounded-md transition-all ${state.viewMode === id ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-200/50'}">
-                    <i data-lucide="${icon}" class="w-4 h-4 md:w-5 md:h-5"></i>
-                </button>
-            `;
-
-            return `
-                <header class="bg-white/80 backdrop-blur-md border-b border-slate-200 px-4 md:px-6 py-4 flex items-center justify-between sticky top-0 z-10 shrink-0">
-                    <div class="flex items-center gap-3 md:gap-0">
-                        <button class="md:hidden p-2 -ml-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors focus:outline-none" onclick="toggleMobileMenu(true)">
-                            <i data-lucide="menu" class="w-6 h-6"></i>
-                        </button>
-                        <div>
-                            <h2 class="text-lg font-semibold text-slate-900 line-clamp-1 max-w-[150px] sm:max-w-none">${title}</h2>
-                            <p class="text-sm text-slate-500 hidden sm:block">Showing ${filteredCount} words</p>
-                        </div>
-                    </div>
-                    <div class="flex bg-slate-100 p-1 rounded-lg border border-slate-200/60 shrink-0">
-                        ${btn('grid', 'layout-grid', 'Grid View')}
-                        ${btn('table', 'list', 'Table View')}
-                        ${btn('compact', 'align-justify', 'Compact View')}
-                    </div>
-                </header>
-            `;
-        }
-
         function renderDirectory(filteredWords) {
-            if (filteredWords.length === 0) {
-                return `
-                    <div class="h-full flex flex-col items-center justify-center text-slate-400 fade-in">
-                        <i data-lucide="search" class="w-12 h-12 mb-4 opacity-20"></i>
-                        <p>No words found matching your criteria.</p>
-                        <button onclick="setSearchQuery(''); setSelectedUnit('All');" class="mt-4 text-indigo-600 hover:underline text-sm">Clear filters</button>
-                    </div>
-                `;
-            }
+            if (filteredWords.length === 0) return `<div class="h-full flex flex-col items-center justify-center text-slate-400 fade-in"><i data-lucide="search" class="w-12 h-12 mb-4 opacity-20"></i><p>No results found.</p></div>`;
 
             let contentHtml = '';
-
             if (state.viewMode === 'grid') {
                 contentHtml = `<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 auto-rows-max pb-12 fade-in">` + filteredWords.map(word => {
                     const isLearned = state.learnedWords.has(word.id);
-                    const icon = isLearned ? svgCheckCircle(24, "text-emerald-500 fill-emerald-100") : svgCircle(24, "text-slate-300 group-hover:text-slate-400");
-                    const cardBorder = isLearned ? 'border-emerald-200 bg-emerald-50/10' : 'border-slate-200 hover:border-indigo-300 bg-white';
-                    
                     return `
-                        <div onclick="openWordDetail(${word.id})" class="group relative border rounded-xl p-5 cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5 ${cardBorder}">
+                        <div onclick="openWordDetail(${word.id})" class="group relative border rounded-xl p-5 cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5 ${isLearned ? 'border-emerald-200 bg-emerald-50/10' : 'border-slate-200 bg-white hover:border-indigo-300'}">
                             <div class="flex justify-between items-start mb-3">
                                 ${getCategoryBadge(word.category)}
-                                <button onclick="toggleLearned(${word.id}, event)" class="p-2 -m-2 hover:scale-110 transition-transform focus:outline-none">
-                                    ${icon}
-                                </button>
+                                <button onclick="toggleLearned(${word.id}, event)" class="p-2 -m-2 hover:scale-110 transition-transform">${isLearned ? svgCheckCircle(24, "text-emerald-500 fill-emerald-100") : svgCircle(24, "text-slate-300")}</button>
                             </div>
-                            <div class="mb-2">
-                                <h3 class="text-xl font-bold text-slate-900 tracking-tight group-hover:text-indigo-600 transition-colors">${word.word}</h3>
-                                <div class="mt-1">${getPosBadge(word.pos)}</div>
-                            </div>
-                            <p class="text-slate-600 text-sm leading-relaxed line-clamp-2">${word.def}</p>
-                            <div class="mt-4 text-[11px] font-medium text-slate-400">${word.unit}</div>
+                            <h3 class="text-xl font-bold text-slate-900 tracking-tight group-hover:text-indigo-600 transition-colors">${word.word}</h3>
+                            <div class="mt-1">${getPosBadge(word.pos)}</div>
+                            <p class="text-slate-600 text-sm leading-relaxed line-clamp-2 mt-2">${word.def}</p>
+                            <div class="mt-4 text-[10px] font-medium text-slate-400 uppercase tracking-wide">${word.unit}</div>
                         </div>
                     `;
                 }).join('') + `</div>`;
-            } 
-            else if (state.viewMode === 'table') {
-                const rows = filteredWords.map(word => {
-                    const isLearned = state.learnedWords.has(word.id);
-                    const icon = isLearned ? svgCheckCircle(20, "text-emerald-500 fill-emerald-50 mx-auto") : svgCircle(20, "text-slate-300 group-hover:text-slate-400 mx-auto");
-                    return `
-                        <tr onclick="openWordDetail(${word.id})" class="hover:bg-slate-50 cursor-pointer transition-colors group">
-                            <td class="px-4 py-3 text-center" onclick="event.stopPropagation()">
-                                <button onclick="toggleLearned(${word.id}, event)" class="p-2 -m-2 focus:outline-none">${icon}</button>
-                            </td>
-                            <td class="px-4 py-3 font-semibold text-slate-900 group-hover:text-indigo-600">${word.word}</td>
-                            <td class="px-4 py-3 hidden sm:table-cell">${getPosBadge(word.pos)}</td>
-                            <td class="px-4 py-3 text-slate-600">${word.def}</td>
-                            <td class="px-4 py-3 hidden md:table-cell text-slate-500 text-xs">${word.unit}</td>
-                        </tr>
-                    `;
-                }).join('');
-
-                contentHtml = `
-                    <div class="bg-white border border-slate-200 rounded-xl overflow-x-auto shadow-sm pb-12 fade-in">
-                        <table class="w-full text-left text-sm min-w-[500px]">
-                            <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 font-medium">
-                                <tr>
-                                    <th class="px-4 py-3 w-12 text-center">Stat</th>
-                                    <th class="px-4 py-3">Word</th>
-                                    <th class="px-4 py-3 hidden sm:table-cell">Part of Speech</th>
-                                    <th class="px-4 py-3 w-1/2">Definition</th>
-                                    <th class="px-4 py-3 hidden md:table-cell">Unit</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-100">${rows}</tbody>
-                        </table>
+            } else if (state.viewMode === 'table') {
+                const rows = filteredWords.map(word => `
+                    <tr onclick="openWordDetail(${word.id})" class="hover:bg-slate-50 cursor-pointer transition-colors group">
+                        <td class="px-4 py-3 text-center" onclick="event.stopPropagation()"><button onclick="toggleLearned(${word.id}, event)" class="p-2 -m-2">${state.learnedWords.has(word.id) ? svgCheckCircle(18, "text-emerald-500 mx-auto") : svgCircle(18, "text-slate-300 mx-auto")}</button></td>
+                        <td class="px-4 py-3 font-semibold text-slate-900">${word.word}</td>
+                        <td class="px-4 py-3 hidden sm:table-cell">${getPosBadge(word.pos)}</td>
+                        <td class="px-4 py-3 text-slate-600 text-sm truncate max-w-xs">${word.def}</td>
+                        <td class="px-4 py-3 hidden md:table-cell text-slate-400 text-xs">${word.unit}</td>
+                    </tr>
+                `).join('');
+                contentHtml = `<div class="bg-white border rounded-xl overflow-x-auto shadow-sm pb-12 fade-in"><table class="w-full text-left text-sm min-w-[500px]"><thead class="bg-slate-50 border-b text-slate-500 font-medium"><tr><th class="px-4 py-3 w-12"></th><th class="px-4 py-3">Word</th><th class="px-4 py-3 hidden sm:table-cell">POS</th><th class="px-4 py-3">Definition</th><th class="px-4 py-3 hidden md:table-cell">Unit</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+            } else {
+                contentHtml = `<div class="max-w-3xl mx-auto space-y-2 pb-12 fade-in">` + filteredWords.map(word => `
+                    <div onclick="openWordDetail(${word.id})" class="flex items-center gap-4 py-3 px-4 hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 rounded-lg cursor-pointer transition-all">
+                        <button onclick="toggleLearned(${word.id}, event)" class="shrink-0 p-2 -m-2">${state.learnedWords.has(word.id) ? svgCheckCircle(18, "text-emerald-500") : svgCircle(18, "text-slate-300")}</button>
+                        <span class="font-bold text-slate-900 w-32 truncate">${word.word}</span>
+                        <span class="text-slate-600 text-sm truncate flex-1">${word.def}</span>
                     </div>
-                `;
-            }
-            else if (state.viewMode === 'compact') {
-                contentHtml = `<div class="max-w-3xl mx-auto space-y-2 pb-12 fade-in">` + filteredWords.map(word => {
-                    const isLearned = state.learnedWords.has(word.id);
-                    const icon = isLearned ? svgCheckCircle(20, "text-emerald-500") : svgCircle(20, "text-slate-300 group-hover:text-slate-400");
-                    return `
-                        <div onclick="openWordDetail(${word.id})" class="flex items-center gap-4 py-3 px-4 hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 rounded-lg cursor-pointer transition-all group">
-                            <button onclick="toggleLearned(${word.id}, event)" class="shrink-0 p-2 -m-2 focus:outline-none">${icon}</button>
-                            <span class="font-bold text-slate-900 w-32 group-hover:text-indigo-600 truncate">${word.word}</span>
-                            <span class="text-slate-400 text-xs italic w-20 hidden sm:block">${word.pos}</span>
-                            <span class="text-slate-600 text-sm truncate flex-1">${word.def}</span>
-                        </div>
-                    `;
-                }).join('') + `</div>`;
+                `).join('') + `</div>`;
             }
 
-            return `
-                <div id="scroll-container" class="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50/50 relative">
-                    ${contentHtml}
-                </div>
-            `;
+            return `<div id="scroll-container" class="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50/50">${contentHtml}</div>`;
         }
 
         function renderWordDetail(word, filteredWords) {
             const isLearned = state.learnedWords.has(word.id);
             const currentIndex = filteredWords.findIndex(w => w.id === word.id);
-            const hasNext = currentIndex < filteredWords.length - 1;
-            const hasPrev = currentIndex > 0;
-            
-            const btnClass = isLearned 
-                ? 'bg-emerald-50 text-emerald-700 border-2 border-emerald-500 hover:bg-emerald-100' 
-                : 'bg-white text-slate-700 border-2 border-slate-200 hover:border-slate-300';
-            
-            const btnIcon = isLearned
-                ? svgCheckCircle(24, "text-emerald-600 fill-emerald-200 shrink-0")
-                : svgCircle(24, "text-slate-300 group-hover:text-slate-400 shrink-0");
-
             return `
                 <div id="detail-view-container" class="flex flex-col h-full bg-white slide-in-right touch-pan-y w-full">
-                    <header class="px-4 md:px-6 py-4 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white/90 backdrop-blur z-10 shrink-0">
-                        <div class="flex items-center gap-4">
-                            <button onclick="closeWordDetail()" class="flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg">
-                                <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to List
-                            </button>
-                            <div class="hidden sm:flex items-center gap-2 text-xs text-slate-400">
-                                <span>${word.unit}</span>
-                                <span class="w-1 h-1 rounded-full bg-slate-300"></span>
-                                <span>${word.category}</span>
-                            </div>
-                        </div>
+                    <header class="px-4 md:px-6 py-4 border-b flex items-center justify-between sticky top-0 bg-white/90 backdrop-blur z-10">
+                        <button onclick="closeWordDetail()" class="flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-900 bg-slate-100 px-3 py-1.5 rounded-lg transition-colors">
+                            <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to List
+                        </button>
                         <div class="flex items-center gap-2">
-                            <span class="text-sm font-medium tabular-nums text-slate-400 mr-2 md:mr-4">${currentIndex + 1} of ${filteredWords.length}</span>
-                            <button onclick="navigateDetail('prev')" ${!hasPrev ? 'disabled' : ''} class="p-2 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all">
-                                <i data-lucide="chevron-left" class="w-4 h-4"></i>
-                            </button>
-                            <button onclick="navigateDetail('next')" ${!hasNext ? 'disabled' : ''} class="p-2 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all">
-                                <i data-lucide="chevron-right" class="w-4 h-4"></i>
-                            </button>
+                            <span class="text-xs font-medium text-slate-400 mr-2">${currentIndex+1}/${filteredWords.length}</span>
+                            <button onclick="navigateDetail('prev')" ${currentIndex===0?'disabled':''} class="p-2 border rounded-lg hover:bg-slate-50 disabled:opacity-30"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+                            <button onclick="navigateDetail('next')" ${currentIndex===filteredWords.length-1?'disabled':''} class="p-2 border rounded-lg hover:bg-slate-50 disabled:opacity-30"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
                         </div>
                     </header>
-
                     <div class="flex-1 overflow-y-auto">
                         <div class="max-w-4xl mx-auto px-6 py-12 md:py-20 flex flex-col items-center text-center">
-                            <div class="mb-6 flex gap-3 justify-center items-center">
-                                ${getCategoryBadge(word.category)}
-                                ${getPosBadge(word.pos)}
-                            </div>
+                            <div class="mb-4 flex gap-2">${getCategoryBadge(word.category)} ${getPosBadge(word.pos)}</div>
                             <h1 class="text-5xl md:text-7xl font-black text-slate-900 tracking-tight mb-8">${word.word}</h1>
-                            
-                            <div class="w-full max-w-2xl bg-slate-50 rounded-2xl p-8 md:p-12 border border-slate-100 shadow-inner mb-12">
-                                <h3 class="text-sm font-semibold text-slate-400 uppercase tracking-widest mb-4">Definition</h3>
+                            <div class="w-full max-w-2xl bg-slate-50 rounded-2xl p-8 border shadow-inner mb-12">
+                                <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-4">Definition</h3>
                                 <p class="text-2xl md:text-3xl text-slate-800 font-medium leading-relaxed">${word.def}</p>
                             </div>
-
-                            <button onclick="toggleLearned(${word.id})" class="group relative flex items-center justify-center gap-3 px-8 py-4 rounded-2xl text-lg font-bold transition-all duration-300 overflow-hidden shadow-sm hover:shadow-md ${btnClass}">
-                                ${btnIcon}
-                                <span>${isLearned ? 'Mastered' : 'Mark as Mastered'}</span>
+                            <button onclick="toggleLearned(${word.id})" class="flex items-center gap-3 px-8 py-4 rounded-2xl text-lg font-bold transition-all border-2 ${isLearned?'bg-emerald-50 text-emerald-700 border-emerald-500':'bg-white text-slate-700 border-slate-200'}">
+                                ${isLearned?svgCheckCircle(24, "text-emerald-600 fill-emerald-100"):svgCircle(24, "text-slate-300")}
+                                <span>${isLearned?'Mastered':'Mark as Mastered'}</span>
                             </button>
-
-                            <p class="text-slate-400 text-sm mt-8 hidden sm:block">
-                                Keyboard Shortcuts: <kbd class="px-2 py-1 bg-slate-100 rounded text-xs font-mono border border-slate-200">Esc</kbd> return, <kbd class="px-2 py-1 bg-slate-100 rounded text-xs font-mono border border-slate-200">←</kbd> <kbd class="px-2 py-1 bg-slate-100 rounded text-xs font-mono border border-slate-200">→</kbd> navigate
-                            </p>
-                            <p class="text-slate-400 text-sm mt-8 sm:hidden flex items-center justify-center gap-2">
-                                <i data-lucide="chevron-left" class="w-4 h-4"></i> Swipe to navigate <i data-lucide="chevron-right" class="w-4 h-4"></i>
-                            </p>
+                            <p class="text-slate-400 text-xs mt-12 sm:hidden flex items-center gap-2"><i data-lucide="chevron-left" class="w-4 h-4"></i> Swipe to navigate <i data-lucide="chevron-right" class="w-4 h-4"></i></p>
                         </div>
                     </div>
                 </div>
             `;
         }
 
-        // --- ATTACH SWIPE LISTENERS ---
-        function attachSwipeListeners() {
-            const container = document.getElementById('detail-view-container');
-            if (!container) return;
-
-            let touchStartX = 0;
-            let touchEndX = 0;
-            
-            container.addEventListener('touchstart', e => {
-                touchStartX = e.changedTouches[0].clientX;
-            }, {passive: true});
-
-            container.addEventListener('touchend', e => {
-                touchEndX = e.changedTouches[0].clientX;
-                handleSwipe();
-            }, {passive: true});
-
-            function handleSwipe() {
-                const distance = touchStartX - touchEndX;
-                if (distance > 60) navigateDetail('next');      // Swipe left = Next
-                if (distance < -60) navigateDetail('prev');     // Swipe right = Prev
-            }
-        }
-
-        // --- MAIN RENDER CYCLE ---
         function render() {
+            if (state.isLoading) return;
             const appDiv = document.getElementById('app');
             const filteredWords = getFilteredWords();
-
             let html = renderSidebar();
-
+            
             if (state.selectedWordId) {
-                const word = vocabData.find(w => w.id === state.selectedWordId);
-                html += `<main class="flex-1 flex flex-col h-full overflow-hidden relative bg-slate-50/50">
-                            ${renderWordDetail(word, filteredWords)}
-                         </main>`;
+                const word = state.vocabData.find(w => w.id === state.selectedWordId);
+                html += `<main class="flex-1 flex flex-col h-full overflow-hidden relative">${renderWordDetail(word, filteredWords)}</main>`;
             } else {
-                html += `<main class="flex-1 flex flex-col h-full overflow-hidden relative bg-slate-50/50">
-                            ${renderToolbar(filteredWords.length)}
-                            ${renderDirectory(filteredWords)}
-                         </main>`;
+                html += `
+                    <main class="flex-1 flex flex-col h-full overflow-hidden relative">
+                        <header class="bg-white/80 backdrop-blur-md border-b px-4 py-4 flex items-center justify-between sticky top-0 z-10">
+                            <div class="flex items-center gap-3">
+                                <button class="md:hidden p-2 -ml-2" onclick="toggleMobileMenu(true)"><i data-lucide="menu"></i></button>
+                                <h2 class="text-lg font-semibold truncate max-w-[140px] sm:max-w-none">${state.selectedUnit}</h2>
+                            </div>
+                            <div class="flex bg-slate-100 p-1 rounded-lg border">
+                                <button onclick="setViewMode('grid')" class="p-1.5 rounded ${state.viewMode==='grid'?'bg-white text-indigo-600 shadow-sm':'text-slate-500'}"><i data-lucide="layout-grid" class="w-4 h-4"></i></button>
+                                <button onclick="setViewMode('table')" class="p-1.5 rounded ${state.viewMode==='table'?'bg-white text-indigo-600 shadow-sm':'text-slate-500'}"><i data-lucide="list" class="w-4 h-4"></i></button>
+                                <button onclick="setViewMode('compact')" class="p-1.5 rounded ${state.viewMode==='compact'?'bg-white text-indigo-600 shadow-sm':'text-slate-500'}"><i data-lucide="align-justify" class="w-4 h-4"></i></button>
+                            </div>
+                        </header>
+                        ${renderDirectory(filteredWords)}
+                    </main>`;
             }
-
             appDiv.innerHTML = html;
-
-            // Re-initialize icons after DOM update
             lucide.createIcons();
-
-            // Re-attach listeners for the detail view swipe if it exists
             if (state.selectedWordId) {
-                attachSwipeListeners();
+                const container = document.getElementById('detail-view-container');
+                let touchStartX = 0;
+                container.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].clientX; }, {passive: true});
+                container.addEventListener('touchend', e => {
+                    const distance = touchStartX - e.changedTouches[0].clientX;
+                    if (distance > 60) navigateDetail('next');
+                    if (distance < -60) navigateDetail('prev');
+                }, {passive: true});
             }
         }
 
-        // Initial Boot
-        render();
-
+        initData();
     </script>
 </body>
 </html>
