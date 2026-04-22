@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Dynamic Vocab Study</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --primary:#1a56db;--primary-c:#d6e4ff;--on-primary:#fff;--on-primary-c:#001b4e;
+  --tertiary:#7c3aed;
+  --surface:#f8fafc;--surface-b:#fff;--surface-v:#e8f0fe;
+  --on-surface:#0f172a;--on-surface-v:#475569;
+  --outline:#94a3b8;--outline-v:#cbd5e1;
+  --error:#dc2626;--error-c:#fee2e2;--success:#16a34a;--success-c:#dcfce7;
+  --e1:0 1px 2px rgba(0,0,0,.04),0 2px 6px rgba(0,0,0,.06);
+  --e2:0 1px 2px rgba(0,0,0,.06),0 4px 12px rgba(0,0,0,.09);
+  --e3:0 2px 4px rgba(0,0,0,.06),0 8px 24px rgba(0,0,0,.12);
+  --r-sm:8px;--r-md:12px;--r-lg:16px;--r-xl:20px;--r-full:9999px;
+  --fd:'Playfair Display',Georgia,serif;--fb:'DM Sans',system-ui,sans-serif;
+  --nav-w:240px;--topbar-h:52px;
+  --bnav-h:60px;--safe-b:env(safe-area-inset-bottom,0px);
+}
+[data-theme="dark"]{
+  --primary:#93c5fd;--primary-c:#1e3a5f;--on-primary:#001b4e;--on-primary-c:#dbeafe;
+  --tertiary:#c4b5fd;
+  --surface:#0f172a;--surface-b:#1e293b;--surface-v:#1e293b;
+  --on-surface:#f1f5f9;--on-surface-v:#94a3b8;
+  --outline:#475569;--outline-v:#334155;
+  --error:#f87171;--error-c:#450a0a;--success:#4ade80;--success-c:#052e16;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{font-family:var(--fb);background:var(--surface);color:var(--on-surface);min-height:100dvh;transition:background .25s,color .25s;overflow-x:hidden;-webkit-tap-highlight-color:transparent}
+#shell{display:flex;min-height:100dvh}
+#nav{
+  width:var(--nav-w);background:var(--surface-b);border-right:1px solid var(--outline-v);
+  position:fixed;top:0;left:0;height:100vh;z-index:200;
+  display:flex;flex-direction:column;padding:14px 0;gap:2px;overflow-y:auto;
+}
+#nav-logo{padding:2px 14px 14px;border-bottom:1px solid var(--outline-v);margin-bottom:6px;display:flex;align-items:center;gap:9px}
+.logo-icon{font-size:20px;width:34px;height:34px;background:var(--primary-c);border-radius:10px;display:flex;align-items:center;justify-content:center}
+.logo-label{font-family:var(--fd);font-size:14px;color:var(--primary);line-height:1.2}
+.logo-sub{font-size:9px;color:var(--on-surface-v);letter-spacing:.06em;text-transform:uppercase}
+.ns{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--on-surface-v);padding:12px 14px 4px}
+.ni{display:flex;align-items:center;gap:9px;padding:8px 14px;border-radius:0 var(--r-full) var(--r-full) 0;margin-right:10px;cursor:pointer;font-size:12px;font-weight:500;color:var(--on-surface-v);transition:all .15s;user-select:none}
+.ni:hover{background:var(--surface-v);color:var(--on-surface)}
+.ni.active{background:var(--primary-c);color:var(--on-primary-c);font-weight:600}
+.ni-icon{font-size:14px;width:16px;text-align:center}
+.ni-count{margin-left:auto;background:var(--outline-v);color:var(--on-surface-v);border-radius:var(--r-full);font-size:9px;font-weight:700;padding:1px 5px;min-width:18px;text-align:center}
+.ni.active .ni-count{background:var(--primary);color:var(--on-primary)}
+#main{margin-left:var(--nav-w);flex:1;display:flex;flex-direction:column}
+#topbar{height:var(--topbar-h);background:var(--surface-b);border-bottom:1px solid var(--outline-v);display:flex;align-items:center;gap:6px;padding:0 10px;position:sticky;top:0;z-index:100}
+#sw{flex:1;position:relative;display:flex;align-items:center}
+.si{position:absolute;left:10px;font-size:13px;color:var(--on-surface-v);pointer-events:none}
+#search{width:100%;background:var(--surface-v);border:1.5px solid transparent;border-radius:var(--r-full);padding:7px 32px 7px 30px;font-family:var(--fb);font-size:14px;color:var(--on-surface);outline:none}
+#sc{position:absolute;right:8px;font-size:12px;color:var(--on-surface-v);cursor:pointer;display:none;padding:4px}
+.ib{width:36px;height:36px;border-radius:var(--r-full);border:none;background:transparent;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:var(--on-surface-v)}
+#controls{background:var(--surface-b);border-bottom:1px solid var(--outline-v);position:sticky;top:var(--topbar-h);z-index:90}
+#vpills{display:flex;padding:7px 10px 0;overflow-x:auto;gap:2px}
+.vp{display:flex;align-items:center;gap:4px;padding:5px 12px;border-radius:var(--r-full) var(--r-full) 0 0;border:1.5px solid var(--outline-v);border-bottom:none;background:transparent;cursor:pointer;font-family:var(--fb);font-size:11px;font-weight:500;color:var(--on-surface-v);white-space:nowrap}
+.vp.active{background:var(--surface);border-color:var(--primary);color:var(--primary);font-weight:700}
+#frow{display:flex;gap:5px;padding:7px 10px 8px;overflow-x:auto;align-items:center}
+.fc{padding:3px 11px;border-radius:var(--r-full);border:1.5px solid var(--outline-v);background:transparent;cursor:pointer;font-family:var(--fb);font-size:11px;font-weight:500;color:var(--on-surface-v);white-space:nowrap}
+.fc.active{background:var(--primary-c);border-color:var(--primary);color:var(--on-primary-c)}
+#page{padding:10px 10px calc(var(--bnav-h) + var(--safe-b) + 10px)}
+#vg{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:9px}
+.wc{background:var(--surface-b);border:1px solid var(--outline-v);border-radius:var(--r-lg);padding:13px;cursor:pointer;transition:transform .2s,box-shadow .2s;position:relative;overflow:hidden}
+.wc::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--ca,var(--primary))}
+.wc-u{font-size:9px;font-weight:700;text-transform:uppercase;color:var(--on-surface-v)}
+.wc-w{font-family:var(--fd);font-size:17px;color:var(--on-surface)}
+.wc-p{display:inline-flex;padding:1px 6px;border-radius:var(--r-full);font-size:10px;font-weight:700;background:var(--pb);color:var(--pf);margin:4px 0}
+.wc-d{font-size:11px;color:var(--on-surface-v);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.wc-s{position:absolute;top:9px;right:9px;font-size:14px;cursor:pointer;color:var(--outline);border:none;background:transparent}
+.wc-s.starred{color:#f59e0b}
+#vf{display:flex;flex-direction:column;align-items:center;gap:14px}
+#fc{width:100%;max-width:500px;height:240px;perspective:1200px;cursor:pointer}
+#fi{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform .5s}
+#fi.flipped{transform:rotateY(180deg)}
+.ff{position:absolute;width:100%;height:100%;backface-visibility:hidden;border-radius:var(--r-xl);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:22px;box-shadow:var(--e3)}
+#ff-front{background:var(--surface-b);border:2px solid var(--primary-c)}
+#ff-back{background:var(--primary-c);border:2px solid var(--primary);transform:rotateY(180deg)}
+#overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(8px);z-index:500;display:none;align-items:flex-end;justify-content:center}
+#overlay.open{display:flex}
+#dm{background:var(--surface-b);border-radius:var(--r-xl) var(--r-xl) 0 0;width:100%;max-width:600px;max-height:90dvh;overflow-y:auto;position:relative;animation:slideUp .3s ease-out}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+#bnav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--surface-b);border-top:1px solid var(--outline-v);z-index:150;padding-bottom:var(--safe-b)}
+.bni{display:flex}
+.bn{flex:1;display:flex;flex-direction:column;align-items:center;padding:7px 4px;background:transparent;border:none;font-size:9px;color:var(--on-surface-v)}
+.bn.active{color:var(--primary)}
+@media(max-width:640px){
+  #nav{display:none}
+  #main{margin-left:0}
+  #bnav{display:block}
+  #vg{grid-template-columns:1fr 1fr}
+}
+.pos-noun{--pb:#dbeafe;--pf:#1e40af}
+.pos-verb{--pb:#dcfce7;--pf:#166534}
+.pos-adjective{--pb:#fef3c7;--pf:#92400e}
+.pos-adverb{--pb:#ede9fe;--pf:#5b21b6}
+#loading{position:fixed;inset:0;background:var(--surface);display:flex;align-items:center;justify-content:center;z-index:1000}
+</style>
+</head>
+<body class="f-normal">
+
+<div id="loading">Loading Vocabulary...</div>
+
+<div id="shell">
+  <!-- SIDE NAV -->
+  <nav id="nav">
+    <div id="nav-logo">
+      <div class="logo-icon">📚</div>
+      <div><div class="logo-label">VocabStudy</div><div class="logo-sub">Flashcard App</div></div>
+    </div>
+    <div class="ns">Units</div>
+    <div id="nav-units-list"></div>
+    <div class="ni" onclick="fUnit('starred',this)"><span class="ni-icon">⭐</span>Starred<span class="ni-count" id="nc-starred">0</span></div>
+    
+    <div class="ns" style="margin-top:8px">Part of Speech</div>
+    <div class="ni active" onclick="fPOS('all',this)"><span class="ni-icon">🔤</span>All Types</div>
+    <div class="ni" onclick="fPOS('noun',this)"><span class="ni-icon">🟦</span>Nouns</div>
+    <div class="ni" onclick="fPOS('verb',this)"><span class="ni-icon">🟩</span>Verbs</div>
+    <div class="ni" onclick="fPOS('adjective',this)"><span class="ni-icon">🟨</span>Adjectives</div>
+    <div class="ni" onclick="fPOS('adverb',this)"><span class="ni-icon">🟪</span>Adverbs</div>
+  </nav>
+
+  <div id="main">
+    <header id="topbar">
+      <div id="sw">
+        <span class="si">🔎</span>
+        <input id="search" type="search" placeholder="Search words…" oninput="doSearch(this.value)">
+        <span id="sc" onclick="clearSearch()">✕</span>
+      </div>
+      <button class="ib" id="theme-btn" onclick="toggleTheme()">🌙</button>
+      <button class="ib" onclick="shuffleWords()">🔀</button>
+    </header>
+
+    <div id="controls">
+      <div id="vpills">
+        <button class="vp active" onclick="setView('grid',this)">▦ Grid</button>
+        <button class="vp" onclick="setView('flash',this)">🃏 Cards</button>
+      </div>
+      <div id="frow">
+        <button class="fc active" onclick="fNAWL('all',this)">All</button>
+        <button class="fc" onclick="fNAWL('preview',this)">📘 Preview</button>
+        <button class="fc" onclick="fNAWL('nawl',this)">🎓 NAWL</button>
+      </div>
+    </div>
+
+    <div id="page">
+      <div id="vg"></div>
+      <div id="vf" style="display:none"></div>
+      <div id="empty" style="display:none; text-align:center; padding:50px; color:var(--on-surface-v)">
+        <h3>No words found</h3>
+        <p>Try adjusting your filters or search query.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- OVERLAY DETAIL -->
+<div id="overlay" onclick="if(event.target===this)closeDetail()">
+  <div id="dm">
+    <div style="padding:20px">
+      <div id="dm-unit" class="wc-u"></div>
+      <h2 id="dm-word" style="font-family:var(--fd); font-size:32px"></h2>
+      <div id="dm-pos" class="wc-p"></div>
+      <p id="dm-def" style="margin-top:15px; line-height:1.6"></p>
+      <div style="margin-top:20px; display:flex; gap:10px">
+        <button class="fc" onclick="closeDetail()">Close</button>
+        <button id="dm-star" class="fc" onclick="toggleStarCur()">Star</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MOBILE BOTTOM NAV -->
+<nav id="bnav">
+  <div class="bni">
+    <button class="bn active" id="bn-all" onclick="mNav('all')">📦 All</button>
+    <button class="bn" id="bn-flash" onclick="mNav('flash')">🃏 Cards</button>
+    <button class="bn" id="bn-starred" onclick="mNav('starred')">⭐ Starred</button>
+  </div>
+</nav>
+
+<script>
+let VOCAB = [];
+let cUnit = 'all', cPOS = 'all', cNAWL = 'all', cView = 'grid', sQ = '';
+let starred = new Set(JSON.parse(localStorage.getItem('vs_starred') || '[]'));
+let flIdx = 0, flFlipped = false, flList = [];
+let dIdx = 0, dList = [];
+
+async function loadData() {
+  try {
+    const res = await fetch('vocab.json');
+    if (!res.ok) throw new Error('Failed to load JSON');
+    const data = await res.json();
+    
+    const flattened = [];
+    data.units.forEach(unit => {
+      unit.vocabulary_preview.forEach(w => {
+        flattened.push({ ...w, unit: unit.title, type: 'preview' });
+      });
+      unit.nawl.forEach(w => {
+        flattened.push({ ...w, unit: unit.title, type: 'nawl' });
+      });
+    });
+    
+    VOCAB = flattened;
+    buildUnitMenu(data.units);
+    document.getElementById('loading').style.display = 'none';
+    render();
+    updNC();
+  } catch (err) {
+    document.getElementById('loading').innerHTML = `Error: ${err.message}`;
+    console.error(err);
+  }
+}
+
+function buildUnitMenu(units) {
+  const container = document.getElementById('nav-units-list');
+  let html = `<div class="ni active" onclick="fUnit('all',this)"><span class="ni-icon">📦</span>All Words<span class="ni-count" id="nc-all">0</span></div>`;
+  
+  units.forEach(u => {
+    const safeId = u.title.replace(/\s+/g, '-').toLowerCase();
+    html += `<div class="ni" onclick="fUnit('${u.title}',this)"><span class="ni-icon">🔍</span>${u.title}<span class="ni-count" id="nc-${safeId}">0</span></div>`;
+  });
+  
+  container.innerHTML = html;
+}
+
+function getF() {
+  let l = [...VOCAB];
+  if (cUnit === 'starred') l = l.filter(w => starred.has(w.word));
+  else if (cUnit !== 'all') l = l.filter(w => w.unit === cUnit);
+  
+  if (cPOS !== 'all') l = l.filter(w => w.pos.toLowerCase() === cPOS);
+  if (cNAWL === 'nawl') l = l.filter(w => w.type === 'nawl');
+  else if (cNAWL === 'preview') l = l.filter(w => w.type === 'preview');
+  
+  if (sQ) {
+    const q = sQ.toLowerCase();
+    l = l.filter(w => w.word.toLowerCase().includes(q) || w.definition.toLowerCase().includes(q));
+  }
+  return l;
+}
+
+function render() {
+  const l = getF();
+  document.getElementById('empty').style.display = l.length === 0 ? 'block' : 'none';
+  
+  if (cView === 'grid') {
+    document.getElementById('vg').style.display = 'grid';
+    document.getElementById('vf').style.display = 'none';
+    rGrid(l);
+  } else {
+    document.getElementById('vg').style.display = 'none';
+    document.getElementById('vf').style.display = 'flex';
+    initFlash(l);
+  }
+}
+
+function rGrid(l) {
+  document.getElementById('vg').innerHTML = l.map((w, i) => `
+    <div class="wc" onclick="openD(${i})">
+      <button class="wc-s ${starred.has(w.word) ? 'starred' : ''}" onclick="tStar('${w.word}',event)">${starred.has(w.word) ? '★' : '☆'}</button>
+      <div class="wc-u">${w.unit}</div>
+      <div class="wc-w">${w.word}</div>
+      <span class="wc-p pos-${w.pos.toLowerCase()}">${w.pos}</span>
+      <div class="wc-d">${w.definition}</div>
+    </div>`).join('');
+}
+
+/* FLASHCARDS */
+function initFlash(l) { flList = [...l]; flIdx = 0; flFlipped = false; rFlash(); }
+function rFlash() {
+  const el = document.getElementById('vf');
+  if (!flList.length) { el.innerHTML = '<p>No words matches current filters.</p>'; return; }
+  const w = flList[flIdx];
+  el.innerHTML = `
+    <div style="margin-bottom:10px">${flIdx + 1} / ${flList.length}</div>
+    <div id="fc" onclick="flipCard()">
+      <div id="fi" class="${flFlipped ? 'flipped' : ''}">
+        <div class="ff" id="ff-front">
+          <div class="wc-u">${w.unit}</div>
+          <h2 style="font-size:32px">${w.word}</h2>
+          <div style="margin-top:20px; font-size:12px; opacity:0.6">Tap to reveal</div>
+        </div>
+        <div class="ff" id="ff-back">
+          <span class="wc-p pos-${w.pos.toLowerCase()}">${w.pos}</span>
+          <p style="text-align:center; padding:10px">${w.definition}</p>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex; gap:10px; margin-top:20px">
+      <button class="fc" onclick="fNav(-1)">Prev</button>
+      <button class="fc" onclick="flipCard()">Flip</button>
+      <button class="fc" onclick="fNav(1)">Next</button>
+    </div>
+  `;
+}
+function flipCard() { flFlipped = !flFlipped; document.getElementById('fi')?.classList.toggle('flipped', flFlipped); }
+function fNav(d) { flIdx = (flIdx + d + flList.length) % flList.length; flFlipped = false; rFlash(); }
+
+/* DETAIL */
+function openD(i) { dList = getF(); dIdx = i; rDetail(); document.getElementById('overlay').classList.add('open'); }
+function closeDetail() { document.getElementById('overlay').classList.remove('open'); }
+function rDetail() {
+  const w = dList[dIdx];
+  document.getElementById('dm-unit').textContent = w.unit;
+  document.getElementById('dm-word').textContent = w.word;
+  document.getElementById('dm-pos').textContent = w.pos;
+  document.getElementById('dm-pos').className = `wc-p pos-${w.pos.toLowerCase()}`;
+  document.getElementById('dm-def').textContent = w.definition;
+  document.getElementById('dm-star').textContent = starred.has(w.word) ? '★ Starred' : '☆ Star';
+}
+
+function toggleStarCur() {
+  const w = dList[dIdx];
+  tStar(w.word);
+  rDetail();
+}
+
+function tStar(word, e) {
+  if(e) e.stopPropagation();
+  starred.has(word) ? starred.delete(word) : starred.add(word);
+  localStorage.setItem('vs_starred', JSON.stringify([...starred]));
+  render();
+  updNC();
+}
+
+function fUnit(u, el) {
+  cUnit = u;
+  document.querySelectorAll('.ni').forEach(n => n.classList.remove('active'));
+  if(el) el.classList.add('active');
+  render();
+}
+function fPOS(p, el) {
+  cPOS = p;
+  document.querySelectorAll('[onclick*="fPOS"]').forEach(n => n.classList.remove('active'));
+  if(el) el.classList.add('active');
+  render();
+}
+function fNAWL(t, el) {
+  cNAWL = t;
+  document.querySelectorAll('[onclick*="fNAWL"]').forEach(n => n.classList.remove('active'));
+  if(el) el.classList.add('active');
+  render();
+}
+function setView(v, el) {
+  cView = v;
+  document.querySelectorAll('.vp').forEach(n => n.classList.remove('active'));
+  if(el) el.classList.add('active');
+  render();
+}
+function doSearch(v) { sQ = v; document.getElementById('sc').style.display = v ? 'block' : 'none'; render(); }
+function clearSearch() { sQ = ''; document.getElementById('search').value = ''; doSearch(''); }
+function shuffleWords() { VOCAB.sort(() => Math.random() - 0.5); render(); }
+
+function updNC() {
+  const counts = { all: VOCAB.length, starred: starred.size };
+  VOCAB.forEach(w => {
+    const safeId = w.unit.replace(/\s+/g, '-').toLowerCase();
+    counts[safeId] = (counts[safeId] || 0) + 1;
+  });
+  Object.entries(counts).forEach(([k, v]) => {
+    const e = document.getElementById('nc-' + k);
+    if (e) e.textContent = v;
+  });
+}
+
+function mNav(view) {
+  document.querySelectorAll('.bn').forEach(b => b.classList.remove('active'));
+  document.getElementById('bn-' + view).classList.add('active');
+  if (view === 'all') { cUnit = 'all'; setView('grid'); }
+  else if (view === 'flash') { setView('flash'); }
+  else if (view === 'starred') { cUnit = 'starred'; setView('grid'); }
+}
+
+function toggleTheme() {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  document.documentElement.setAttribute('data-theme', isDark ? '' : 'dark');
+  document.getElementById('theme-btn').textContent = isDark ? '🌙' : '☀️';
+}
+
+document.addEventListener('DOMContentLoaded', loadData);
+</script>
+</body>
+</html>
