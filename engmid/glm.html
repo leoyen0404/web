@@ -1,0 +1,2214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<title>Midterm Vocabulary Review</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════
+   M3 DESIGN TOKENS — Strict Color Management
+   ═══════════════════════════════════════════════ */
+:root {
+  /* Primary tonal palette */
+  --md-primary: #3C6AAF;
+  --md-on-primary: #FFFFFF;
+  --md-primary-container: #D8E2FF;
+  --md-on-primary-container: #001A41;
+  
+  /* Secondary tonal palette */
+  --md-secondary: #565F71;
+  --md-on-secondary: #FFFFFF;
+  --md-secondary-container: #DAE2F9;
+  --md-on-secondary-container: #131C2B;
+  
+  /* Tertiary */
+  --md-tertiary: #705574;
+  --md-on-tertiary: #FFFFFF;
+  --md-tertiary-container: #FBD7FC;
+  --md-on-tertiary-container: #29132E;
+  
+  /* Error */
+  --md-error: #BA1A1A;
+  --md-on-error: #FFFFFF;
+  --md-error-container: #FFDAD6;
+  --md-on-error-container: #410002;
+  
+  /* Success */
+  --md-success: #1B6D3D;
+  --md-success-container: #A4F5B5;
+  --md-on-success-container: #00210C;
+  
+  /* Surface system */
+  --md-surface: #FAFAFF;
+  --md-surface-dim: #D9D9E0;
+  --md-surface-bright: #FAFAFF;
+  --md-surface-container-lowest: #FFFFFF;
+  --md-surface-container-low: #F3F3FB;
+  --md-surface-container: #EDEDf5;
+  --md-surface-container-high: #E7E8EF;
+  --md-surface-container-highest: #E1E2EA;
+  --md-on-surface: #1A1C20;
+  --md-on-surface-variant: #44474E;
+  --md-outline: #74777F;
+  --md-outline-variant: #C4C6D0;
+  
+  /* Inverse */
+  --md-inverse-surface: #2F3036;
+  --md-inverse-on-surface: #F0F0F7;
+  
+  /* Elevation overlay */
+  --md-elevation-1: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+  --md-elevation-2: 0 3px 6px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.06);
+  --md-elevation-3: 0 6px 12px rgba(0,0,0,0.1), 0 4px 8px rgba(0,0,0,0.06);
+  
+  /* POS badge colors */
+  --pos-noun: #4F7C3F;
+  --pos-noun-bg: #E8F5E0;
+  --pos-verb: #8B5E3C;
+  --pos-verb-bg: #FBE9E0;
+  --pos-adjective: #5C6BAE;
+  --pos-adjective-bg: #E0E6FB;
+  --pos-adverb: #8C5A8C;
+  --pos-adverb-bg: #F5E0F5;
+  
+  /* Shape */
+  --md-shape-xs: 4px;
+  --md-shape-sm: 8px;
+  --md-shape-md: 12px;
+  --md-shape-lg: 16px;
+  --md-shape-xl: 28px;
+  --md-shape-full: 9999px;
+  
+  /* Motion */
+  --md-motion-standard: cubic-bezier(0.2, 0, 0, 1);
+  --md-motion-emphasized: cubic-bezier(0.2, 0, 0, 1);
+  --md-motion-duration-short: 200ms;
+  --md-motion-duration-medium: 400ms;
+  --md-motion-duration-long: 600ms;
+  
+  /* Typography scale */
+  --md-typescale-display-large: 700 57px/64px 'Inter', sans-serif;
+  --md-typescale-display-medium: 600 45px/52px 'Inter', sans-serif;
+  --md-typescale-headline-large: 600 32px/40px 'Inter', sans-serif;
+  --md-typescale-headline-medium: 500 28px/36px 'Inter', sans-serif;
+  --md-typescale-headline-small: 500 24px/32px 'Inter', sans-serif;
+  --md-typescale-title-large: 500 22px/28px 'Inter', sans-serif;
+  --md-typescale-title-medium: 500 16px/24px 'Inter', sans-serif;
+  --md-typescale-title-small: 500 14px/20px 'Inter', sans-serif;
+  --md-typescale-body-large: 400 16px/24px 'Inter', sans-serif;
+  --md-typescale-body-medium: 400 14px/20px 'Inter', sans-serif;
+  --md-typescale-body-small: 400 12px/16px 'Inter', sans-serif;
+  --md-typescale-label-large: 500 14px/20px 'Inter', sans-serif;
+  --md-typescale-label-medium: 500 12px/16px 'Inter', sans-serif;
+  --md-typescale-label-small: 500 11px/16px 'Inter', sans-serif;
+}
+
+/* ═══════════════════════════════════════════════
+   DARK THEME
+   ═══════════════════════════════════════════════ */
+[data-theme="dark"] {
+  --md-primary: #AEC6FF;
+  --md-on-primary: #002F65;
+  --md-primary-container: #15457C;
+  --md-on-primary-container: #D8E2FF;
+  
+  --md-secondary: #BEC6DC;
+  --md-on-secondary: #283141;
+  --md-secondary-container: #3E4759;
+  --md-on-secondary-container: #DAE2F9;
+  
+  --md-tertiary: #DEBCDF;
+  --md-on-tertiary: #402843;
+  --md-tertiary-container: #583E5B;
+  --md-on-tertiary-container: #FBD7FC;
+  
+  --md-error: #FFB4AB;
+  --md-on-error: #690005;
+  --md-error-container: #93000A;
+  --md-on-error-container: #FFDAD6;
+  
+  --md-success: #88D8A0;
+  --md-success-container: #005224;
+  --md-on-success-container: #A4F5B5;
+  
+  --md-surface: #111318;
+  --md-surface-dim: #111318;
+  --md-surface-bright: #37393F;
+  --md-surface-container-lowest: #0C0E13;
+  --md-surface-container-low: #191C20;
+  --md-surface-container: #1D2024;
+  --md-surface-container-high: #272A2F;
+  --md-surface-container-highest: #32353A;
+  --md-on-surface: #E1E2EA;
+  --md-on-surface-variant: #C4C6D0;
+  --md-outline: #8E9099;
+  --md-outline-variant: #44474F;
+  
+  --md-inverse-surface: #E1E2EA;
+  --md-inverse-on-surface: #2F3036;
+  
+  --md-elevation-1: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+  --md-elevation-2: 0 3px 6px rgba(0,0,0,0.3), 0 2px 4px rgba(0,0,0,0.2);
+  --md-elevation-3: 0 6px 12px rgba(0,0,0,0.3), 0 4px 8px rgba(0,0,0,0.2);
+  
+  --pos-noun: #A4D894;
+  --pos-noun-bg: #1E3318;
+  --pos-verb: #D4A882;
+  --pos-verb-bg: #3D2210;
+  --pos-adjective: #A8B4E0;
+  --pos-adjective-bg: #1C2240;
+  --pos-adverb: #CFA0CF;
+  --pos-adverb-bg: #3A1C3A;
+}
+
+/* ═══════════════════════════════════════════════
+   RESET & BASE
+   ═══════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  scroll-behavior: smooth;
+}
+
+body {
+  font: var(--md-typescale-body-large);
+  background: var(--md-surface);
+  color: var(--md-on-surface);
+  min-height: 100dvh;
+  overflow-x: hidden;
+  transition: background var(--md-motion-duration-medium) var(--md-motion-standard),
+              color var(--md-motion-duration-medium) var(--md-motion-standard);
+}
+
+/* ═══════════════════════════════════════════════
+   TOP APP BAR
+   ═══════════════════════════════════════════════ */
+.top-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--md-surface);
+  border-bottom: 1px solid var(--md-outline-variant);
+  transition: background var(--md-motion-duration-medium) var(--md-motion-standard),
+              border-color var(--md-motion-duration-medium) var(--md-motion-standard);
+}
+
+.top-bar-inner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  max-width: 840px;
+  margin: 0 auto;
+}
+
+.top-bar-title {
+  font: var(--md-typescale-title-large);
+  color: var(--md-on-surface);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ═══════════════════════════════════════════════
+   ICON BUTTONS
+   ═══════════════════════════════════════════════ */
+.icon-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--md-shape-full);
+  border: none;
+  background: transparent;
+  color: var(--md-on-surface-variant);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--md-motion-duration-short) var(--md-motion-standard);
+  flex-shrink: 0;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.icon-btn:hover { background: rgba(28,27,31,0.08); }
+[data-theme="dark"] .icon-btn:hover { background: rgba(224,224,232,0.08); }
+.icon-btn:active { background: rgba(28,27,31,0.12); }
+[data-theme="dark"] .icon-btn:active { background: rgba(224,224,232,0.12); }
+.icon-btn .material-icons-round { font-size: 24px; }
+
+.icon-btn-filled {
+  background: var(--md-primary);
+  color: var(--md-on-primary);
+}
+.icon-btn-filled:hover { background: var(--md-primary); box-shadow: var(--md-elevation-1); }
+
+/* ═══════════════════════════════════════════════
+   MAIN CONTENT AREA
+   ═══════════════════════════════════════════════ */
+.main-content {
+  max-width: 840px;
+  margin: 0 auto;
+  padding: 0 16px 96px;
+}
+
+/* ═══════════════════════════════════════════════
+   PERFORMANCE OVERVIEW CARDS
+   ═══════════════════════════════════════════════ */
+.perf-section {
+  margin: 16px 0 24px;
+}
+
+.perf-header {
+  font: var(--md-typescale-title-medium);
+  color: var(--md-on-surface);
+  margin-bottom: 12px;
+}
+
+.perf-cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.perf-card {
+  background: var(--md-surface-container-low);
+  border-radius: var(--md-shape-lg);
+  padding: 16px;
+  transition: background var(--md-motion-duration-medium) var(--md-motion-standard);
+}
+
+.perf-card-value {
+  font: var(--md-typescale-headline-large);
+  color: var(--md-primary);
+  line-height: 1.1;
+}
+
+.perf-card-label {
+  font: var(--md-typescale-body-small);
+  color: var(--md-on-surface-variant);
+  margin-top: 4px;
+}
+
+.perf-card-sub {
+  font: var(--md-typescale-label-small);
+  color: var(--md-outline);
+  margin-top: 2px;
+}
+
+/* Progress ring */
+.progress-ring-wrap {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 8px;
+}
+.progress-ring-wrap svg {
+  transform: rotate(-90deg);
+  width: 72px;
+  height: 72px;
+}
+.progress-ring-bg {
+  fill: none;
+  stroke: var(--md-outline-variant);
+  stroke-width: 6;
+}
+.progress-ring-fg {
+  fill: none;
+  stroke: var(--md-primary);
+  stroke-width: 6;
+  stroke-linecap: round;
+  transition: stroke-dashoffset var(--md-motion-duration-long) var(--md-motion-emphasized);
+}
+.progress-ring-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: var(--md-typescale-title-medium);
+  color: var(--md-primary);
+}
+
+/* Mastery bar */
+.mastery-bar-track {
+  width: 100%;
+  height: 6px;
+  background: var(--md-outline-variant);
+  border-radius: var(--md-shape-full);
+  margin-top: 8px;
+  overflow: hidden;
+}
+.mastery-bar-fill {
+  height: 100%;
+  border-radius: var(--md-shape-full);
+  background: var(--md-primary);
+  transition: width var(--md-motion-duration-long) var(--md-motion-emphasized);
+}
+
+/* ═══════════════════════════════════════════════
+   UNIT FILTER CHIPS
+   ═══════════════════════════════════════════════ */
+.filter-section {
+  margin-bottom: 16px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.filter-section::-webkit-scrollbar { display: none; }
+
+.filter-chips {
+  display: flex;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
+  border-radius: var(--md-shape-sm);
+  border: 1px solid var(--md-outline);
+  background: transparent;
+  color: var(--md-on-surface-variant);
+  font: var(--md-typescale-label-large);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--md-motion-duration-short) var(--md-motion-standard);
+  -webkit-user-select: none;
+  user-select: none;
+}
+.chip:hover { background: rgba(28,27,31,0.08); }
+[data-theme="dark"] .chip:hover { background: rgba(224,224,232,0.08); }
+
+.chip.selected {
+  background: var(--md-secondary-container);
+  color: var(--md-on-secondary-container);
+  border-color: transparent;
+}
+
+.chip .material-icons-round { font-size: 18px; }
+
+/* ═══════════════════════════════════════════════
+   VIEW MODE TABS
+   ═══════════════════════════════════════════════ */
+.view-tabs {
+  display: flex;
+  background: var(--md-surface-container);
+  border-radius: var(--md-shape-full);
+  padding: 4px;
+  margin-bottom: 16px;
+  transition: background var(--md-motion-duration-medium) var(--md-motion-standard);
+}
+
+.view-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: var(--md-shape-full);
+  border: none;
+  background: transparent;
+  color: var(--md-on-surface-variant);
+  font: var(--md-typescale-label-large);
+  cursor: pointer;
+  transition: all var(--md-motion-duration-short) var(--md-motion-standard);
+  -webkit-user-select: none;
+  user-select: none;
+}
+.view-tab .material-icons-round { font-size: 18px; }
+
+.view-tab.active {
+  background: var(--md-primary);
+  color: var(--md-on-primary);
+  box-shadow: var(--md-elevation-1);
+}
+
+/* ═══════════════════════════════════════════════
+   SEARCH BAR
+   ═══════════════════════════════════════════════ */
+.search-bar {
+  position: relative;
+  margin-bottom: 16px;
+}
+.search-bar input {
+  width: 100%;
+  padding: 12px 16px 12px 44px;
+  border-radius: var(--md-shape-xl);
+  border: none;
+  background: var(--md-surface-container-high);
+  color: var(--md-on-surface);
+  font: var(--md-typescale-body-large);
+  outline: none;
+  transition: background var(--md-motion-duration-short) var(--md-motion-standard),
+              box-shadow var(--md-motion-duration-short) var(--md-motion-standard);
+}
+.search-bar input::placeholder { color: var(--md-on-surface-variant); }
+.search-bar input:focus {
+  box-shadow: 0 0 0 2px var(--md-primary);
+  background: var(--md-surface-container-highest);
+}
+.search-bar .search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--md-on-surface-variant);
+  font-size: 22px;
+  pointer-events: none;
+}
+
+/* ═══════════════════════════════════════════════
+   WORD LIST VIEW
+   ═══════════════════════════════════════════════ */
+.unit-section {
+  margin-bottom: 24px;
+}
+
+.unit-title {
+  font: var(--md-typescale-title-medium);
+  color: var(--md-on-surface);
+  padding: 8px 0;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.unit-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--md-outline-variant);
+}
+
+.category-label {
+  font: var(--md-typescale-label-medium);
+  color: var(--md-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 12px 0 4px;
+}
+
+.word-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: var(--md-shape-md);
+  cursor: pointer;
+  transition: background var(--md-motion-duration-short) var(--md-motion-standard);
+  -webkit-user-select: none;
+  user-select: none;
+}
+.word-item:hover { background: var(--md-surface-container-low); }
+.word-item:active { background: var(--md-surface-container); }
+
+.word-item-check {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--md-shape-xs);
+  border: 2px solid var(--md-outline);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all var(--md-motion-duration-short) var(--md-motion-standard);
+}
+.word-item-check .material-icons-round {
+  font-size: 18px;
+  color: var(--md-on-primary);
+  opacity: 0;
+  transition: opacity var(--md-motion-duration-short) var(--md-motion-standard);
+}
+.word-item.mastered .word-item-check {
+  background: var(--md-primary);
+  border-color: var(--md-primary);
+}
+.word-item.mastered .word-item-check .material-icons-round { opacity: 1; }
+
+.word-item-body { flex: 1; min-width: 0; }
+.word-item-word {
+  font: var(--md-typescale-body-large);
+  color: var(--md-on-surface);
+  font-weight: 500;
+}
+.word-item-def {
+  font: var(--md-typescale-body-small);
+  color: var(--md-on-surface-variant);
+  margin-top: 1px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.word-item-arrow {
+  color: var(--md-on-surface-variant);
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════════════
+   GRID VIEW (CARD LAYOUT)
+   ═══════════════════════════════════════════════ */
+.word-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.word-card {
+  background: var(--md-surface-container-low);
+  border-radius: var(--md-shape-lg);
+  padding: 16px;
+  cursor: pointer;
+  transition: all var(--md-motion-duration-short) var(--md-motion-standard);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+}
+.word-card:hover {
+  box-shadow: var(--md-elevation-1);
+  transform: translateY(-1px);
+}
+.word-card:active { transform: translateY(0); }
+
+.word-card-word {
+  font: var(--md-typescale-title-medium);
+  color: var(--md-on-surface);
+  word-break: break-word;
+}
+
+.word-card-def {
+  font: var(--md-typescale-body-small);
+  color: var(--md-on-surface-variant);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  flex: 1;
+}
+
+.word-card-mastered-indicator {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--md-shape-full);
+  background: var(--md-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity var(--md-motion-duration-short) var(--md-motion-standard);
+}
+.word-card.mastered .word-card-mastered-indicator { opacity: 1; }
+.word-card-mastered-indicator .material-icons-round {
+  font-size: 14px;
+  color: var(--md-on-primary);
+}
+
+/* ═══════════════════════════════════════════════
+   FLASHCARD VIEW
+   ═══════════════════════════════════════════════ */
+.flashcard-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 24px 0;
+}
+
+.flashcard {
+  width: 100%;
+  max-width: 400px;
+  min-height: 280px;
+  perspective: 1000px;
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.flashcard-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 280px;
+  transition: transform var(--md-motion-duration-medium) var(--md-motion-emphasized);
+  transform-style: preserve-3d;
+}
+.flashcard.flipped .flashcard-inner {
+  transform: rotateY(180deg);
+}
+
+.flashcard-front, .flashcard-back {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: var(--md-shape-xl);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 24px;
+  text-align: center;
+}
+
+.flashcard-front {
+  background: var(--md-primary-container);
+  color: var(--md-on-primary-container);
+}
+.flashcard-back {
+  background: var(--md-tertiary-container);
+  color: var(--md-on-tertiary-container);
+  transform: rotateY(180deg);
+}
+
+.flashcard-word {
+  font: var(--md-typescale-headline-large);
+  margin-bottom: 8px;
+}
+.flashcard-hint {
+  font: var(--md-typescale-body-small);
+  opacity: 0.6;
+}
+.flashcard-pos {
+  font: var(--md-typescale-label-large);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 16px;
+}
+.flashcard-def {
+  font: var(--md-typescale-body-large);
+  line-height: 1.6;
+}
+
+.flashcard-controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.flashcard-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 24px;
+  border-radius: var(--md-shape-full);
+  border: none;
+  font: var(--md-typescale-label-large);
+  cursor: pointer;
+  transition: all var(--md-motion-duration-short) var(--md-motion-standard);
+}
+.flashcard-btn .material-icons-round { font-size: 20px; }
+
+.flashcard-btn-know {
+  background: var(--md-success-container);
+  color: var(--md-on-success-container);
+}
+.flashcard-btn-know:hover { box-shadow: var(--md-elevation-1); }
+
+.flashcard-btn-skip {
+  background: var(--md-surface-container-high);
+  color: var(--md-on-surface-variant);
+}
+.flashcard-btn-skip:hover { box-shadow: var(--md-elevation-1); }
+
+.flashcard-counter {
+  font: var(--md-typescale-label-medium);
+  color: var(--md-on-surface-variant);
+}
+
+.flashcard-progress-bar {
+  width: 100%;
+  max-width: 400px;
+  height: 4px;
+  background: var(--md-outline-variant);
+  border-radius: var(--md-shape-full);
+  overflow: hidden;
+}
+.flashcard-progress-fill {
+  height: 100%;
+  background: var(--md-primary);
+  border-radius: var(--md-shape-full);
+  transition: width var(--md-motion-duration-medium) var(--md-motion-emphasized);
+}
+
+/* ═══════════════════════════════════════════════
+   POS BADGE
+   ═══════════════════════════════════════════════ */
+.pos-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: var(--md-shape-xs);
+  font: var(--md-typescale-label-small);
+  text-transform: lowercase;
+  white-space: nowrap;
+}
+.pos-badge.noun { background: var(--pos-noun-bg); color: var(--pos-noun); }
+.pos-badge.verb { background: var(--pos-verb-bg); color: var(--pos-verb); }
+.pos-badge.adjective { background: var(--pos-adjective-bg); color: var(--pos-adjective); }
+.pos-badge.adverb { background: var(--pos-adverb-bg); color: var(--pos-adverb); }
+
+/* ═══════════════════════════════════════════════
+   DETAIL PAGE (SINGLE WORD)
+   ═══════════════════════════════════════════════ */
+.detail-page {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: var(--md-surface);
+  transform: translateX(100%);
+  transition: transform var(--md-motion-duration-medium) var(--md-motion-emphasized);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.detail-page.open { transform: translateX(0); }
+
+.detail-top-bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--md-surface);
+  border-bottom: 1px solid var(--md-outline-variant);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  transition: background var(--md-motion-duration-medium) var(--md-motion-standard);
+}
+
+.detail-content {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 24px 16px 96px;
+}
+
+.detail-word {
+  font: var(--md-typescale-display-medium);
+  color: var(--md-on-surface);
+  margin-bottom: 8px;
+  word-break: break-word;
+}
+
+.detail-pos {
+  margin-bottom: 24px;
+}
+
+.detail-section {
+  margin-bottom: 24px;
+}
+
+.detail-section-title {
+  font: var(--md-typescale-label-large);
+  color: var(--md-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.detail-definition {
+  font: var(--md-typescale-body-large);
+  color: var(--md-on-surface);
+  line-height: 1.7;
+  padding: 16px;
+  background: var(--md-surface-container-low);
+  border-radius: var(--md-shape-md);
+}
+
+.detail-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.detail-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--md-surface-container-low);
+  border-radius: var(--md-shape-md);
+}
+.detail-meta-item .material-icons-round {
+  font-size: 20px;
+  color: var(--md-on-surface-variant);
+}
+.detail-meta-label {
+  font: var(--md-typescale-body-small);
+  color: var(--md-on-surface-variant);
+}
+.detail-meta-value {
+  font: var(--md-typescale-body-medium);
+  color: var(--md-on-surface);
+}
+
+.detail-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.detail-action-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 24px;
+  border-radius: var(--md-shape-full);
+  border: none;
+  font: var(--md-typescale-label-large);
+  cursor: pointer;
+  transition: all var(--md-motion-duration-short) var(--md-motion-standard);
+}
+.detail-action-btn .material-icons-round { font-size: 20px; }
+
+.btn-master {
+  background: var(--md-primary);
+  color: var(--md-on-primary);
+}
+.btn-master:hover { box-shadow: var(--md-elevation-1); }
+.btn-master.is-mastered {
+  background: var(--md-surface-container-high);
+  color: var(--md-on-surface-variant);
+}
+
+.btn-unmaster {
+  background: var(--md-surface-container-high);
+  color: var(--md-on-surface-variant);
+}
+
+/* Nav arrows */
+.detail-nav {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.detail-nav-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px;
+  border-radius: var(--md-shape-lg);
+  border: 1px solid var(--md-outline-variant);
+  background: transparent;
+  color: var(--md-on-surface);
+  font: var(--md-typescale-label-large);
+  cursor: pointer;
+  transition: all var(--md-motion-duration-short) var(--md-motion-standard);
+}
+.detail-nav-btn:hover { background: var(--md-surface-container-low); }
+.detail-nav-btn:disabled {
+  opacity: 0.38;
+  cursor: default;
+}
+.detail-nav-btn:disabled:hover { background: transparent; }
+
+/* ═══════════════════════════════════════════════
+   FAB (Floating Action Button)
+   ═══════════════════════════════════════════════ */
+.fab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--md-shape-lg);
+  border: none;
+  background: var(--md-primary-container);
+  color: var(--md-on-primary-container);
+  box-shadow: var(--md-elevation-3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--md-motion-duration-short) var(--md-motion-standard);
+  z-index: 50;
+}
+.fab:hover { box-shadow: var(--md-elevation-3); transform: scale(1.04); }
+.fab:active { transform: scale(0.96); }
+.fab .material-icons-round { font-size: 24px; }
+
+/* ═══════════════════════════════════════════════
+   SNACKBAR
+   ═══════════════════════════════════════════════ */
+.snackbar {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: var(--md-inverse-surface);
+  color: var(--md-inverse-on-surface);
+  padding: 14px 24px;
+  border-radius: var(--md-shape-xs);
+  font: var(--md-typescale-body-medium);
+  box-shadow: var(--md-elevation-3);
+  z-index: 300;
+  transition: transform var(--md-motion-duration-medium) var(--md-motion-emphasized);
+  white-space: nowrap;
+}
+.snackbar.show { transform: translateX(-50%) translateY(0); }
+
+/* ═══════════════════════════════════════════════
+   EMPTY STATE
+   ═══════════════════════════════════════════════ */
+.empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--md-on-surface-variant);
+}
+.empty-state .material-icons-round {
+  font-size: 48px;
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+.empty-state-text {
+  font: var(--md-typescale-body-large);
+}
+
+/* ═══════════════════════════════════════════════
+   SETTINGS BOTTOM SHEET
+   ═══════════════════════════════════════════════ */
+.scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.32);
+  z-index: 250;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--md-motion-duration-short) var(--md-motion-standard);
+}
+.scrim.open { opacity: 1; pointer-events: auto; }
+
+.bottom-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 260;
+  background: var(--md-surface-container-low);
+  border-radius: var(--md-shape-xl) var(--md-shape-xl) 0 0;
+  padding: 16px 24px 32px;
+  max-width: 640px;
+  margin: 0 auto;
+  transform: translateY(100%);
+  transition: transform var(--md-motion-duration-medium) var(--md-motion-emphasized);
+}
+.bottom-sheet.open { transform: translateY(0); }
+
+.bottom-sheet-handle {
+  width: 32px;
+  height: 4px;
+  background: var(--md-on-surface-variant);
+  opacity: 0.4;
+  border-radius: var(--md-shape-full);
+  margin: 0 auto 16px;
+}
+
+.bottom-sheet-title {
+  font: var(--md-typescale-title-medium);
+  color: var(--md-on-surface);
+  margin-bottom: 16px;
+}
+
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--md-outline-variant);
+}
+.setting-row:last-child { border-bottom: none; }
+
+.setting-label {
+  font: var(--md-typescale-body-large);
+  color: var(--md-on-surface);
+}
+.setting-desc {
+  font: var(--md-typescale-body-small);
+  color: var(--md-on-surface-variant);
+  margin-top: 2px;
+}
+
+/* M3 Switch */
+.m3-switch {
+  position: relative;
+  width: 52px;
+  height: 32px;
+  flex-shrink: 0;
+}
+.m3-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.m3-switch-track {
+  position: absolute;
+  inset: 0;
+  background: var(--md-surface-container-highest);
+  border: 2px solid var(--md-outline);
+  border-radius: var(--md-shape-full);
+  cursor: pointer;
+  transition: all var(--md-motion-duration-short) var(--md-motion-standard);
+}
+.m3-switch-thumb {
+  position: absolute;
+  top: 50%;
+  left: 8px;
+  width: 16px;
+  height: 16px;
+  background: var(--md-outline);
+  border-radius: var(--md-shape-full);
+  transform: translateY(-50%);
+  transition: all var(--md-motion-duration-short) var(--md-motion-standard);
+}
+.m3-switch input:checked + .m3-switch-track {
+  background: var(--md-primary);
+  border-color: var(--md-primary);
+}
+.m3-switch input:checked + .m3-switch-track .m3-switch-thumb {
+  left: 28px;
+  width: 24px;
+  height: 24px;
+  background: var(--md-on-primary);
+}
+
+/* ═══════════════════════════════════════════════
+   SORT MENU
+   ═══════════════════════════════════════════════ */
+.sort-menu {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 270;
+  background: var(--md-surface-container);
+  border-radius: var(--md-shape-md);
+  padding: 8px 0;
+  min-width: 200px;
+  box-shadow: var(--md-elevation-2);
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.9);
+  transform-origin: top right;
+  transition: all var(--md-motion-duration-short) var(--md-motion-standard);
+}
+.sort-menu.open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: scale(1);
+}
+.sort-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  border: none;
+  background: transparent;
+  color: var(--md-on-surface);
+  font: var(--md-typescale-body-medium);
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition: background var(--md-motion-duration-short) var(--md-motion-standard);
+}
+.sort-menu-item:hover { background: rgba(28,27,31,0.08); }
+[data-theme="dark"] .sort-menu-item:hover { background: rgba(224,224,232,0.08); }
+.sort-menu-item.active { color: var(--md-primary); }
+.sort-menu-item .material-icons-round { font-size: 20px; }
+
+/* ═══════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════ */
+@media (min-width: 600px) {
+  .perf-cards { grid-template-columns: repeat(4, 1fr); }
+  .word-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+}
+
+@media (min-width: 840px) {
+  .main-content { padding: 0 24px 96px; }
+  .flashcard { max-width: 480px; }
+  .flashcard-progress-bar { max-width: 480px; }
+}
+
+/* ═══════════════════════════════════════════════
+   SCROLLBAR
+   ═══════════════════════════════════════════════ */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--md-outline-variant);
+  border-radius: var(--md-shape-full);
+}
+
+/* ═══════════════════════════════════════════════
+   ANIMATIONS
+   ═══════════════════════════════════════════════ */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-in {
+  animation: fadeIn var(--md-motion-duration-medium) var(--md-motion-emphasized) both;
+}
+
+/* Stagger */
+.animate-in:nth-child(1) { animation-delay: 0ms; }
+.animate-in:nth-child(2) { animation-delay: 30ms; }
+.animate-in:nth-child(3) { animation-delay: 60ms; }
+.animate-in:nth-child(4) { animation-delay: 90ms; }
+.animate-in:nth-child(5) { animation-delay: 120ms; }
+.animate-in:nth-child(6) { animation-delay: 150ms; }
+.animate-in:nth-child(7) { animation-delay: 180ms; }
+.animate-in:nth-child(8) { animation-delay: 210ms; }
+.animate-in:nth-child(9) { animation-delay: 240ms; }
+.animate-in:nth-child(10) { animation-delay: 270ms; }
+
+/* ═══════════════════════════════════════════════
+   REDUCED MOTION
+   ═══════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   FLASHCARD SWIPE HINT
+   ═══════════════════════════════════════════════ */
+.swipe-hint {
+  font: var(--md-typescale-body-small);
+  color: var(--md-on-surface-variant);
+  text-align: center;
+  opacity: 0.7;
+}
+</style>
+</head>
+<body>
+
+<!-- TOP APP BAR -->
+<header class="top-bar">
+  <div class="top-bar-inner">
+    <button class="icon-btn" id="settingsBtn" aria-label="Settings">
+      <span class="material-icons-round">tune</span>
+    </button>
+    <h1 class="top-bar-title">Vocab Review</h1>
+    <button class="icon-btn" id="sortBtn" aria-label="Sort">
+      <span class="material-icons-round">sort</span>
+    </button>
+    <button class="icon-btn" id="themeBtn" aria-label="Toggle theme">
+      <span class="material-icons-round" id="themeIcon">dark_mode</span>
+    </button>
+  </div>
+</header>
+
+<!-- SORT MENU -->
+<div class="sort-menu" id="sortMenu">
+  <button class="sort-menu-item active" data-sort="default">
+    <span class="material-icons-round">check</span>Default order
+  </button>
+  <button class="sort-menu-item" data-sort="alpha">
+    <span class="material-icons-round"></span>A → Z
+  </button>
+  <button class="sort-menu-item" data-sort="alpha-desc">
+    <span class="material-icons-round"></span>Z → A
+  </button>
+  <button class="sort-menu-item" data-sort="pos">
+    <span class="material-icons-round"></span>By part of speech
+  </button>
+  <button class="sort-menu-item" data-sort="mastery">
+    <span class="material-icons-round"></span>Mastery status
+  </button>
+</div>
+
+<!-- MAIN CONTENT -->
+<main class="main-content" id="mainContent">
+  <!-- Performance overview -->
+  <section class="perf-section" id="perfSection"></section>
+
+  <!-- Filter chips -->
+  <section class="filter-section" id="filterSection">
+    <div class="filter-chips" id="filterChips"></div>
+  </section>
+
+  <!-- Search bar -->
+  <div class="search-bar">
+    <span class="material-icons-round search-icon">search</span>
+    <input type="text" id="searchInput" placeholder="Search words or definitions..." autocomplete="off">
+  </div>
+
+  <!-- View mode tabs -->
+  <div class="view-tabs" id="viewTabs">
+    <button class="view-tab active" data-view="list">
+      <span class="material-icons-round">list</span>List
+    </button>
+    <button class="view-tab" data-view="grid">
+      <span class="material-icons-round">grid_view</span>Grid
+    </button>
+    <button class="view-tab" data-view="flash">
+      <span class="material-icons-round">style</span>Flash
+    </button>
+  </div>
+
+  <!-- Word display area -->
+  <div id="wordDisplay"></div>
+</main>
+
+<!-- DETAIL PAGE -->
+<div class="detail-page" id="detailPage">
+  <div class="detail-top-bar">
+    <button class="icon-btn" id="detailBack" aria-label="Back">
+      <span class="material-icons-round">arrow_back</span>
+    </button>
+    <span style="flex:1"></span>
+    <button class="icon-btn" id="detailSpeak" aria-label="Pronounce">
+      <span class="material-icons-round">volume_up</span>
+    </button>
+  </div>
+  <div class="detail-content" id="detailContent"></div>
+</div>
+
+<!-- FAB: Shuffle / Review -->
+<button class="fab" id="fabBtn" aria-label="Start flashcard review">
+  <span class="material-icons-round">shuffle</span>
+</button>
+
+<!-- SETTINGS BOTTOM SHEET -->
+<div class="scrim" id="scrim"></div>
+<div class="bottom-sheet" id="bottomSheet">
+  <div class="bottom-sheet-handle"></div>
+  <div class="bottom-sheet-title">Settings</div>
+  
+  <div class="setting-row">
+    <div>
+      <div class="setting-label">Show definitions in list</div>
+      <div class="setting-desc">Display definitions alongside words</div>
+    </div>
+    <label class="m3-switch">
+      <input type="checkbox" id="showDefToggle" checked>
+      <span class="m3-switch-track"><span class="m3-switch-thumb"></span></span>
+    </label>
+  </div>
+
+  <div class="setting-row">
+    <div>
+      <div class="setting-label">Show POS badges</div>
+      <div class="setting-desc">Display part of speech labels</div>
+    </div>
+    <label class="m3-switch">
+      <input type="checkbox" id="showPosToggle" checked>
+      <span class="m3-switch-track"><span class="m3-switch-thumb"></span></span>
+    </label>
+  </div>
+
+  <div class="setting-row">
+    <div>
+      <div class="setting-label">Group by category</div>
+      <div class="setting-desc">Separate Vocabulary Preview and NAWL</div>
+    </div>
+    <label class="m3-switch">
+      <input type="checkbox" id="groupByCatToggle" checked>
+      <span class="m3-switch-track"><span class="m3-switch-thumb"></span></span>
+    </label>
+  </div>
+
+  <div class="setting-row">
+    <div>
+      <div class="setting-label">Compact mode</div>
+      <div class="setting-desc">Reduce spacing for more words on screen</div>
+    </div>
+    <label class="m3-switch">
+      <input type="checkbox" id="compactToggle">
+      <span class="m3-switch-track"><span class="m3-switch-thumb"></span></span>
+    </label>
+  </div>
+
+  <div class="setting-row">
+    <div>
+      <div class="setting-label">Reset mastery data</div>
+      <div class="setting-desc">Clear all mastered word records</div>
+    </div>
+    <button class="icon-btn" id="resetMasteryBtn" aria-label="Reset mastery" style="color:var(--md-error)">
+      <span class="material-icons-round">delete_outline</span>
+    </button>
+  </div>
+</div>
+
+<!-- SNACKBAR -->
+<div class="snackbar" id="snackbar"></div>
+
+<script>
+/* ═══════════════════════════════════════════════
+   APPLICATION STATE
+   ═══════════════════════════════════════════════ */
+const APP = {
+  data: null,
+  allWords: [],
+  filteredWords: [],
+  mastered: new Set(),
+  viewMode: 'list',
+  sortMode: 'default',
+  filterUnit: 'all',
+  filterCat: 'all',
+  searchQuery: '',
+  showDef: true,
+  showPos: true,
+  groupByCat: true,
+  compact: false,
+  darkMode: false,
+  flashIndex: 0,
+  flashFlipped: false,
+  flashCards: [],
+  detailWord: null,
+  detailIndex: -1,
+};
+
+/* ═══════════════════════════════════════════════
+   INITIALIZATION
+   ═══════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', async () => {
+  loadPrefs();
+  await loadData();
+  initUI();
+  render();
+});
+
+async function loadData() {
+  try {
+    const res = await fetch('./vocab.json');
+    APP.data = await res.json();
+  } catch {
+    // Fallback embedded data
+    APP.data = {"units":[{"title":"Unit 6 – Lie Detectors","vocabulary_preview":[{"word":"minimal","pos":"adjective","definition":"very small in amount"},{"word":"conduction","pos":"noun","definition":"the movement of heat or electricity through something"},{"word":"accurately","pos":"adverb","definition":"correctly"},{"word":"punish","pos":"verb","definition":"to discipline; to penalize"},{"word":"likelihood","pos":"noun","definition":"probability"},{"word":"reliability","pos":"noun","definition":"trustworthiness; consistency"}],"nawl":[{"word":"intimidate","pos":"verb","definition":"to fill someone with fear"},{"word":"jagged","pos":"adjective","definition":"uneven; having sharp points"},{"word":"identical","pos":"adjective","definition":"exactly the same"},{"word":"apprehensive","pos":"adjective","definition":"nervous; anxious"},{"word":"perspiration","pos":"noun","definition":"sweat"},{"word":"compress","pos":"verb","definition":"to press or squeeze"},{"word":"wrist","pos":"noun","definition":"the part of the body where the hand joins the arm"},{"word":"deduce","pos":"verb","definition":"to reach a conclusion by reasoning"}]},{"title":"Unit 6 – Patents","vocabulary_preview":[{"word":"viable","pos":"adjective","definition":"having a reasonable chance of succeeding"},{"word":"specialty","pos":"noun","definition":"an area of expertise"},{"word":"obtain","pos":"verb","definition":"to get or acquire"},{"word":"adaptation","pos":"noun","definition":"a change to an existing design or concept"},{"word":"theorem","pos":"noun","definition":"a formula or general statement in the sciences"},{"word":"machinery","pos":"noun","definition":"man-made moving devices"}],"nawl":[{"word":"backbreaking","pos":"adjective","definition":"involving extremely hard physical work"},{"word":"thereof","pos":"adverb","definition":"of the thing that has been mentioned"},{"word":"gear","pos":"noun","definition":"a mechanism that performs a specific function in a machine"},{"word":"relativity","pos":"noun","definition":"the theory that motion depends on the observer's position"},{"word":"procedure","pos":"noun","definition":"a series of actions done in a set order"},{"word":"database","pos":"noun","definition":"an organized collection of information stored electronically"},{"word":"stimulate","pos":"verb","definition":"to encourage or increase activity"},{"word":"file","pos":"verb","definition":"to officially submit a legal document"}]},{"title":"Unit 7 – Ever-Evolving English","vocabulary_preview":[{"word":"standardize","pos":"verb","definition":"to make consistent according to rules"},{"word":"vowel","pos":"noun","definition":"an open-mouthed speech sound"},{"word":"profound","pos":"adjective","definition":"deep or having great importance"},{"word":"pronounce","pos":"verb","definition":"to say a word aloud correctly"},{"word":"consensus","pos":"noun","definition":"general agreement"},{"word":"linguistic","pos":"adjective","definition":"relating to language"}],"nawl":[{"word":"case","pos":"noun","definition":"a grammatical form showing a word's role in a sentence"},{"word":"conqueror","pos":"noun","definition":"a person who takes control by force"},{"word":"aristocracy","pos":"noun","definition":"the upper ruling class, often hereditary"},{"word":"dub","pos":"verb","definition":"to name or call something"},{"word":"usage","pos":"noun","definition":"the way language is used"},{"word":"rudiments","pos":"noun","definition":"basic principles or foundations"},{"word":"prescriptive","pos":"adjective","definition":"enforcing strict rules"},{"word":"linguist","pos":"noun","definition":"a person who scientifically studies language"},{"word":"lexicon","pos":"noun","definition":"the vocabulary of a language"},{"word":"flux","pos":"noun","definition":"continuous change"}]},{"title":"Unit 7 – Pride and Prejudice","vocabulary_preview":[{"word":"admission","pos":"noun","definition":"the act of confessing something"},{"word":"inferiority","pos":"noun","definition":"the state of being lower in status or rank"},{"word":"evident","pos":"adjective","definition":"clearly seen or obvious"},{"word":"disturbance","pos":"noun","definition":"interruption or upset"},{"word":"duration","pos":"noun","definition":"length of time something lasts"},{"word":"unconsciously","pos":"adverb","definition":"without awareness"}],"nawl":[{"word":"rouse","pos":"verb","definition":"to awaken or stir"},{"word":"banish","pos":"verb","definition":"to send away or remove"},{"word":"repress","pos":"verb","definition":"to hold back emotions"},{"word":"ardently","pos":"adverb","definition":"with strong feeling or passion"},{"word":"color","pos":"verb","definition":"to blush"},{"word":"insensible","pos":"adjective","definition":"unaware or unmindful"},{"word":"endeavor","pos":"noun","definition":"an effort or attempt"},{"word":"countenance","pos":"noun","definition":"facial expression"},{"word":"bestow","pos":"verb","definition":"to give as a gift or honor"},{"word":"mantelpiece","pos":"noun","definition":"a shelf above a fireplace"},{"word":"composure","pos":"noun","definition":"calm control of one's emotions"}]}]};
+  }
+  buildAllWords();
+}
+
+function buildAllWords() {
+  APP.allWords = [];
+  APP.data.units.forEach((unit, ui) => {
+    unit.vocabulary_preview.forEach(w => {
+      APP.allWords.push({ ...w, unitTitle: unit.title, unitIndex: ui, category: 'vocabulary_preview' });
+    });
+    unit.nawl.forEach(w => {
+      APP.allWords.push({ ...w, unitTitle: unit.title, unitIndex: ui, category: 'nawl' });
+    });
+  });
+}
+
+/* ═══════════════════════════════════════════════
+   PERSISTENCE
+   ═══════════════════════════════════════════════ */
+function loadPrefs() {
+  try {
+    const saved = localStorage.getItem('vocab_app_prefs');
+    if (saved) {
+      const p = JSON.parse(saved);
+      APP.mastered = new Set(p.mastered || []);
+      APP.darkMode = p.darkMode || false;
+      APP.showDef = p.showDef !== undefined ? p.showDef : true;
+      APP.showPos = p.showPos !== undefined ? p.showPos : true;
+      APP.groupByCat = p.groupByCat !== undefined ? p.groupByCat : true;
+      APP.compact = p.compact || false;
+      APP.viewMode = p.viewMode || 'list';
+      APP.sortMode = p.sortMode || 'default';
+    }
+  } catch {}
+  if (APP.darkMode) document.documentElement.setAttribute('data-theme', 'dark');
+  updateThemeIcon();
+}
+
+function savePrefs() {
+  try {
+    localStorage.setItem('vocab_app_prefs', JSON.stringify({
+      mastered: [...APP.mastered],
+      darkMode: APP.darkMode,
+      showDef: APP.showDef,
+      showPos: APP.showPos,
+      groupByCat: APP.groupByCat,
+      compact: APP.compact,
+      viewMode: APP.viewMode,
+      sortMode: APP.sortMode,
+    }));
+  } catch {}
+}
+
+/* ═══════════════════════════════════════════════
+   FILTER & SORT
+   ═══════════════════════════════════════════════ */
+function getFilteredWords() {
+  let words = [...APP.allWords];
+
+  // Unit filter
+  if (APP.filterUnit !== 'all') {
+    words = words.filter(w => w.unitIndex === parseInt(APP.filterUnit));
+  }
+
+  // Category filter
+  if (APP.filterCat !== 'all') {
+    words = words.filter(w => w.category === APP.filterCat);
+  }
+
+  // Search
+  if (APP.searchQuery) {
+    const q = APP.searchQuery.toLowerCase();
+    words = words.filter(w =>
+      w.word.toLowerCase().includes(q) ||
+      w.definition.toLowerCase().includes(q) ||
+      w.pos.toLowerCase().includes(q)
+    );
+  }
+
+  // Sort
+  switch (APP.sortMode) {
+    case 'alpha':
+      words.sort((a, b) => a.word.localeCompare(b.word));
+      break;
+    case 'alpha-desc':
+      words.sort((a, b) => b.word.localeCompare(a.word));
+      break;
+    case 'pos':
+      words.sort((a, b) => a.pos.localeCompare(b.pos) || a.word.localeCompare(b.word));
+      break;
+    case 'mastery':
+      words.sort((a, b) => {
+        const am = APP.mastered.has(a.word) ? 1 : 0;
+        const bm = APP.mastered.has(b.word) ? 1 : 0;
+        return am - bm || a.word.localeCompare(b.word);
+      });
+      break;
+    default:
+      // Keep original order
+      break;
+  }
+
+  return words;
+}
+
+/* ═══════════════════════════════════════════════
+   RENDER ENGINE
+   ═══════════════════════════════════════════════ */
+function render() {
+  APP.filteredWords = getFilteredWords();
+  renderPerf();
+  renderFilters();
+  renderWords();
+  updateFab();
+}
+
+function renderPerf() {
+  const total = APP.allWords.length;
+  const mastered = APP.mastered.size;
+  const pct = total ? Math.round((mastered / total) * 100) : 0;
+  const circumference = 2 * Math.PI * 30;
+  const offset = circumference - (pct / 100) * circumference;
+
+  // POS breakdown
+  const posCounts = {};
+  const posMastered = {};
+  APP.allWords.forEach(w => {
+    posCounts[w.pos] = (posCounts[w.pos] || 0) + 1;
+    if (APP.mastered.has(w.word)) posMastered[w.pos] = (posMastered[w.pos] || 0) + 1;
+  });
+
+  let posBreakdown = Object.entries(posCounts).map(([pos, count]) => {
+    const m = posMastered[pos] || 0;
+    const p = Math.round((m / count) * 100);
+    return `<div style="margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <span class="pos-badge ${pos}">${pos}</span>
+        <span style="font:var(--md-typescale-label-small);color:var(--md-on-surface-variant)">${m}/${count}</span>
+      </div>
+      <div class="mastery-bar-track"><div class="mastery-bar-fill" style="width:${p}%"></div></div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('perfSection').innerHTML = `
+    <div class="perf-header">Review Progress</div>
+    <div class="perf-cards">
+      <div class="perf-card" style="text-align:center">
+        <div class="progress-ring-wrap">
+          <svg viewBox="0 0 72 72">
+            <circle class="progress-ring-bg" cx="36" cy="36" r="30"/>
+            <circle class="progress-ring-fg" cx="36" cy="36" r="30"
+              stroke-dasharray="${circumference}" stroke-dashoffset="${offset}"/>
+          </svg>
+          <div class="progress-ring-text">${pct}%</div>
+        </div>
+        <div class="perf-card-label">Mastery</div>
+      </div>
+      <div class="perf-card">
+        <div class="perf-card-value">${mastered}</div>
+        <div class="perf-card-label">Mastered</div>
+        <div class="perf-card-sub">of ${total} words</div>
+      </div>
+      <div class="perf-card">
+        <div class="perf-card-value">${total - mastered}</div>
+        <div class="perf-card-label">Remaining</div>
+        <div class="perf-card-sub">to review</div>
+      </div>
+      <div class="perf-card">
+        <div class="perf-card-value">${APP.data.units.length}</div>
+        <div class="perf-card-label">Units</div>
+        <div class="perf-card-sub">${total} total words</div>
+      </div>
+    </div>
+    <div style="margin-top:16px">${posBreakdown}</div>
+  `;
+}
+
+function renderFilters() {
+  let chips = `<button class="chip ${APP.filterUnit === 'all' ? 'selected' : ''}" data-filter-unit="all">
+    <span class="material-icons-round">apps</span>All
+  </button>`;
+
+  APP.data.units.forEach((u, i) => {
+    chips += `<button class="chip ${APP.filterUnit === String(i) ? 'selected' : ''}" data-filter-unit="${i}">
+      ${u.title.replace(/Unit \d+ – /, '')}
+    </button>`;
+  });
+
+  chips += `<button class="chip ${APP.filterCat === 'vocab' ? 'selected' : ''}" data-filter-cat="vocab">
+    <span class="material-icons-round">visibility</span>Preview
+  </button>`;
+  chips += `<button class="chip ${APP.filterCat === 'nawl' ? 'selected' : ''}" data-filter-cat="nawl">
+    <span class="material-icons-round">school</span>NAWL
+  </button>`;
+
+  document.getElementById('filterChips').innerHTML = chips;
+}
+
+function renderWords() {
+  const display = document.getElementById('wordDisplay');
+
+  if (APP.viewMode === 'flash') {
+    renderFlashcard(display);
+    return;
+  }
+
+  if (APP.filteredWords.length === 0) {
+    display.innerHTML = `<div class="empty-state">
+      <span class="material-icons-round">search_off</span>
+      <div class="empty-state-text">No words found</div>
+    </div>`;
+    return;
+  }
+
+  if (APP.viewMode === 'grid') {
+    renderGrid(display);
+  } else {
+    renderList(display);
+  }
+}
+
+function renderList(container) {
+  let html = '';
+  const pad = APP.compact ? '8px 16px' : '12px 16px';
+
+  if (APP.groupByCat && APP.sortMode === 'default') {
+    // Group by unit then category
+    APP.data.units.forEach((unit, ui) => {
+      const unitWords = APP.filteredWords.filter(w => w.unitIndex === ui);
+      if (unitWords.length === 0) return;
+
+      html += `<div class="unit-section">
+        <div class="unit-title">${unit.title}</div>`;
+
+      const previewWords = unitWords.filter(w => w.category === 'vocabulary_preview');
+      const nawlWords = unitWords.filter(w => w.category === 'nawl');
+
+      if (previewWords.length) {
+        html += `<div class="category-label">Vocabulary Preview</div>`;
+        previewWords.forEach((w, i) => {
+          html += wordItemHTML(w, pad, i);
+        });
+      }
+      if (nawlWords.length) {
+        html += `<div class="category-label">New Academic Word List</div>`;
+        nawlWords.forEach((w, i) => {
+          html += wordItemHTML(w, pad, i + previewWords.length);
+        });
+      }
+
+      html += `</div>`;
+    });
+  } else {
+    // Flat list
+    APP.filteredWords.forEach((w, i) => {
+      html += wordItemHTML(w, pad, i);
+    });
+  }
+
+  container.innerHTML = html;
+}
+
+function wordItemHTML(w, pad, idx) {
+  const isMastered = APP.mastered.has(w.word);
+  return `<div class="word-item animate-in ${isMastered ? 'mastered' : ''}" 
+    style="padding:${pad}" data-word="${escAttr(w.word)}" data-idx="${idx}">
+    <div class="word-item-check">
+      <span class="material-icons-round">check</span>
+    </div>
+    <div class="word-item-body">
+      <div class="word-item-word">${esc(w.word)}${APP.showPos ? ` <span class="pos-badge ${w.pos}">${w.pos}</span>` : ''}</div>
+      ${APP.showDef ? `<div class="word-item-def">${esc(w.definition)}</div>` : ''}
+    </div>
+    <span class="material-icons-round word-item-arrow">chevron_right</span>
+  </div>`;
+}
+
+function renderGrid(container) {
+  let html = '<div class="word-grid">';
+  APP.filteredWords.forEach((w, i) => {
+    const isMastered = APP.mastered.has(w.word);
+    html += `<div class="word-card animate-in ${isMastered ? 'mastered' : ''}" data-word="${escAttr(w.word)}" data-idx="${i}">
+      <div class="word-card-mastered-indicator"><span class="material-icons-round">check</span></div>
+      <div class="word-card-word">${esc(w.word)}</div>
+      ${APP.showPos ? `<span class="pos-badge ${w.pos}">${w.pos}</span>` : ''}
+      ${APP.showDef ? `<div class="word-card-def">${esc(w.definition)}</div>` : ''}
+    </div>`;
+  });
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+function renderFlashcard(container) {
+  if (APP.flashCards.length === 0) {
+    APP.flashCards = [...APP.filteredWords];
+    APP.flashIndex = 0;
+    APP.flashFlipped = false;
+  }
+
+  if (APP.flashCards.length === 0) {
+    container.innerHTML = `<div class="empty-state">
+      <span class="material-icons-round">style</span>
+      <div class="empty-state-text">No words to review</div>
+    </div>`;
+    return;
+  }
+
+  const w = APP.flashCards[APP.flashIndex];
+  const progress = ((APP.flashIndex) / APP.flashCards.length) * 100;
+  const isMastered = APP.mastered.has(w.word);
+
+  container.innerHTML = `
+    <div class="flashcard-container">
+      <div class="flashcard-progress-bar">
+        <div class="flashcard-progress-fill" style="width:${progress}%"></div>
+      </div>
+      <div class="flashcard-counter">${APP.flashIndex + 1} / ${APP.flashCards.length}</div>
+      <div class="flashcard ${APP.flashFlipped ? 'flipped' : ''}" id="flashcardEl">
+        <div class="flashcard-inner">
+          <div class="flashcard-front">
+            <div class="flashcard-word">${esc(w.word)}</div>
+            <div class="flashcard-hint">${APP.flashFlipped ? '' : 'Tap to reveal definition'}</div>
+          </div>
+          <div class="flashcard-back">
+            <div class="flashcard-pos">${w.pos}</div>
+            <div class="flashcard-def">${esc(w.definition)}</div>
+          </div>
+        </div>
+      </div>
+      <div class="flashcard-controls">
+        <button class="flashcard-btn flashcard-btn-skip" id="flashSkip">
+          <span class="material-icons-round">close</span>Still learning
+        </button>
+        <button class="flashcard-btn flashcard-btn-know" id="flashKnow">
+          <span class="material-icons-round">check</span>Got it
+        </button>
+      </div>
+      <div class="swipe-hint">${isMastered ? 'Previously mastered' : ''}</div>
+    </div>
+  `;
+}
+
+/* ═══════════════════════════════════════════════
+   DETAIL PAGE
+   ═══════════════════════════════════════════════ */
+function openDetail(word, idx) {
+  APP.detailWord = word;
+  APP.detailIndex = APP.filteredWords.indexOf(word);
+  const page = document.getElementById('detailPage');
+  renderDetail();
+  page.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeDetail() {
+  const page = document.getElementById('detailPage');
+  page.classList.remove('open');
+  document.body.style.overflow = '';
+  APP.detailWord = null;
+}
+
+function renderDetail() {
+  const w = APP.detailWord;
+  if (!w) return;
+  const isMastered = APP.mastered.has(w.word);
+  const idx = APP.filteredWords.indexOf(w);
+  const hasPrev = idx > 0;
+  const hasNext = idx < APP.filteredWords.length - 1;
+
+  // Count review stats
+  const reviewKey = `review_${w.word}`;
+  const reviewCount = parseInt(localStorage.getItem(reviewKey) || '0');
+
+  document.getElementById('detailContent').innerHTML = `
+    <div class="detail-word">${esc(w.word)}</div>
+    <div class="detail-pos"><span class="pos-badge ${w.pos}" style="font-size:14px;padding:4px 12px">${w.pos}</span></div>
+    
+    <div class="detail-section">
+      <div class="detail-section-title">Definition</div>
+      <div class="detail-definition">${esc(w.definition)}</div>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-section-title">Details</div>
+      <div class="detail-meta">
+        <div class="detail-meta-item">
+          <span class="material-icons-round">menu_book</span>
+          <div>
+            <div class="detail-meta-label">Unit</div>
+            <div class="detail-meta-value">${w.unitTitle}</div>
+          </div>
+        </div>
+        <div class="detail-meta-item">
+          <span class="material-icons-round">category</span>
+          <div>
+            <div class="detail-meta-label">Category</div>
+            <div class="detail-meta-value">${w.category === 'vocabulary_preview' ? 'Vocabulary Preview' : 'NAWL'}</div>
+          </div>
+        </div>
+        <div class="detail-meta-item">
+          <span class="material-icons-round">repeat</span>
+          <div>
+            <div class="detail-meta-label">Reviews</div>
+            <div class="detail-meta-value">${reviewCount} time${reviewCount !== 1 ? 's' : ''}</div>
+          </div>
+        </div>
+        <div class="detail-meta-item">
+          <span class="material-icons-round">${isMastered ? 'check_circle' : 'radio_button_unchecked'}</span>
+          <div>
+            <div class="detail-meta-label">Status</div>
+            <div class="detail-meta-value">${isMastered ? 'Mastered' : 'Not yet mastered'}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-actions">
+      <button class="detail-action-btn ${isMastered ? 'btn-master is-mastered' : 'btn-master'}" id="detailMasterBtn">
+        <span class="material-icons-round">${isMastered ? 'undo' : 'check_circle'}</span>
+        ${isMastered ? 'Unmark' : 'Mark mastered'}
+      </button>
+    </div>
+
+    <div class="detail-nav">
+      <button class="detail-nav-btn" id="detailPrev" ${!hasPrev ? 'disabled' : ''}>
+        <span class="material-icons-round">arrow_back</span>Previous
+      </button>
+      <button class="detail-nav-btn" id="detailNext" ${!hasNext ? 'disabled' : ''}>
+        Next<span class="material-icons-round">arrow_forward</span>
+      </button>
+    </div>
+  `;
+
+  // Bind detail actions
+  document.getElementById('detailMasterBtn').addEventListener('click', () => {
+    toggleMastery(w.word);
+    // Increment review count
+    const rk = `review_${w.word}`;
+    localStorage.setItem(rk, String(parseInt(localStorage.getItem(rk) || '0') + 1));
+    renderDetail();
+    render();
+  });
+
+  document.getElementById('detailPrev').addEventListener('click', () => {
+    if (idx > 0) {
+      APP.detailWord = APP.filteredWords[idx - 1];
+      renderDetail();
+      document.getElementById('detailContent').scrollTop = 0;
+    }
+  });
+
+  document.getElementById('detailNext').addEventListener('click', () => {
+    if (idx < APP.filteredWords.length - 1) {
+      APP.detailWord = APP.filteredWords[idx + 1];
+      renderDetail();
+      document.getElementById('detailContent').scrollTop = 0;
+    }
+  });
+}
+
+/* ═══════════════════════════════════════════════
+   MASTERY
+   ═══════════════════════════════════════════════ */
+function toggleMastery(word) {
+  if (APP.mastered.has(word)) {
+    APP.mastered.delete(word);
+    showSnackbar(`"${word}" unmarked`);
+  } else {
+    APP.mastered.add(word);
+    showSnackbar(`"${word}" marked as mastered`);
+  }
+  savePrefs();
+}
+
+/* ═══════════════════════════════════════════════
+   THEME
+   ═══════════════════════════════════════════════ */
+function toggleTheme() {
+  APP.darkMode = !APP.darkMode;
+  document.documentElement.setAttribute('data-theme', APP.darkMode ? 'dark' : '');
+  updateThemeIcon();
+  savePrefs();
+}
+
+function updateThemeIcon() {
+  const icon = document.getElementById('themeIcon');
+  if (icon) icon.textContent = APP.darkMode ? 'light_mode' : 'dark_mode';
+}
+
+/* ═══════════════════════════════════════════════
+   SNACKBAR
+   ═══════════════════════════════════════════════ */
+let snackTimer;
+function showSnackbar(msg) {
+  const el = document.getElementById('snackbar');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(snackTimer);
+  snackTimer = setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+/* ═══════════════════════════════════════════════
+   FAB
+   ═══════════════════════════════════════════════ */
+function updateFab() {
+  const fab = document.getElementById('fabBtn');
+  if (APP.viewMode === 'flash') {
+    fab.innerHTML = '<span class="material-icons-round">restart_alt</span>';
+  } else {
+    fab.innerHTML = '<span class="material-icons-round">shuffle</span>';
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   TTS (Text-to-Speech)
+   ═══════════════════════════════════════════════ */
+function speakWord(word) {
+  if ('speechSynthesis' in window) {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(word);
+    u.lang = 'en-US';
+    u.rate = 0.85;
+    speechSynthesis.speak(u);
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   UTILS
+   ═══════════════════════════════════════════════ */
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+function escAttr(s) {
+  return s.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+/* ═══════════════════════════════════════════════
+   EVENT BINDING
+   ═══════════════════════════════════════════════ */
+function initUI() {
+  // Theme
+  document.getElementById('themeBtn').addEventListener('click', toggleTheme);
+
+  // View tabs
+  document.querySelectorAll('.view-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      APP.viewMode = tab.dataset.view;
+      document.querySelectorAll('.view-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      if (APP.viewMode === 'flash') {
+        APP.flashCards = [...APP.filteredWords];
+        APP.flashIndex = 0;
+        APP.flashFlipped = false;
+      }
+      savePrefs();
+      render();
+    });
+  });
+
+  // Set active view tab from prefs
+  document.querySelectorAll('.view-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.view === APP.viewMode);
+  });
+
+  // Search
+  document.getElementById('searchInput').addEventListener('input', (e) => {
+    APP.searchQuery = e.target.value;
+    render();
+  });
+
+  // Filter chips (delegated)
+  document.getElementById('filterChips').addEventListener('click', (e) => {
+    const chip = e.target.closest('.chip');
+    if (!chip) return;
+
+    if (chip.dataset.filterUnit !== undefined) {
+      APP.filterUnit = chip.dataset.filterUnit;
+      // Reset cat filter when selecting a unit
+      if (APP.filterUnit !== 'all') APP.filterCat = 'all';
+    }
+    if (chip.dataset.filterCat !== undefined) {
+      APP.filterCat = chip.dataset.filterCat;
+      // Reset unit filter when selecting a cat
+      if (APP.filterCat !== 'all') APP.filterUnit = 'all';
+    }
+
+    if (APP.viewMode === 'flash') {
+      APP.flashCards = [];
+    }
+    render();
+  });
+
+  // Word click (delegated)
+  document.getElementById('wordDisplay').addEventListener('click', (e) => {
+    // Word item or card click
+    const item = e.target.closest('.word-item, .word-card');
+    if (item) {
+      const word = item.dataset.word;
+      const w = APP.allWords.find(w => w.word === word);
+      if (w) openDetail(w);
+      return;
+    }
+
+    // Flashcard click
+    const flashcard = e.target.closest('.flashcard');
+    if (flashcard) {
+      APP.flashFlipped = !APP.flashFlipped;
+      flashcard.classList.toggle('flipped', APP.flashFlipped);
+      return;
+    }
+
+    // Flashcard buttons
+    if (e.target.closest('#flashKnow')) {
+      flashcardAction(true);
+      return;
+    }
+    if (e.target.closest('#flashSkip')) {
+      flashcardAction(false);
+      return;
+    }
+  });
+
+  // Word item checkbox toggle (clicking the checkbox area)
+  document.getElementById('wordDisplay').addEventListener('click', (e) => {
+    const check = e.target.closest('.word-item-check');
+    if (check) {
+      e.stopPropagation();
+      const item = check.closest('.word-item');
+      const word = item.dataset.word;
+      toggleMastery(word);
+      render();
+    }
+  });
+
+  // Detail back
+  document.getElementById('detailBack').addEventListener('click', closeDetail);
+
+  // Detail speak
+  document.getElementById('detailSpeak').addEventListener('click', () => {
+    if (APP.detailWord) speakWord(APP.detailWord.word);
+  });
+
+  // Sort menu
+  document.getElementById('sortBtn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    document.getElementById('sortMenu').classList.toggle('open');
+  });
+  document.addEventListener('click', () => {
+    document.getElementById('sortMenu').classList.remove('open');
+  });
+  document.querySelectorAll('.sort-menu-item').forEach(item => {
+    item.addEventListener('click', () => {
+      APP.sortMode = item.dataset.sort;
+      document.querySelectorAll('.sort-menu-item').forEach(i => {
+        i.classList.remove('active');
+        i.querySelector('.material-icons-round').textContent = '';
+      });
+      item.classList.add('active');
+      item.querySelector('.material-icons-round').textContent = 'check';
+      if (APP.viewMode === 'flash') APP.flashCards = [];
+      savePrefs();
+      render();
+    });
+  });
+
+  // Set active sort from prefs
+  document.querySelectorAll('.sort-menu-item').forEach(i => {
+    i.classList.toggle('active', i.dataset.sort === APP.sortMode);
+    i.querySelector('.material-icons-round').textContent = i.dataset.sort === APP.sortMode ? 'check' : '';
+  });
+
+  // Settings bottom sheet
+  document.getElementById('settingsBtn').addEventListener('click', () => {
+    document.getElementById('bottomSheet').classList.add('open');
+    document.getElementById('scrim').classList.add('open');
+  });
+  document.getElementById('scrim').addEventListener('click', closeSheet);
+
+  // Settings toggles
+  document.getElementById('showDefToggle').checked = APP.showDef;
+  document.getElementById('showDefToggle').addEventListener('change', (e) => {
+    APP.showDef = e.target.checked;
+    savePrefs();
+    render();
+  });
+
+  document.getElementById('showPosToggle').checked = APP.showPos;
+  document.getElementById('showPosToggle').addEventListener('change', (e) => {
+    APP.showPos = e.target.checked;
+    savePrefs();
+    render();
+  });
+
+  document.getElementById('groupByCatToggle').checked = APP.groupByCat;
+  document.getElementById('groupByCatToggle').addEventListener('change', (e) => {
+    APP.groupByCat = e.target.checked;
+    savePrefs();
+    render();
+  });
+
+  document.getElementById('compactToggle').checked = APP.compact;
+  document.getElementById('compactToggle').addEventListener('change', (e) => {
+    APP.compact = e.target.checked;
+    savePrefs();
+    render();
+  });
+
+  // Reset mastery
+  document.getElementById('resetMasteryBtn').addEventListener('click', () => {
+    APP.mastered.clear();
+    savePrefs();
+    render();
+    showSnackbar('Mastery data cleared');
+    closeSheet();
+  });
+
+  // FAB
+  document.getElementById('fabBtn').addEventListener('click', () => {
+    if (APP.viewMode === 'flash') {
+      // Reset flashcards
+      APP.flashCards = [...APP.filteredWords];
+      // Shuffle
+      for (let i = APP.flashCards.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [APP.flashCards[i], APP.flashCards[j]] = [APP.flashCards[j], APP.flashCards[i]];
+      }
+      APP.flashIndex = 0;
+      APP.flashFlipped = false;
+      render();
+    } else {
+      // Switch to flash mode
+      APP.viewMode = 'flash';
+      document.querySelectorAll('.view-tab').forEach(t => t.classList.toggle('active', t.dataset.view === 'flash'));
+      APP.flashCards = [...APP.filteredWords];
+      // Shuffle
+      for (let i = APP.flashCards.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [APP.flashCards[i], APP.flashCards[j]] = [APP.flashCards[j], APP.flashCards[i]];
+      }
+      APP.flashIndex = 0;
+      APP.flashFlipped = false;
+      savePrefs();
+      render();
+    }
+  });
+
+  // Keyboard navigation
+  document.addEventListener('keydown', (e) => {
+    // Detail page navigation
+    if (APP.detailWord) {
+      if (e.key === 'Escape') closeDetail();
+      if (e.key === 'ArrowLeft') document.getElementById('detailPrev')?.click();
+      if (e.key === 'ArrowRight') document.getElementById('detailNext')?.click();
+      return;
+    }
+
+    // Flashcard keyboard shortcuts
+    if (APP.viewMode === 'flash') {
+      if (e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault();
+        APP.flashFlipped = !APP.flashFlipped;
+        const fc = document.getElementById('flashcardEl');
+        if (fc) fc.classList.toggle('flipped', APP.flashFlipped);
+      }
+      if (e.key === 'ArrowRight' || e.key === '1') flashcardAction(true);
+      if (e.key === 'ArrowLeft' || e.key === '2') flashcardAction(false);
+    }
+  });
+}
+
+function flashcardAction(know) {
+  if (APP.flashCards.length === 0) return;
+  const w = APP.flashCards[APP.flashIndex];
+
+  if (know) {
+    if (!APP.mastered.has(w.word)) {
+      APP.mastered.add(w.word);
+      savePrefs();
+    }
+    // Increment review count
+    const rk = `review_${w.word}`;
+    localStorage.setItem(rk, String(parseInt(localStorage.getItem(rk) || '0') + 1));
+  }
+
+  APP.flashIndex++;
+  APP.flashFlipped = false;
+
+  if (APP.flashIndex >= APP.flashCards.length) {
+    showSnackbar('Review complete! All cards done.');
+    APP.flashIndex = 0;
+    // Remove mastered from the deck for next round
+    APP.flashCards = APP.flashCards.filter(w => !APP.mastered.has(w.word));
+    if (APP.flashCards.length === 0) {
+      APP.flashCards = [...APP.filteredWords];
+      for (let i = APP.flashCards.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [APP.flashCards[i], APP.flashCards[j]] = [APP.flashCards[j], APP.flashCards[i]];
+      }
+      showSnackbar('All words mastered! Starting over...');
+    }
+  }
+
+  render();
+  renderPerf();
+}
+
+function closeSheet() {
+  document.getElementById('bottomSheet').classList.remove('open');
+  document.getElementById('scrim').classList.remove('open');
+}
+</script>
+</body>
+</html>
