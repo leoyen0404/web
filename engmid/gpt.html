@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Vocab Review</title>
+
+<style>
+:root {
+  /* Material 3 inspired neutral palette */
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --primary: #6750a4;
+  --on-primary: #ffffff;
+  --text: #1c1b1f;
+  --subtle: #6b7280;
+  --outline: #e5e7eb;
+  --card: #ffffff;
+
+  --radius: 16px;
+}
+
+[data-theme="dark"] {
+  --bg: #121212;
+  --surface: #1e1e1e;
+  --text: #f1f1f1;
+  --subtle: #9ca3af;
+  --outline: #2a2a2a;
+  --card: #1e1e1e;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* HEADER */
+header {
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  padding: 12px;
+  border-bottom: 1px solid var(--outline);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  z-index: 10;
+}
+
+header h1 {
+  font-size: 16px;
+  margin: 0;
+  flex: 1;
+}
+
+button {
+  border: none;
+  background: var(--primary);
+  color: var(--on-primary);
+  padding: 8px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+/* LAYOUT */
+.container {
+  padding: 12px;
+  max-width: 900px;
+  margin: auto;
+}
+
+/* STATS */
+.stats {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 12px;
+  margin-bottom: 12px;
+  border: 1px solid var(--outline);
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+}
+
+/* UNIT */
+.unit {
+  margin-bottom: 16px;
+}
+
+.unit h2 {
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+/* WORD CARD */
+.word {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 12px;
+  margin-bottom: 8px;
+  border: 1px solid var(--outline);
+  cursor: pointer;
+}
+
+.word:hover {
+  transform: translateY(-1px);
+}
+
+/* COMPACT MODE */
+.compact .definition {
+  display: none;
+}
+
+/* DETAIL VIEW */
+.detail {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  padding: 20px;
+  display: none;
+  flex-direction: column;
+}
+
+.detail.active {
+  display: flex;
+}
+
+.detail h2 {
+  font-size: 28px;
+}
+
+.detail .pos {
+  color: var(--subtle);
+}
+
+.detail .definition {
+  margin-top: 16px;
+  font-size: 18px;
+}
+
+/* TOGGLE BAR */
+.controls {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+/* MOBILE */
+@media (min-width: 600px) {
+  .word {
+    padding: 16px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>Vocabulary Review</h1>
+  <button onclick="toggleTheme()">🌗</button>
+</header>
+
+<div class="container">
+
+  <div class="stats" id="stats">
+    <div>Total: 0</div>
+    <div>Reviewed: 0</div>
+  </div>
+
+  <div class="controls">
+    <button onclick="setView('normal')">Normal</button>
+    <button onclick="setView('compact')">Compact</button>
+  </div>
+
+  <div id="app"></div>
+
+</div>
+
+<!-- DETAIL VIEW -->
+<div id="detail" class="detail">
+  <button onclick="closeDetail()">← Back</button>
+  <h2 id="d-word"></h2>
+  <div class="pos" id="d-pos"></div>
+  <div class="definition" id="d-def"></div>
+  <button onclick="markReviewed()">Mark Reviewed</button>
+</div>
+
+<script>
+let data = [];
+let reviewed = JSON.parse(localStorage.getItem("reviewed") || "[]");
+let currentWord = null;
+
+async function load() {
+  const res = await fetch("vocab.json");
+  const json = await res.json();
+  data = json.units;
+  render();
+}
+
+function render() {
+  const app = document.getElementById("app");
+  app.innerHTML = "";
+
+  let total = 0;
+
+  data.forEach(unit => {
+    const unitEl = document.createElement("div");
+    unitEl.className = "unit";
+
+    const title = document.createElement("h2");
+    title.textContent = unit.title;
+    unitEl.appendChild(title);
+
+    const words = [...unit.vocabulary_preview, ...unit.nawl];
+
+    words.forEach(w => {
+      total++;
+
+      const el = document.createElement("div");
+      el.className = "word";
+
+      el.innerHTML = `
+        <strong>${w.word}</strong>
+        <div class="pos">${w.pos}</div>
+        <div class="definition">${w.definition}</div>
+      `;
+
+      el.onclick = () => openDetail(w);
+
+      unitEl.appendChild(el);
+    });
+
+    app.appendChild(unitEl);
+  });
+
+  updateStats(total);
+}
+
+function updateStats(total) {
+  document.getElementById("stats").innerHTML = `
+    <div>Total: ${total}</div>
+    <div>Reviewed: ${reviewed.length}</div>
+  `;
+}
+
+function openDetail(word) {
+  currentWord = word;
+  document.getElementById("detail").classList.add("active");
+  document.getElementById("d-word").textContent = word.word;
+  document.getElementById("d-pos").textContent = word.pos;
+  document.getElementById("d-def").textContent = word.definition;
+}
+
+function closeDetail() {
+  document.getElementById("detail").classList.remove("active");
+}
+
+function markReviewed() {
+  if (!reviewed.includes(currentWord.word)) {
+    reviewed.push(currentWord.word);
+    localStorage.setItem("reviewed", JSON.stringify(reviewed));
+    render();
+  }
+  closeDetail();
+}
+
+function setView(mode) {
+  document.body.classList.remove("compact");
+  if (mode === "compact") {
+    document.body.classList.add("compact");
+  }
+}
+
+function toggleTheme() {
+  const current = document.body.getAttribute("data-theme");
+  document.body.setAttribute(
+    "data-theme",
+    current === "dark" ? "light" : "dark"
+  );
+}
+
+load();
+</script>
+
+</body>
+</html>
