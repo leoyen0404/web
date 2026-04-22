@@ -1,0 +1,93 @@
+{
+  "units": [
+    {
+      "title": "Unit 6 - Lie Detectors",
+      "vocabulary_preview": [
+        { "word": "minimal", "pos": "adjective", "definition": "very small in amount" },
+        { "word": "conduction", "pos": "noun", "definition": "the movement of heat or electricity through something" },
+        { "word": "accurately", "pos": "adverb", "definition": "correctly" },
+        { "word": "punish", "pos": "verb", "definition": "to discipline; to penalize" },
+        { "word": "likelihood", "pos": "noun", "definition": "probability" },
+        { "word": "reliability", "pos": "noun", "definition": "trustworthiness; consistency" }
+      ],
+      "nawl": [
+        { "word": "intimidate", "pos": "verb", "definition": "to fill someone with fear" },
+        { "word": "jagged", "pos": "adjective", "definition": "uneven; having sharp points" },
+        { "word": "identical", "pos": "adjective", "definition": "exactly the same" },
+        { "word": "apprehensive", "pos": "adjective", "definition": "nervous; anxious" },
+        { "word": "perspiration", "pos": "noun", "definition": "sweat" },
+        { "word": "compress", "pos": "verb", "definition": "to press or squeeze" },
+        { "word": "wrist", "pos": "noun", "definition": "the part of the body where the hand joins the arm" },
+        { "word": "deduce", "pos": "verb", "definition": "to reach a conclusion by reasoning" }
+      ]
+    },
+    {
+      "title": "Unit 6 - Patents",
+      "vocabulary_preview": [
+        { "word": "viable", "pos": "adjective", "definition": "having a reasonable chance of succeeding" },
+        { "word": "specialty", "pos": "noun", "definition": "an area of expertise" },
+        { "word": "obtain", "pos": "verb", "definition": "to get or acquire" },
+        { "word": "adaptation", "pos": "noun", "definition": "a change to an existing design or concept" },
+        { "word": "theorem", "pos": "noun", "definition": "a formula or general statement in the sciences" },
+        { "word": "machinery", "pos": "noun", "definition": "man-made moving devices" }
+      ],
+      "nawl": [
+        { "word": "backbreaking", "pos": "adjective", "definition": "involving extremely hard physical work" },
+        { "word": "thereof", "pos": "adverb", "definition": "of the thing that has been mentioned" },
+        { "word": "gear", "pos": "noun", "definition": "a mechanism that performs a specific function in a machine" },
+        { "word": "relativity", "pos": "noun", "definition": "the theory that motion depends on the observer's position" },
+        { "word": "procedure", "pos": "noun", "definition": "a series of actions done in a set order" },
+        { "word": "database", "pos": "noun", "definition": "an organized collection of information stored electronically" },
+        { "word": "stimulate", "pos": "verb", "definition": "to encourage or increase activity" },
+        { "word": "file", "pos": "verb", "definition": "to officially submit a legal document" }
+      ]
+    },
+    {
+      "title": "Unit 7 - Ever-Evolving English",
+      "vocabulary_preview": [
+        { "word": "standardize", "pos": "verb", "definition": "to make consistent according to rules" },
+        { "word": "vowel", "pos": "noun", "definition": "an open-mouthed speech sound" },
+        { "word": "profound", "pos": "adjective", "definition": "deep or having great importance" },
+        { "word": "pronounce", "pos": "verb", "definition": "to say a word aloud correctly" },
+        { "word": "consensus", "pos": "noun", "definition": "general agreement" },
+        { "word": "linguistic", "pos": "adjective", "definition": "relating to language" }
+      ],
+      "nawl": [
+        { "word": "case", "pos": "noun", "definition": "a grammatical form showing a word's role in a sentence" },
+        { "word": "conqueror", "pos": "noun", "definition": "a person who takes control by force" },
+        { "word": "aristocracy", "pos": "noun", "definition": "the upper ruling class, often hereditary" },
+        { "word": "dub", "pos": "verb", "definition": "to name or call something" },
+        { "word": "usage", "pos": "noun", "definition": "the way language is used" },
+        { "word": "rudiments", "pos": "noun", "definition": "basic principles or foundations" },
+        { "word": "prescriptive", "pos": "adjective", "definition": "enforcing strict rules" },
+        { "word": "linguist", "pos": "noun", "definition": "a person who scientifically studies language" },
+        { "word": "lexicon", "pos": "noun", "definition": "the vocabulary of a language" },
+        { "word": "flux", "pos": "noun", "definition": "continuous change" }
+      ]
+    },
+    {
+      "title": "Unit 7 - Pride and Prejudice",
+      "vocabulary_preview": [
+        { "word": "admission", "pos": "noun", "definition": "the act of confessing something" },
+        { "word": "inferiority", "pos": "noun", "definition": "the state of being lower in status or rank" },
+        { "word": "evident", "pos": "adjective", "definition": "clearly seen or obvious" },
+        { "word": "disturbance", "pos": "noun", "definition": "interruption or upset" },
+        { "word": "duration", "pos": "noun", "definition": "length of time something lasts" },
+        { "word": "unconsciously", "pos": "adverb", "definition": "without awareness" }
+      ],
+      "nawl": [
+        { "word": "rouse", "pos": "verb", "definition": "to awaken or stir" },
+        { "word": "banish", "pos": "verb", "definition": "to send away or remove" },
+        { "word": "repress", "pos": "verb", "definition": "to hold back emotions" },
+        { "word": "ardently", "pos": "adverb", "definition": "with strong feeling or passion" },
+        { "word": "color", "pos": "verb", "definition": "to blush" },
+        { "word": "insensible", "pos": "adjective", "definition": "unaware or unmindful" },
+        { "word": "endeavor", "pos": "noun", "definition": "an effort or attempt" },
+        { "word": "countenance", "pos": "noun", "definition": "facial expression" },
+        { "word": "bestow", "pos": "verb", "definition": "to give as a gift or honor" },
+        { "word": "mantelpiece", "pos": "noun", "definition": "a shelf above a fireplace" },
+        { "word": "composure", "pos": "noun", "definition": "calm control of one's emotions" }
+      ]
+    }
+  ]
+}
