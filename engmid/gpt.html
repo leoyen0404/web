@@ -1,0 +1,1943 @@
+<!doctype html>
+<html lang="en" data-theme="light" data-density="comfortable" data-text="normal" data-layout="cards">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Exam Vocabulary Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+:root {
+  color-scheme: light;
+  --font-body: "Manrope", "Segoe UI", sans-serif;
+  --font-display: "Fraunces", "Georgia", serif;
+
+  --size-text-base: 16px;
+  --size-text-large: 17px;
+
+  --space-1: 0.375rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+
+  --radius-s: 0.75rem;
+  --radius-m: 1rem;
+  --radius-l: 1.25rem;
+  --radius-xl: 1.75rem;
+
+  --elevation-1: 0 1px 2px rgba(15, 23, 42, 0.08), 0 3px 6px rgba(15, 23, 42, 0.08);
+  --elevation-2: 0 6px 18px rgba(15, 23, 42, 0.12);
+
+  --md-sys-color-primary: #0f6b56;
+  --md-sys-color-on-primary: #ffffff;
+  --md-sys-color-primary-container: #b5f2df;
+  --md-sys-color-on-primary-container: #00392d;
+
+  --md-sys-color-secondary: #315d7f;
+  --md-sys-color-on-secondary: #ffffff;
+  --md-sys-color-secondary-container: #d3e9ff;
+  --md-sys-color-on-secondary-container: #113551;
+
+  --md-sys-color-tertiary: #6f4d1f;
+  --md-sys-color-on-tertiary: #ffffff;
+  --md-sys-color-tertiary-container: #f9deba;
+  --md-sys-color-on-tertiary-container: #3b2500;
+
+  --md-sys-color-surface: #f6faf8;
+  --md-sys-color-surface-variant: #e3ece8;
+  --md-sys-color-surface-container: #ffffff;
+  --md-sys-color-background: #eef5f1;
+
+  --md-sys-color-on-surface: #172119;
+  --md-sys-color-on-surface-variant: #3f4c43;
+  --md-sys-color-outline: #6e7e73;
+  --md-sys-color-error: #ba1a1a;
+
+  --gradient-bg: radial-gradient(circle at 10% 10%, #d6f4e8 0%, transparent 40%), radial-gradient(circle at 90% 20%, #d8ecff 0%, transparent 32%), linear-gradient(160deg, #eff7f3 0%, #e6f0ea 100%);
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+
+  --md-sys-color-primary: #6fd9bd;
+  --md-sys-color-on-primary: #00382d;
+  --md-sys-color-primary-container: #005141;
+  --md-sys-color-on-primary-container: #8df7d8;
+
+  --md-sys-color-secondary: #9ecbf2;
+  --md-sys-color-on-secondary: #003355;
+  --md-sys-color-secondary-container: #164971;
+  --md-sys-color-on-secondary-container: #d0e5ff;
+
+  --md-sys-color-tertiary: #e4c18f;
+  --md-sys-color-on-tertiary: #3f2d07;
+  --md-sys-color-tertiary-container: #574012;
+  --md-sys-color-on-tertiary-container: #ffdfab;
+
+  --md-sys-color-surface: #101714;
+  --md-sys-color-surface-variant: #24322b;
+  --md-sys-color-surface-container: #1a2520;
+  --md-sys-color-background: #09100d;
+
+  --md-sys-color-on-surface: #d9e6de;
+  --md-sys-color-on-surface-variant: #b8c8be;
+  --md-sys-color-outline: #8f9f95;
+  --md-sys-color-error: #ffb4ab;
+
+  --elevation-1: 0 1px 2px rgba(0, 0, 0, 0.3), 0 3px 6px rgba(0, 0, 0, 0.35);
+  --elevation-2: 0 8px 22px rgba(0, 0, 0, 0.45);
+  --gradient-bg: radial-gradient(circle at 15% 15%, #123328 0%, transparent 36%), radial-gradient(circle at 90% 8%, #15324d 0%, transparent 34%), linear-gradient(160deg, #0b120f 0%, #101a15 100%);
+}
+
+html[data-theme="contrast"] {
+  color-scheme: light;
+
+  --md-sys-color-primary: #005944;
+  --md-sys-color-on-primary: #ffffff;
+  --md-sys-color-primary-container: #00a079;
+  --md-sys-color-on-primary-container: #00150e;
+
+  --md-sys-color-secondary: #004e84;
+  --md-sys-color-on-secondary: #ffffff;
+  --md-sys-color-secondary-container: #7dc3ff;
+  --md-sys-color-on-secondary-container: #001423;
+
+  --md-sys-color-tertiary: #7d4b00;
+  --md-sys-color-on-tertiary: #ffffff;
+  --md-sys-color-tertiary-container: #f7b351;
+  --md-sys-color-on-tertiary-container: #2a1600;
+
+  --md-sys-color-surface: #ffffff;
+  --md-sys-color-surface-variant: #f1f4f2;
+  --md-sys-color-surface-container: #ffffff;
+  --md-sys-color-background: #e8eeeb;
+
+  --md-sys-color-on-surface: #0a0e0b;
+  --md-sys-color-on-surface-variant: #1f2922;
+  --md-sys-color-outline: #2d3b31;
+  --md-sys-color-error: #8f1111;
+}
+
+html[data-density="compact"] {
+  --space-4: 0.75rem;
+  --space-5: 1rem;
+  --space-6: 1.125rem;
+  --space-8: 1.5rem;
+}
+
+html[data-text="large"] {
+  --size-text-base: var(--size-text-large);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--size-text-base);
+  line-height: 1.55;
+  color: var(--md-sys-color-on-surface);
+  background: var(--gradient-bg);
+  min-height: 100vh;
+  padding: 0 var(--space-4) 5.25rem;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  line-height: 1.2;
+}
+
+p {
+  margin: 0;
+}
+
+button,
+select,
+input {
+  font: inherit;
+}
+
+.skip-link {
+  position: absolute;
+  left: -999px;
+  top: var(--space-3);
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-s);
+  z-index: 100;
+}
+
+.skip-link:focus {
+  left: var(--space-3);
+}
+
+.top-app-bar,
+.dashboard,
+.control-shell,
+.preference-shell,
+.main-shell {
+  width: min(1100px, 100%);
+  margin: 0 auto;
+}
+
+.top-app-bar {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-8) 0 var(--space-6);
+}
+
+.eyebrow {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  font-size: 0.75rem;
+  color: var(--md-sys-color-secondary);
+}
+
+.brand-block h1 {
+  font-size: clamp(1.9rem, 4vw, 2.6rem);
+  color: var(--md-sys-color-on-surface);
+  margin-top: var(--space-1);
+}
+
+.subtitle {
+  margin-top: var(--space-2);
+  color: var(--md-sys-color-on-surface-variant);
+  max-width: 50ch;
+}
+
+.view-tabs {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.tab-button,
+.mobile-nav-button,
+.text-button,
+.filled-button,
+.tonal-button,
+.outline-button,
+.bookmark-button {
+  border: 0;
+  border-radius: var(--radius-m);
+  min-height: 44px;
+  padding: 0.55rem 0.95rem;
+  cursor: pointer;
+  transition: transform 160ms ease, background-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
+}
+
+.tab-button {
+  background: var(--md-sys-color-surface-container);
+  color: var(--md-sys-color-on-surface-variant);
+  border: 1px solid var(--md-sys-color-outline);
+}
+
+.tab-button.is-active,
+.mobile-nav-button.is-active {
+  background: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+  border-color: transparent;
+}
+
+.dashboard {
+  background: var(--md-sys-color-surface-container);
+  border: 1px solid color-mix(in srgb, var(--md-sys-color-outline) 42%, transparent);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  box-shadow: var(--elevation-1);
+}
+
+.section-heading {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.section-heading h2 {
+  font-size: clamp(1.35rem, 3vw, 1.65rem);
+}
+
+#statusMessage {
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.stats-grid {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+.stat-card {
+  background: var(--md-sys-color-surface-variant);
+  border-radius: var(--radius-l);
+  padding: var(--space-4);
+  border: 1px solid color-mix(in srgb, var(--md-sys-color-outline) 32%, transparent);
+}
+
+.stat-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.stat-value {
+  margin-top: var(--space-2);
+  font-size: clamp(1.3rem, 3vw, 1.85rem);
+  font-weight: 700;
+}
+
+.unit-performance {
+  margin-top: var(--space-6);
+}
+
+.unit-performance h3 {
+  font-size: 1.15rem;
+  margin-bottom: var(--space-3);
+}
+
+.unit-row {
+  display: grid;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.unit-row-head {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  align-items: baseline;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.9rem;
+}
+
+.mastery-track,
+.progress-track {
+  width: 100%;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--md-sys-color-outline) 24%, transparent);
+  overflow: hidden;
+  height: 0.56rem;
+}
+
+.mastery-fill,
+.progress-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--md-sys-color-primary), var(--md-sys-color-secondary));
+}
+
+.control-shell,
+.preference-shell,
+.main-shell {
+  margin-top: var(--space-5);
+}
+
+.control-shell,
+.preference-shell {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.control-group {
+  display: grid;
+  gap: var(--space-2);
+  background: var(--md-sys-color-surface-container);
+  border: 1px solid color-mix(in srgb, var(--md-sys-color-outline) 38%, transparent);
+  border-radius: var(--radius-l);
+  padding: var(--space-4);
+  box-shadow: var(--elevation-1);
+}
+
+.control-group-wide {
+  grid-column: 1 / -1;
+}
+
+.control-group label {
+  font-weight: 700;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.9rem;
+}
+
+.control-group input,
+.control-group select {
+  border: 1px solid var(--md-sys-color-outline);
+  background: var(--md-sys-color-surface);
+  border-radius: var(--radius-s);
+  color: var(--md-sys-color-on-surface);
+  padding: 0.68rem 0.75rem;
+  min-height: 44px;
+}
+
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.checkbox-group label {
+  font-weight: 600;
+}
+
+.checkbox-group input {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.compact-heading {
+  margin-bottom: var(--space-4);
+}
+
+.view-panel {
+  background: var(--md-sys-color-surface-container);
+  border: 1px solid color-mix(in srgb, var(--md-sys-color-outline) 42%, transparent);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--elevation-1);
+  padding: var(--space-6);
+}
+
+.view-panel + .view-panel {
+  margin-top: var(--space-4);
+}
+
+.view-panel[hidden] {
+  display: none;
+}
+
+.word-list {
+  display: grid;
+  gap: var(--space-3);
+}
+
+html[data-layout="cards"] .word-list {
+  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+}
+
+html[data-layout="list"] .word-list {
+  grid-template-columns: 1fr;
+}
+
+.word-card {
+  border-radius: var(--radius-l);
+  border: 1px solid color-mix(in srgb, var(--md-sys-color-outline) 38%, transparent);
+  background: var(--md-sys-color-surface);
+  padding: var(--space-4);
+  display: grid;
+  gap: var(--space-3);
+}
+
+.word-card-header {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+  align-items: start;
+}
+
+.word-title {
+  font-size: 1.2rem;
+}
+
+.word-card .chip-line {
+  margin-top: var(--space-1);
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.88rem;
+}
+
+.word-definition {
+  color: var(--md-sys-color-on-surface);
+}
+
+.tags {
+  display: flex;
+  gap: var(--space-1);
+  flex-wrap: wrap;
+}
+
+.tag {
+  border-radius: 999px;
+  background: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+  font-size: 0.79rem;
+  padding: 0.24rem 0.58rem;
+  font-weight: 700;
+}
+
+.word-card-footer {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.progress-text {
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.84rem;
+}
+
+.card-actions,
+.review-buttons,
+.review-actions {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.filled-button {
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+}
+
+.filled-button.alt {
+  background: var(--md-sys-color-secondary);
+  color: var(--md-sys-color-on-secondary);
+}
+
+.tonal-button {
+  background: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+}
+
+.outline-button,
+.text-button,
+.bookmark-button {
+  background: transparent;
+  color: var(--md-sys-color-on-surface-variant);
+  border: 1px solid var(--md-sys-color-outline);
+}
+
+.bookmark-button.is-saved {
+  color: var(--md-sys-color-on-tertiary-container);
+  background: var(--md-sys-color-tertiary-container);
+  border-color: transparent;
+}
+
+.review-card,
+.word-detail {
+  border-radius: var(--radius-l);
+  border: 1px solid color-mix(in srgb, var(--md-sys-color-outline) 36%, transparent);
+  background: var(--md-sys-color-surface);
+  padding: var(--space-5);
+}
+
+.review-label {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.79rem;
+  color: var(--md-sys-color-on-surface-variant);
+  font-weight: 700;
+}
+
+#reviewWord {
+  margin-top: var(--space-2);
+  font-size: clamp(1.7rem, 6vw, 2.2rem);
+}
+
+.review-definition {
+  margin-top: var(--space-4);
+  font-size: 1.04rem;
+}
+
+.word-detail h2 {
+  font-size: clamp(1.65rem, 5vw, 2.3rem);
+}
+
+.detail-meta {
+  margin-top: var(--space-3);
+  display: grid;
+  gap: var(--space-2);
+}
+
+.detail-block {
+  margin-top: var(--space-5);
+  display: grid;
+  gap: var(--space-2);
+}
+
+.detail-actions {
+  margin-top: var(--space-5);
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.mobile-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3) calc(env(safe-area-inset-bottom) + var(--space-2));
+  background: color-mix(in srgb, var(--md-sys-color-surface-container) 92%, transparent);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid color-mix(in srgb, var(--md-sys-color-outline) 40%, transparent);
+}
+
+.mobile-nav-button {
+  flex: 1;
+  max-width: 260px;
+  background: var(--md-sys-color-surface);
+  border: 1px solid var(--md-sys-color-outline);
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+button:hover,
+button:focus-visible,
+select:focus-visible,
+input:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--md-sys-color-primary) 35%, transparent);
+}
+
+button:hover {
+  transform: translateY(-1px);
+}
+
+.empty-state,
+.error-state {
+  border-radius: var(--radius-l);
+  border: 1px dashed var(--md-sys-color-outline);
+  padding: var(--space-5);
+  background: color-mix(in srgb, var(--md-sys-color-surface-variant) 58%, transparent);
+}
+
+.error-state {
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--md-sys-color-error) 55%, transparent);
+  color: var(--md-sys-color-error);
+}
+
+@media (min-width: 760px) {
+  body {
+    padding-left: var(--space-6);
+    padding-right: var(--space-6);
+    padding-bottom: var(--space-8);
+  }
+
+  .top-app-bar {
+    grid-template-columns: 1fr auto;
+    align-items: end;
+  }
+
+  .control-shell,
+  .preference-shell {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .mobile-nav {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  button:hover {
+    transform: none;
+  }
+}
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to content</a>
+
+  <header class="top-app-bar" role="banner">
+    <div class="brand-block">
+      <p class="eyebrow">Exam Toolkit</p>
+      <h1>Vocabulary Studio</h1>
+      <p class="subtitle">Search, review, and master every word from all units.</p>
+    </div>
+
+    <nav class="view-tabs" aria-label="Main views">
+      <button class="tab-button is-active" data-view-target="library" aria-controls="libraryView" aria-pressed="true">Library</button>
+      <button class="tab-button" data-view-target="review" aria-controls="reviewView" aria-pressed="false">Review</button>
+    </nav>
+  </header>
+
+  <section class="dashboard" aria-labelledby="dashboard-title">
+    <div class="section-heading">
+      <h2 id="dashboard-title">Review Performance</h2>
+      <p id="statusMessage" role="status" aria-live="polite">Loading vocabulary data...</p>
+    </div>
+
+    <div class="stats-grid" id="statsGrid" aria-live="polite"></div>
+
+    <section class="unit-performance" aria-labelledby="unit-performance-title">
+      <h3 id="unit-performance-title">Unit Mastery</h3>
+      <div id="unitPerformanceList"></div>
+    </section>
+  </section>
+
+  <section class="control-shell" aria-label="Filters and display options">
+    <div class="control-group control-group-wide">
+      <label for="searchInput">Search vocabulary</label>
+      <input id="searchInput" name="search" type="search" placeholder="Search word, definition, or unit" autocomplete="off">
+    </div>
+
+    <div class="control-group">
+      <label for="unitFilter">Unit</label>
+      <select id="unitFilter" name="unit"></select>
+    </div>
+
+    <div class="control-group">
+      <label for="listTypeFilter">List type</label>
+      <select id="listTypeFilter" name="listType">
+        <option value="all">All</option>
+        <option value="vocabulary_preview">Vocabulary Preview</option>
+        <option value="nawl">NAWL</option>
+      </select>
+    </div>
+
+    <div class="control-group">
+      <label for="posFilter">Part of speech</label>
+      <select id="posFilter" name="pos"></select>
+    </div>
+
+    <div class="control-group">
+      <label for="sortSelect">Sort by</label>
+      <select id="sortSelect" name="sortBy">
+        <option value="alpha">Word A-Z</option>
+        <option value="unit">Unit</option>
+        <option value="pos">Part of speech</option>
+        <option value="weakest">Weakest first</option>
+      </select>
+    </div>
+
+    <div class="control-group checkbox-group">
+      <input id="showBookmarkedOnly" type="checkbox">
+      <label for="showBookmarkedOnly">Bookmarked only</label>
+    </div>
+  </section>
+
+  <section class="preference-shell" aria-label="View customization">
+    <div class="control-group">
+      <label for="layoutMode">Layout mode</label>
+      <select id="layoutMode" name="layoutMode">
+        <option value="cards">Cards</option>
+        <option value="list">List</option>
+      </select>
+    </div>
+
+    <div class="control-group">
+      <label for="densityMode">Density</label>
+      <select id="densityMode" name="densityMode">
+        <option value="comfortable">Comfortable</option>
+        <option value="compact">Compact</option>
+      </select>
+    </div>
+
+    <div class="control-group">
+      <label for="textMode">Text size</label>
+      <select id="textMode" name="textMode">
+        <option value="normal">Standard</option>
+        <option value="large">Large</option>
+      </select>
+    </div>
+
+    <div class="control-group">
+      <label for="themeMode">Theme</label>
+      <select id="themeMode" name="themeMode">
+        <option value="light">Light</option>
+        <option value="dark">Dark</option>
+        <option value="contrast">High Contrast</option>
+      </select>
+    </div>
+  </section>
+
+  <main id="main-content" class="main-shell">
+    <section id="libraryView" class="view-panel is-active" aria-labelledby="library-heading">
+      <div class="section-heading compact-heading">
+        <h2 id="library-heading">Vocabulary Library</h2>
+        <p id="resultMeta" aria-live="polite"></p>
+      </div>
+      <div id="wordList" class="word-list" role="list"></div>
+    </section>
+
+    <section id="reviewView" class="view-panel" aria-labelledby="review-heading" hidden>
+      <div class="section-heading compact-heading">
+        <h2 id="review-heading">Focused Review</h2>
+        <p>Practice from your current filtered set. Hard words are shown first.</p>
+      </div>
+
+      <div class="review-actions">
+        <button id="startReviewButton" class="filled-button">Start review</button>
+        <p id="reviewMeta" aria-live="polite">No active session.</p>
+      </div>
+
+      <article id="reviewCard" class="review-card" hidden>
+        <p class="review-label">Word</p>
+        <h3 id="reviewWord"></h3>
+        <p id="reviewPos" class="chip-line"></p>
+        <p id="reviewDefinition" class="review-definition" hidden></p>
+
+        <div class="review-buttons">
+          <button id="revealAnswerButton" class="tonal-button">Reveal meaning</button>
+          <button id="againButton" class="outline-button" hidden>Again</button>
+          <button id="goodButton" class="filled-button" hidden>Good</button>
+          <button id="easyButton" class="filled-button alt" hidden>Easy</button>
+        </div>
+      </article>
+    </section>
+
+    <section id="detailView" class="view-panel" aria-labelledby="detail-heading" hidden>
+      <button id="backToLibraryButton" class="text-button" type="button">Back to library</button>
+      <article id="wordDetail" class="word-detail" aria-live="polite"></article>
+    </section>
+  </main>
+
+  <nav class="mobile-nav" aria-label="Mobile navigation">
+    <button class="mobile-nav-button is-active" data-view-target="library" aria-controls="libraryView">Library</button>
+    <button class="mobile-nav-button" data-view-target="review" aria-controls="reviewView">Review</button>
+  </nav>
+
+  <template id="wordCardTemplate">
+    <article class="word-card" role="listitem">
+      <header class="word-card-header">
+        <div>
+          <h3 class="word-title"></h3>
+          <p class="chip-line"></p>
+        </div>
+        <button class="bookmark-button" type="button" aria-label="Bookmark word">Save</button>
+      </header>
+
+      <p class="word-definition"></p>
+
+      <footer class="word-card-footer">
+        <div class="tags"></div>
+        <div class="progress-area">
+          <p class="progress-text"></p>
+          <div class="progress-track" aria-hidden="true">
+            <span class="progress-fill"></span>
+          </div>
+        </div>
+      </footer>
+
+      <div class="card-actions">
+        <button class="outline-button mark-again" type="button">Needs review</button>
+        <button class="filled-button mark-good" type="button">Known</button>
+      </div>
+    </article>
+  </template>
+
+  <script>
+const STORAGE_KEYS = {
+  progress: "vocab-studio-progress-v1",
+  settings: "vocab-studio-settings-v1"
+};
+
+const DEFAULT_SETTINGS = {
+  layout: "cards",
+  density: "comfortable",
+  text: "normal",
+  theme: "light"
+};
+
+const DEFAULT_FILTERS = {
+  search: "",
+  unit: "all",
+  listType: "all",
+  pos: "all",
+  sortBy: "alpha",
+  bookmarkedOnly: false
+};
+
+const VIEW_IDS = {
+  library: "libraryView",
+  review: "reviewView",
+  detail: "detailView"
+};
+
+const state = {
+  units: [],
+  words: [],
+  filteredWords: [],
+  wordMap: new Map(),
+  progress: loadStateObject(STORAGE_KEYS.progress),
+  settings: sanitizeSettings(loadStateObject(STORAGE_KEYS.settings)),
+  filters: { ...DEFAULT_FILTERS },
+  activeView: "library",
+  selectedWordId: null,
+  review: {
+    active: false,
+    queue: [],
+    index: 0,
+    revealed: false,
+    sessionSeen: 0,
+    sessionCorrect: 0
+  }
+};
+
+const dom = {
+  html: document.documentElement,
+  statusMessage: document.getElementById("statusMessage"),
+  statsGrid: document.getElementById("statsGrid"),
+  unitPerformanceList: document.getElementById("unitPerformanceList"),
+  searchInput: document.getElementById("searchInput"),
+  unitFilter: document.getElementById("unitFilter"),
+  listTypeFilter: document.getElementById("listTypeFilter"),
+  posFilter: document.getElementById("posFilter"),
+  sortSelect: document.getElementById("sortSelect"),
+  showBookmarkedOnly: document.getElementById("showBookmarkedOnly"),
+  layoutMode: document.getElementById("layoutMode"),
+  densityMode: document.getElementById("densityMode"),
+  textMode: document.getElementById("textMode"),
+  themeMode: document.getElementById("themeMode"),
+  resultMeta: document.getElementById("resultMeta"),
+  wordList: document.getElementById("wordList"),
+  wordCardTemplate: document.getElementById("wordCardTemplate"),
+  reviewMeta: document.getElementById("reviewMeta"),
+  startReviewButton: document.getElementById("startReviewButton"),
+  reviewCard: document.getElementById("reviewCard"),
+  reviewWord: document.getElementById("reviewWord"),
+  reviewPos: document.getElementById("reviewPos"),
+  reviewDefinition: document.getElementById("reviewDefinition"),
+  revealAnswerButton: document.getElementById("revealAnswerButton"),
+  againButton: document.getElementById("againButton"),
+  goodButton: document.getElementById("goodButton"),
+  easyButton: document.getElementById("easyButton"),
+  backToLibraryButton: document.getElementById("backToLibraryButton"),
+  wordDetail: document.getElementById("wordDetail"),
+  tabButtons: Array.from(document.querySelectorAll("[data-view-target]")),
+  viewPanels: {
+    library: document.getElementById(VIEW_IDS.library),
+    review: document.getElementById(VIEW_IDS.review),
+    detail: document.getElementById(VIEW_IDS.detail)
+  }
+};
+
+document.addEventListener("DOMContentLoaded", init);
+window.addEventListener("hashchange", handleHashRoute);
+
+async function init() {
+  bindEvents();
+  hydrateControls();
+  applySettings();
+  renderEmptyStats();
+
+  try {
+    await loadVocabulary();
+    handleHashRoute();
+  } catch (error) {
+    showLoadError(error instanceof Error ? error.message : "Unable to load vocabulary.");
+  }
+}
+
+function bindEvents() {
+  dom.tabButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const targetView = button.dataset.viewTarget;
+      if (!targetView) {
+        return;
+      }
+
+      if (targetView === "library" || targetView === "review") {
+        setActiveView(targetView, { clearHash: true });
+      }
+    });
+  });
+
+  dom.searchInput.addEventListener("input", (event) => {
+    state.filters.search = event.target.value.trim();
+    refreshFilteredView();
+  });
+
+  dom.unitFilter.addEventListener("change", (event) => {
+    state.filters.unit = event.target.value;
+    refreshFilteredView();
+  });
+
+  dom.listTypeFilter.addEventListener("change", (event) => {
+    state.filters.listType = event.target.value;
+    refreshFilteredView();
+  });
+
+  dom.posFilter.addEventListener("change", (event) => {
+    state.filters.pos = event.target.value;
+    refreshFilteredView();
+  });
+
+  dom.sortSelect.addEventListener("change", (event) => {
+    state.filters.sortBy = event.target.value;
+    refreshFilteredView();
+  });
+
+  dom.showBookmarkedOnly.addEventListener("change", (event) => {
+    state.filters.bookmarkedOnly = event.target.checked;
+    refreshFilteredView();
+  });
+
+  dom.layoutMode.addEventListener("change", (event) => {
+    state.settings.layout = event.target.value;
+    saveStateObject(STORAGE_KEYS.settings, state.settings);
+    applySettings();
+  });
+
+  dom.densityMode.addEventListener("change", (event) => {
+    state.settings.density = event.target.value;
+    saveStateObject(STORAGE_KEYS.settings, state.settings);
+    applySettings();
+  });
+
+  dom.textMode.addEventListener("change", (event) => {
+    state.settings.text = event.target.value;
+    saveStateObject(STORAGE_KEYS.settings, state.settings);
+    applySettings();
+  });
+
+  dom.themeMode.addEventListener("change", (event) => {
+    state.settings.theme = event.target.value;
+    saveStateObject(STORAGE_KEYS.settings, state.settings);
+    applySettings();
+  });
+
+  dom.wordList.addEventListener("click", onWordListClick);
+  dom.wordList.addEventListener("keydown", onWordListKeyboardOpen);
+
+  dom.startReviewButton.addEventListener("click", startReviewSession);
+  dom.revealAnswerButton.addEventListener("click", revealCurrentReviewAnswer);
+  dom.againButton.addEventListener("click", () => submitReviewResult(false));
+  dom.goodButton.addEventListener("click", () => submitReviewResult(true));
+  dom.easyButton.addEventListener("click", () => submitReviewResult(true));
+
+  dom.backToLibraryButton.addEventListener("click", () => {
+    setActiveView("library", { clearHash: true });
+  });
+
+  dom.wordDetail.addEventListener("click", (event) => {
+    const actionButton = event.target.closest("button[data-detail-action]");
+    if (!actionButton || !state.selectedWordId) {
+      return;
+    }
+
+    const action = actionButton.dataset.detailAction;
+    if (action === "good") {
+      applyReviewResult(state.selectedWordId, true);
+    } else if (action === "again") {
+      applyReviewResult(state.selectedWordId, false);
+    } else if (action === "bookmark") {
+      toggleBookmark(state.selectedWordId);
+    } else if (action === "open-related") {
+      const relatedId = actionButton.dataset.relatedId;
+      if (relatedId) {
+        openDetailView(relatedId, true);
+      }
+    }
+  });
+}
+
+function hydrateControls() {
+  dom.layoutMode.value = state.settings.layout;
+  dom.densityMode.value = state.settings.density;
+  dom.textMode.value = state.settings.text;
+  dom.themeMode.value = state.settings.theme;
+
+  dom.sortSelect.value = state.filters.sortBy;
+  dom.showBookmarkedOnly.checked = state.filters.bookmarkedOnly;
+
+  setSelectOptions(dom.unitFilter, [{ value: "all", label: "All units" }]);
+  setSelectOptions(dom.posFilter, [{ value: "all", label: "All parts of speech" }]);
+}
+
+function applySettings() {
+  dom.html.dataset.layout = state.settings.layout;
+  dom.html.dataset.density = state.settings.density;
+  dom.html.dataset.text = state.settings.text;
+  dom.html.dataset.theme = state.settings.theme;
+}
+
+async function loadVocabulary() {
+  const response = await fetch("./vocab.json", { cache: "no-store" });
+  if (!response.ok) {
+    throw new Error("Could not fetch vocab.json. Confirm it is in the same folder as this page.");
+  }
+
+  const payload = await response.json();
+  if (!payload || !Array.isArray(payload.units)) {
+    throw new Error("Invalid data format. Expected an object with a units array.");
+  }
+
+  state.units = payload.units;
+  state.words = flattenWords(payload.units);
+  state.wordMap = new Map(state.words.map((word) => [word.id, word]));
+
+  populateFilterOptions();
+  refreshFilteredView();
+  updateDashboard();
+
+  setStatus(`Loaded ${state.words.length} words from ${state.units.length} units.`);
+}
+
+function flattenWords(units) {
+  const allWords = [];
+
+  units.forEach((unit, unitIndex) => {
+    const unitTitle = normalizeText(unit.title) || `Unit ${unitIndex + 1}`;
+
+    ["vocabulary_preview", "nawl"].forEach((listType) => {
+      const entries = Array.isArray(unit[listType]) ? unit[listType] : [];
+
+      entries.forEach((entry, entryIndex) => {
+        const word = normalizeText(entry.word);
+        const pos = normalizeText(entry.pos).toLowerCase() || "unknown";
+        const definition = normalizeText(entry.definition);
+
+        if (!word || !definition) {
+          return;
+        }
+
+        const id = `${unitIndex}-${listType}-${entryIndex}-${slugify(word)}`;
+        allWords.push({
+          id,
+          word,
+          pos,
+          definition,
+          unitTitle,
+          listType
+        });
+      });
+    });
+  });
+
+  return allWords;
+}
+
+function populateFilterOptions() {
+  const unitOptions = [
+    { value: "all", label: "All units" },
+    ...state.units.map((unit, index) => ({
+      value: unit.title || `Unit ${index + 1}`,
+      label: unit.title || `Unit ${index + 1}`
+    }))
+  ];
+
+  const uniquePos = Array.from(new Set(state.words.map((word) => word.pos))).sort((a, b) => a.localeCompare(b));
+  const posOptions = [{ value: "all", label: "All parts of speech" }].concat(
+    uniquePos.map((pos) => ({ value: pos, label: capitalize(pos) }))
+  );
+
+  setSelectOptions(dom.unitFilter, unitOptions);
+  setSelectOptions(dom.posFilter, posOptions);
+}
+
+function refreshFilteredView() {
+  const query = state.filters.search.toLowerCase();
+
+  state.filteredWords = state.words.filter((word) => {
+    const progress = getWordProgress(word.id);
+
+    if (state.filters.unit !== "all" && word.unitTitle !== state.filters.unit) {
+      return false;
+    }
+
+    if (state.filters.listType !== "all" && word.listType !== state.filters.listType) {
+      return false;
+    }
+
+    if (state.filters.pos !== "all" && word.pos !== state.filters.pos) {
+      return false;
+    }
+
+    if (state.filters.bookmarkedOnly && !progress.bookmarked) {
+      return false;
+    }
+
+    if (query) {
+      const searchTarget = `${word.word} ${word.definition} ${word.unitTitle}`.toLowerCase();
+      if (!searchTarget.includes(query)) {
+        return false;
+      }
+    }
+
+    return true;
+  });
+
+  sortWords(state.filteredWords, state.filters.sortBy);
+  renderWordList();
+  renderResultMeta();
+  renderReviewMeta();
+}
+
+function renderWordList() {
+  dom.wordList.innerHTML = "";
+
+  if (!state.filteredWords.length) {
+    const empty = document.createElement("div");
+    empty.className = "empty-state";
+    empty.textContent = "No words match your current filters.";
+    dom.wordList.append(empty);
+    return;
+  }
+
+  const fragment = document.createDocumentFragment();
+
+  state.filteredWords.forEach((word) => {
+    const progress = getWordProgress(word.id);
+    const totalAttempts = progress.correct + progress.incorrect;
+    const ratio = totalAttempts > 0 ? progress.correct / totalAttempts : 0;
+
+    const card = dom.wordCardTemplate.content.firstElementChild.cloneNode(true);
+    card.dataset.wordId = word.id;
+    card.tabIndex = 0;
+
+    const wordTitle = card.querySelector(".word-title");
+    const chipLine = card.querySelector(".chip-line");
+    const definition = card.querySelector(".word-definition");
+    const tags = card.querySelector(".tags");
+    const progressText = card.querySelector(".progress-text");
+    const progressFill = card.querySelector(".progress-fill");
+    const bookmarkButton = card.querySelector(".bookmark-button");
+
+    wordTitle.textContent = word.word;
+    chipLine.textContent = capitalize(word.pos);
+    definition.textContent = word.definition;
+
+    tags.append(
+      createTag(word.unitTitle),
+      createTag(formatListType(word.listType))
+    );
+
+    progressText.textContent = totalAttempts
+      ? `Accuracy ${formatPercent(ratio)} from ${totalAttempts} checks`
+      : "Not reviewed yet";
+    progressFill.style.width = `${Math.max(8, Math.round(ratio * 100))}%`;
+
+    if (!totalAttempts) {
+      progressFill.style.width = "8%";
+      progressFill.style.opacity = "0.35";
+    } else {
+      progressFill.style.opacity = "1";
+    }
+
+    bookmarkButton.classList.toggle("is-saved", Boolean(progress.bookmarked));
+    bookmarkButton.textContent = progress.bookmarked ? "Saved" : "Save";
+
+    fragment.append(card);
+  });
+
+  dom.wordList.append(fragment);
+}
+
+function onWordListClick(event) {
+  const card = event.target.closest(".word-card");
+  if (!card) {
+    return;
+  }
+
+  const wordId = card.dataset.wordId;
+  if (!wordId) {
+    return;
+  }
+
+  if (event.target.closest(".bookmark-button")) {
+    toggleBookmark(wordId);
+    return;
+  }
+
+  if (event.target.closest(".mark-good")) {
+    applyReviewResult(wordId, true);
+    return;
+  }
+
+  if (event.target.closest(".mark-again")) {
+    applyReviewResult(wordId, false);
+    return;
+  }
+
+  openDetailView(wordId, true);
+}
+
+function onWordListKeyboardOpen(event) {
+  const card = event.target.closest(".word-card");
+  if (!card) {
+    return;
+  }
+
+  if (event.key !== "Enter" && event.key !== " ") {
+    return;
+  }
+
+  if (event.target.closest("button")) {
+    return;
+  }
+
+  event.preventDefault();
+  const wordId = card.dataset.wordId;
+  if (wordId) {
+    openDetailView(wordId, true);
+  }
+}
+
+function renderResultMeta() {
+  const total = state.words.length;
+  const filtered = state.filteredWords.length;
+  const activeFilters = [];
+
+  if (state.filters.unit !== "all") {
+    activeFilters.push(state.filters.unit);
+  }
+
+  if (state.filters.listType !== "all") {
+    activeFilters.push(formatListType(state.filters.listType));
+  }
+
+  if (state.filters.pos !== "all") {
+    activeFilters.push(capitalize(state.filters.pos));
+  }
+
+  if (state.filters.bookmarkedOnly) {
+    activeFilters.push("Bookmarked");
+  }
+
+  if (state.filters.search) {
+    activeFilters.push(`Search: ${state.filters.search}`);
+  }
+
+  const filterText = activeFilters.length ? ` | Filters: ${activeFilters.join(", ")}` : "";
+  dom.resultMeta.textContent = `${filtered} words shown of ${total}${filterText}`;
+}
+
+function renderEmptyStats() {
+  const fallbackStats = [
+    { label: "Total", value: "0" },
+    { label: "Reviewed", value: "0" },
+    { label: "Mastered", value: "0" },
+    { label: "Accuracy", value: "0%" }
+  ];
+
+  dom.statsGrid.innerHTML = "";
+  fallbackStats.forEach((item) => {
+    dom.statsGrid.append(createStatCard(item.label, item.value));
+  });
+
+  dom.unitPerformanceList.innerHTML = "";
+}
+
+function updateDashboard() {
+  const total = state.words.length;
+
+  let reviewed = 0;
+  let mastered = 0;
+  let correct = 0;
+  let incorrect = 0;
+
+  state.words.forEach((word) => {
+    const progress = getWordProgress(word.id);
+    const attempts = progress.correct + progress.incorrect;
+
+    if (attempts > 0) {
+      reviewed += 1;
+    }
+
+    if (attempts >= 3 && progress.correct / attempts >= 0.85) {
+      mastered += 1;
+    }
+
+    correct += progress.correct;
+    incorrect += progress.incorrect;
+  });
+
+  const accuracy = correct + incorrect > 0 ? correct / (correct + incorrect) : 0;
+
+  const cards = [
+    { label: "Total words", value: String(total) },
+    { label: "Reviewed", value: String(reviewed) },
+    { label: "Mastered", value: String(mastered) },
+    { label: "Accuracy", value: formatPercent(accuracy) },
+    { label: "Unseen", value: String(Math.max(0, total - reviewed)) },
+    { label: "Checks", value: String(correct + incorrect) }
+  ];
+
+  dom.statsGrid.innerHTML = "";
+  cards.forEach((item) => {
+    dom.statsGrid.append(createStatCard(item.label, item.value));
+  });
+
+  renderUnitPerformance();
+}
+
+function renderUnitPerformance() {
+  const groupedByUnit = new Map();
+
+  state.words.forEach((word) => {
+    if (!groupedByUnit.has(word.unitTitle)) {
+      groupedByUnit.set(word.unitTitle, {
+        total: 0,
+        reviewed: 0,
+        mastered: 0,
+        correct: 0,
+        incorrect: 0
+      });
+    }
+
+    const bucket = groupedByUnit.get(word.unitTitle);
+    const progress = getWordProgress(word.id);
+    const attempts = progress.correct + progress.incorrect;
+
+    bucket.total += 1;
+    bucket.correct += progress.correct;
+    bucket.incorrect += progress.incorrect;
+
+    if (attempts > 0) {
+      bucket.reviewed += 1;
+    }
+
+    if (attempts >= 3 && progress.correct / attempts >= 0.85) {
+      bucket.mastered += 1;
+    }
+  });
+
+  const rows = Array.from(groupedByUnit.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+
+  dom.unitPerformanceList.innerHTML = "";
+
+  if (!rows.length) {
+    return;
+  }
+
+  rows.forEach(([unitTitle, metrics]) => {
+    const masteryRatio = metrics.total > 0 ? metrics.mastered / metrics.total : 0;
+    const reviewRatio = metrics.total > 0 ? metrics.reviewed / metrics.total : 0;
+
+    const row = document.createElement("div");
+    row.className = "unit-row";
+
+    const rowHead = document.createElement("div");
+    rowHead.className = "unit-row-head";
+
+    const title = document.createElement("span");
+    title.textContent = unitTitle;
+
+    const label = document.createElement("span");
+    label.textContent = `Reviewed ${formatPercent(reviewRatio)} | Mastered ${metrics.mastered}/${metrics.total}`;
+
+    rowHead.append(title, label);
+
+    const track = document.createElement("div");
+    track.className = "mastery-track";
+
+    const fill = document.createElement("span");
+    fill.className = "mastery-fill";
+    fill.style.width = `${Math.round(masteryRatio * 100)}%`;
+
+    track.append(fill);
+    row.append(rowHead, track);
+    dom.unitPerformanceList.append(row);
+  });
+}
+
+function createStatCard(label, value) {
+  const card = document.createElement("article");
+  card.className = "stat-card";
+
+  const labelNode = document.createElement("p");
+  labelNode.className = "stat-label";
+  labelNode.textContent = label;
+
+  const valueNode = document.createElement("p");
+  valueNode.className = "stat-value";
+  valueNode.textContent = value;
+
+  card.append(labelNode, valueNode);
+  return card;
+}
+
+function startReviewSession() {
+  if (!state.filteredWords.length) {
+    dom.reviewMeta.textContent = "No words available for review under current filters.";
+    dom.reviewCard.hidden = true;
+    return;
+  }
+
+  const queue = [...state.filteredWords];
+  sortWords(queue, "weakest");
+
+  state.review.active = true;
+  state.review.queue = queue;
+  state.review.index = 0;
+  state.review.revealed = false;
+  state.review.sessionSeen = 0;
+  state.review.sessionCorrect = 0;
+
+  setActiveView("review", { clearHash: true });
+  renderReviewCard();
+  renderReviewMeta();
+}
+
+function renderReviewMeta() {
+  if (!state.review.active) {
+    dom.reviewMeta.textContent = `${state.filteredWords.length} words ready based on current filters.`;
+    return;
+  }
+
+  const total = state.review.queue.length;
+  const current = Math.min(state.review.index + 1, total);
+  const sessionAccuracy = state.review.sessionSeen
+    ? state.review.sessionCorrect / state.review.sessionSeen
+    : 0;
+
+  dom.reviewMeta.textContent = `Card ${current}/${total} | Session accuracy ${formatPercent(sessionAccuracy)}`;
+}
+
+function renderReviewCard() {
+  const word = state.review.queue[state.review.index];
+
+  if (!state.review.active || !word) {
+    state.review.active = false;
+    dom.reviewCard.hidden = true;
+    dom.reviewMeta.textContent = "Review complete. Start another session when ready.";
+    return;
+  }
+
+  dom.reviewCard.hidden = false;
+  dom.reviewWord.textContent = word.word;
+  dom.reviewPos.textContent = `${capitalize(word.pos)} | ${word.unitTitle} | ${formatListType(word.listType)}`;
+  dom.reviewDefinition.textContent = word.definition;
+  dom.reviewDefinition.hidden = !state.review.revealed;
+
+  dom.revealAnswerButton.hidden = state.review.revealed;
+  dom.againButton.hidden = !state.review.revealed;
+  dom.goodButton.hidden = !state.review.revealed;
+  dom.easyButton.hidden = !state.review.revealed;
+}
+
+function revealCurrentReviewAnswer() {
+  if (!state.review.active) {
+    return;
+  }
+
+  state.review.revealed = true;
+  renderReviewCard();
+}
+
+function submitReviewResult(isCorrect) {
+  if (!state.review.active) {
+    return;
+  }
+
+  const word = state.review.queue[state.review.index];
+  if (!word) {
+    return;
+  }
+
+  applyReviewResult(word.id, isCorrect);
+
+  state.review.sessionSeen += 1;
+  if (isCorrect) {
+    state.review.sessionCorrect += 1;
+  }
+
+  state.review.index += 1;
+  state.review.revealed = false;
+
+  if (state.review.index >= state.review.queue.length) {
+    state.review.active = false;
+  }
+
+  renderReviewCard();
+  renderReviewMeta();
+}
+
+function applyReviewResult(wordId, isCorrect) {
+  const progress = getWordProgress(wordId);
+  progress.seen += 1;
+
+  if (isCorrect) {
+    progress.correct += 1;
+  } else {
+    progress.incorrect += 1;
+  }
+
+  progress.lastReviewed = Date.now();
+  state.progress[wordId] = progress;
+
+  saveStateObject(STORAGE_KEYS.progress, state.progress);
+  refreshFilteredView();
+  updateDashboard();
+
+  if (state.selectedWordId === wordId) {
+    renderDetailWord(wordId);
+  }
+}
+
+function toggleBookmark(wordId) {
+  const progress = getWordProgress(wordId);
+  progress.bookmarked = !progress.bookmarked;
+  state.progress[wordId] = progress;
+
+  saveStateObject(STORAGE_KEYS.progress, state.progress);
+  refreshFilteredView();
+  updateDashboard();
+
+  if (state.selectedWordId === wordId) {
+    renderDetailWord(wordId);
+  }
+}
+
+function getWordProgress(wordId) {
+  const current = state.progress[wordId];
+
+  if (current) {
+    return {
+      seen: Number(current.seen) || 0,
+      correct: Number(current.correct) || 0,
+      incorrect: Number(current.incorrect) || 0,
+      bookmarked: Boolean(current.bookmarked),
+      lastReviewed: Number(current.lastReviewed) || 0
+    };
+  }
+
+  return {
+    seen: 0,
+    correct: 0,
+    incorrect: 0,
+    bookmarked: false,
+    lastReviewed: 0
+  };
+}
+
+function openDetailView(wordId, updateHash) {
+  if (!state.wordMap.has(wordId)) {
+    return;
+  }
+
+  state.selectedWordId = wordId;
+  renderDetailWord(wordId);
+  setActiveView("detail", { clearHash: false });
+
+  if (updateHash) {
+    location.hash = `word=${encodeURIComponent(wordId)}`;
+  }
+}
+
+function renderDetailWord(wordId) {
+  const word = state.wordMap.get(wordId);
+  if (!word) {
+    return;
+  }
+
+  const progress = getWordProgress(word.id);
+  const attempts = progress.correct + progress.incorrect;
+  const ratio = attempts ? progress.correct / attempts : 0;
+
+  dom.wordDetail.innerHTML = "";
+
+  const heading = document.createElement("h2");
+  heading.textContent = word.word;
+
+  const chipLine = document.createElement("p");
+  chipLine.className = "chip-line";
+  chipLine.textContent = `${capitalize(word.pos)} | ${word.unitTitle} | ${formatListType(word.listType)}`;
+
+  const meaningBlock = document.createElement("section");
+  meaningBlock.className = "detail-block";
+
+  const meaningTitle = document.createElement("h3");
+  meaningTitle.textContent = "Definition";
+
+  const meaningText = document.createElement("p");
+  meaningText.textContent = word.definition;
+
+  meaningBlock.append(meaningTitle, meaningText);
+
+  const statBlock = document.createElement("section");
+  statBlock.className = "detail-block";
+
+  const statTitle = document.createElement("h3");
+  statTitle.textContent = "Learning Stats";
+
+  const statMeta = document.createElement("div");
+  statMeta.className = "detail-meta";
+
+  const stats = [
+    `Checks: ${attempts}`,
+    `Accuracy: ${formatPercent(ratio)}`,
+    `Correct: ${progress.correct}`,
+    `Incorrect: ${progress.incorrect}`,
+    `Last reviewed: ${progress.lastReviewed ? new Date(progress.lastReviewed).toLocaleString() : "Never"}`
+  ];
+
+  stats.forEach((text) => {
+    const row = document.createElement("p");
+    row.textContent = text;
+    statMeta.append(row);
+  });
+
+  statBlock.append(statTitle, statMeta);
+
+  const detailActions = document.createElement("div");
+  detailActions.className = "detail-actions";
+
+  const needsReviewButton = document.createElement("button");
+  needsReviewButton.className = "outline-button";
+  needsReviewButton.dataset.detailAction = "again";
+  needsReviewButton.textContent = "Needs review";
+
+  const knownButton = document.createElement("button");
+  knownButton.className = "filled-button";
+  knownButton.dataset.detailAction = "good";
+  knownButton.textContent = "Known";
+
+  const bookmarkButton = document.createElement("button");
+  bookmarkButton.className = progress.bookmarked ? "tonal-button" : "outline-button";
+  bookmarkButton.dataset.detailAction = "bookmark";
+  bookmarkButton.textContent = progress.bookmarked ? "Saved" : "Save";
+
+  detailActions.append(needsReviewButton, knownButton, bookmarkButton);
+
+  const relatedWords = state.words
+    .filter((candidate) => candidate.unitTitle === word.unitTitle && candidate.id !== word.id)
+    .slice(0, 6);
+
+  const relatedBlock = document.createElement("section");
+  relatedBlock.className = "detail-block";
+
+  const relatedTitle = document.createElement("h3");
+  relatedTitle.textContent = "Related words in this unit";
+
+  relatedBlock.append(relatedTitle);
+
+  if (!relatedWords.length) {
+    const empty = document.createElement("p");
+    empty.textContent = "No additional words in this unit.";
+    relatedBlock.append(empty);
+  } else {
+    const relatedActions = document.createElement("div");
+    relatedActions.className = "detail-actions";
+
+    relatedWords.forEach((candidate) => {
+      const button = document.createElement("button");
+      button.className = "text-button";
+      button.dataset.detailAction = "open-related";
+      button.dataset.relatedId = candidate.id;
+      button.textContent = candidate.word;
+      relatedActions.append(button);
+    });
+
+    relatedBlock.append(relatedActions);
+  }
+
+  dom.wordDetail.append(heading, chipLine, meaningBlock, statBlock, detailActions, relatedBlock);
+}
+
+function setActiveView(view, options = { clearHash: false }) {
+  state.activeView = view;
+
+  Object.entries(dom.viewPanels).forEach(([viewName, panel]) => {
+    const isActive = viewName === view;
+    panel.hidden = !isActive;
+    panel.classList.toggle("is-active", isActive);
+  });
+
+  dom.tabButtons.forEach((button) => {
+    const target = button.dataset.viewTarget;
+    const isActive = target === view;
+    button.classList.toggle("is-active", isActive);
+    if (button.classList.contains("tab-button")) {
+      button.setAttribute("aria-pressed", String(isActive));
+    }
+  });
+
+  if (options.clearHash && location.hash.startsWith("#word=")) {
+    history.replaceState(null, "", `${location.pathname}${location.search}`);
+  }
+}
+
+function handleHashRoute() {
+  if (!location.hash.startsWith("#word=")) {
+    if (state.activeView === "detail") {
+      setActiveView("library", { clearHash: false });
+    }
+    return;
+  }
+
+  const idFromHash = decodeURIComponent(location.hash.replace("#word=", ""));
+  if (!idFromHash || !state.wordMap.has(idFromHash)) {
+    return;
+  }
+
+  openDetailView(idFromHash, false);
+}
+
+function showLoadError(message) {
+  setStatus(message);
+  dom.wordList.innerHTML = "";
+
+  const errorNode = document.createElement("article");
+  errorNode.className = "error-state";
+  errorNode.textContent = `${message} Once vocab.json is available, reload this page.`;
+
+  dom.wordList.append(errorNode);
+  dom.resultMeta.textContent = "No data available.";
+  dom.reviewMeta.textContent = "Review is unavailable until vocabulary data loads.";
+  renderEmptyStats();
+}
+
+function setStatus(message) {
+  dom.statusMessage.textContent = message;
+}
+
+function sortWords(words, sortBy) {
+  if (sortBy === "alpha") {
+    words.sort((a, b) => a.word.localeCompare(b.word));
+    return;
+  }
+
+  if (sortBy === "unit") {
+    words.sort((a, b) => {
+      const byUnit = a.unitTitle.localeCompare(b.unitTitle);
+      return byUnit || a.word.localeCompare(b.word);
+    });
+    return;
+  }
+
+  if (sortBy === "pos") {
+    words.sort((a, b) => {
+      const byPos = a.pos.localeCompare(b.pos);
+      return byPos || a.word.localeCompare(b.word);
+    });
+    return;
+  }
+
+  if (sortBy === "weakest") {
+    words.sort((a, b) => {
+      const aProgress = getWordProgress(a.id);
+      const bProgress = getWordProgress(b.id);
+
+      const aAttempts = aProgress.correct + aProgress.incorrect;
+      const bAttempts = bProgress.correct + bProgress.incorrect;
+
+      const aScore = aAttempts ? aProgress.correct / aAttempts : -1;
+      const bScore = bAttempts ? bProgress.correct / bAttempts : -1;
+
+      if (aScore === bScore) {
+        return a.word.localeCompare(b.word);
+      }
+
+      return aScore - bScore;
+    });
+  }
+}
+
+function createTag(text) {
+  const tag = document.createElement("span");
+  tag.className = "tag";
+  tag.textContent = text;
+  return tag;
+}
+
+function setSelectOptions(selectElement, options) {
+  selectElement.innerHTML = "";
+
+  options.forEach((optionData) => {
+    const option = document.createElement("option");
+    option.value = optionData.value;
+    option.textContent = optionData.label;
+    selectElement.append(option);
+  });
+}
+
+function formatListType(listType) {
+  if (listType === "vocabulary_preview") {
+    return "Vocabulary Preview";
+  }
+  if (listType === "nawl") {
+    return "NAWL";
+  }
+  return listType;
+}
+
+function formatPercent(number) {
+  return `${Math.round(number * 100)}%`;
+}
+
+function capitalize(value) {
+  if (!value) {
+    return "";
+  }
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+function normalizeText(value) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function slugify(value) {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 40);
+}
+
+function sanitizeSettings(input) {
+  const normalized = {
+    layout: DEFAULT_SETTINGS.layout,
+    density: DEFAULT_SETTINGS.density,
+    text: DEFAULT_SETTINGS.text,
+    theme: DEFAULT_SETTINGS.theme
+  };
+
+  const layoutOptions = new Set(["cards", "list"]);
+  const densityOptions = new Set(["comfortable", "compact"]);
+  const textOptions = new Set(["normal", "large"]);
+  const themeOptions = new Set(["light", "dark", "contrast"]);
+
+  if (layoutOptions.has(input.layout)) {
+    normalized.layout = input.layout;
+  }
+
+  if (densityOptions.has(input.density)) {
+    normalized.density = input.density;
+  }
+
+  if (textOptions.has(input.text)) {
+    normalized.text = input.text;
+  }
+
+  if (themeOptions.has(input.theme)) {
+    normalized.theme = input.theme;
+  }
+
+  return normalized;
+}
+
+function loadStateObject(storageKey) {
+  try {
+    const value = localStorage.getItem(storageKey);
+    if (!value) {
+      return {};
+    }
+    return JSON.parse(value);
+  } catch {
+    return {};
+  }
+}
+
+function saveStateObject(storageKey, value) {
+  localStorage.setItem(storageKey, JSON.stringify(value));
+}
+  </script>
+</body>
+</html>
