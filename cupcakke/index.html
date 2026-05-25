@@ -56,10 +56,25 @@
       </div>
     </header>
 
+    <nav class="mobile-pane-tabs" aria-label="Workspace panels">
+      <button class="mobile-pane-tab active" type="button" data-pane="files">
+        <i class="fa-solid fa-folder-open"></i>
+        <span>Files</span>
+      </button>
+      <button class="mobile-pane-tab" type="button" data-pane="editor">
+        <i class="fa-regular fa-file-code"></i>
+        <span>Editor</span>
+      </button>
+      <button class="mobile-pane-tab" type="button" data-pane="output">
+        <i class="fa-solid fa-terminal"></i>
+        <span>Output</span>
+      </button>
+    </nav>
+
     <!-- Main IDE Workspace Layout -->
-    <main class="ide-workspace">
+    <main class="ide-workspace" data-active-pane="editor">
       <!-- Left Sidebar: File Tree explorer -->
-      <aside class="sidebar">
+      <aside class="sidebar workspace-pane" data-pane="files">
         <div class="panel-header flex-between">
           <h3><i class="fa-solid fa-folder-open"></i> Explorer</h3>
           <div class="explorer-actions">
@@ -87,8 +102,10 @@
         </div>
       </aside>
 
+      <div class="resize-handle resize-handle-vertical" data-resizer="sidebar" role="separator" aria-label="Resize explorer" aria-orientation="vertical" tabindex="0"></div>
+
       <!-- Middle Code Editor Panel -->
-      <section class="editor-panel">
+      <section class="editor-panel workspace-pane active-mobile-pane" data-pane="editor">
         <div class="panel-header flex-between">
           <div class="tabs">
             <div class="tab active">
@@ -110,8 +127,10 @@
         </div>
       </section>
 
+      <div class="resize-handle resize-handle-vertical" data-resizer="debug" role="separator" aria-label="Resize output panel" aria-orientation="vertical" tabindex="0"></div>
+
       <!-- Right/Bottom Terminal & AST Visualizer Section -->
-      <section class="debug-panel">
+      <section class="debug-panel workspace-pane" data-pane="output">
         <!-- Terminal Output -->
         <div class="console-section">
           <div class="panel-header flex-between">
@@ -123,6 +142,8 @@
             <div class="console-line system-line">[System] CupcakKeScript version 1.0.0 is ready. Slurp. 👅</div>
           </div>
         </div>
+
+        <div class="resize-handle resize-handle-horizontal" data-resizer="console" role="separator" aria-label="Resize console and AST" aria-orientation="horizontal" tabindex="0"></div>
 
         <!-- AST Visualizer -->
         <div class="ast-section">

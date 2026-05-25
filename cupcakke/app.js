@@ -12,11 +12,17 @@ document.addEventListener("DOMContentLoaded", () => {
   const resetEditorBtn = document.getElementById("reset-editor-btn");
   const consoleOutput = document.getElementById("console-output");
   const astOutput = document.getElementById("ast-output");
+  const toggleAstBtn = document.getElementById("toggle-ast-btn");
   const exampleSelect = document.getElementById("example-select");
   const audioToggleBtn = document.getElementById("audio-toggle-btn");
   const activeFilename = document.getElementById("active-filename");
   const newFileBtn = document.getElementById("new-file-btn");
   const deleteFileBtn = document.getElementById("delete-file-btn");
+  const workspace = document.querySelector(".ide-workspace");
+  const mobilePaneTabs = document.querySelectorAll(".mobile-pane-tab");
+  const workspacePanes = document.querySelectorAll(".workspace-pane");
+  const resizeHandles = document.querySelectorAll(".resize-handle");
+  const debugPanel = document.querySelector(".debug-panel");
 
   // Resolve global CupcakKe compiler object safely
   const CupcakKe = window.CupcakKe || globalThis.CupcakKe;
@@ -27,6 +33,169 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Track code state
   let originalShowcase = "";
+
+  const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+
+  const isMobileLayout = () => window.matchMedia("(max-width: 760px)").matches;
+
+  const saveLayoutPrefs = () => {
+    const styles = getComputedStyle(document.documentElement);
+    localStorage.setItem("cupcakke_layout", JSON.stringify({
+      sidebarWidth: styles.getPropertyValue("--sidebar-width").trim(),
+      debugWidth: styles.getPropertyValue("--debug-width").trim(),
+      consoleHeight: styles.getPropertyValue("--console-height").trim(),
+      astCollapsed: debugPanel?.classList.contains("ast-collapsed") || false
+    }));
+  };
+
+  const loadLayoutPrefs = () => {
+    const saved = localStorage.getItem("cupcakke_layout");
+    if (!saved) return;
+    try {
+      const prefs = JSON.parse(saved);
+      if (prefs.sidebarWidth) document.documentElement.style.setProperty("--sidebar-width", prefs.sidebarWidth);
+      if (prefs.debugWidth) document.documentElement.style.setProperty("--debug-width", prefs.debugWidth);
+      if (prefs.consoleHeight) document.documentElement.style.setProperty("--console-height", prefs.consoleHeight);
+      if (prefs.astCollapsed) {
+        setAstCollapsed(true, false);
+      }
+    } catch (e) {
+      localStorage.removeItem("cupcakke_layout");
+    }
+  };
+
+  function setAstCollapsed(collapsed, shouldSave = true) {
+    if (!debugPanel || !toggleAstBtn) return;
+
+    debugPanel.classList.toggle("ast-collapsed", collapsed);
+    toggleAstBtn.setAttribute("aria-expanded", String(!collapsed));
+    toggleAstBtn.title = collapsed ? "Show AST" : "Hide AST";
+    const icon = toggleAstBtn.querySelector("i");
+    if (icon) {
+      icon.className = collapsed ? "fa-solid fa-chevron-up" : "fa-solid fa-chevron-down";
+    }
+    if (shouldSave) {
+      saveLayoutPrefs();
+    }
+  }
+
+  const showMobilePane = (paneName) => {
+    if (!workspace) return;
+    workspace.dataset.activePane = paneName;
+    workspacePanes.forEach((pane) => {
+      pane.classList.toggle("active-mobile-pane", pane.dataset.pane === paneName);
+    });
+    mobilePaneTabs.forEach((tab) => {
+      tab.classList.toggle("active", tab.dataset.pane === paneName);
+    });
+    requestAnimationFrame(updateLineNumbers);
+  };
+
+  const initMobilePaneTabs = () => {
+    mobilePaneTabs.forEach((tab) => {
+      tab.addEventListener("click", () => showMobilePane(tab.dataset.pane));
+    });
+    showMobilePane("editor");
+  };
+
+  const initResizableLayout = () => {
+    loadLayoutPrefs();
+
+    if (toggleAstBtn) {
+      toggleAstBtn.setAttribute("aria-expanded", String(!debugPanel?.classList.contains("ast-collapsed")));
+      toggleAstBtn.addEventListener("click", () => {
+        setAstCollapsed(!debugPanel.classList.contains("ast-collapsed"));
+        playGulpSound();
+      });
+    }
+
+    resizeHandles.forEach((handle) => {
+      handle.addEventListener("pointerdown", (e) => {
+        if (!workspace) return;
+        if (handle.dataset.resizer !== "console" && isMobileLayout()) return;
+        if (handle.dataset.resizer === "console" && debugPanel?.classList.contains("ast-collapsed")) return;
+
+        e.preventDefault();
+        handle.setPointerCapture(e.pointerId);
+        handle.classList.add("active");
+
+        const resizer = handle.dataset.resizer;
+        const workspaceRect = workspace.getBoundingClientRect();
+        const debugPanel = document.querySelector(".debug-panel");
+        const debugRect = debugPanel ? debugPanel.getBoundingClientRect() : null;
+        const startX = e.clientX;
+        const startY = e.clientY;
+        const styles = getComputedStyle(document.documentElement);
+        const startSidebarWidth = parseFloat(styles.getPropertyValue("--sidebar-width")) || 240;
+        const startDebugWidth = parseFloat(styles.getPropertyValue("--debug-width")) || 400;
+        const startConsoleHeight = debugRect
+          ? document.querySelector(".console-section").getBoundingClientRect().height
+          : 0;
+
+        document.body.classList.toggle("is-resizing-horizontal", resizer === "console");
+        document.body.classList.toggle("is-resizing", resizer !== "console");
+
+        const handleMove = (moveEvent) => {
+          if (resizer === "sidebar") {
+            const maxSidebar = Math.max(180, workspaceRect.width - startDebugWidth - 360);
+            const nextWidth = clamp(startSidebarWidth + moveEvent.clientX - startX, 160, maxSidebar);
+            document.documentElement.style.setProperty("--sidebar-width", `${Math.round(nextWidth)}px`);
+          } else if (resizer === "debug") {
+            const maxDebug = Math.max(280, workspaceRect.width - startSidebarWidth - 360);
+            const nextWidth = clamp(startDebugWidth - (moveEvent.clientX - startX), 260, maxDebug);
+            document.documentElement.style.setProperty("--debug-width", `${Math.round(nextWidth)}px`);
+          } else if (resizer === "console" && debugRect) {
+            const minHeight = 120;
+            const maxHeight = Math.max(minHeight, debugRect.height - 140);
+            const nextHeight = clamp(startConsoleHeight + moveEvent.clientY - startY, minHeight, maxHeight);
+            document.documentElement.style.setProperty("--console-height", `${Math.round(nextHeight)}px`);
+          }
+        };
+
+        const handleUp = () => {
+          handle.classList.remove("active");
+          document.body.classList.remove("is-resizing", "is-resizing-horizontal");
+          saveLayoutPrefs();
+          window.removeEventListener("pointermove", handleMove);
+          window.removeEventListener("pointerup", handleUp);
+          window.removeEventListener("pointercancel", handleUp);
+        };
+
+        window.addEventListener("pointermove", handleMove);
+        window.addEventListener("pointerup", handleUp);
+        window.addEventListener("pointercancel", handleUp);
+      });
+
+      handle.addEventListener("keydown", (e) => {
+        const resizer = handle.dataset.resizer;
+        const styles = getComputedStyle(document.documentElement);
+        const step = e.shiftKey ? 40 : 16;
+        let handled = false;
+
+        if (resizer === "sidebar" && (e.key === "ArrowLeft" || e.key === "ArrowRight")) {
+          const current = parseFloat(styles.getPropertyValue("--sidebar-width")) || 240;
+          const direction = e.key === "ArrowRight" ? 1 : -1;
+          document.documentElement.style.setProperty("--sidebar-width", `${clamp(current + step * direction, 160, 480)}px`);
+          handled = true;
+        } else if (resizer === "debug" && (e.key === "ArrowLeft" || e.key === "ArrowRight")) {
+          const current = parseFloat(styles.getPropertyValue("--debug-width")) || 400;
+          const direction = e.key === "ArrowLeft" ? 1 : -1;
+          document.documentElement.style.setProperty("--debug-width", `${clamp(current + step * direction, 260, 640)}px`);
+          handled = true;
+        } else if (resizer === "console" && !debugPanel?.classList.contains("ast-collapsed") && (e.key === "ArrowUp" || e.key === "ArrowDown")) {
+          const current = parseFloat(styles.getPropertyValue("--console-height")) || 220;
+          const direction = e.key === "ArrowDown" ? 1 : -1;
+          document.documentElement.style.setProperty("--console-height", `${clamp(current + step * direction, 120, 640)}px`);
+          handled = true;
+        }
+
+        if (handled) {
+          e.preventDefault();
+          saveLayoutPrefs();
+        }
+      });
+    });
+  };
 
   // Preset code contents matching user's edited keywords
   const PRESETS = {
@@ -171,6 +340,9 @@ favorite.moan(); // Prints: 💦 Moan from Pink Bullet - Excitement level is: 69
 
       fileItem.addEventListener("click", () => {
         selectFile(filename);
+        if (isMobileLayout()) {
+          showMobilePane("editor");
+        }
       });
 
       treeChildren.appendChild(fileItem);
@@ -595,6 +767,10 @@ squirt("💋 CupcakKeScript Pure Experience runs flawlessly! Slurp! 💋");`;
 
   // --- CORE INTERPRETER INVOCATION ---
   runBtn.addEventListener("click", async () => {
+    if (isMobileLayout()) {
+      showMobilePane("output");
+    }
+
     const code = codeEditor.value;
     if (!code.trim()) {
       appendConsoleError("Cannot swallow an empty script! Please write some CupcakKeScript.");
@@ -668,5 +844,7 @@ squirt("💋 CupcakKeScript Pure Experience runs flawlessly! Slurp! 💋");`;
   };
 
   // Run initialization
+  initResizableLayout();
+  initMobilePaneTabs();
   init();
 });
