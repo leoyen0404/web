@@ -18,8 +18,22 @@
   "catch": "cream",
   "split": "slay",
   "chopsticks": "chopsticks",
-  "int": "bitch",
-  "string": "swallow",
-  "double": "nasty",
-  "void": "ass"
+  "int": "int",
+  "string": "string",
+  "char": "char",
+  "double": "double",
+  "void": "void",
+  "typeAliases": {
+    "int": ["bitch", "cum_int"],
+    "string": ["swallow", "slurp_string"],
+    "double": ["nasty", "double_throat"],
+    "void": ["ass", "empty_box"]
+  },
+  "typedReturns": {
+    "int": "give_int_to_me_now",
+    "string": "give_string_to_me_now",
+    "char": "give_char_to_me_now",
+    "double": "give_double_to_me_now",
+    "void": "give_void_to_me_now"
+  }
 }

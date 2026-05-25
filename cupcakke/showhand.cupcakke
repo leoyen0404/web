@@ -1,0 +1,336 @@
+// File: showhand.cupcakke
+
+int rank_value(string r) {
+  slurp (r == "A") { give_int_to_me_now 14; }
+  smack slurp (r == "K") { give_int_to_me_now 13; }
+  smack slurp (r == "Q") { give_int_to_me_now 12; }
+  smack slurp (r == "J") { give_int_to_me_now 11; }
+  smack slurp (r == "10") { give_int_to_me_now 10; }
+  smack slurp (r == "9") { give_int_to_me_now 9; }
+  smack slurp (r == "8") { give_int_to_me_now 8; }
+  smack slurp (r == "7") { give_int_to_me_now 7; }
+  smack slurp (r == "6") { give_int_to_me_now 6; }
+  smack slurp (r == "5") { give_int_to_me_now 5; }
+  smack slurp (r == "4") { give_int_to_me_now 4; }
+  smack slurp (r == "3") { give_int_to_me_now 3; }
+  smack { give_int_to_me_now 2; }
+}
+
+int suit_value(string s) {
+  slurp (s == "S") { give_int_to_me_now 4; }
+  smack slurp (s == "H") { give_int_to_me_now 3; }
+  smack slurp (s == "C") { give_int_to_me_now 2; }
+  smack { give_int_to_me_now 1; }
+}
+
+string rank_name(int v) {
+  slurp (v == 14) { give_string_to_me_now "Ace"; }
+  smack slurp (v == 13) { give_string_to_me_now "King"; }
+  smack slurp (v == 12) { give_string_to_me_now "Queen"; }
+  smack slurp (v == 11) { give_string_to_me_now "Jack"; }
+  smack slurp (v == 10) { give_string_to_me_now "Ten"; }
+  smack slurp (v == 9) { give_string_to_me_now "Nine"; }
+  smack slurp (v == 8) { give_string_to_me_now "Eight"; }
+  smack slurp (v == 7) { give_string_to_me_now "Seven"; }
+  smack slurp (v == 6) { give_string_to_me_now "Six"; }
+  smack slurp (v == 5) { give_string_to_me_now "Five"; }
+  smack slurp (v == 4) { give_string_to_me_now "Four"; }
+  smack slurp (v == 3) { give_string_to_me_now "Three"; }
+  smack { give_string_to_me_now "Two"; }
+}
+
+string card_label(args) {
+  lick rank = args chopsticks 0;
+  lick suitv = args chopsticks 1;
+  string suit = "Diamonds";
+  slurp (suitv == 4) { suit = "Spades"; }
+  smack slurp (suitv == 3) { suit = "Hearts"; }
+  smack slurp (suitv == 2) { suit = "Clubs"; }
+  give_string_to_me_now rank_name(rank) + " of " + suit;
+}
+
+fuck make_card(line) {
+  lick parts = slay(line, " ");
+  lick suit = parts chopsticks 0;
+  lick rank = parts chopsticks 1;
+  give_it_to_me_now [suit, rank, rank_value(rank), suit_value(suit)];
+}
+
+fuck read_hand() {
+  lick cards = [];
+  lick line = "";
+  deepthroat (!(line == -1)) {
+    line = gulp("card:");
+    slurp (!(line == -1)) {
+      cards = push(cards, make_card(line));
+    }
+  }
+  give_it_to_me_now cards;
+}
+
+int count_rank(args) {
+  lick cards = args chopsticks 0;
+  lick rank = args chopsticks 1;
+  int i = 0;
+  int count = 0;
+  deepthroat (i < len(cards)) {
+    lick card = cards chopsticks i;
+    slurp ((card chopsticks 2) == rank) {
+      count = count + 1;
+    }
+    i = i + 1;
+  }
+  give_int_to_me_now count;
+}
+
+fuck has_rank(args) {
+  lick cards = args chopsticks 0;
+  lick rank = args chopsticks 1;
+  slurp (count_rank([cards, rank]) > 0) { give_it_to_me_now true; }
+  smack { give_it_to_me_now false; }
+}
+
+fuck all_flush(cards) {
+  lick first = cards chopsticks 0;
+  lick suit = first chopsticks 0;
+  int i = 1;
+  deepthroat (i < len(cards)) {
+    lick card = cards chopsticks i;
+    slurp (!((card chopsticks 0) == suit)) { give_it_to_me_now false; }
+    i = i + 1;
+  }
+  give_it_to_me_now true;
+}
+
+int max_rank(cards) {
+  int best = 0;
+  int i = 0;
+  deepthroat (i < len(cards)) {
+    lick card = cards chopsticks i;
+    slurp ((card chopsticks 2) > best) { best = card chopsticks 2; }
+    i = i + 1;
+  }
+  give_int_to_me_now best;
+}
+
+int min_rank(cards) {
+  int best = 99;
+  int i = 0;
+  deepthroat (i < len(cards)) {
+    lick card = cards chopsticks i;
+    slurp ((card chopsticks 2) < best) { best = card chopsticks 2; }
+    i = i + 1;
+  }
+  give_int_to_me_now best;
+}
+
+int unique_count(cards) {
+  int total = 0;
+  int rank = 2;
+  deepthroat (rank <= 14) {
+    slurp (has_rank([cards, rank])) { total = total + 1; }
+    rank = rank + 1;
+  }
+  give_int_to_me_now total;
+}
+
+int straight_high_rank(cards) {
+  slurp (unique_count(cards) != 5) { give_int_to_me_now 0; }
+  slurp (has_rank([cards, 14]) && has_rank([cards, 5]) && has_rank([cards, 4]) && has_rank([cards, 3]) && has_rank([cards, 2])) {
+    give_int_to_me_now 5;
+  }
+  lick hi = max_rank(cards);
+  lick lo = min_rank(cards);
+  slurp ((hi - lo) == 4) { give_int_to_me_now hi; }
+  give_int_to_me_now 0;
+}
+
+int card_suit_for_rank(args) {
+  lick cards = args chopsticks 0;
+  lick rank = args chopsticks 1;
+  int best = 0;
+  int i = 0;
+  deepthroat (i < len(cards)) {
+    lick card = cards chopsticks i;
+    slurp (((card chopsticks 2) == rank) && ((card chopsticks 3) > best)) {
+      best = card chopsticks 3;
+    }
+    i = i + 1;
+  }
+  give_int_to_me_now best;
+}
+
+fuck high_card_info(cards) {
+  int best_rank = 0;
+  int best_suit = 0;
+  int i = 0;
+  deepthroat (i < len(cards)) {
+    lick card = cards chopsticks i;
+    lick r = card chopsticks 2;
+    lick s = card chopsticks 3;
+    slurp ((r > best_rank) || ((r == best_rank) && (s > best_suit))) {
+      best_rank = r;
+      best_suit = s;
+    }
+    i = i + 1;
+  }
+  give_it_to_me_now [best_rank, best_suit];
+}
+
+int pair_rank_high(cards) {
+  int rank = 14;
+  deepthroat (rank >= 2) {
+    slurp (count_rank([cards, rank]) == 2) { give_int_to_me_now rank; }
+    rank = rank - 1;
+  }
+  give_int_to_me_now 0;
+}
+
+int pair_rank_low(args) {
+  lick cards = args chopsticks 0;
+  lick high_pair = args chopsticks 1;
+  int rank = high_pair - 1;
+  deepthroat (rank >= 2) {
+    slurp (count_rank([cards, rank]) == 2) { give_int_to_me_now rank; }
+    rank = rank - 1;
+  }
+  give_int_to_me_now 0;
+}
+
+int rank_with_count(args) {
+  lick cards = args chopsticks 0;
+  lick wanted = args chopsticks 1;
+  int rank = 14;
+  deepthroat (rank >= 2) {
+    slurp (count_rank([cards, rank]) == wanted) { give_int_to_me_now rank; }
+    rank = rank - 1;
+  }
+  give_int_to_me_now 0;
+}
+
+string describe(args) {
+  lick type_name = args chopsticks 0;
+  lick one = args chopsticks 1;
+  lick two = args chopsticks 2;
+  slurp ((type_name == "two pairs") || (type_name == "Two pairs")) {
+    give_string_to_me_now type_name + " (" + one + " and " + two + ")";
+  }
+  smack {
+    give_string_to_me_now type_name + " (" + one + ")";
+  }
+}
+
+string first_type(string type_name) {
+  slurp (type_name == "straight flush") { give_string_to_me_now "Straight flush"; }
+  smack slurp (type_name == "four of a kind") { give_string_to_me_now "Four of a kind"; }
+  smack slurp (type_name == "full house") { give_string_to_me_now "Full house"; }
+  smack slurp (type_name == "flush") { give_string_to_me_now "Flush"; }
+  smack slurp (type_name == "straight") { give_string_to_me_now "Straight"; }
+  smack slurp (type_name == "three of a kind") { give_string_to_me_now "Three of a kind"; }
+  smack slurp (type_name == "two pairs") { give_string_to_me_now "Two pairs"; }
+  smack slurp (type_name == "one pair") { give_string_to_me_now "One pair"; }
+  smack { give_string_to_me_now "Zilch"; }
+}
+
+string describe_result(args) {
+  lick result = args chopsticks 0;
+  lick other = args chopsticks 1;
+  lick type_name = args chopsticks 2;
+
+  slurp ((result chopsticks 0) == 2) {
+    slurp ((result chopsticks 2) == (other chopsticks 2)) {
+      give_string_to_me_now type_name + " (" + (result chopsticks 7) + ")";
+    }
+    smack {
+      give_string_to_me_now type_name + " (" + (result chopsticks 6) + " and " + (result chopsticks 7) + ")";
+    }
+  }
+
+  give_string_to_me_now type_name + " (" + (result chopsticks 6) + ")";
+}
+
+fuck evaluate_hand(cards) {
+  lick flush = all_flush(cards);
+  lick straight_hi = straight_high_rank(cards);
+  lick straight_suit = card_suit_for_rank([cards, straight_hi]);
+
+  slurp (flush && (straight_hi > 0)) {
+    give_it_to_me_now [8, "straight flush", straight_hi, straight_suit, 0, 0, card_label([straight_hi, straight_suit]), ""];
+  }
+
+  lick four = rank_with_count([cards, 4]);
+  slurp (four > 0) {
+    give_it_to_me_now [7, "four of a kind", four, card_suit_for_rank([cards, four]), 0, 0, card_label([four, card_suit_for_rank([cards, four])]), ""];
+  }
+
+  lick triple = rank_with_count([cards, 3]);
+  lick pair = pair_rank_high(cards);
+  slurp ((triple > 0) && (pair > 0)) {
+    give_it_to_me_now [6, "full house", triple, card_suit_for_rank([cards, triple]), 0, 0, card_label([triple, card_suit_for_rank([cards, triple])]), ""];
+  }
+
+  slurp (flush) {
+    lick high = high_card_info(cards);
+    give_it_to_me_now [5, "flush", high chopsticks 0, high chopsticks 1, 0, 0, card_label([high chopsticks 0, high chopsticks 1]), ""];
+  }
+
+  slurp (straight_hi > 0) {
+    give_it_to_me_now [4, "straight", straight_hi, straight_suit, 0, 0, card_label([straight_hi, straight_suit]), ""];
+  }
+
+  slurp (triple > 0) {
+    give_it_to_me_now [3, "three of a kind", triple, card_suit_for_rank([cards, triple]), 0, 0, card_label([triple, card_suit_for_rank([cards, triple])]), ""];
+  }
+
+  lick high_pair = pair_rank_high(cards);
+  lick low_pair = pair_rank_low([cards, high_pair]);
+  slurp ((high_pair > 0) && (low_pair > 0)) {
+    lick high_suit = card_suit_for_rank([cards, high_pair]);
+    lick low_suit = card_suit_for_rank([cards, low_pair]);
+    give_it_to_me_now [2, "two pairs", high_pair, high_suit, low_pair, low_suit, card_label([high_pair, high_suit]), card_label([low_pair, low_suit])];
+  }
+
+  slurp (high_pair > 0) {
+    lick pair_suit = card_suit_for_rank([cards, high_pair]);
+    give_it_to_me_now [1, "one pair", high_pair, pair_suit, 0, 0, card_label([high_pair, pair_suit]), ""];
+  }
+
+  lick top = high_card_info(cards);
+  give_it_to_me_now [0, "zilch", top chopsticks 0, top chopsticks 1, 0, 0, card_label([top chopsticks 0, top chopsticks 1]), ""];
+}
+
+int compare_hand(args) {
+  lick a = args chopsticks 0;
+  lick b = args chopsticks 1;
+  slurp ((a chopsticks 0) > (b chopsticks 0)) { give_int_to_me_now 1; }
+  smack slurp ((a chopsticks 0) < (b chopsticks 0)) { give_int_to_me_now -1; }
+
+  slurp ((a chopsticks 0) == 2) {
+    slurp ((a chopsticks 2) > (b chopsticks 2)) { give_int_to_me_now 1; }
+    smack slurp ((a chopsticks 2) < (b chopsticks 2)) { give_int_to_me_now -1; }
+    smack slurp ((a chopsticks 4) > (b chopsticks 4)) { give_int_to_me_now 1; }
+    smack slurp ((a chopsticks 4) < (b chopsticks 4)) { give_int_to_me_now -1; }
+    smack slurp ((a chopsticks 3) > (b chopsticks 3)) { give_int_to_me_now 1; }
+    smack { give_int_to_me_now -1; }
+  }
+
+  slurp ((a chopsticks 2) > (b chopsticks 2)) { give_int_to_me_now 1; }
+  smack slurp ((a chopsticks 2) < (b chopsticks 2)) { give_int_to_me_now -1; }
+  smack slurp ((a chopsticks 3) > (b chopsticks 3)) { give_int_to_me_now 1; }
+  smack { give_int_to_me_now -1; }
+}
+
+lick first_hand = read_hand();
+lick second_hand = read_hand();
+lick first_result = evaluate_hand(first_hand);
+lick second_result = evaluate_hand(second_hand);
+lick left = describe_result([first_result, second_result, first_type(first_result chopsticks 1)]);
+lick right = describe_result([second_result, first_result, second_result chopsticks 1]);
+lick verdict = compare_hand([first_result, second_result]);
+
+slurp (verdict > 0) {
+  squirt(left + " wins over " + right + ".");
+}
+smack {
+  squirt(left + " loses to " + right + ".");
+}

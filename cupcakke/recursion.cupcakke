@@ -1,0 +1,63 @@
+// File: recursion.cupcakke
+
+fuck factorial(n) {
+  slurp (n <= 1) {
+    give_it_to_me_now 1;
+  }
+  give_it_to_me_now n * factorial(n - 1);
+}
+
+fuck fibonacci(n) {
+  slurp (n <= 1) {
+    give_it_to_me_now n;
+  }
+  give_it_to_me_now fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+fuck stairs(n) {
+  slurp (n < 0) {
+    give_it_to_me_now 0;
+  }
+  slurp (n == 0) {
+    give_it_to_me_now 1;
+  }
+  give_it_to_me_now stairs(n - 1) + stairs(n - 2) + stairs(n - 3);
+}
+
+fuck reverse_from(args) {
+  lick text = args chopsticks 0;
+  lick index = args chopsticks 1;
+  slurp (index < 0) {
+    give_it_to_me_now "";
+  }
+  lick ch = text chopsticks index;
+  give_it_to_me_now ch + reverse_from([text, index - 1]);
+}
+
+fuck reverse_string(text) {
+  give_it_to_me_now reverse_from([text, len(text) - 1]);
+}
+
+fuck hanoi(args) {
+  lick n = args chopsticks 0;
+  lick source = args chopsticks 1;
+  lick helper = args chopsticks 2;
+  lick target = args chopsticks 3;
+
+  slurp (n == 0) {
+    give_it_to_me_now 0;
+  }
+  hanoi([n - 1, source, target, helper]);
+  squirt("Move disk " + n + " from " + source + " to " + target);
+  hanoi([n - 1, helper, source, target]);
+  give_it_to_me_now 0;
+}
+
+squirt("Recursion suite start");
+squirt("factorial(5) =", factorial(5));
+squirt("fibonacci(8) =", fibonacci(8));
+squirt("stairs(5) =", stairs(5));
+squirt("reverse(cupcakke) =", reverse_string("cupcakke"));
+squirt("hanoi(3):");
+hanoi([3, "A", "B", "C"]);
+squirt("Recursion suite done");

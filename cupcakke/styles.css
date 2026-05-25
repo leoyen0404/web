@@ -658,6 +658,8 @@ body {
 
 #gulp-input {
   width: 100%;
+  min-height: 96px;
+  resize: vertical;
   background-color: rgba(5, 3, 7, 0.8);
   border: 1px solid var(--border-glass);
   color: var(--text-primary);

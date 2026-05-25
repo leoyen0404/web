@@ -22,14 +22,16 @@ All keywords are fully customizable and loaded dynamically from `/Users/leo/Desk
 | `protected` | `condoms` | Protected class field definition (supports number-prefixed identifier!). |
 | `new` | `wet` | Class object instantiation. |
 | `this` | `my_pussy` | Instance scoping reference. |
-| `int` | `bitch` | Integer variable declaration (C++ comfort). |
-| `string` | `swallow` | String variable declaration (C++ comfort). |
-| `double` | `nasty` | Float/Double variable declaration (C++ comfort). |
-| `void` | `ass` | Function/Method type indicator (C++ comfort). |
+| `int` | `int` | Canonical integer type annotation. |
+| `string` | `string` | Canonical string type annotation. |
+| `char` | `char` | Canonical single-character type annotation. |
+| `double` | `double` | Canonical float/double type annotation. |
+| `void` | `void` | Canonical empty return-type annotation. |
 | `let` | `lick` | Mutable variable declaration. |
 | `const` | `cumshot` | Constant (immutable) variable declaration. |
 | `function` | `fuck` | Function declaration. Supports closure capturing. |
-| `return` | `give_it_to_me_now` | Return statement. Yields value and exits frame. |
+| `return` | `give_it_to_me_now` | Untyped return statement. Yields value and exits frame. |
+| typed returns | `give_int_to_me_now`, `give_string_to_me_now`, `give_char_to_me_now`, `give_double_to_me_now`, `give_void_to_me_now` | Runtime-checked typed return statements. |
 | `print(...)` | `squirt(...)` | Outputs parameters to stdout (Console stream). |
 | `input()` | `gulp(...)` | Prompts user and reads string/number from stdin. |
 | `if` | `slurp` | Conditional guard statement. |
@@ -101,7 +103,7 @@ You have been equipped with the skill to write, analyze, and debug CupcakKeScrip
 
 1. **No Standard Keywords**: You are forbidden from using JS-style keywords like `let`, `const`, `var`, `function`, `return`, `if`, `else`, `while`, `try`, or `catch` unless mapped.
 2. **Strict Vocabulary Enforcement**:
-   - Use C++ comfort types: `bitch` for int, `swallow` for string, `nasty` for double, and `ass` for void methods.
+   - Use normal type names: `int`, `string`, `char`, `double`, and `void`.
    - Use `smack slurp (cond)` for else-if conditions.
    - Declare classes using `papi`.
    - Use `condoms` for protected members (note: identifiers/keywords can start with a digit like `4skins`).
@@ -109,7 +111,7 @@ You have been equipped with the skill to write, analyze, and debug CupcakKeScrip
    - Declare mutable variables using `lick`.
    - Declare constant variables using `cumshot`.
    - Declare functions using `fuck`.
-   - Return values using `give_it_to_me_now`.
+   - Return untyped values using `give_it_to_me_now`; return checked values using `give_int_to_me_now`, `give_string_to_me_now`, `give_char_to_me_now`, `give_double_to_me_now`, or `give_void_to_me_now`.
    - Print outputs using `squirt(...)`.
    - Take standard inputs using `gulp()`.
    - Write conditional guards with `slurp (condition) { ... } smack { ... }`.
@@ -119,7 +121,7 @@ You have been equipped with the skill to write, analyze, and debug CupcakKeScrip
    - Partition strings/arrays using `open_coochie(target, index_or_separator)`.
 
 3. **Code Syntax Rules**:
-   - Variables and functions can start with type specifiers (`bitch`, `swallow`, `nasty`, `ass`).
+   - Variables and functions can start with type specifiers (`int`, `string`, `char`, `double`, `void`).
    - Function parameter bindings can optionally carry type prefixes.
    - Access fields or call methods using member dot access: `instance.field` or `instance.method()`.
    - Constructor functions are named `init`.

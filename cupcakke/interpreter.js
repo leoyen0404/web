@@ -65,6 +65,7 @@ const TokenType = {
   CONST: "CONST", // squirt
   INT: "INT",
   STRING_TYPE: "STRING_TYPE",
+  CHAR: "CHAR",
   DOUBLE: "DOUBLE",
   VOID: "VOID",
   TRUE: "TRUE", // true
@@ -93,10 +94,24 @@ let MAPPINGS = {
   catch: "vending_machine",
   split: "open_coochie",
   chopsticks: "chopsticks",
-  int: "cum_int",
-  string: "slurp_string",
-  double: "double_throat",
-  void: "empty_box",
+  int: "int",
+  string: "string",
+  char: "char",
+  double: "double",
+  void: "void",
+  typeAliases: {
+    int: ["bitch", "cum_int"],
+    string: ["swallow", "slurp_string"],
+    double: ["nasty", "double_throat"],
+    void: ["ass", "empty_box"],
+  },
+  typedReturns: {
+    int: "give_int_to_me_now",
+    string: "give_string_to_me_now",
+    char: "give_char_to_me_now",
+    double: "give_double_to_me_now",
+    void: "give_void_to_me_now",
+  },
 };
 
 // If running in Node environment, dynamically sync with mapping_table.json config file
@@ -119,29 +134,40 @@ let KEYWORDS = {};
 
 function updateKeywords() {
   KEYWORDS = {};
-  KEYWORDS[MAPPINGS.class] = TokenType.CLASS;
-  KEYWORDS[MAPPINGS.protected] = TokenType.PROTECTED;
-  KEYWORDS[MAPPINGS.public] = TokenType.PUBLIC;
-  KEYWORDS[MAPPINGS.private] = TokenType.PRIVATE;
-  KEYWORDS[MAPPINGS.new] = TokenType.NEW;
-  KEYWORDS[MAPPINGS.this] = TokenType.THIS;
-  KEYWORDS[MAPPINGS.let] = TokenType.LET;
-  KEYWORDS[MAPPINGS.const] = TokenType.CONST;
-  KEYWORDS[MAPPINGS.function] = TokenType.FUNCTION;
-  KEYWORDS[MAPPINGS.return] = TokenType.RETURN;
-  KEYWORDS[MAPPINGS.print] = TokenType.PRINT;
-  KEYWORDS[MAPPINGS.input] = TokenType.INPUT;
-  KEYWORDS[MAPPINGS.if] = TokenType.IF;
-  KEYWORDS[MAPPINGS.else] = TokenType.ELSE;
-  KEYWORDS[MAPPINGS.while] = TokenType.WHILE;
-  KEYWORDS[MAPPINGS.try] = TokenType.TRY;
-  KEYWORDS[MAPPINGS.catch] = TokenType.ELSE; // catch wraps else block
-  KEYWORDS[MAPPINGS.split] = TokenType.SPLIT;
-  KEYWORDS[MAPPINGS.chopsticks] = TokenType.CHOPSTICKS;
-  KEYWORDS[MAPPINGS.int] = TokenType.INT;
-  KEYWORDS[MAPPINGS.string] = TokenType.STRING_TYPE;
-  KEYWORDS[MAPPINGS.double] = TokenType.DOUBLE;
-  KEYWORDS[MAPPINGS.void] = TokenType.VOID;
+  const addKeyword = (word, type) => {
+    if (word) KEYWORDS[word] = type;
+  };
+  const addTypeAliases = (typeName, tokenType) => {
+    addKeyword(typeName, tokenType);
+    addKeyword(MAPPINGS[typeName], tokenType);
+    (MAPPINGS.typeAliases?.[typeName] || []).forEach((alias) => addKeyword(alias, tokenType));
+  };
+
+  addKeyword(MAPPINGS.class, TokenType.CLASS);
+  addKeyword(MAPPINGS.protected, TokenType.PROTECTED);
+  addKeyword(MAPPINGS.public, TokenType.PUBLIC);
+  addKeyword(MAPPINGS.private, TokenType.PRIVATE);
+  addKeyword(MAPPINGS.new, TokenType.NEW);
+  addKeyword(MAPPINGS.this, TokenType.THIS);
+  addKeyword(MAPPINGS.let, TokenType.LET);
+  addKeyword(MAPPINGS.const, TokenType.CONST);
+  addKeyword(MAPPINGS.function, TokenType.FUNCTION);
+  addKeyword(MAPPINGS.return, TokenType.RETURN);
+  Object.values(MAPPINGS.typedReturns || {}).forEach((word) => addKeyword(word, TokenType.RETURN));
+  addKeyword(MAPPINGS.print, TokenType.PRINT);
+  addKeyword(MAPPINGS.input, TokenType.INPUT);
+  addKeyword(MAPPINGS.if, TokenType.IF);
+  addKeyword(MAPPINGS.else, TokenType.ELSE);
+  addKeyword(MAPPINGS.while, TokenType.WHILE);
+  addKeyword(MAPPINGS.try, TokenType.TRY);
+  addKeyword(MAPPINGS.catch, TokenType.ELSE); // catch wraps else block
+  addKeyword(MAPPINGS.split, TokenType.SPLIT);
+  addKeyword(MAPPINGS.chopsticks, TokenType.CHOPSTICKS);
+  addTypeAliases("int", TokenType.INT);
+  addTypeAliases("string", TokenType.STRING_TYPE);
+  addTypeAliases("char", TokenType.CHAR);
+  addTypeAliases("double", TokenType.DOUBLE);
+  addTypeAliases("void", TokenType.VOID);
   KEYWORDS["true"] = TokenType.TRUE;
   KEYWORDS["false"] = TokenType.FALSE;
   KEYWORDS["null"] = TokenType.NULL;
@@ -149,6 +175,37 @@ function updateKeywords() {
 
 // Initial populate on script load
 updateKeywords();
+
+function returnTypeForKeyword(keyword) {
+  const typedReturns = MAPPINGS.typedReturns || {};
+  for (const [typeName, mappedKeyword] of Object.entries(typedReturns)) {
+    if (keyword === mappedKeyword) return typeName;
+  }
+  return null;
+}
+
+function returnKeywordForType(typeName) {
+  if (!typeName) return MAPPINGS.return;
+  return MAPPINGS.typedReturns?.[typeName] || MAPPINGS.return;
+}
+
+function typeNameForToken(token) {
+  if (!token) return null;
+  switch (token.type) {
+    case TokenType.INT:
+      return "int";
+    case TokenType.STRING_TYPE:
+      return "string";
+    case TokenType.CHAR:
+      return "char";
+    case TokenType.DOUBLE:
+      return "double";
+    case TokenType.VOID:
+      return "void";
+    default:
+      return null;
+  }
+}
 
 class Token {
   constructor(type, value, line, column) {
@@ -317,11 +374,15 @@ class Lexer {
       default:
         // Support Alphanumeric words (letters, digits, underscores)
         // Enables identifiers to start with numbers (e.g. 4skins)
-        if (this.isAlphanumericOrUnderscore(this.ch)) {
-          const val = this.readWord();
+        if (this.isDigit(this.ch)) {
+          const val = this.readNumberOrWord();
           if (this.isValidNumber(val)) {
             return new Token(TokenType.NUMBER, val, startLine, startCol);
           }
+          const type = KEYWORDS[val] || TokenType.IDENT;
+          return new Token(type, val, startLine, startCol);
+        } else if (this.isAlphanumericOrUnderscore(this.ch)) {
+          const val = this.readWord();
           const type = KEYWORDS[val] || TokenType.IDENT;
           return new Token(type, val, startLine, startCol);
         } else {
@@ -348,6 +409,30 @@ class Lexer {
       this.readChar();
     }
     return this.input.slice(startPos, this.position);
+  }
+
+  readNumberOrWord() {
+    const startPos = this.position;
+    while (this.isDigit(this.ch)) {
+      this.readChar();
+    }
+    if (this.ch === "." && this.isDigit(this.peekChar())) {
+      this.readChar();
+      while (this.isDigit(this.ch)) {
+        this.readChar();
+      }
+      return this.input.slice(startPos, this.position);
+    }
+    if (this.isAlphanumericOrUnderscore(this.ch)) {
+      while (this.isAlphanumericOrUnderscore(this.ch)) {
+        this.readChar();
+      }
+    }
+    return this.input.slice(startPos, this.position);
+  }
+
+  isDigit(ch) {
+    return ch >= "0" && ch <= "9";
   }
 
   isValidNumber(str) {
@@ -421,13 +506,14 @@ class AssignStatement extends ASTNode {
 }
 
 class ReturnStatement extends ASTNode {
-  constructor(token, returnValue) {
+  constructor(token, returnValue, returnType = null) {
     super();
     this.token = token;
     this.returnValue = returnValue;
+    this.returnType = returnType;
   }
   toString() {
-    return `${MAPPINGS.return} ${this.returnValue ? this.returnValue.toString() : ""};`;
+    return `${returnKeywordForType(this.returnType)} ${this.returnValue ? this.returnValue.toString() : ""};`;
   }
 }
 
@@ -520,17 +606,19 @@ class ClassDeclaration extends ASTNode {
 }
 
 class FunctionDeclaration extends ASTNode {
-  constructor(token, name, parameters, body) {
+  constructor(token, name, parameters, body, returnType = null) {
     super();
     this.token = token;
     this.name = name;
     this.parameters = parameters;
     this.body = body;
+    this.returnType = returnType;
   }
   toString() {
     const params = this.parameters.map((p) => p.toString()).join(", ");
     const nameStr = this.name ? ` ${this.name.toString()}` : "";
-    return `${MAPPINGS.function}${nameStr}(${params}) ${this.body.toString()}`;
+    const prefix = this.returnType ? `${this.returnType} ` : MAPPINGS.function;
+    return `${prefix}${nameStr}(${params}) ${this.body.toString()}`;
   }
 }
 
@@ -849,6 +937,7 @@ class Parser {
       case TokenType.PRIVATE:
       case TokenType.INT:
       case TokenType.STRING_TYPE:
+      case TokenType.CHAR:
       case TokenType.DOUBLE:
       case TokenType.VOID:
         // If followed by an LPAREN after identifier (lookahead), it is a typed function!
@@ -955,13 +1044,16 @@ class Parser {
     const tok = this.curToken;
     this.nextToken(); // consume 'give_it_to_me_now'
 
-    const value = this.parseExpression(Precedence.LOWEST);
+    let value = null;
+    if (!this.curTokenIs(TokenType.SEMICOLON)) {
+      value = this.parseExpression(Precedence.LOWEST);
+    }
 
     if (this.peekTokenIs(TokenType.SEMICOLON)) {
       this.nextToken();
     }
 
-    return new ReturnStatement(tok, value);
+    return new ReturnStatement(tok, value, returnTypeForKeyword(tok.value));
   }
 
   parsePrintStatement() {
@@ -1144,7 +1236,7 @@ class Parser {
     }
 
     const body = this.parseBlockStatement();
-    return new FunctionDeclaration(tok, name, parameters, body);
+    return new FunctionDeclaration(tok, name, parameters, body, null);
   }
 
   parseFunctionDeclarationWithType() {
@@ -1160,13 +1252,14 @@ class Parser {
       return null;
     }
     const body = this.parseBlockStatement();
-    return new FunctionDeclaration(typeTok, name, parameters, body);
+    return new FunctionDeclaration(typeTok, name, parameters, body, typeNameForToken(typeTok));
   }
 
   isTypeToken(type) {
     return (
       type === TokenType.INT ||
       type === TokenType.STRING_TYPE ||
+      type === TokenType.CHAR ||
       type === TokenType.DOUBLE ||
       type === TokenType.VOID ||
       type === TokenType.LET ||
@@ -1197,10 +1290,8 @@ class Parser {
     params.push(ident);
 
     while (this.peekTokenIs(TokenType.COMMA)) {
-      this.nextToken(); // consume current param
       this.nextToken(); // consume COMMA
-      
-      this.nextToken(); // consume COMMA, curToken is now parameter name or type
+      this.nextToken(); // curToken is now parameter name or type
       let nextNameToken = this.curToken;
       if (this.isTypeToken(this.curToken.type) && this.peekTokenIs(TokenType.IDENT)) {
         this.nextToken(); // skip type specifier
@@ -1384,7 +1475,7 @@ class Parser {
     }
 
     const body = this.parseBlockStatement();
-    return new FunctionDeclaration(tok, null, parameters, body);
+    return new FunctionDeclaration(tok, null, parameters, body, null);
   }
 
   parseInputExpression() {
@@ -1525,8 +1616,9 @@ class BoundMethodObj extends Obj {
 }
 
 class ReturnObj extends Obj {
-  constructor(val) {
+  constructor(val, returnType = null) {
     super(ObjectType.RETURN_VALUE, val);
+    this.returnType = returnType;
   }
 }
 
@@ -1542,11 +1634,12 @@ class ErrorObj extends Obj {
 }
 
 class FunctionObj extends Obj {
-  constructor(parameters, body, env) {
+  constructor(parameters, body, env, returnType = null) {
     super(ObjectType.FUNCTION, null);
     this.parameters = parameters;
     this.body = body;
     this.env = env;
+    this.returnType = returnType;
   }
   inspect() {
     const params = this.parameters.map((p) => p.toString()).join(", ");
@@ -1644,7 +1737,7 @@ class Evaluator {
     }));
   }
 
-  evaluate(node, env) {
+  async evaluate(node, env) {
     if (!node) return new NullObj();
 
     switch (node.constructor) {
@@ -1667,7 +1760,7 @@ class Evaluator {
         return new NullObj();
 
       case ArrayLiteral:
-        const elements = this.evalExpressions(node.elements, env);
+        const elements = await this.evalExpressions(node.elements, env);
         if (elements.length === 1 && elements[0].type === ObjectType.ERROR) {
           return elements[0];
         }
@@ -1679,7 +1772,7 @@ class Evaluator {
       case LetStatement: {
         let val = new NullObj();
         if (node.value) {
-          val = this.evaluate(node.value, env);
+          val = await this.evaluate(node.value, env);
           if (val.type === ObjectType.ERROR) return val;
         }
         const res = env.set(node.name.value, val, node.isConst);
@@ -1688,12 +1781,12 @@ class Evaluator {
       }
 
       case AssignStatement: {
-        const val = this.evaluate(node.value, env);
+        const val = await this.evaluate(node.value, env);
         if (val.type === ObjectType.ERROR) return val;
 
         // Check if member assignment: instance.field = value;
         if (node.name instanceof DotExpression) {
-          const left = this.evaluate(node.name.left, env);
+          const left = await this.evaluate(node.name.left, env);
           if (left.type === ObjectType.ERROR) return left;
           if (left.type !== ObjectType.INSTANCE) {
             return new ErrorObj("Member assignment target is not a class instance", node.token.line, node.token.column);
@@ -1713,13 +1806,15 @@ class Evaluator {
       }
 
       case ReturnStatement: {
-        const val = this.evaluate(node.returnValue, env);
+        const val = node.returnValue ? await this.evaluate(node.returnValue, env) : new NullObj();
         if (val.type === ObjectType.ERROR) return val;
-        return new ReturnObj(val);
+        const typeError = this.validateTypedReturn(val, node.returnType, node.token.line, node.token.column);
+        if (typeError) return typeError;
+        return new ReturnObj(val, node.returnType);
       }
 
       case PrintStatement: {
-        const args = this.evalExpressions(node.args, env);
+        const args = await this.evalExpressions(node.args, env);
         if (args.length === 1 && args[0].type === ObjectType.ERROR) {
           return args[0];
         }
@@ -1731,11 +1826,11 @@ class Evaluator {
       case InputExpression: {
         let promptVal = "👅 GULP Input:";
         if (node.promptMsg) {
-          const val = this.evaluate(node.promptMsg, env);
+          const val = await this.evaluate(node.promptMsg, env);
           if (val.type === ObjectType.ERROR) return val;
           promptVal = val.inspect();
         }
-        const userInput = this.stdin(promptVal) || "";
+        const userInput = (await this.stdin(promptVal)) || "";
         if (!isNaN(userInput) && userInput.trim() !== "") {
           return new NumberObj(parseFloat(userInput));
         }
@@ -1743,9 +1838,9 @@ class Evaluator {
       }
 
       case SplitExpression: {
-        const target = this.evaluate(node.target, env);
+        const target = await this.evaluate(node.target, env);
         if (target.type === ObjectType.ERROR) return target;
-        const separator = this.evaluate(node.separator, env);
+        const separator = await this.evaluate(node.separator, env);
         if (separator.type === ObjectType.ERROR) return separator;
 
         if (target.type === ObjectType.STRING) {
@@ -1783,12 +1878,12 @@ class Evaluator {
         const classEnv = new Environment(classObj.env);
         for (const stmt of classObj.body.statements) {
           if (stmt instanceof FunctionDeclaration) {
-            const method = new FunctionObj(stmt.parameters, stmt.body, classEnv);
+            const method = new FunctionObj(stmt.parameters, stmt.body, classEnv, stmt.returnType);
             instance.methods[stmt.name.value] = method;
           } else if (stmt instanceof LetStatement) {
             let defaultVal = new NullObj();
             if (stmt.value) {
-              defaultVal = this.evaluate(stmt.value, classEnv);
+              defaultVal = await this.evaluate(stmt.value, classEnv);
               if (defaultVal.type === ObjectType.ERROR) return defaultVal;
             }
             instance.fields[stmt.name.value] = defaultVal;
@@ -1798,7 +1893,7 @@ class Evaluator {
         // Call initializer/constructor if present (e.g. init method)
         const initMethod = instance.methods["init"] || instance.methods[classObj.name];
         if (initMethod) {
-          const args = this.evalExpressions(node.args, env);
+          const args = await this.evalExpressions(node.args, env);
           if (args.length === 1 && args[0].type === ObjectType.ERROR) {
             return args[0];
           }
@@ -1806,7 +1901,7 @@ class Evaluator {
           const extendedEnv = this.extendFunctionEnv(initMethod, args);
           extendedEnv.set(MAPPINGS.this, instance, true); // bind 'this'
           
-          const evaluated = this.evaluate(initMethod.body, extendedEnv);
+          const evaluated = await this.evaluate(initMethod.body, extendedEnv);
           if (evaluated.type === ObjectType.ERROR) return evaluated;
         }
         
@@ -1814,7 +1909,7 @@ class Evaluator {
       }
 
       case DotExpression: {
-        const left = this.evaluate(node.left, env);
+        const left = await this.evaluate(node.left, env);
         if (left.type === ObjectType.ERROR) return left;
 
         if (left.type !== ObjectType.INSTANCE) {
@@ -1838,23 +1933,23 @@ class Evaluator {
       }
 
       case PrefixExpression: {
-        const right = this.evaluate(node.right, env);
+        const right = await this.evaluate(node.right, env);
         if (right.type === ObjectType.ERROR) return right;
         return this.evalPrefixExpression(node.operator, right, node.token.line, node.token.column);
       }
 
       case InfixExpression: {
-        const left = this.evaluate(node.left, env);
+        const left = await this.evaluate(node.left, env);
         if (left.type === ObjectType.ERROR) return left;
-        const right = this.evaluate(node.right, env);
+        const right = await this.evaluate(node.right, env);
         if (right.type === ObjectType.ERROR) return right;
         return this.evalInfixExpression(node.operator, left, right, node.token.line, node.token.column);
       }
 
       case IndexExpression: {
-        const left = this.evaluate(node.left, env);
+        const left = await this.evaluate(node.left, env);
         if (left.type === ObjectType.ERROR) return left;
-        const index = this.evaluate(node.index, env);
+        const index = await this.evaluate(node.index, env);
         if (index.type === ObjectType.ERROR) return index;
         return this.evalIndexExpression(left, index, node.token.line, node.token.column);
       }
@@ -1872,7 +1967,7 @@ class Evaluator {
         return this.evalTryCatchStatement(node, env);
 
       case FunctionDeclaration: {
-        const func = new FunctionObj(node.parameters, node.body, env);
+        const func = new FunctionObj(node.parameters, node.body, env, node.returnType);
         if (node.name) {
           env.set(node.name.value, func, false);
           return new NullObj();
@@ -1881,15 +1976,15 @@ class Evaluator {
       }
 
       case CallExpression: {
-        const func = this.evaluate(node.functionNode, env);
+        const func = await this.evaluate(node.functionNode, env);
         if (func.type === ObjectType.ERROR) return func;
 
-        const args = this.evalExpressions(node.args, env);
+        const args = await this.evalExpressions(node.args, env);
         if (args.length === 1 && args[0].type === ObjectType.ERROR) {
           return args[0];
         }
 
-        return this.applyFunction(func, args, node.token.line, node.token.column);
+        return await this.applyFunction(func, args, node.token.line, node.token.column);
       }
 
       default:
@@ -1897,10 +1992,10 @@ class Evaluator {
     }
   }
 
-  evalProgram(program, env) {
+  async evalProgram(program, env) {
     let result = new NullObj();
     for (const stmt of program.statements) {
-      result = this.evaluate(stmt, env);
+      result = await this.evaluate(stmt, env);
 
       if (result.type === ObjectType.RETURN_VALUE) {
         return result.value;
@@ -1911,10 +2006,10 @@ class Evaluator {
     return result;
   }
 
-  evalBlockStatement(block, env) {
+  async evalBlockStatement(block, env) {
     let result = new NullObj();
     for (const stmt of block.statements) {
-      result = this.evaluate(stmt, env);
+      result = await this.evaluate(stmt, env);
       if (result && (result.type === ObjectType.RETURN_VALUE || result.type === ObjectType.ERROR)) {
         return result;
       }
@@ -1930,10 +2025,10 @@ class Evaluator {
     return val;
   }
 
-  evalExpressions(exps, env) {
+  async evalExpressions(exps, env) {
     const result = [];
     for (const e of exps) {
-      const evaluated = this.evaluate(e, env);
+      const evaluated = await this.evaluate(e, env);
       if (evaluated.type === ObjectType.ERROR) {
         return [evaluated];
       }
@@ -2070,21 +2165,21 @@ class Evaluator {
     return new ErrorObj(`Index operator "chopsticks" is not supported for ${left.type} index by ${index.type}`, line, col);
   }
 
-  evalIfStatement(node, env) {
-    const condition = this.evaluate(node.condition, env);
+  async evalIfStatement(node, env) {
+    const condition = await this.evaluate(node.condition, env);
     if (condition.type === ObjectType.ERROR) return condition;
 
     if (this.isTruthy(condition)) {
-      return this.evaluate(node.consequence, env);
+      return await this.evaluate(node.consequence, env);
     } else if (node.alternative) {
-      return this.evaluate(node.alternative, env);
+      return await this.evaluate(node.alternative, env);
     }
     return new NullObj();
   }
 
-  evalWhileStatement(node, env) {
+  async evalWhileStatement(node, env) {
     let result = new NullObj();
-    let condition = this.evaluate(node.condition, env);
+    let condition = await this.evaluate(node.condition, env);
     if (condition.type === ObjectType.ERROR) return condition;
 
     let loops = 0;
@@ -2093,31 +2188,31 @@ class Evaluator {
       if (loops > 5000) {
         return new ErrorObj("Lips are tired! Infinite loop detected (capped at 5,000 runs)", node.token.line, node.token.column);
       }
-      result = this.evaluate(node.body, env);
+      result = await this.evaluate(node.body, env);
       if (result && (result.type === ObjectType.RETURN_VALUE || result.type === ObjectType.ERROR)) {
         return result;
       }
-      condition = this.evaluate(node.condition, env);
+      condition = await this.evaluate(node.condition, env);
       if (condition.type === ObjectType.ERROR) return condition;
     }
     return result;
   }
 
-  evalTryCatchStatement(node, env) {
+  async evalTryCatchStatement(node, env) {
     const tryEnv = new Environment(env);
-    const result = this.evaluate(node.tryBlock, tryEnv);
+    const result = await this.evaluate(node.tryBlock, tryEnv);
 
     if (result.type === ObjectType.ERROR) {
       const catchEnv = new Environment(env);
       if (node.errorVar) {
         catchEnv.set(node.errorVar.value, new StringObj(result.value), true);
       }
-      return this.evaluate(node.catchBlock, catchEnv);
+      return await this.evaluate(node.catchBlock, catchEnv);
     }
     return result;
   }
 
-  applyFunction(func, args, line, col) {
+  async applyFunction(func, args, line, col) {
     if (func.type === ObjectType.BUILTIN) {
       const res = func.value(args);
       if (res.type === ObjectType.ERROR) {
@@ -2134,8 +2229,8 @@ class Evaluator {
       }
       const extendedEnv = this.extendFunctionEnv(method, args);
       extendedEnv.set(MAPPINGS.this, func.instance, true); // Bind dynamic 'this' context!
-      const evaluated = this.evaluate(method.body, extendedEnv);
-      return this.unwrapReturnValue(evaluated);
+      const evaluated = await this.evaluate(method.body, extendedEnv);
+      return this.unwrapReturnValue(evaluated, method.returnType, line, col);
     }
 
     if (func.type === ObjectType.FUNCTION) {
@@ -2144,8 +2239,8 @@ class Evaluator {
       }
 
       const extendedEnv = this.extendFunctionEnv(func, args);
-      const evaluated = this.evaluate(func.body, extendedEnv);
-      return this.unwrapReturnValue(evaluated);
+      const evaluated = await this.evaluate(func.body, extendedEnv);
+      return this.unwrapReturnValue(evaluated, func.returnType, line, col);
     }
 
     return new ErrorObj(`Type "${func.type}" is not callable. Did you mean to deepthroat a function or class?`, line, col);
@@ -2159,9 +2254,44 @@ class Evaluator {
     return env;
   }
 
-  unwrapReturnValue(obj) {
+  validateTypedReturn(value, expectedType, line = 0, col = 0) {
+    if (!expectedType) return null;
+
+    const actualType = this.valueTypeName(value);
+    if (expectedType === "void") {
+      return actualType === "void"
+        ? null
+        : new ErrorObj(`Expected void return, got ${actualType}`, line, col);
+    }
+    if (expectedType === "double" && actualType === "int") return null;
+    if (expectedType === actualType) return null;
+    return new ErrorObj(`Expected ${expectedType} return, got ${actualType}`, line, col);
+  }
+
+  valueTypeName(value) {
+    if (!value || value.type === ObjectType.NULL) return "void";
+    if (value.type === ObjectType.NUMBER) return Number.isInteger(value.value) ? "int" : "double";
+    if (value.type === ObjectType.STRING) return value.value.length === 1 ? "char" : "string";
+    if (value.type === ObjectType.BOOLEAN) return "boolean";
+    if (value.type === ObjectType.ARRAY) return "array";
+    if (value.type === ObjectType.INSTANCE) return "instance";
+    if (value.type === ObjectType.FUNCTION) return "function";
+    if (value.type === ObjectType.BOUND_METHOD) return "function";
+    return String(value.type || "unknown").toLowerCase();
+  }
+
+  unwrapReturnValue(obj, expectedType = null, line = 0, col = 0) {
+    if (obj.type === ObjectType.ERROR) return obj;
     if (obj.type === ObjectType.RETURN_VALUE) {
+      if (obj.returnType && expectedType && obj.returnType !== expectedType) {
+        return new ErrorObj(`Function declared ${expectedType} but returned ${obj.returnType}`, line, col);
+      }
+      const typeError = this.validateTypedReturn(obj.value, expectedType, line, col);
+      if (typeError) return typeError;
       return obj.value;
+    }
+    if (expectedType && expectedType !== "void") {
+      return new ErrorObj(`Function declared ${expectedType} but did not return a value`, line, col);
     }
     return obj;
   }

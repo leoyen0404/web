@@ -528,7 +528,26 @@ squirt("💋 CupcakKeScript Pure Experience runs flawlessly! Slurp! 💋");`;
   });
 
   // --- GULP INPUT STREAM OVERLAY MODAL ---
+  const gulpInputQueue = [];
+
+  const enqueueGulpLines = (rawValue) => {
+    const lines = String(rawValue)
+      .replace(/\r\n/g, "\n")
+      .replace(/\r/g, "\n")
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
+
+    if (lines.length === 0) return "";
+    gulpInputQueue.push(...lines.slice(1));
+    return lines[0];
+  };
+
   const showGulpModal = (promptMsg) => {
+    if (gulpInputQueue.length > 0) {
+      return Promise.resolve(gulpInputQueue.shift());
+    }
+
     return new Promise((resolve) => {
       const modal = document.getElementById("gulp-modal");
       const modalText = document.getElementById("gulp-prompt-text");
@@ -543,9 +562,10 @@ squirt("💋 CupcakKeScript Pure Experience runs flawlessly! Slurp! 💋");`;
       playGulpSound();
 
       const handleResolve = () => {
+        const value = enqueueGulpLines(input.value);
         modal.classList.remove("active");
         cleanup();
-        resolve(input.value);
+        resolve(value);
       };
 
       const handleReject = () => {
@@ -555,7 +575,8 @@ squirt("💋 CupcakKeScript Pure Experience runs flawlessly! Slurp! 💋");`;
       };
 
       const handleKey = (e) => {
-        if (e.key === "Enter") {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
           handleResolve();
         }
       };
@@ -618,15 +639,11 @@ squirt("💋 CupcakKeScript Pure Experience runs flawlessly! Slurp! 💋");`;
       stdout: (msg) => {
         appendConsoleLog(`💦 [Stdout] ${msg}`);
       },
-      stdin: (promptMsg) => {
-        playGulpSound();
-        const userInput = prompt(`👅 GULP STREAM REQUESTED INPUT:\n\n${promptMsg}`);
-        return userInput;
-      }
+      stdin: (promptMsg) => showGulpModal(promptMsg)
     });
 
     try {
-      const result = evaluator.evaluate(program, evaluator.globals);
+      const result = await evaluator.evaluate(program, evaluator.globals);
       
       if (result.type === "ERROR") {
         appendConsoleError(result.inspect());

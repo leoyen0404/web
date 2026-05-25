@@ -30,7 +30,8 @@ The lexical scanner translates dynamic keywords loaded from `mapping_table.json`
 | `let` | `lick` | **Dynamic Variable / Object Declaration**. |
 | `const` | `cumshot` | **Immutable Variable / Constant Declaration**. |
 | `function` | `fuck` | **Function Declaration**. |
-| `return` | `give_it_to_me_now` | **Return Statement**. |
+| `return` | `give_it_to_me_now` | **Untyped Return Statement**. |
+| typed returns | `give_int_to_me_now`, `give_string_to_me_now`, `give_char_to_me_now`, `give_double_to_me_now`, `give_void_to_me_now` | **Runtime-checked typed returns**. |
 | `print` | `squirt` | **Output Stream / Stdout Call**. |
 | `input` | `gulp` | **Input Stream / Stdin Popup Reader**. |
 | `if` | `slurp` | **Conditional (If)**. |
@@ -40,10 +41,11 @@ The lexical scanner translates dynamic keywords loaded from `mapping_table.json`
 | `catch` | `cream` | **Exception Recovery Catch Block**. |
 | `split` | `slay` | **String/Array Split Helper** (e.g., `slay(text, ",")`). |
 | `chopsticks` | `chopsticks` | **Array / String Index Accessor** (e.g., `arr chopsticks 2`). |
-| `int` | `bitch` | Comfortable dynamic integer type annotation. |
-| `string` | `swallow` | Comfortable dynamic string type annotation. |
-| `double` | `nasty` | Comfortable dynamic floating-point type annotation. |
-| `void` | `ass` | Comfortable dynamic empty return-type annotation. |
+| `int` | `int` | Canonical integer type annotation. |
+| `string` | `string` | Canonical string type annotation. |
+| `char` | `char` | Canonical single-character type annotation. |
+| `double` | `double` | Canonical floating-point type annotation. |
+| `void` | `void` | Canonical empty return-type annotation. |
 
 ---
 
