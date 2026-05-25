@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>👄 CupcakKe IDE - The Sensual Programming Language</title>
+  
+  <!-- Modern Typography and Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- CSS Styling -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Background Decorative Glowing Orbs -->
+  <div class="glow-orb orb-1"></div>
+  <div class="glow-orb orb-2"></div>
+  <div class="glow-orb orb-3"></div>
+
+  <div class="app-container">
+    <!-- Header Navigation -->
+    <header class="main-header">
+      <div class="logo">
+        <span class="emoji-glow">👄</span>
+        <h1>CupcakKe<span class="text-gradient">Script</span> IDE</h1>
+      </div>
+      <div class="header-controls">
+        <!-- Preset Examples Dropdown -->
+        <div class="dropdown-container">
+          <label for="example-select"><i class="fa-solid fa-list-check"></i> Presets:</label>
+          <select id="example-select" class="custom-select">
+            <option value="main.cupcakke">💦 Full Showcase (.cupcakke)</option>
+            <option value="basic">🍒 Variable Pleasures</option>
+            <option value="conditional">🍓 Smack Conditionals</option>
+            <option value="loop">🔥 Looping (Goose)</option>
+            <option value="function">👅 Deepthroat Recursion</option>
+            <option value="cpr">🚑 CPR Exception Recovery</option>
+            <option value="oop">🍑 OOP Class Pleasures</option>
+          </select>
+        </div>
+
+        <!-- Audio Toggle -->
+        <button id="audio-toggle-btn" class="icon-btn active" title="Toggle Sound Synthesis">
+          <i class="fa-solid fa-volume-high"></i>
+          <span>Audio: ON</span>
+        </button>
+
+        <!-- Run Button -->
+        <button id="run-btn" class="btn btn-primary btn-glow">
+          <i class="fa-solid fa-play"></i> Run Script
+        </button>
+      </div>
+    </header>
+
+    <!-- Main IDE Workspace Layout -->
+    <main class="ide-workspace">
+      <!-- Left Sidebar: File Tree explorer -->
+      <aside class="sidebar">
+        <div class="panel-header flex-between">
+          <h3><i class="fa-solid fa-folder-open"></i> Explorer</h3>
+          <div class="explorer-actions">
+            <button id="new-file-btn" class="icon-btn-small" title="Create New File"><i class="fa-solid fa-file-circle-plus"></i></button>
+            <button id="delete-file-btn" class="icon-btn-small" title="Delete Active File"><i class="fa-solid fa-trash-can"></i></button>
+          </div>
+        </div>
+        <div class="file-tree">
+          <div class="tree-item folder open">
+            <span class="folder-name"><i class="fa-solid fa-chevron-down"></i> <i class="fa-regular fa-folder-open text-pink"></i> workspace</span>
+            <div class="tree-children">
+              <div class="tree-item file active" data-file="main.cupcakke">
+                <span class="file-name"><i class="fa-regular fa-file-code text-pink"></i> main.cupcakke</span>
+              </div>
+              <div class="tree-item file" data-file="interpreter.js">
+                <span class="file-name"><i class="fa-brands fa-js text-yellow"></i> interpreter.js</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="system-status">
+          <div class="status-indicator online"></div>
+          <span>CupcakKe VM Online</span>
+        </div>
+      </aside>
+
+      <!-- Middle Code Editor Panel -->
+      <section class="editor-panel">
+        <div class="panel-header flex-between">
+          <div class="tabs">
+            <div class="tab active">
+              <i class="fa-regular fa-file-code text-pink"></i>
+              <span id="active-filename">main.cupcakke</span>
+              <span class="tab-dot"></span>
+            </div>
+          </div>
+          <div class="editor-actions">
+            <button id="clear-editor-btn" class="icon-btn" title="Clear Editor"><i class="fa-solid fa-trash-can"></i></button>
+            <button id="reset-editor-btn" class="icon-btn" title="Reset to Original Showcase"><i class="fa-solid fa-rotate-left"></i></button>
+          </div>
+        </div>
+        
+        <!-- Interactive Code Editor container -->
+        <div class="editor-container">
+          <div class="line-numbers" id="line-numbers">1</div>
+          <textarea id="code-editor" autocomplete="off" autofocus spellcheck="false" placeholder="Write some sensual CupcakKeScript here..."></textarea>
+        </div>
+      </section>
+
+      <!-- Right/Bottom Terminal & AST Visualizer Section -->
+      <section class="debug-panel">
+        <!-- Terminal Output -->
+        <div class="console-section">
+          <div class="panel-header flex-between">
+            <h3><i class="fa-solid fa-terminal text-pink"></i> Terminal Console</h3>
+            <button id="clear-console-btn" class="icon-btn" title="Clear Console"><i class="fa-solid fa-ban"></i> Clear</button>
+          </div>
+          <div class="console-body" id="console-output">
+            <div class="console-line system-line">[System] Click "Run Script" to parse and execute.</div>
+            <div class="console-line system-line">[System] CupcakKeScript version 1.0.0 is ready. Slurp. 👅</div>
+          </div>
+        </div>
+
+        <!-- AST Visualizer -->
+        <div class="ast-section">
+          <div class="panel-header flex-between">
+            <h3><i class="fa-solid fa-diagram-project text-pink"></i> AST Visualizer</h3>
+            <button id="toggle-ast-btn" class="icon-btn" title="Expand/Collapse AST"><i class="fa-solid fa-chevron-down"></i></button>
+          </div>
+          <div class="ast-body" id="ast-output">
+            <pre class="json-code">/* Abstract Syntax Tree (AST) will appear here after parsing */</pre>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer Meta -->
+    <footer class="main-footer">
+      <div class="footer-left">
+        <span>Sensitive Mode: <strong class="text-pink">EXPLICIT</strong></span>
+      </div>
+      <div class="footer-center">
+        <span>Created for humorous educational purposes</span>
+      </div>
+      <div class="footer-right">
+        <span>UTF-8 | LF | CupcakKeScript</span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Interactive Gulp Modal Prompt (Replaces standard browser prompt) -->
+  <div id="gulp-modal" class="modal-overlay">
+    <div class="modal-content glass-card">
+      <div class="modal-header">
+        <span class="modal-emoji">👅</span>
+        <h2>GULP Stream Intake</h2>
+      </div>
+      <div class="modal-body">
+        <p id="gulp-prompt-text">The interpreter requests input values:</p>
+        <input type="text" id="gulp-input" placeholder="Type a value to gulp..." autocomplete="off">
+      </div>
+      <div class="modal-footer">
+        <button id="gulp-cancel-btn" class="btn btn-secondary">Reject</button>
+        <button id="gulp-submit-btn" class="btn btn-primary btn-glow">Swallow & Gulp</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript Modules -->
+  <script src="interpreter.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
