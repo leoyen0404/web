@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AGM-158 JASSM 戰術展售與 2026 實戰綜合評估報告</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'system-ui', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f1f5f9;
+            color: #0f172a;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 650px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 320px;
+            max-height: 380px;
+        }
+        .active-tab {
+            border-bottom: 3px solid #2563eb;
+            color: #2563eb;
+            font-weight: 700;
+        }
+        .glow-blue {
+            box-shadow: 0 4px 20px -2px rgba(37, 99, 235, 0.15);
+        }
+        .tactical-border {
+            border-left: 4px solid #2563eb;
+        }
+        .warning-border {
+            border-left: 4px solid #d97706;
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col">
+
+    <!-- Top Premium Brand Navbar -->
+    <header class="bg-slate-900 text-white sticky top-0 z-50 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-blue-600 text-white p-2.5 rounded-lg font-black tracking-wider text-lg">LM-AGM</div>
+                    <div>
+                        <h1 class="text-xl font-bold tracking-tight">AGM-158 JASSM 戰術展售系統</h1>
+                        <p class="text-xs text-slate-400">Tactical Showcase & 2026 Combat Analytics Dashboard</p>
+                    </div>
+                </div>
+                <!-- Controls info -->
+                <div class="hidden md:flex items-center space-x-4 text-xs text-slate-300">
+                    <span class="flex items-center"><span class="w-2.5 h-2.5 bg-green-500 rounded-full mr-1.5 animate-pulse"></span>2026年6月最新解密數據已導入</span>
+                    <span class="border-l border-slate-700 h-4"></span>
+                    <span>等級：國防戰略公開檔案</span>
+                </div>
+            </div>
+        </div>
+        <!-- Menu Bar (Light Slate contrast) -->
+        <div class="bg-slate-800 text-slate-200 border-t border-slate-700">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <nav class="flex space-x-2 py-2 overflow-x-auto" id="main-navigation">
+                    <button onclick="switchSection('dashboard')" id="nav-dashboard" class="px-4 py-2 rounded text-sm font-medium hover:bg-slate-700 transition active-tab">1. 實戰戰略簡報</button>
+                    <button onclick="switchSection('showroom')" id="nav-showroom" class="px-4 py-2 rounded text-sm font-medium hover:bg-slate-700 transition">2. 飛彈科技展示廳</button>
+                    <button onclick="switchSection('rapid-dragon')" id="nav-rapid-dragon" class="px-4 py-2 rounded text-sm font-medium hover:bg-slate-700 transition">3. 載台適配與快速龍</button>
+                    <button onclick="switchSection('shields')" id="nav-shields" class="px-4 py-2 rounded text-sm font-medium hover:bg-slate-700 transition">4. 雙重區域戰禦盾</button>
+                    <button onclick="switchSection('supply-chain')" id="nav-supply-chain" class="px-4 py-2 rounded text-sm font-medium hover:bg-slate-700 transition">5. 產能重建與市場</button>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- 1. SECTION: TACTICAL DASHBOARD -->
+        <section id="sec-dashboard" class="space-y-8">
+            <!-- Intro Paragraph explaining purpose -->
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <p class="text-slate-700 leading-relaxed text-base">
+                    <strong>戰略引言：</strong> 歡迎進入 2026 年最新戰略評估控制台。本單元重點剖析 2026 年 2 月至 4 月間爆發的最新美伊衝突——<strong>「狂怒史詩行動」（Operation Epic Fury）</strong>。這場為期 39 天的高強度非對稱空中戰役中，美軍大量釋放了常規精密彈藥庫存，尤以 AGM-158 JASSM 家族為首攻核心。本單元將為您提供最直觀的實戰數據解碼、耗能警示、以及釐清廣受關注的「美伊衝突歷史誤區」。
+                </p>
+            </div>
+
+            <!-- Operational Stat Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div class="text-xs font-bold text-slate-400 tracking-wider uppercase">美伊空襲戰役耗能</div>
+                        <div class="text-3xl font-black text-blue-600 mt-2">1,100+ 枚</div>
+                    </div>
+                    <div class="text-xs text-slate-500 mt-4">佔衝突前全球 JASSM-ER 可用總儲備的將近一半</div>
+                </div>
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div class="text-xs font-bold text-slate-400 tracking-wider uppercase">JASSM-ER 太平洋西太餘量</div>
+                        <div class="text-3xl font-black text-amber-600 mt-2">約 425 枚</div>
+                    </div>
+                    <div class="text-xs text-slate-500 mt-4">降至臨界警戒線，西太平洋即時威懾能力面臨空前挑戰</div>
+                </div>
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div class="text-xs font-bold text-slate-400 tracking-wider uppercase">戰機防區外生存率</div>
+                        <div class="text-3xl font-black text-emerald-600 mt-2">100%</div>
+                    </div>
+                    <div class="text-xs text-slate-500 mt-4">JASSM 防區外投射成功保障發射機群避開伊朗防空網</div>
+                </div>
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div class="text-xs font-bold text-slate-400 tracking-wider uppercase">緊急重組 Lot 22 合約</div>
+                        <div class="text-3xl font-black text-indigo-600 mt-2">$32.3 億</div>
+                    </div>
+                    <div class="text-xs text-slate-500 mt-4">美軍聯合盟國緊急啟動產能加速協議，交貨排程至 2032 年</div>
+                </div>
+            </div>
+
+            <!-- Dynamic Timeline & Debunking Row -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                
+                <!-- Left: Combat Timeline -->
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm lg:col-span-2">
+                    <h3 class="text-lg font-bold text-slate-900 mb-4 flex items-center">
+                        <span class="p-1.5 bg-blue-100 text-blue-600 rounded mr-2">🚀</span> AGM-158 關鍵實戰軌跡與戰術演變
+                    </h3>
+                    <p class="text-xs text-slate-500 mb-4">點擊下方關鍵衝突節點，切換右側戰術情報卡：</p>
+                    
+                    <div class="space-y-4">
+                        <div onclick="showTacticalInfo('syria')" id="btn-t-syria" class="p-4 bg-blue-50 border-l-4 border-blue-600 rounded-r cursor-pointer hover:bg-blue-100 transition">
+                            <div class="flex justify-between font-bold text-sm text-blue-900">
+                                <span>2018 年：敘利亞空襲 (初試啼聲)</span>
+                                <span class="bg-blue-200 text-blue-800 text-xs px-2 py-0.5 rounded">JASSM-A 首次實戰</span>
+                            </div>
+                            <p class="text-xs text-slate-600 mt-1">美軍 B-1B 轟炸機發射 19 枚飛彈成功突擊化學武器設施，完勝俄製防空系統。</p>
+                        </div>
+                        
+                        <div onclick="showTacticalInfo('baghdadi')" id="btn-t-baghdadi" class="p-4 bg-slate-50 border-l-4 border-slate-300 rounded-r cursor-pointer hover:bg-slate-100 transition">
+                            <div class="flex justify-between font-bold text-sm text-slate-800">
+                                <span>2019 年：擊殺巴格達迪行動</span>
+                                <span class="bg-slate-200 text-slate-700 text-xs px-2 py-0.5 rounded">精準斬首與清除</span>
+                            </div>
+                            <p class="text-xs text-slate-600 mt-1">特種部隊突襲任務後，空中力量釋放 JASSM 徹底夷平恐怖份子據點防範神化。</p>
+                        </div>
+                        
+                        <div onclick="showTacticalInfo('iran2026')" id="btn-t-iran2026" class="p-4 bg-slate-50 border-l-4 border-slate-300 rounded-r cursor-pointer hover:bg-slate-100 transition">
+                            <div class="flex justify-between font-bold text-sm text-slate-800">
+                                <span>2026 年：狂怒史詩行動 (飽和消耗戰)</span>
+                                <span class="bg-red-100 text-red-800 text-xs px-2 py-0.5 rounded">JASSM-ER/LRASM 飽和投射</span>
+                            </div>
+                            <p class="text-xs text-slate-600 mt-1">為期 39 天消耗上千枚高階精密飛彈，揭示了全球戰略庫存和供應鏈產能的系統性危機。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Tactical Detail Card -->
+                <div class="bg-slate-900 text-slate-100 p-6 rounded-xl shadow-md flex flex-col justify-between">
+                    <div>
+                        <div class="border-b border-slate-700 pb-3">
+                            <span class="text-xs font-bold text-blue-400 uppercase tracking-widest">TACTICAL DETAIL</span>
+                            <h4 id="tactical-title" class="text-lg font-bold mt-1 text-white">2018 年：敘利亞空襲 (初試啼聲)</h4>
+                        </div>
+                        <div class="py-4 space-y-3 text-xs leading-relaxed text-slate-300" id="tactical-body">
+                            <p><strong>作戰實踐：</strong> 美軍出動兩架 B-1B 戰略轟炸機，在大馬士革防區外釋放了 19 枚基準型 AGM-158A。目標為巴爾扎（Barzah）化學武器研究與發展中心。</p>
+                            <p><strong>戰術意義：</strong> 敵方部署的俄製 S-200、S-300 等防空系統完全未能實施攔截，飛彈全數摧毀目標。此戰驗證了 JASSM 優秀的低可偵測構型在實戰防空網絡前的突防價值。</p>
+                        </div>
+                    </div>
+                    <div class="bg-slate-800 p-3 rounded text-xxs text-slate-400">
+                        * 情報來源：美國空軍與中東多國開源監測情報彙編。
+                    </div>
+                </div>
+            </div>
+
+            <!-- CRITICAL DEBUNKING BOX -->
+            <div class="bg-amber-50 border-l-4 border-amber-600 p-6 rounded-xl shadow-sm">
+                <h3 class="text-lg font-bold text-amber-900 flex items-center">
+                    <span class="mr-2 text-xl">⚠️</span> 機密解碼：釐清「美伊衝突與 JASSM」的歷史大誤區
+                </h3>
+                <div class="mt-3 text-sm text-amber-900 leading-relaxed space-y-3">
+                    <p>
+                        在坊間與許多非專業軍事討論中，經常會將 <strong>2003 年爆發的美伊戰爭（伊拉克戰爭）</strong> 與 <strong>2026 年爆發的新美伊衝突（對伊朗空襲行動）</strong> 相互混淆，並誤傳「美軍在 2003 年伊拉克戰爭中大量發射了 AGM-158 JASSM 飛彈」。
+                    </p>
+                    <p class="font-bold">
+                        這是完全錯誤的歷史時間線！
+                    </p>
+                    <p>
+                        <strong>第一，JASSM 基本型（AGM-158A）直到 2009 年才正式進入美軍服役</strong>，而其增程型（AGM-158B JASSM-ER）更是在 2014 年才形成戰力。因此，在 2003 年對伊拉克的「震懾與畏懼」作戰中，美軍軍火庫裡根本不存在這型武器。
+                    </p>
+                    <p>
+                        <strong>第二，當時實際擔當距外打擊主力的是：</strong> <strong>BGM-109 戰斧巡弋飛彈</strong>、<strong>AGM-86C (CALCM)</strong> 以及 <strong>AGM-84H/K (SLAM-ER)</strong>。JASSM 的實質飽和消耗和大規模跨區緊急部署，是在 2026 年針對伊朗縱深硬化與網絡化防空網的「狂怒史詩行動」中才首次上演。
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. SECTION: WEAPON SHOWROOM -->
+        <section id="sec-showroom" class="space-y-8 hidden">
+            <!-- Intro -->
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <p class="text-slate-700 leading-relaxed text-base">
+                    <strong>說明：</strong> 本單元展示了洛克希德·馬丁開發的 AGM-158 飛彈家族從基本型至極增程型（JASSM-XR）、以及海上殺手 LRASM 的多維戰術參數。您可以利用左側的「型號選擇卡」來實時切換右側雷達圖及核心規格表，探討美軍如何藉由引擎升級與雙模感測融合，重塑現代視距外打擊鏈。
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- Left Selector Card -->
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm lg:col-span-4 space-y-4">
+                    <h3 class="text-lg font-bold text-slate-900 border-b pb-2">🎯 型號特點快選</h3>
+                    
+                    <div class="space-y-3">
+                        <button onclick="updateSpecs('A')" id="btn-spec-A" class="w-full text-left p-3 rounded-lg border-2 border-blue-600 bg-blue-50/50 transition">
+                            <span class="block font-bold text-slate-900 text-sm">AGM-158A JASSM (基準型)</span>
+                            <span class="text-xs text-slate-500">射程 370 km | 經典隱身突防先鋒</span>
+                        </button>
+                        
+                        <button onclick="updateSpecs('B')" id="btn-spec-B" class="w-full text-left p-3 rounded-lg border border-slate-200 hover:border-blue-500 transition">
+                            <span class="block font-bold text-slate-900 text-sm">AGM-158B JASSM-ER (增程型)</span>
+                            <span class="text-xs text-slate-500">射程 925+ km | 換裝渦輪扇發動機</span>
+                        </button>
+                        
+                        <button onclick="updateSpecs('C')" id="btn-spec-C" class="w-full text-left p-3 rounded-lg border border-slate-200 hover:border-blue-500 transition">
+                            <span class="block font-bold text-slate-900 text-sm">AGM-158C LRASM (長程反艦)</span>
+                            <span class="text-xs text-slate-500">射程 ~930 km | 蜂群自主反艦威懾</span>
+                        </button>
+                        
+                        <button onclick="updateSpecs('D')" id="btn-spec-D" class="w-full text-left p-3 rounded-lg border border-slate-200 hover:border-blue-500 transition">
+                            <span class="block font-bold text-slate-900 text-sm">AGM-158D JASSM-XR (極增程型)</span>
+                            <span class="text-xs text-slate-500">射程 1,600+ km | 重型超長距深遠突防</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Added MACE note -->
+                    <div class="p-4 bg-slate-50 rounded-lg border border-slate-200 text-xs text-slate-600">
+                        <span class="font-bold text-indigo-700">📌 2026年最新開發動態：MACE 計畫</span><br>
+                        為了因應高階彈藥耗盡，美軍加速研發「多任務可負擔電磁效應器（MACE）」，具備尺寸小、低成本特性，可裝入 F-35 內彈艙而不破壞隱身，首批編列 1.56 億美元採購 353 枚。
+                    </div>
+                </div>
+
+                <!-- Right Radar Graph & Stats -->
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="text-sm font-bold text-slate-500 uppercase tracking-widest mb-3">戰力雷達分析</h4>
+                        <div class="chart-container">
+                            <canvas id="showroomRadarChart"></canvas>
+                        </div>
+                    </div>
+                    <!-- Detailed Technical Parameters -->
+                    <div class="flex flex-col justify-between">
+                        <div>
+                            <h4 class="text-sm font-bold text-slate-500 uppercase tracking-widest mb-3">技術諸元與實戰參數</h4>
+                            <div class="space-y-4 text-sm" id="spec-sheet">
+                                <div class="flex justify-between border-b pb-1.5">
+                                    <span class="text-slate-500">發動機系統</span>
+                                    <span class="font-bold text-slate-800" id="spec-engine">Teledyne CAE J402 渦輪噴射</span>
+                                </div>
+                                <div class="flex justify-between border-b pb-1.5">
+                                    <span class="text-slate-500">實戰規劃射程</span>
+                                    <span class="font-bold text-slate-800" id="spec-range">370 公里 (防區外釋放)</span>
+                                </div>
+                                <div class="flex justify-between border-b pb-1.5">
+                                    <span class="text-slate-500">彈頭重量及配置</span>
+                                    <span class="font-bold text-slate-800" id="spec-warhead">1,000 磅 WDU-42/B 穿甲彈頭</span>
+                                </div>
+                                <div class="flex justify-between border-b pb-1.5">
+                                    <span class="text-slate-500">引信技術</span>
+                                    <span class="font-bold text-slate-800" id="spec-fuse">FMU-156/B 智能延時引信</span>
+                                </div>
+                                <div class="flex justify-between border-b pb-1.5">
+                                    <span class="text-slate-500">終端引導與抗干擾</span>
+                                    <span class="font-bold text-slate-800" id="spec-guidance">GPS/INS + IIR紅外線自動目標辨識 (ATR)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Highlights Section inside specifications -->
+                        <div class="bg-blue-50 p-4 rounded-lg mt-4 text-xs text-blue-950 border border-blue-100">
+                            <h5 class="font-bold mb-1 flex items-center">🧬 核心隱形特徵解密：</h5>
+                            <p id="spec-description">採用高度稜角化的雷達雷達散射截面(RCS)縮減設計，結合機身外部塗裝特殊的雷達吸收塗料，大幅延遲敵方雷達發現時機，突防勝率居全球之首。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. SECTION: PLATFORMS & RAPID DRAGON -->
+        <section id="sec-rapid-dragon" class="space-y-8 hidden">
+            <!-- Intro -->
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <p class="text-slate-700 leading-relaxed text-base">
+                    <strong>說明：</strong> AGM-158 系列最大的戰術優勢之一，在於其與盟國空戰平台的廣泛相容性。本單元重點推介革命性的<strong>「快速龍托盤武器投放系統」(Rapid Dragon)</strong>——該系統使得不具備隱身外型的大型運輸機能直接轉化為強大的武裝火力卡車。點擊下方載台，即可獲得其典型掛載與 2026 美伊實戰中解密的「前線任務特化配置」。
+                </p>
+            </div>
+
+            <!-- Platform Selector Tabs -->
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <button onclick="selectPlatform('rapid-dragon-sys')" id="plat-rapid-dragon-sys" class="p-4 rounded-xl border-2 border-blue-600 bg-white shadow-sm flex flex-col items-center justify-center text-center transition">
+                    <span class="text-2xl mb-1">📦</span>
+                    <span class="font-bold text-sm text-slate-800">快速龍投放系統</span>
+                    <span class="text-xxs text-slate-500">C-17 / C-130 托盤</span>
+                </button>
+                <button onclick="selectPlatform('b1b')" id="plat-b1b" class="p-4 rounded-xl border border-slate-200 bg-white shadow-sm flex flex-col items-center justify-center text-center transition">
+                    <span class="text-2xl mb-1">🦅</span>
+                    <span class="font-bold text-sm text-slate-800">B-1B 槍騎兵</span>
+                    <span class="text-xxs text-slate-500">24枚 (內部彈艙)</span>
+                </button>
+                <button onclick="selectPlatform('b52h')" id="plat-b52h" class="p-4 rounded-xl border border-slate-200 bg-white shadow-sm flex flex-col items-center justify-center text-center transition">
+                    <span class="text-2xl mb-1">🏢</span>
+                    <span class="font-bold text-sm text-slate-800">B-52H 同溫層堡壘</span>
+                    <span class="text-xxs text-slate-500">12枚 (外部掛載)</span>
+                </button>
+                <button onclick="selectPlatform('f16cm')" id="plat-f16cm" class="p-4 rounded-xl border border-slate-200 bg-white shadow-sm flex flex-col items-center justify-center text-center transition">
+                    <span class="text-2xl mb-1">🦊</span>
+                    <span class="font-bold text-sm text-slate-800">F-16CM 沼澤之狐</span>
+                    <span class="text-xxs text-slate-500">雙重任務防區外掛載</span>
+                </button>
+                <button onclick="selectPlatform('p8a')" id="plat-p8a" class="p-4 rounded-xl border border-slate-200 bg-white shadow-sm flex flex-col items-center justify-center text-center transition">
+                    <span class="text-2xl mb-1">⚓</span>
+                    <span class="font-bold text-sm text-slate-800">P-8A 海神</span>
+                    <span class="text-xxs text-slate-500">4枚 (外部掛載)</span>
+                </button>
+            </div>
+
+            <!-- Display Area -->
+            <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- Visual simulation card -->
+                <div class="lg:col-span-5 bg-slate-900 text-white p-6 rounded-xl flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                            <h4 class="font-bold text-blue-400 text-sm tracking-wider uppercase">發射載台掛載模擬</h4>
+                            <span class="bg-blue-600/30 text-blue-400 text-xs px-2 py-0.5 rounded border border-blue-500/20" id="ui-plat-badge">已就緒</span>
+                        </div>
+                        
+                        <div class="my-8 flex flex-col items-center justify-center">
+                            <!-- Visual box representing load payload representation -->
+                            <div class="border-2 border-dashed border-slate-700 p-4 rounded-lg w-full max-w-sm text-center">
+                                <span class="block text-xs text-slate-500 uppercase mb-3">掛載與彈艙配置拓撲</span>
+                                <div class="grid grid-cols-6 gap-2" id="payload-grid">
+                                    <!-- Dynamic elements injected via JS to represent individual missiles -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-xs text-slate-400 leading-relaxed bg-slate-800/50 p-3 rounded">
+                        <strong>掛載效力說明：</strong> 該配置允許執行高飽和度、防區外外科手術式突擊，藉由密集的齊射（Salvo）飽和並壓制高度集成的敵方多層防空網絡。
+                    </div>
+                </div>
+
+                <!-- Textual & Tactical Area -->
+                <div class="lg:col-span-7 flex flex-col justify-between space-y-6">
+                    <div>
+                        <h3 class="text-2xl font-bold text-slate-950" id="plat-showcase-title">快速龍托盤化空投發射系統</h3>
+                        <p class="text-slate-600 text-sm mt-2 leading-relaxed" id="plat-showcase-desc">
+                            這是一種極具開創性的「托盤化武器系統」（Palletized Weapon System）。美軍成功驗證了其自普通 C-17 運輸機發射 AGM-158B-2 (JASSM-ER) 飛彈的能力。運輸機不需進行昂貴的結構改裝，僅需以滾輪貨軌將裝滿 JASSM-ER 的重力托盤空投，托盤在降落傘減速下穩定姿態並自動釋放飛彈，依序點火發射。這將非隱身運輸機徹底升級為具備數百枚飛彈投射量的重型對地導彈發射卡車。
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="p-4 bg-slate-50 rounded-lg border border-slate-200">
+                            <span class="block text-xs font-bold text-slate-400 tracking-wider">實戰基地 / 突襲區域</span>
+                            <span class="block font-bold text-slate-800 text-sm mt-1" id="plat-showcase-base">印太戰區／大西洋前沿轉運基地</span>
+                        </div>
+                        <div class="p-4 bg-slate-50 rounded-lg border border-slate-200">
+                            <span class="block text-xs font-bold text-slate-400 tracking-wider">掛載上限 (發射規模)</span>
+                            <span class="block font-bold text-blue-600 text-sm mt-1" id="plat-showcase-limit">每托盤可承載 6 至 9 枚 | 單機 12 - 45枚</span>
+                        </div>
+                    </div>
+
+                    <!-- F-16CM Spec Info Box (Dynamic show/hide details) -->
+                    <div id="f16-tactical-detail-box" class="hidden p-4 bg-amber-50 rounded-lg border border-amber-200">
+                        <h5 class="text-xs font-bold text-amber-900 uppercase tracking-widest">💡 2026 戰術爆點：SCANG「沼澤之狐」雙重任務配置</h5>
+                        <p class="text-xs text-amber-800 mt-2 leading-relaxed">
+                            在 3 月 29 日實施的壓制伊朗防空網（SEAD）任務中，美軍 F-16CM Block 52 戰機採用了精密的<strong>雙重任務掛載（Swing-Role Loadout）</strong>：左右翼下各掛載 1 枚實彈 AGM-158A，機身腹部掛載「憤怒小貓」（Angry Kitten）主動電磁干擾莢艙、AN/ASQ-213 高速反輻射定位系統（HTS）莢艙，外加 AIM-120 與 AIM-9X。這使戰機能夠在釋放遠程巡弋飛彈後，立刻轉為強大的防空壓制與自衛空戰節點。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. SECTION: THE SHIELDS (TAIWAN & IRAN) -->
+        <section id="sec-shields" class="space-y-8 hidden">
+            <!-- Intro -->
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <p class="text-slate-700 leading-relaxed text-base">
+                    <strong>說明：</strong> AGM-158 代表的防區外（Stand-Off）精準打擊學說已在波斯灣實戰中得到深刻印證。本單元以對稱視角分析海峽兩岸的「源頭打擊與防空反制」角力。透過將「台灣求購與自研反制（萬劍、雄昇）」與「伊朗反隱身多重防禦網（Product 358 自殺巡飛彈、Bavar-373）」並列展示，揭示非對稱防空環境下防區外飛彈的真正價值。
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Taiwan Shield -->
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm tactical-border">
+                    <h3 class="text-xl font-bold text-slate-900 mb-3 flex items-center">
+                        <span class="mr-2 text-xl">🛡️</span> 台灣戰略防禦與自主研發路徑
+                    </h3>
+                    <p class="text-sm text-slate-600 leading-relaxed mb-6">
+                        面對解放軍龐大的區域拒止與防空反艦網，台灣國軍長年將 AGM-158JASSM 系列列為戰略求購對象，配合 F-16V Block 70 的全戰力成軍。然而在美方政治考量與庫存排程不確定下，台灣採取了「美購 SLAM-ER、自研雄昇/萬劍」兩手策略。
+                    </p>
+                    
+                    <div class="space-y-4">
+                        <div class="p-4 bg-slate-50 rounded-lg border border-slate-200">
+                            <div class="flex justify-between items-center font-bold text-blue-900 text-sm">
+                                <span>中科院自研：萬劍巡弋飛彈（萬劍彈）</span>
+                                <span class="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded">空射防區外 / 服役中</span>
+                            </div>
+                            <p class="text-xs text-slate-600 mt-2 leading-relaxed">
+                                <strong>台版 JSOW / JASSM 結合體：</strong> 由 IDF 戰機掛載的空對地集束巡弋飛彈。初型射程約 200 公里，新一代「萬劍二型」射程據信推進至 400 公里。透過集束彈藥大面積撒佈能力，专门用於第一波癱瘓敵方沿海雷達站、防空飛彈發射地及機場跑道。
+                            </p>
+                        </div>
+
+                        <div class="p-4 bg-slate-50 rounded-lg border border-slate-200">
+                            <div class="flex justify-between items-center font-bold text-blue-900 text-sm">
+                                <span>中科院自研：雄二E／雄昇巡弋飛彈</span>
+                                <span class="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded">陸基發射 / 戰備部署中</span>
+                            </div>
+                            <p class="text-xs text-slate-600 mt-2 leading-relaxed">
+                                <strong>台版隱身戰斧：</strong> 基本型射程 600 公里，最新增程型（雄昇飛彈）最大射程擴展至 1,000 ~ 1,200 公里。採用先進光電終端導引與地形比對系統，是國軍手中具備直擊中國縱深高價值軍事集結點、火箭軍陣地、與軍政指揮中心能力的「戰略殺手鐧」。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Iran Shield -->
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm warning-border">
+                    <h3 class="text-xl font-bold text-slate-900 mb-3 flex items-center">
+                        <span class="mr-2 text-xl">🕸️</span> 伊朗防空對抗與非對稱防禦挑戰
+                    </h3>
+                    <p class="text-sm text-slate-600 leading-relaxed mb-6">
+                        在「狂怒史詩行動」中，伊朗革命衛隊（IRGC）宣稱其成功在德黑蘭及馬爾卡齊省攔截多枚 AGM-158 JASSM 與戰斧飛彈。這打破了西方標榜的「絕對隱形神話」，並向美軍及盟國揭示了低可偵測性巡弋飛彈在「飽和協同」不足時，仍有突防受挫的真實戰術風險。
+                    </p>
+                    
+                    <div class="space-y-4">
+                        <div class="p-4 bg-amber-50 rounded-lg border border-amber-200">
+                            <div class="flex justify-between items-center font-bold text-amber-900 text-sm">
+                                <span>伊朗不對稱兵器：「358 號產品」防空巡飛彈</span>
+                                <span class="bg-amber-100 text-amber-800 text-xs px-2 py-0.5 rounded">無源被動光電引導</span>
+                            </div>
+                            <p class="text-xs text-slate-700 mt-2 leading-relaxed">
+                                這是一型由普通車輛發射的低成本、高隱蔽滯空巡飛彈。不發射雷達波信號，專以光電尋標器靜默伏擊。實戰中一架美軍 F-35A 戰機在毫無預警情況下被其近距離破片波及發動機，被迫迫降。這種不對稱風險，迫使美軍指揮官在戰役前期減少有人戰機進入防區內轟炸，改以在防區外釋放 JASSM-ER。
+                            </p>
+                        </div>
+
+                        <div class="p-4 bg-amber-50 rounded-lg border border-amber-200">
+                            <div class="flex justify-between items-center font-bold text-amber-900 text-sm">
+                                <span>多頻集成雷達與巴瓦爾-373</span>
+                                <span class="bg-amber-100 text-amber-800 text-xs px-2 py-0.5 rounded">反隱形雷達早期預警</span>
+                            </div>
+                            <p class="text-xs text-slate-700 mt-2 leading-relaxed">
+                                伊朗利用俄製 S-300 防空飛彈系統，聯合部署了新型「巴瓦爾-373」（Bavar-373）防空系統，並大量引進長程 UHF/VHF 波段反隱形雷達（如 YLC-8B 雷達）。多源雷達組成的無縫防空網路，讓 JASSM 的低 RCS 遭遇前所未有的探測和跟蹤威脅。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. SECTION: SUPPLY CHAIN & REBUILD -->
+        <section id="sec-supply-chain" class="space-y-8 hidden">
+            <!-- Intro -->
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <p class="text-slate-700 leading-relaxed text-base">
+                    <strong>說明：</strong> 2026 年美伊高強度衝突揭示了一個巨大的隱憂：美軍在一週內消耗的精密巡弋飛彈數量高於數年的製造產能。本單元基於解密的 <strong>Lot 22 合約數據</strong>，展示彈藥生產、庫存崩潰程度與漫長的「產能重建週期」。
+                </p>
+            </div>
+
+            <!-- Visualization row -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Bar Chart comparing stock, depletion and rebuilt months -->
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                    <h3 class="text-base font-bold text-slate-900 mb-4 text-center">關鍵彈藥美伊衝突損耗與產能重建週期對比</h3>
+                    <div class="chart-container">
+                        <canvas id="rebuildBarChart"></canvas>
+                    </div>
+                    <div class="text-xxs text-slate-500 mt-4 text-center">
+                        * 重建週期指在現有工業供應鏈（DIB）條件下，將損失數量重新補齊所耗費的時間（月）。
+                    </div>
+                </div>
+
+                <!-- Contract Data Cards and description -->
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900 border-b pb-2 mb-4">洛馬 $32.3 億 Lot 22 緊急合約分佈</h3>
+                        <p class="text-sm text-slate-600 leading-relaxed mb-4">
+                            為了挽救耗盡儲備的威脅，美國防部緊急將大量海外儲備調往中東，並重組了採購計畫，成立 Lot 22 合約，全力重整西方盟邦在防區外突防力量的庫存標準。
+                        </p>
+
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center p-2.5 bg-slate-50 rounded border border-slate-100">
+                                <span class="font-bold text-sm text-slate-800">🇺🇸 美國空軍補充庫存：</span>
+                                <span class="font-mono text-blue-600 font-bold">$14.93 億</span>
+                            </div>
+                            <div class="flex justify-between items-center p-2.5 bg-slate-50 rounded border border-slate-100">
+                                <span class="font-bold text-sm text-slate-800">🇺🇸 美國海軍 LRASM 專項：</span>
+                                <span class="font-mono text-blue-600 font-bold">$1.76 億</span>
+                            </div>
+                            <div class="flex justify-between items-center p-2.5 bg-slate-50 rounded border border-slate-100">
+                                <span class="font-bold text-sm text-slate-800">🌍 FMS 海外軍事合約：</span>
+                                <span class="font-mono text-indigo-600 font-bold">$7.51 億</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-4 bg-indigo-50 text-indigo-950 text-xs rounded-lg mt-4 border border-indigo-100">
+                        <h5 class="font-bold mb-1">🌍 全球同盟擴採動向：</h5>
+                        <p class="leading-relaxed">
+                            <strong>丹麥：</strong> 2026年6月，美批准售其 200 枚 JASSM-ER（合約總值 $8.42 億），武裝 F-35A 機隊。<br>
+                            <strong>波蘭、芬蘭、日本、荷蘭：</strong> 已正式加入生產佇列，生產於洛馬佛羅里達州奧蘭多工廠，預計在 2032 年 7 月 31 日前才能全部履行交割。
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table of Precise Stats -->
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="p-4 bg-slate-50 border-b border-slate-200">
+                    <h3 class="font-bold text-slate-900 text-sm">2026 美伊衝突精密彈藥損耗數據庫 (Table 1)</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-slate-600">
+                        <thead class="bg-slate-100 text-slate-800 font-bold text-xs uppercase border-b">
+                            <tr>
+                                <th class="p-4">彈藥型號</th>
+                                <th class="p-4 text-right">單枚成本 (美元)</th>
+                                <th class="p-4 text-right">衝突前預估庫存</th>
+                                <th class="p-4 text-right">衝突中估計消耗</th>
+                                <th class="p-4 text-center">預估重建週期</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <tr class="hover:bg-slate-50">
+                                <td class="p-4 font-bold text-slate-900">AGM-158 JASSM/ER</td>
+                                <td class="p-4 text-right font-mono text-blue-600">260 萬</td>
+                                <td class="p-4 text-right font-mono">4,400 枚</td>
+                                <td class="p-4 text-right font-mono font-bold text-red-600">1,100+ 枚</td>
+                                <td class="p-4 text-center font-bold text-amber-600">48 個月</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td class="p-4 font-bold text-slate-900">RGM/UGM-109 戰斧巡弋飛彈</td>
+                                <td class="p-4 text-right font-mono text-blue-600">260 萬</td>
+                                <td class="p-4 text-right font-mono">3,100 枚</td>
+                                <td class="p-4 text-right font-mono font-bold text-red-600">1,000+ 枚</td>
+                                <td class="p-4 text-center font-bold text-amber-600">47 個月</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td class="p-4 font-bold text-slate-900">PrSM 精準打擊飛彈</td>
+                                <td class="p-4 text-right font-mono text-blue-600">160 萬</td>
+                                <td class="p-4 text-right font-mono">90 枚</td>
+                                <td class="p-4 text-right font-mono font-bold text-red-600">40 ~ 70 枚</td>
+                                <td class="p-4 text-center font-bold text-amber-600">46 個月</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td class="p-4 font-bold text-slate-900">SM-3 標槍三型防空飛彈</td>
+                                <td class="p-4 text-right font-mono text-blue-600">2,870 萬</td>
+                                <td class="p-4 text-right font-mono">410 枚</td>
+                                <td class="p-4 text-right font-mono font-bold text-red-600">130 ~ 250 枚</td>
+                                <td class="p-4 text-center font-bold text-red-600">64 個月</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td class="p-4 font-bold text-slate-900">SM-6 標槍六型防空飛彈</td>
+                                <td class="p-4 text-right font-mono text-blue-600">530 萬</td>
+                                <td class="p-4 text-right font-mono">1,160 枚</td>
+                                <td class="p-4 text-right font-mono font-bold text-red-600">190 ~ 370 枚</td>
+                                <td class="p-4 text-center font-bold text-amber-600">53 個月</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td class="p-4 font-bold text-slate-900">Patriot 愛國者飛彈 (PAC-3)</td>
+                                <td class="p-4 text-right font-mono text-blue-600">390 萬</td>
+                                <td class="p-4 text-right font-mono">2,330 枚</td>
+                                <td class="p-4 text-right font-mono font-bold text-red-600">1,060~1,430 枚</td>
+                                <td class="p-4 text-center font-bold text-amber-600">42 個月</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Interactive Bottom Toast Panel for simulated real-time status alerts -->
+    <div id="tactical-toast" class="fixed bottom-4 right-4 bg-slate-900 text-white p-4 rounded-xl shadow-2xl border border-slate-700 max-w-sm z-50 transform translate-y-24 transition-transform duration-300">
+        <div class="flex items-start space-x-3">
+            <span class="text-xl text-yellow-500">📡</span>
+            <div>
+                <h5 class="text-xs font-bold uppercase tracking-wider text-slate-400">當前模擬演習廣播</h5>
+                <p class="text-xs text-slate-200 mt-1" id="toast-message">切換展示艙型號，即可解鎖即時技術屬性模擬。</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 py-8 border-t border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center">
+            <span class="text-xs">© 2026 國防高階科技戰略智庫中心. All rights reserved. 依據 2026 美伊實戰解密情報。</span>
+            <div class="flex space-x-4 text-xs mt-4 md:mt-0">
+                <a href="#" class="hover:text-white transition">隱私政策</a>
+                <span>|</span>
+                <a href="#" class="hover:text-white transition">免責條款</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript Execution Logic -->
+    <script>
+        // Global variables holding data and state
+        let currentSection = 'dashboard';
+        let currentSpecModel = 'A';
+        let currentPlatform = 'rapid-dragon-sys';
+        let radarChartInstance = null;
+        let rebuildBarChartInstance = null;
+
+        // Data Structure for Specifications
+        const specDatabase = {
+            A: {
+                engine: "Teledyne CAE J402 渦輪噴射發動機",
+                range: "370 公里 (防區外釋放限制)",
+                warhead: "1,000 磅 (450 kg) WDU-42/B 穿甲彈頭",
+                fuse: "FMU-156/B 智能延時引信",
+                guidance: "GPS/INS + IIR紅外線自動目標辨識 (ATR)",
+                desc: "採用高度棱角化的雷達雷達散射截面(RCS)縮減設計，結合機身外部塗裝特殊的雷達吸收塗料，大幅延遲敵方雷達發現時機，突防勝率居全球之首。",
+                radarData: [40, 85, 80, 80, 90] // Range, Stealth, Lethality, ECCM, Flexibility
+            },
+            B: {
+                engine: "Williams F107-WR-105 渦輪扇發動機",
+                range: "925 ~ 1,000 公里 (防區外精準增程)",
+                warhead: "1,000 磅 (450 kg) WDU-42/B 穿甲彈頭",
+                fuse: "FMU-156/B 智能多重感應",
+                guidance: "GPS/INS (強抗干擾) + IIR 自動場景匹配",
+                desc: "換裝了燃油效率高得多的 F107 渦輪扇發動機，在不增大外部體積的情況下大幅延伸了飛彈射程，是「狂怒史詩行動」中的絕對空襲主力器物。",
+                radarData: [75, 85, 80, 88, 95]
+            },
+            C: {
+                engine: "Williams 渦輪扇發動機",
+                range: "370 ~ 930 公里 (超視距封鎖)",
+                warhead: "1,000 磅 (450 kg) 穿甲高爆型",
+                fuse: "FMU-156/B 主動抗毀防爆",
+                guidance: "多模被動雷達(RF) + 雙向資料鏈 + IIR 終端引導",
+                desc: "遠程反艦型。配備高尖端被動電子支持度量(ESM)與加密蜂群資料鏈。實戰展示中成功驗證了4枚飛彈在無GPS支持下的「人工智慧蜂群」自主分配與航路突擊。",
+                radarData: [68, 85, 80, 95, 80]
+            },
+            D: {
+                engine: "升級型高功率渦輪扇發動機",
+                range: "1,600 ~ 1,800 公里 (極深遠突防)",
+                warhead: "1,000 ~ 2,000 磅（戰術變更設計）",
+                fuse: "新一代數位多用途延遲引信",
+                guidance: "強化型GPS/INS + 進階雙向鏈路 + 高解析度 IIR",
+                desc: "加長機身並重新設計機翼，最大程度增加航空煤油搭載容量，具備了戰略轟炸機實施大洲際打擊能力的「頂點遙攻突擊器」。",
+                radarData: [98, 80, 90, 92, 85]
+            }
+        };
+
+        // Data for Platform Simulator
+        const platformDatabase = {
+            'rapid-dragon-sys': {
+                title: "快速龍托盤化空投發射系統 (Rapid Dragon)",
+                desc: "這是一種極具開創性的「托盤化武器系統」（Palletized Weapon System）。美軍成功驗證了其自普通 C-17 或 C-130 運輸機發射 AGM-158B-2 (JASSM-ER) 飛彈的能力。運輸機不需進行昂貴的結構改裝，僅需以滾輪貨軌將裝滿 JASSM-ER 的重力托盤空投，托盤在降落傘減速下穩定姿態並自動釋放飛彈，依序點火發射。這將非隱身運輸機徹底升級為具備數百枚飛彈投射量的重型對地導彈發射卡車。",
+                base: "印太戰區／大西洋前沿轉運基地（如費爾福德）",
+                limit: "每托盤可承載 6 至 9 枚 | 單機最大可達 45 枚",
+                gridSize: 12,
+                missileType: "ER",
+                isRapid: true
+            },
+            'b1b': {
+                title: "B-1B 槍騎兵 (Lancer) 戰略轟炸機",
+                desc: "擁有強大的全天候超音速突防能力，內部具備三個可旋轉彈艙，最多可裝載 24 枚 AGM-158B JASSM-ER。在「狂怒史詩行動」中，部署於英國費爾福德空軍基地的 B-1B 在前 72 小時中對伊朗實施了密集的防區外轟炸，單次出擊投擲規模驚人。",
+                base: "英國費爾福德空軍基地 (RAF Fairford)",
+                limit: "24 枚 (全部安裝在旋轉彈艙內)",
+                gridSize: 24,
+                missileType: "ER",
+                isRapid: false
+            },
+            'b52h': {
+                title: "B-52H 同溫層堡壘 (Stratofortress)",
+                desc: "空中戰略武器裝載卡車。機翼下的外部懸掛架可搭載 12 枚 JASSM-ER 飛彈。在 2026 年 3 月 20 日的實戰任務中，B-52H 穿過大西洋與地中海多空加油，在安全空域實施了飽和對陸遙攻擊殺。",
+                base: "英國費爾福德基地 / 美國本土基地直飛",
+                limit: "12 枚 (外部翼下重型掛架)",
+                gridSize: 12,
+                missileType: "A/B",
+                isRapid: false
+            },
+            'f16cm': {
+                title: "F-16CM Block 52「沼澤之狐」多用途戰機",
+                desc: "主力防區外戰術打擊平台。左右翼下各掛載 1 枚 AGM-158。在 3 月 29 日實戰突襲中，該型戰機展現了「雙重任務配置」：掛載2枚飛彈的同時，加載了 Angry Kitten 電磁干擾莢艙和 HTS 莢艙，在執行遠程防區外打擊後仍能執行自衛空戰和電磁壓制。",
+                base: "中東前線基地 (如阿聯阿爾達夫拉)",
+                limit: "2 枚 (外部左右主翼下)",
+                gridSize: 2,
+                missileType: "A",
+                isRapid: false
+            },
+            'p8a': {
+                title: "P-8A 海神 (Poseidon) 巡邏機",
+                desc: "遠程海域反艦與監測。P-8A 在波斯灣與阿曼灣的實戰海上封鎖行動中，首次採用了機翼外掛式部署（單機4枚 AGM-158C LRASM）。配合反艦飛彈的超遠航程，大大提升了美海軍對伊朗沙希德·蘇萊曼尼級巡邏艦與快艇群的打擊覆蓋半徑。",
+                base: "波斯灣週邊前進巡邏區",
+                limit: "4 枚 (機翼懸掛)",
+                gridSize: 4,
+                missileType: "C",
+                isRapid: false
+            }
+        };
+
+        // Static timelines tactical data
+        const timelineTexts = {
+            syria: {
+                title: "2018 年：敘利亞空襲 (初試啼聲)",
+                body: `<p><strong>作戰實踐：</strong> 美軍出動兩架 B-1B 戰略轟炸機，在大馬士革防區外發射了 19 枚基準型 AGM-158A。目標為巴爾扎（Barzah）化學武器研究與發展中心。</p>
+                       <p><strong>戰術意義：</strong> 敵方部署的俄製 S-200、S-300 等防空系統完全未能實施攔截，飛彈全數命中並摧毀目標。這也是 JASSM 自服役後的首次實戰，驗證了其隱形突防的極致效能。</p>`
+            },
+            baghdadi: {
+                title: "2019 年：擊殺巴格達迪行動",
+                body: `<p><strong>作戰實踐：</strong> 特種部隊突襲敘利亞北部、ISIS 頭目巴格達迪藏身據點後，為了防止該安全屋成為恐怖份子的「聖地」，美軍派遣空中武裝力量使用 JASSM 飛彈，精準炸毀了整座藏身建築，使其徹底夷為平地。</p>
+                       <p><strong>戰術意義：</strong> 證明了防區外精密導引炸彈除了可用於常規防空對抗外，也能高效且無損地執行外科手術式定點摧毀任務。</p>`
+            },
+            iran2026: {
+                title: "2026 年：狂怒史詩行動 (飽和消耗戰)",
+                body: `<p><strong>作戰實踐：</strong> 2026 年 2 月至 4 月底美伊大規模衝突。首波空襲美軍消耗高達上千枚 JASSM，在衝突第 5 週將伊朗成體系的防空網壓制後，隨即將戰術切換為更具性價比的 B-52H 搭載 GBU-31 JDAM（僅數萬美元成本）直接切入防區內轟炸殘餘陣地。</p>
+                       <p><strong>戰術意義：</strong> 實戰表明高昂單價（$260 萬）與漫長產線限制，使美軍無法長時間承擔這類飽和消耗戰。美軍需要加速微型 MACE 低成本飛彈的多元化生產。</p>`
+            }
+        };
+
+        // Switch Main SPA Navigation Sections
+        function switchSection(sectionId) {
+            // Hide all sections
+            document.getElementById('sec-dashboard').classList.add('hidden');
+            document.getElementById('sec-showroom').classList.add('hidden');
+            document.getElementById('sec-rapid-dragon').classList.add('hidden');
+            document.getElementById('sec-shields').classList.add('hidden');
+            document.getElementById('sec-supply-chain').classList.add('hidden');
+
+            // Remove all active navigation menu styles
+            document.getElementById('nav-dashboard').classList.remove('active-tab');
+            document.getElementById('nav-showroom').classList.remove('active-tab');
+            document.getElementById('nav-rapid-dragon').classList.remove('active-tab');
+            document.getElementById('nav-shields').classList.remove('active-tab');
+            document.getElementById('nav-supply-chain').classList.remove('active-tab');
+
+            // Show and Activate target
+            if (sectionId === 'dashboard') {
+                document.getElementById('sec-dashboard').classList.remove('hidden');
+                document.getElementById('nav-dashboard').classList.add('active-tab');
+            } else if (sectionId === 'showroom') {
+                document.getElementById('sec-showroom').classList.remove('hidden');
+                document.getElementById('nav-showroom').classList.add('active-tab');
+                // Instantiate Showroom Radar Chart if not existed
+                setTimeout(initRadarChart, 100);
+            } else if (sectionId === 'rapid-dragon') {
+                document.getElementById('sec-rapid-dragon').classList.remove('hidden');
+                document.getElementById('nav-rapid-dragon').classList.add('active-tab');
+                // Init load grid
+                renderPayloadGrid('rapid-dragon-sys');
+            } else if (sectionId === 'shields') {
+                document.getElementById('sec-shields').classList.remove('hidden');
+                document.getElementById('nav-shields').classList.add('active-tab');
+            } else if (sectionId === 'supply-chain') {
+                document.getElementById('sec-supply-chain').classList.remove('hidden');
+                document.getElementById('nav-supply-chain').classList.add('active-tab');
+                // Init Rebuild Bar Chart
+                setTimeout(initRebuildBarChart, 100);
+            }
+
+            // Fire simulated broadcast
+            triggerToastAlert(`您已切換到 [ ${sectionId.toUpperCase()} ] 決策單元，相關解密檔案已就緒。`);
+        }
+
+        // Show Toast Function
+        function triggerToastAlert(msg) {
+            const toast = document.getElementById('tactical-toast');
+            document.getElementById('toast-message').innerText = msg;
+            toast.classList.remove('translate-y-24');
+            // retract in 3.5s
+            setTimeout(() => {
+                toast.classList.add('translate-y-24');
+            }, 3500);
+        }
+
+        // Interactive Timeline Selector Function
+        function showTacticalInfo(nodeId) {
+            // Remove active bg border styles from buttons
+            document.getElementById('btn-t-syria').className = "p-4 bg-slate-50 border-l-4 border-slate-300 rounded-r cursor-pointer hover:bg-slate-100 transition";
+            document.getElementById('btn-t-baghdadi').className = "p-4 bg-slate-50 border-l-4 border-slate-300 rounded-r cursor-pointer hover:bg-slate-100 transition";
+            document.getElementById('btn-t-iran2026').className = "p-4 bg-slate-50 border-l-4 border-slate-300 rounded-r cursor-pointer hover:bg-slate-100 transition";
+
+            // Add active focus styling to clicked target
+            const activeBtn = document.getElementById(`btn-t-${nodeId}`);
+            if (nodeId === 'iran2026') {
+                activeBtn.className = "p-4 bg-red-50 border-l-4 border-red-600 rounded-r cursor-pointer hover:bg-red-100 transition";
+            } else {
+                activeBtn.className = "p-4 bg-blue-50 border-l-4 border-blue-600 rounded-r cursor-pointer hover:bg-blue-100 transition";
+            }
+
+            // Update Tactical detail text
+            document.getElementById('tactical-title').innerText = timelineTexts[nodeId].title;
+            document.getElementById('tactical-body').innerHTML = timelineTexts[nodeId].body;
+        }
+
+        // Interactive Showroom Specifications updates
+        function updateSpecs(modelCode) {
+            currentSpecModel = modelCode;
+            // update buttons class
+            document.getElementById('btn-spec-A').className = "w-full text-left p-3 rounded-lg border border-slate-200 hover:border-blue-500 transition";
+            document.getElementById('btn-spec-B').className = "w-full text-left p-3 rounded-lg border border-slate-200 hover:border-blue-500 transition";
+            document.getElementById('btn-spec-C').className = "w-full text-left p-3 rounded-lg border border-slate-200 hover:border-blue-500 transition";
+            document.getElementById('btn-spec-D').className = "w-full text-left p-3 rounded-lg border border-slate-200 hover:border-blue-500 transition";
+
+            const clickedBtn = document.getElementById(`btn-spec-${modelCode}`);
+            clickedBtn.className = "w-full text-left p-3 rounded-lg border-2 border-blue-600 bg-blue-50/50 transition";
+
+            // update Text Database
+            const spec = specDatabase[modelCode];
+            document.getElementById('spec-engine').innerText = spec.engine;
+            document.getElementById('spec-range').innerText = spec.range;
+            document.getElementById('spec-warhead').innerText = spec.warhead;
+            document.getElementById('spec-fuse').innerText = spec.fuse;
+            document.getElementById('spec-guidance').innerText = spec.guidance;
+            document.getElementById('spec-description').innerText = spec.desc;
+
+            // update Chart.js Radar Dataset
+            if (radarChartInstance) {
+                radarChartInstance.data.datasets[0].label = `AGM-158${modelCode} 戰鬥包絡度`;
+                radarChartInstance.data.datasets[0].data = spec.radarData;
+                // Add color variance based on models
+                const colors = {
+                    A: 'rgba(59, 130, 246, 0.2)',
+                    B: 'rgba(37, 99, 235, 0.2)',
+                    C: 'rgba(14, 165, 233, 0.2)',
+                    D: 'rgba(30, 58, 138, 0.2)'
+                };
+                const borderColors = {
+                    A: 'rgb(59, 130, 246)',
+                    B: 'rgb(37, 99, 235)',
+                    C: 'rgb(14, 165, 233)',
+                    D: 'rgb(30, 58, 138)'
+                };
+                radarChartInstance.data.datasets[0].backgroundColor = colors[modelCode];
+                radarChartInstance.data.datasets[0].borderColor = borderColors[modelCode];
+                radarChartInstance.update();
+            }
+
+            triggerToastAlert(`成功載入 AGM-158${modelCode} 技術展示包絡線。`);
+        }
+
+        // Initialize Radar Chart
+        function initRadarChart() {
+            if (radarChartInstance) return; // avoid duplicate load
+
+            const ctx = document.getElementById('showroomRadarChart').getContext('2d');
+            radarChartInstance = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['打擊射程 (Range)', '低可偵測隱身 (Stealth)', '穿硬彈頭力 (Lethality)', '電子對抗與尋標 (ECCM)', '載台靈活度 (Flexibility)'],
+                    datasets: [{
+                        label: 'AGM-158A 戰鬥包絡度',
+                        data: [40, 85, 80, 80, 90],
+                        fill: true,
+                        backgroundColor: 'rgba(37, 99, 235, 0.2)',
+                        borderColor: 'rgb(37, 99, 235)',
+                        pointBackgroundColor: 'rgb(37, 99, 235)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgb(37, 99, 235)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: { color: '#cbd5e1' },
+                            grid: { color: '#e2e8f0' },
+                            pointLabels: { font: { size: 10, weight: 'bold' }, color: '#334155' },
+                            ticks: { display: false },
+                            min: 0,
+                            max: 100
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'bottom', labels: { font: { size: 11, weight: 'bold' } } }
+                    }
+                }
+            });
+        }
+
+        // Interactive Platform Updates
+        function selectPlatform(platId) {
+            currentPlatform = platId;
+            // update classes on buttons
+            document.getElementById('plat-rapid-dragon-sys').className = "p-4 rounded-xl border border-slate-200 bg-white shadow-sm flex flex-col items-center justify-center text-center transition";
+            document.getElementById('plat-b1b').className = "p-4 rounded-xl border border-slate-200 bg-white shadow-sm flex flex-col items-center justify-center text-center transition";
+            document.getElementById('plat-b52h').className = "p-4 rounded-xl border border-slate-200 bg-white shadow-sm flex flex-col items-center justify-center text-center transition";
+            document.getElementById('plat-f16cm').className = "p-4 rounded-xl border border-slate-200 bg-white shadow-sm flex flex-col items-center justify-center text-center transition";
+            document.getElementById('plat-p8a').className = "p-4 rounded-xl border border-slate-200 bg-white shadow-sm flex flex-col items-center justify-center text-center transition";
+
+            document.getElementById(`plat-${platId}`).className = "p-4 rounded-xl border-2 border-blue-600 bg-white shadow-sm flex flex-col items-center justify-center text-center transition";
+
+            const data = platformDatabase[platId];
+            document.getElementById('plat-showcase-title').innerText = data.title;
+            document.getElementById('plat-showcase-desc').innerText = data.desc;
+            document.getElementById('plat-showcase-base').innerText = data.base;
+            document.getElementById('plat-showcase-limit').innerText = data.limit;
+
+            // show/hide special block
+            if (platId === 'f16cm') {
+                document.getElementById('f16-tactical-detail-box').classList.remove('hidden');
+            } else {
+                document.getElementById('f16-tactical-detail-box').classList.add('hidden');
+            }
+
+            renderPayloadGrid(platId);
+            triggerToastAlert(`模擬載台已成功變更為: ${data.title}`);
+        }
+
+        // Render Dynamic CSS-missile boxes representing aircraft payload capacity
+        function renderPayloadGrid(platId) {
+            const data = platformDatabase[platId];
+            const gridContainer = document.getElementById('payload-grid');
+            gridContainer.innerHTML = ''; // clear out old cells
+
+            const uiBadge = document.getElementById('ui-plat-badge');
+            if (data.isRapid) {
+                uiBadge.innerText = "托盤化重力空投";
+                uiBadge.className = "bg-amber-600/30 text-amber-700 text-xs px-2 py-0.5 rounded border border-amber-500/20";
+            } else {
+                uiBadge.innerText = "標準航空掛載";
+                uiBadge.className = "bg-blue-600/30 text-blue-700 text-xs px-2 py-0.5 rounded border border-blue-500/20";
+            }
+
+            // generate grid representing capacity
+            for (let i = 0; i < data.gridSize; i++) {
+                const cell = document.createElement('div');
+                cell.className = "h-8 flex items-center justify-center rounded text-xxs font-bold transition duration-300";
+                
+                // Color and label according to type
+                if (data.missileType === 'ER') {
+                    cell.className += " bg-blue-600 text-white hover:bg-blue-700";
+                    cell.innerText = "J-ER";
+                } else if (data.missileType === 'A/B') {
+                    cell.className += " bg-indigo-600 text-white hover:bg-indigo-700";
+                    cell.innerText = "J-A/B";
+                } else if (data.missileType === 'C') {
+                    cell.className += " bg-sky-500 text-slate-900 hover:bg-sky-600";
+                    cell.innerText = "LRAS";
+                } else {
+                    cell.className += " bg-emerald-600 text-white hover:bg-emerald-700";
+                    cell.innerText = "J-A";
+                }
+                
+                cell.title = `飛彈 ${i+1} 掛載裝填就緒`;
+                gridContainer.appendChild(cell);
+            }
+        }
+
+        // Initialize Logistics / Rebuild Bar Chart (Chart.js)
+        function initRebuildBarChart() {
+            if (rebuildBarChartInstance) return; // avoid duplicated call
+
+            const ctx = document.getElementById('rebuildBarChart').getContext('2d');
+            rebuildBarChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['AGM-158 JASSM/ER', '戰斧巡弋飛彈', 'PrSM 精準打擊彈', 'SM-3 標槍三防空', 'SM-6 標槍六防空', 'Patriot愛國者(PAC-3)'],
+                    datasets: [
+                        {
+                            label: '衝突消耗 (枚)',
+                            data: [1100, 1000, 60, 200, 280, 1250], // Midpoint from ranges
+                            backgroundColor: 'rgba(239, 68, 68, 0.75)', // Red
+                            borderColor: 'rgb(220, 38, 38)',
+                            borderWidth: 1,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: '重建週期 (月)',
+                            data: [48, 47, 46, 64, 53, 42],
+                            backgroundColor: 'rgba(245, 158, 11, 0.75)', // Amber
+                            borderColor: 'rgb(217, 119, 6)',
+                            borderWidth: 1,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            position: 'left',
+                            title: { display: true, text: '衝突消耗量 (枚)' },
+                            grid: { color: '#e2e8f0' }
+                        },
+                        y1: {
+                            beginAtZero: true,
+                            position: 'right',
+                            title: { display: true, text: '工業重建時間 (月)' },
+                            grid: { drawOnChartArea: false } // only draw grid lines for the first y-axis
+                        },
+                        x: {
+                            ticks: {
+                                font: { size: 9, weight: 'bold' }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'bottom', labels: { font: { size: 10, weight: 'bold' } } },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                            titleFont: { size: 12, weight: 'bold' },
+                            bodyFont: { size: 11 }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
