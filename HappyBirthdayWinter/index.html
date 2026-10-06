@@ -35,16 +35,9 @@
         .cherry { width: 15px; top: -15px; height: 15px; border-radius: 100%; background: #fff; position: absolute; box-shadow: -2px -1px 0px 6px #ff4d59 inset; z-index: 160;}
         #cherry1 { left: 20px; } #cherry2 { left: 64px; } #cherry3 { left: 108px; } #cherry4 { right: 64px; } #cherry5 { right: 20px; }
         .gift_top { transition: all 0.6s ease-in-out; width: 100%; position: absolute; top: 0px; transition-delay: 0.6s; }
-        .gift:hover .gift_top, .gift.open .gift_top { top: -100px; transition-delay: 0.3s; }
         .gift_ribbon_left { transition: all 0.3s ease-in-out; transition-delay: 1s; }
         .gift_ribbon_center { transition: all 0.3s ease-in-out; transition-delay: 1s; }
-        .gift:hover .gift_ribbon_left, .gift.open .gift_ribbon_left { height: 32px; transition-delay: 0s; }
-        .gift:hover .gift_ribbon_center, .gift.open .gift_ribbon_center { transition-delay: 0s; height: 102px; }
         .gift_box_bottom_top { transition-delay: 1.1s; }
-        .gift:hover .gift_box_bottom_top, .gift.open .gift_box_bottom_top { height: 0px; opacity: 0; transition: all 0.3s ease-in-out; transition-delay: 0.4s; }
-        .giftcard { background: transparent; box-shadow: none; padding: 0; width: auto; font-size: 15px; font-family: 'Source Sans Pro', sans-serif; color: #ff3f48; left: 0px; top: 100px; right: 0px; margin: 0px auto; position: absolute; line-height: 26px; z-index: -1; text-align: center; transition: all 0.6s ease-in-out; transition-delay: 0.5s; }
-        .gift:hover .giftcard, .gift.open .giftcard { top: -10px; }
-        .giftcard-image-wrapper { overflow: visible; display: flex; justify-content: center; align-items: center; }
         .candle-container { position: absolute; top: 25px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 130; }
         .candle { position: relative; width: 30px; height: 29px; display: flex; justify-content: center; align-items: center; }
         .candle-digit { font-family: Arial, sans-serif; font-size: 34px; font-weight: 900; color: #c6c6c6; text-shadow: 1px 1px 2px rgba(0,0,0,0.2); position: relative; top: 0px; }
@@ -96,7 +89,7 @@
         @keyframes sceneFade { from { opacity:0; } to { opacity:1; } }
         #scene.show .birthday-text { animation:sceneDrop 1s cubic-bezier(.22,.8,.24,1) .25s both; }
         #scene.show .cake { animation:sceneRise 1.1s cubic-bezier(.22,.8,.24,1) .5s both; }
-        #scene.show .gift { animation:sceneRise 1.1s cubic-bezier(.22,.8,.24,1) .8s both; }
+        #scene.show .gift:not(.settled) { animation:sceneRise 1.1s cubic-bezier(.22,.8,.24,1) .8s both; }
         #scene.show .line { animation:sceneFade 1s ease .3s both; }
         #scene.show #volumeButton, #scene.show #replayBtn { animation:sceneFade .8s ease 1.4s both; }
         #volumeButton img { transition:transform .2s ease, filter .3s ease; }
@@ -106,8 +99,79 @@
         #replayBtn:active { transform:translateY(2px); box-shadow:inset 3px 3px 0 #3f4f94, inset -3px -3px 0 #8a9ae0; }
         #replayBtn:focus-visible { outline:2px solid #fff; outline-offset:2px; }
         @media (max-width: 600px) { .birthday-text { margin-top:70px; font-size:44px; } }
-        .gift { transition:transform .3s ease; }
         @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration:.01ms !important; animation-delay:0s !important; transition-duration:.01ms !important; transition-delay:0s !important; } }
+
+        /* ===== gift box: tap-to-unbox + voucher reveal ===== */
+        .gift { cursor:pointer; outline:none; -webkit-tap-highlight-color:transparent; }
+        .gift.open .gift_ribbon_left { height: 32px; transition-delay: 0s; }
+        .gift.open .gift_ribbon_center { height: 102px; transition-delay: 0s; }
+        .gift.open .gift_box_bottom_top { height: 0px; opacity: 0; transition: all 0.3s ease-in-out; transition-delay: 0.2s; }
+        .gift_top { transition: top .55s cubic-bezier(.3,1.6,.5,1), transform .7s ease, opacity .5s ease .5s; }
+        .gift.open .gift_top { top:-150px; transform:translateX(70px) rotate(32deg); opacity:0; transition-delay:0s, 0s, .45s; }
+        .gift::before { content:""; position:absolute; left:50%; bottom:60px; width:300px; height:300px; margin-left:-150px; margin-bottom:-150px; z-index:-2; border-radius:50%; pointer-events:none;
+                        background:repeating-conic-gradient(from 0deg, rgba(255,224,102,.42) 0deg 9deg, rgba(255,224,102,0) 9deg 22deg);
+                        -webkit-mask:radial-gradient(circle, #000 18%, transparent 68%); mask:radial-gradient(circle, #000 18%, transparent 68%);
+                        opacity:0; transform:scale(.2); transition:opacity .6s ease .25s, transform .9s cubic-bezier(.2,1.2,.4,1) .25s; }
+        .gift.open::before { opacity:1; transform:scale(1); animation:raySpin 14s linear infinite; }
+        @keyframes raySpin { to { rotate:360deg; } }
+        .gift:focus-visible .gift_box_bottom { outline:3px solid #64c8e9; outline-offset:4px; }
+        #scene.show .gift.shake1 { animation:giftShake .45s ease both; }
+        #scene.show .gift.shake2 { animation:giftShake2 .55s ease both; }
+        @keyframes giftShake { 0%,100% { transform:none; } 20% { transform:rotate(-6deg); } 45% { transform:rotate(5deg); } 70% { transform:rotate(-3deg); } }
+        @keyframes giftShake2 { 0%,100% { transform:none; } 10% { transform:translateY(-14px) rotate(-9deg) scale(1.04); } 30% { transform:translateY(-6px) rotate(8deg) scale(1.06); } 50% { transform:rotate(-7deg) scale(1.03,.97); } 70% { transform:rotate(5deg); } 85% { transform:rotate(-2deg); } }
+        .voucher-peek { position:absolute; left:50%; top:100px; width:122px; margin-left:-61px; z-index:-1; border-radius:6px; overflow:hidden; box-shadow:0 6px 18px rgba(0,0,0,.25);
+                        transform:rotate(0deg); transition:top .8s cubic-bezier(.2,1.4,.4,1) .35s, transform .8s ease .35s; }
+        .voucher-peek img { display:block; width:100%; height:auto; }
+        .gift.open .voucher-peek { top:-30px; transform:rotate(-6deg); animation:peekFloat 3s ease-in-out 1.4s infinite; }
+        @keyframes peekFloat { 0%,100% { translate:0 0; } 50% { translate:0 -6px; } }
+        .gift.revealing .voucher-peek { opacity:0; transition:opacity .15s; }
+        .gift-hint { position:absolute; left:50%; bottom:200px; transform:translateX(-50%); white-space:nowrap; padding:8px 16px; border-radius:20px; background:#fff; color:#ff4f5a;
+                     font:700 22px/1.2 system-ui,-apple-system,"PingFang TC","Noto Sans TC",sans-serif; box-shadow:0 4px 14px rgba(255,79,90,.25); pointer-events:none;
+                     animation:hintBob 1.6s ease-in-out infinite; transition:opacity .3s ease; }
+        .gift-hint::after { content:""; position:absolute; left:50%; bottom:-8px; margin-left:-8px; border:8px solid transparent; border-bottom:0; border-top-color:#fff; }
+        @keyframes hintBob { 0%,100% { translate:0 0; } 50% { translate:0 -8px; } }
+        .gift.open .gift-hint { opacity:0; }
+
+        /* voucher modal */
+        .vm { position:fixed; inset:0; z-index:1500; display:flex; align-items:center; justify-content:center; padding:16px; visibility:hidden; pointer-events:none; }
+        .vm.show { visibility:visible; pointer-events:auto; }
+        .vm-backdrop { position:absolute; inset:0; background:radial-gradient(circle at 50% 45%, rgba(40,20,60,.55), rgba(10,6,25,.88)); opacity:0; transition:opacity .45s ease; -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px); }
+        .vm.show .vm-backdrop { opacity:1; }
+        .vm-stage { position:relative; width:min(92vw, 760px, calc((100dvh - 170px) * 1.79)); display:flex; flex-direction:column; align-items:center; gap:18px; perspective:1200px; }
+        .vm-card { position:relative; width:100%; aspect-ratio:1376/768; border-radius:14px; overflow:hidden; box-shadow:0 24px 60px rgba(0,0,0,.45), 0 0 0 3px #ffd83d; transform-origin:0 0; will-change:transform;
+                   transform:rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)); transition:box-shadow .3s ease; }
+        .vm-card.landed { transform-origin:50% 50%; transition:transform .18s ease-out, box-shadow .3s ease; }
+        .vm-card img { display:block; width:100%; height:100%; object-fit:cover; user-select:none; -webkit-user-drag:none; }
+        .vm-shine { position:absolute; inset:0; pointer-events:none; mix-blend-mode:overlay;
+                    background:linear-gradient(115deg, transparent 30%, rgba(255,255,255,.75) 45%, rgba(160,220,255,.5) 50%, rgba(255,180,240,.45) 55%, transparent 70%);
+                    background-size:250% 100%; background-position:var(--sx,120%) 0; }
+        .vm.show .vm-card.landed .vm-shine { animation:shineSweep 1.1s ease .1s; }
+        @keyframes shineSweep { from { background-position:120% 0; } to { background-position:-30% 0; } }
+        .vm-stamp { position:absolute; right:6%; bottom:10%; padding:.25em .6em; border:.16em solid #e0242f; border-radius:.3em; color:#e0242f; background:rgba(255,255,255,.82);
+                    font:900 clamp(22px,6vw,54px)/1 system-ui,"PingFang TC","Noto Sans TC",sans-serif; letter-spacing:.08em; transform:rotate(-14deg) scale(3); opacity:0; pointer-events:none;
+                    box-shadow:inset 0 0 0 .06em rgba(224,36,47,.35); }
+        .vm-card.claimed .vm-stamp { animation:stampIn .42s cubic-bezier(.2,1.5,.45,1) forwards; }
+        .vm-card.claimed-static .vm-stamp { opacity:.92; transform:rotate(-14deg) scale(1); }
+        @keyframes stampIn { 0% { opacity:0; transform:rotate(-14deg) scale(3); } 70% { opacity:1; transform:rotate(-14deg) scale(.92); } 100% { opacity:.92; transform:rotate(-14deg) scale(1); } }
+        .vm-card.thud { animation:cardThud .35s ease; }
+        @keyframes cardThud { 0%,100% { translate:0 0; } 30% { translate:0 6px; } 60% { translate:0 -2px; } }
+        .vm-actions { display:flex; gap:12px; flex-wrap:wrap; justify-content:center; opacity:0; transform:translateY(12px); transition:opacity .35s ease, transform .45s cubic-bezier(.2,1.2,.4,1); }
+        .vm.show .vm-card.landed ~ .vm-actions { opacity:1; transform:none; transition-delay:.15s; }
+        .vm-btn { display:inline-flex; align-items:center; gap:8px; padding:12px 24px; border:0; border-radius:999px; cursor:pointer; text-decoration:none;
+                  font:800 18px system-ui,-apple-system,"PingFang TC","Noto Sans TC",sans-serif; transition:transform .18s cubic-bezier(.2,1.4,.4,1), filter .2s ease, background-color .3s ease, opacity .3s ease; }
+        .vm-btn:hover { transform:translateY(-2px) scale(1.03); filter:brightness(1.08); }
+        .vm-btn:active { transform:scale(.95); transition-duration:.06s; }
+        .vm-btn:focus-visible, .vm-close:focus-visible { outline:3px solid #fff; outline-offset:3px; }
+        .vm-btn.primary { background:linear-gradient(#ffe45c,#ffc21a); color:#3a1d00; box-shadow:0 4px 0 #c98a00, 0 8px 20px rgba(255,194,26,.45); animation:ctaPulse 1.8s ease-in-out infinite; }
+        @keyframes ctaPulse { 0%,100% { box-shadow:0 4px 0 #c98a00, 0 0 0 0 rgba(255,216,61,.6); } 50% { box-shadow:0 4px 0 #c98a00, 0 0 0 12px rgba(255,216,61,0); } }
+        .vm-btn.primary[disabled] { animation:none; background:#3ccf6e; color:#fff; box-shadow:0 4px 0 #1f9a49; cursor:default; transform:none; filter:none; }
+        .vm-btn.ghost { background:rgba(255,255,255,.14); color:#fff; box-shadow:inset 0 0 0 2px rgba(255,255,255,.5); }
+        .vm-btn.ghost[hidden] { display:none; }
+        .vm-close { position:absolute; top:-14px; right:-10px; width:42px; height:42px; border-radius:50%; border:0; background:#fff; color:#333; font:700 20px/42px system-ui,sans-serif; cursor:pointer;
+                    box-shadow:0 4px 14px rgba(0,0,0,.3); opacity:0; transform:scale(.4) rotate(-90deg); transition:opacity .3s ease, transform .4s cubic-bezier(.2,1.4,.4,1); z-index:2; }
+        .vm.show .vm-card.landed ~ .vm-close { opacity:1; transform:none; }
+        .vm-close:hover { transform:rotate(90deg) scale(1.08) !important; }
+        #fx { position:fixed; inset:0; width:100%; height:100%; pointer-events:none; z-index:3000; }
     </style>
 </head>
 <body>
@@ -143,12 +207,9 @@
         Your browser does not support the audio element.
     </audio>
     <section class="wrap">
-        <section class="gift">
-            <a id="giftLink" href="https://birthday-lucky-wheel--leoyen0404.github.app" class="giftcard">
-                <div class="giftcard-image-wrapper">
-                    <img id="giftImage" src="https://raw.githubusercontent.com/leoyen0404/web/main/prize/a8198716-2062-491e-9527-a6a25d6d822b.png" alt="Gift Card" style="transform: scale(1); max-width: 130px; height: auto;">
-                </div>
-            </a>
+        <section class="gift" id="gift" role="button" tabindex="0" aria-label="拆開生日禮物">
+            <div class="gift-hint" id="giftHint">點我拆禮物！</div>
+            <div class="voucher-peek" id="voucherPeek"><img src="assets/img/voucher.jpg" alt=""></div>
             <section class="gift_top">
                 <div class="ribbon_right"></div>
                 <div class="ribbon_left"></div>
@@ -178,6 +239,22 @@
     </section>
     <button id="replayBtn" type="button" aria-label="Replay the music video" title="Replay the music video">REPLAY</button>
 </div>
+<div class="vm" id="voucherModal" role="dialog" aria-modal="true" aria-label="生日禮物兌換券" aria-hidden="true">
+    <div class="vm-backdrop" id="vmBackdrop"></div>
+    <div class="vm-stage">
+        <div class="vm-card" id="vmCard">
+            <img src="assets/img/voucher.jpg" alt="限時0元：三次保護貼更換服務完全免費，限時加贈保護殼">
+            <div class="vm-shine"></div>
+            <div class="vm-stamp" aria-hidden="true">已領取</div>
+        </div>
+        <div class="vm-actions">
+            <button class="vm-btn primary" id="vmClaim" type="button">👉 立即領取</button>
+            <a class="vm-btn ghost" id="vmSave" href="assets/img/voucher.jpg" download="Winter生日兌換券.jpg" hidden>⬇ 儲存兌換券</a>
+        </div>
+        <button class="vm-close" id="vmClose" type="button" aria-label="關閉">✕</button>
+    </div>
+</div>
+<canvas id="fx" aria-hidden="true"></canvas>
     <script>
         const audio = document.getElementById("birthdayAudio");
         const volumeIcon = document.getElementById("volumeIcon");
@@ -211,13 +288,135 @@
             }
             updateAge();
         });
-        // touch screens have no hover: tap the gift to open/close it
-        const giftEl = document.querySelector('.gift');
-        giftEl.addEventListener('click', function (e) {
-            if (e.target.closest('.giftcard') && giftEl.classList.contains('open')) return;
-            giftEl.classList.toggle('open');
-            e.preventDefault();
+        // ---- gift box: three taps to unbox, then the voucher flies out ----
+        const giftEl = document.getElementById('gift');
+        const hintEl = document.getElementById('giftHint');
+        const peekEl = document.getElementById('voucherPeek');
+        const vm = document.getElementById('voucherModal');
+        const vmCard = document.getElementById('vmCard');
+        const vmClaim = document.getElementById('vmClaim');
+        const vmSave = document.getElementById('vmSave');
+        const vmClose = document.getElementById('vmClose');
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const store = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
+        let taps = 0, opened = false, busy = false;
+
+        /* tiny confetti engine */
+        const fx = document.getElementById('fx'), fctx = fx.getContext('2d');
+        const COLORS = ['#ff5a4e', '#ffd83d', '#4fe0d4', '#b56bff', '#ff9a3c', '#64c8e9'];
+        let parts = [], fxRunning = false;
+        function sizeFx() { const d = Math.min(2, window.devicePixelRatio || 1); fx.width = innerWidth * d; fx.height = innerHeight * d; fctx.setTransform(d, 0, 0, d, 0, 0); }
+        sizeFx(); window.addEventListener('resize', sizeFx);
+        function burst(x, y, n, spread, power) {
+            if (reduceMotion) return;
+            for (let i = 0; i < n; i++) {
+                const a = -Math.PI / 2 + (Math.random() - .5) * spread, v = power * (.5 + Math.random() * .7);
+                parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, r: Math.random() * 6.3, vr: (Math.random() - .5) * .4, w: 6 + Math.random() * 6, h: 4 + Math.random() * 8, c: COLORS[i % COLORS.length], life: 1 });
+            }
+            if (!fxRunning) { fxRunning = true; requestAnimationFrame(tickFx); }
+        }
+        function tickFx() {
+            fctx.clearRect(0, 0, innerWidth, innerHeight);
+            parts = parts.filter(p => p.life > 0 && p.y < innerHeight + 40);
+            for (const p of parts) {
+                p.vy += .32; p.vx *= .985; p.vy *= .985; p.x += p.vx; p.y += p.vy; p.r += p.vr; if (p.vy > 0) p.life -= .006;
+                fctx.save(); fctx.globalAlpha = Math.min(1, p.life * 2); fctx.translate(p.x, p.y); fctx.rotate(p.r); fctx.scale(1, Math.cos(p.r * 2));
+                fctx.fillStyle = p.c; fctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); fctx.restore();
+            }
+            if (parts.length) requestAnimationFrame(tickFx); else { fxRunning = false; fctx.clearRect(0, 0, innerWidth, innerHeight); }
+        }
+        function giftCenter() { const r = giftEl.querySelector('.gift_box_bottom').getBoundingClientRect(); return [r.left + r.width / 2, r.top]; }
+
+        function shake(level) {
+            giftEl.classList.remove('shake1', 'shake2'); void giftEl.offsetWidth; giftEl.classList.add('shake' + level);
+            const [x, y] = giftCenter(); burst(x, y, 10 * level, 1.4, 7 + level * 2);
+        }
+        function openBox() {
+            opened = true; busy = true;
+            giftEl.classList.remove('shake1', 'shake2'); giftEl.classList.add('open');
+            giftEl.setAttribute('aria-label', '查看生日禮物兌換券');
+            setTimeout(() => { const [x, y] = giftCenter(); burst(x, y, 90, 1.9, 15); }, 250);
+            setTimeout(() => { busy = false; showVoucher(); }, reduceMotion ? 200 : 1500);
+        }
+        function activateGift() {
+            if (busy) return;
+            giftEl.classList.add('settled');
+            if (opened) { showVoucher(); return; }
+            taps++;
+            if (taps < 3) { shake(taps); hintEl.textContent = taps === 1 ? '再一下…' : '最後一下！'; }
+            else openBox();
+        }
+        giftEl.addEventListener('click', activateGift);
+        giftEl.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activateGift(); } });
+
+        /* card flies from the box to the centre (FLIP), and back on close */
+        function flip(fromRect, toRect) {
+            const sx = fromRect.width / toRect.width;
+            return 'translate(' + (fromRect.left - toRect.left) + 'px,' + (fromRect.top - toRect.top) + 'px) scale(' + sx + ') rotate(-6deg)';
+        }
+        function showVoucher() {
+            if (vm.classList.contains('show') || busy) return;
+            busy = true;
+            vmCard.classList.remove('landed');
+            vm.classList.add('show'); vm.setAttribute('aria-hidden', 'false');
+            giftEl.classList.add('revealing');
+            const from = peekEl.getBoundingClientRect(), to = vmCard.getBoundingClientRect();
+            vmCard.style.transition = 'none';
+            vmCard.style.transform = flip(from, to);
+            void vmCard.offsetWidth;
+            vmCard.style.transition = reduceMotion ? 'none' : 'transform .75s cubic-bezier(.2,1.15,.35,1)';
+            vmCard.style.transform = '';
+            setTimeout(() => {
+                vmCard.style.transition = ''; vmCard.classList.add('landed'); busy = false;
+                (vmClaim.disabled ? vmClose : vmClaim).focus({ preventScroll: true });
+                if (!vmClaim.disabled) { const r = vmCard.getBoundingClientRect(); burst(r.left + r.width / 2, r.top + r.height / 2, 40, 2.6, 12); }
+            }, reduceMotion ? 20 : 760);
+        }
+        function closeVoucher() {
+            if (!vm.classList.contains('show') || busy) return;
+            busy = true;
+            ['--rx', '--ry', '--sx'].forEach(k => vmCard.style.removeProperty(k));
+            vmCard.classList.remove('landed');
+            const to = vmCard.getBoundingClientRect();
+            giftEl.classList.remove('revealing'); peekEl.style.opacity = '0';
+            const from = peekEl.getBoundingClientRect();
+            vmCard.style.transition = reduceMotion ? 'none' : 'transform .55s cubic-bezier(.5,0,.75,0)';
+            vmCard.style.transform = flip(from, to);
+            vm.querySelector('.vm-backdrop').style.opacity = '0';
+            setTimeout(() => {
+                vm.classList.remove('show'); vm.setAttribute('aria-hidden', 'true');
+                vmCard.style.transition = 'none'; vmCard.style.transform = ''; vm.querySelector('.vm-backdrop').style.opacity = '';
+                peekEl.style.opacity = ''; busy = false; giftEl.focus({ preventScroll: true });
+            }, reduceMotion ? 20 : 560);
+        }
+        vmClose.addEventListener('click', closeVoucher);
+        document.getElementById('vmBackdrop').addEventListener('click', closeVoucher);
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeVoucher(); });
+
+        /* claim: stamp slams down, confetti, then offer a download */
+        function markClaimed(animate) {
+            vmClaim.disabled = true; vmClaim.textContent = '✓ 已領取'; vmSave.hidden = false;
+            vmCard.classList.add(animate ? 'claimed' : 'claimed-static');
+        }
+        vmClaim.addEventListener('click', () => {
+            markClaimed(true); store.set('hbw-voucher-claimed', '1');
+            setTimeout(() => {
+                vmCard.classList.remove('thud'); void vmCard.offsetWidth; vmCard.classList.add('thud');
+                const r = vmCard.getBoundingClientRect(); burst(r.left + r.width * .8, r.top + r.height * .75, 70, 2.2, 13);
+            }, 300);
+            vmSave.focus({ preventScroll: true });
         });
+        if (store.get('hbw-voucher-claimed') === '1') markClaimed(false);
+
+        /* 3D tilt + holographic shine follow the pointer */
+        vmCard.addEventListener('pointermove', e => {
+            if (!vmCard.classList.contains('landed') || reduceMotion) return;
+            const r = vmCard.getBoundingClientRect(), px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
+            vmCard.style.setProperty('--ry', ((px - .5) * 14).toFixed(2) + 'deg');
+            vmCard.style.setProperty('--rx', ((.5 - py) * 10).toFixed(2) + 'deg');
+            vmCard.style.setProperty('--sx', (120 - px * 150).toFixed(1) + '%');
+        });
+        vmCard.addEventListener('pointerleave', () => { ['--rx', '--ry', '--sx'].forEach(k => vmCard.style.removeProperty(k)); });
         // the scene is a fixed 800px wide: shrink it to fit narrow screens
         const wrapEl = document.querySelector('.wrap');
         function fit() {
