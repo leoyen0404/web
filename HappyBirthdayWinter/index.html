@@ -121,7 +121,7 @@
         .gift.open .voucher-peek { top:-30px; transform:rotate(-6deg); transition:top .8s cubic-bezier(.2,1.4,.4,1) .35s, transform .8s ease .35s; animation:peekFloat 3s ease-in-out 1.4s infinite; }
         @keyframes peekFloat { 0%,100% { translate:0 0; } 50% { translate:0 -6px; } }
         .gift.revealing .voucher-peek { opacity:0; transition:opacity .15s; }
-        .gift-hint { position:absolute; left:50%; bottom:200px; transform:translateX(-50%); white-space:nowrap; padding:8px 16px; border-radius:20px; background:#fff; color:#ff4f5a;
+        .gift-hint { position:absolute; left:50%; bottom:196px; font-size:26px !important; transform:translateX(-50%); white-space:nowrap; padding:8px 16px; border-radius:20px; background:#fff; color:#ff4f5a;
                      font:700 22px/1.2 system-ui,-apple-system,"PingFang TC","Noto Sans TC",sans-serif; box-shadow:0 4px 14px rgba(255,79,90,.25); pointer-events:none;
                      animation:hintBob 1.6s ease-in-out infinite; transition:opacity .3s ease; }
         .gift-hint::after { content:""; position:absolute; left:50%; bottom:-8px; margin-left:-8px; border:8px solid transparent; border-bottom:0; border-top-color:#fff; }
@@ -222,7 +222,7 @@
     </audio>
     <section class="wrap">
         <section class="gift" id="gift" role="button" tabindex="0" aria-label="拆開生日禮物">
-            <div class="gift-hint" id="giftHint">點我拆禮物！</div>
+            <div class="gift-hint" id="giftHint" aria-hidden="true">👆🎁</div>
             <div class="voucher-peek" id="voucherPeek"><img src="assets/img/voucher.jpg" alt=""></div>
             <div class="gift-legs" aria-hidden="true"><span class="leg l"><i></i></span><span class="leg r"><i></i></span></div>
             <section class="gift_top">
@@ -315,7 +315,8 @@
         const vmClose = document.getElementById('vmClose');
         const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         const store = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
-        let taps = 0, opened = false, busy = false;
+        let taps = 0, opened = false, busy = false, gen = 0;
+        const HINT = { start: '👆🎁', run: '🫵💨', again: '👆✨' };
 
         /* tiny confetti engine */
         const fx = document.getElementById('fx'), fctx = fx.getContext('2d');
@@ -376,9 +377,10 @@
             requestAnimationFrame(runLoop);
         }
         async function startRun() {
-            busy = true; hintEl.textContent = '抓住它！';
+            const g = gen;
+            busy = true; hintEl.textContent = HINT.run;
             giftEl.classList.add('legs-out', 'face-right');
-            await animateTo([{ transform: pose(0, 0, 0) }, { transform: pose(0, -75, 0), offset: .45 }, { transform: pose(0, -40, 0) }], 480, 'ease-out');
+            await animateTo([{ transform: pose(0, 0, 0) }, { transform: pose(0, -75, 0), offset: .45 }, { transform: pose(0, -40, 0) }], 480, 'ease-out'); if (g !== gen) return;
             x = 0; lift = 40; dir = 1; speed = 0; nextEvt = 0; pauseUntil = 0;
             busy = false; requestAnimationFrame(runLoop);
         }
@@ -389,51 +391,64 @@
             document.body.appendChild(el); setTimeout(() => el.remove(), 1500);
         }
         async function trip() {
+            const g = gen;
             busy = true;
             giftEl.classList.remove('running'); giftEl.classList.add('dizzy', 'tripping');
             const xf = Math.max(XMIN, Math.min(XMAX, x + dir * 60));
             giftEl.style.transformOrigin = dir > 0 ? '100% 100%' : '0% 100%';
-            await animateTo([{ transform: pose(x, -lift, 0) }, { transform: pose(x + dir * 25, -lift - 28, -dir * 14), offset: .35 }, { transform: pose(xf, 0, dir * 90) }], 560, 'ease-in');
+            await animateTo([{ transform: pose(x, -lift, 0) }, { transform: pose(x + dir * 25, -lift - 28, -dir * 14), offset: .35 }, { transform: pose(xf, 0, dir * 90) }], 560, 'ease-in'); if (g !== gen) return;
             const r = giftEl.querySelector('.gift_box_bottom').getBoundingClientRect();
             const DUST = ['#d9c3a5', '#c8b08e', '#efe0c8', '#b89f7d'];
             burst(r.left + r.width / 2, r.bottom, 18, .9, 6, DUST, Math.PI * 1.15);
             burst(r.left + r.width / 2, r.bottom, 18, .9, 6, DUST, -Math.PI * .15);
             dizzyStars();
             giftEl.classList.add('running');           // legs flail while it lies there
-            await wait(900);
+            await wait(900); if (g !== gen) return;
             giftEl.classList.remove('running', 'legs-out');
-            await wait(250);
-            await animateTo([{ transform: pose(xf, 0, dir * 90) }, { transform: pose(xf, -32, -dir * 10), offset: .6 }, { transform: pose(xf, 0, 0) }], 620, 'ease-out');
+            await wait(250); if (g !== gen) return;
+            await animateTo([{ transform: pose(xf, 0, dir * 90) }, { transform: pose(xf, -32, -dir * 10), offset: .6 }, { transform: pose(xf, 0, 0) }], 620, 'ease-out'); if (g !== gen) return;
             giftEl.style.transformOrigin = '';
             giftEl.classList.remove('dizzy', 'face-left', 'face-right');
             const hops = Math.max(1, Math.round(Math.abs(xf) / 90)), kf = [];
             for (let i = 0; i <= hops * 2; i++) kf.push({ transform: pose(xf * (1 - i / (hops * 2)), i % 2 ? -22 : 0, 0) });
-            await animateTo(kf, hops * 300, 'linear');
+            await animateTo(kf, hops * 300, 'linear'); if (g !== gen) return;
             giftEl.style.transform = '';
-            hintEl.textContent = '這次真的打開吧！'; giftEl.classList.remove('tripping');
+            hintEl.textContent = HINT.again; giftEl.classList.remove('tripping');
             busy = false;
         }
         function openBox() {
-            opened = true; busy = true;
+            opened = true; busy = true; const g = gen;
             giftEl.classList.add('open');
             giftEl.setAttribute('aria-label', '查看生日禮物兌換券');
             setTimeout(() => { const [x, y] = giftCenter(); burst(x, y, 90, 1.9, 15); }, 250);
-            setTimeout(() => { busy = false; showVoucher(); }, reduceMotion ? 200 : 1500);
+            setTimeout(() => { if (g === gen) { busy = false; showVoucher(); } }, reduceMotion ? 200 : 1500);
         }
         function activateGift() {
             if (busy) return;
             giftEl.classList.add('settled');
             if (opened) {
                 if (giftEl.classList.contains('open')) { showVoucher(); return; }
-                busy = true; giftEl.classList.add('open');
+                busy = true; giftEl.classList.add('open'); const g = gen;
                 setTimeout(() => { const [x, y] = giftCenter(); burst(x, y, 40, 1.6, 12); }, 200);
-                setTimeout(() => { busy = false; showVoucher(); }, reduceMotion ? 150 : 1150);
+                setTimeout(() => { if (g === gen) { busy = false; showVoucher(); } }, reduceMotion ? 150 : 1150);
                 return;
             }
             taps++;
             if (taps === 1) startRun();
             else if (taps === 2) trip();
             else openBox();
+        }
+        /* every time the MV is played again, the gift goes back to its 3-tap runaway routine */
+        function resetGift() {
+            gen++; taps = 0; opened = false; busy = false;
+            giftEl.getAnimations().forEach(a => a.cancel());
+            giftEl.className = 'gift';
+            giftEl.style.transform = ''; giftEl.style.transformOrigin = '';
+            giftEl.setAttribute('aria-label', '拆開生日禮物');
+            hintEl.textContent = HINT.start;
+            vm.classList.remove('show'); vm.setAttribute('aria-hidden', 'true');
+            vmCard.classList.remove('landed'); vmCard.style.transition = ''; vmCard.style.transform = '';
+            vm.querySelector('.vm-backdrop').style.opacity = ''; peekEl.style.opacity = '';
         }
         giftEl.addEventListener('click', activateGift);
         giftEl.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activateGift(); } });
@@ -477,7 +492,7 @@
                 vmCard.style.transition = 'none'; vmCard.style.transform = ''; vm.querySelector('.vm-backdrop').style.opacity = '';
                 peekEl.style.opacity = '';
                 setTimeout(() => {                   // card is back in the box: put the lid back on
-                    giftEl.classList.remove('open'); hintEl.textContent = '點我打開 🎁';
+                    giftEl.classList.remove('open'); hintEl.textContent = HINT.start;
                     giftEl.setAttribute('aria-label', '打開生日禮物');
                     busy = false; giftEl.focus({ preventScroll: true });
                 }, reduceMotion ? 0 : 150);
@@ -1048,6 +1063,7 @@ function enterScene(){
   audio.play().then(()=>{volumeIcon.src=ICON_ON}).catch(()=>{});
 }
 function openMV(){
+  if(typeof resetGift==='function')resetGift();
   clearTimeout(endT);audio.pause();volumeIcon.src=ICON_OFF;
   sceneEl.classList.remove('show');
   playing=false;offset=0;setPP('Play');setCover(true);layout();
