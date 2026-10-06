@@ -106,7 +106,7 @@
         .gift.open .gift_ribbon_left { height: 32px; transition-delay: 0s; }
         .gift.open .gift_ribbon_center { height: 102px; transition-delay: 0s; }
         .gift.open .gift_box_bottom_top { height: 0px; opacity: 0; transition: all 0.3s ease-in-out; transition-delay: 0.2s; }
-        .gift_top { transition: top .55s cubic-bezier(.3,1.6,.5,1), transform .7s ease, opacity .5s ease .5s; }
+        .gift_top { transition: top .55s cubic-bezier(.3,1.6,.5,1) .15s, transform .55s ease .15s, opacity .2s ease 0s; }
         .gift.open .gift_top { top:-150px; transform:translateX(70px) rotate(32deg); opacity:0; transition-delay:0s, 0s, .45s; }
         .gift::before { content:""; position:absolute; left:50%; bottom:60px; width:300px; height:300px; margin-left:-150px; margin-bottom:-150px; z-index:-2; border-radius:50%; pointer-events:none;
                         background:repeating-conic-gradient(from 0deg, rgba(255,224,102,.42) 0deg 9deg, rgba(255,224,102,0) 9deg 22deg);
@@ -116,9 +116,9 @@
         @keyframes raySpin { to { rotate:360deg; } }
         .gift:focus-visible .gift_box_bottom { outline:3px solid #64c8e9; outline-offset:4px; }
         .voucher-peek { position:absolute; left:50%; top:100px; width:122px; margin-left:-61px; z-index:-1; border-radius:6px; overflow:hidden; box-shadow:0 6px 18px rgba(0,0,0,.25);
-                        transform:rotate(0deg); transition:top .8s cubic-bezier(.2,1.4,.4,1) .35s, transform .8s ease .35s; }
+                        transform:rotate(0deg); transition:top .45s ease-in, transform .45s ease; }
         .voucher-peek img { display:block; width:100%; height:auto; }
-        .gift.open .voucher-peek { top:-30px; transform:rotate(-6deg); animation:peekFloat 3s ease-in-out 1.4s infinite; }
+        .gift.open .voucher-peek { top:-30px; transform:rotate(-6deg); transition:top .8s cubic-bezier(.2,1.4,.4,1) .35s, transform .8s ease .35s; animation:peekFloat 3s ease-in-out 1.4s infinite; }
         @keyframes peekFloat { 0%,100% { translate:0 0; } 50% { translate:0 -6px; } }
         .gift.revealing .voucher-peek { opacity:0; transition:opacity .15s; }
         .gift-hint { position:absolute; left:50%; bottom:200px; transform:translateX(-50%); white-space:nowrap; padding:8px 16px; border-radius:20px; background:#fff; color:#ff4f5a;
@@ -423,7 +423,13 @@
         function activateGift() {
             if (busy) return;
             giftEl.classList.add('settled');
-            if (opened) { showVoucher(); return; }
+            if (opened) {
+                if (giftEl.classList.contains('open')) { showVoucher(); return; }
+                busy = true; giftEl.classList.add('open');
+                setTimeout(() => { const [x, y] = giftCenter(); burst(x, y, 40, 1.6, 12); }, 200);
+                setTimeout(() => { busy = false; showVoucher(); }, reduceMotion ? 150 : 1150);
+                return;
+            }
             taps++;
             if (taps === 1) startRun();
             else if (taps === 2) trip();
@@ -469,7 +475,12 @@
             setTimeout(() => {
                 vm.classList.remove('show'); vm.setAttribute('aria-hidden', 'true');
                 vmCard.style.transition = 'none'; vmCard.style.transform = ''; vm.querySelector('.vm-backdrop').style.opacity = '';
-                peekEl.style.opacity = ''; busy = false; giftEl.focus({ preventScroll: true });
+                peekEl.style.opacity = '';
+                setTimeout(() => {                   // card is back in the box: put the lid back on
+                    giftEl.classList.remove('open'); hintEl.textContent = '點我打開 🎁';
+                    giftEl.setAttribute('aria-label', '打開生日禮物');
+                    busy = false; giftEl.focus({ preventScroll: true });
+                }, reduceMotion ? 0 : 150);
             }, reduceMotion ? 20 : 560);
         }
         vmClose.addEventListener('click', closeVoucher);
