@@ -10,7 +10,9 @@
     <link rel="manifest" href="https://raw.githubusercontent.com/g110351/cps/main/favicon/site.webmanifest">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pacifico&family=Pixelify+Sans:wght@500;700&family=Press+Start+2P&display=swap');
+        html, body { overflow-x: hidden; }
         body { background: #ffebd0; margin: 0; padding: 0; }
+        @media (max-width: 800px) { .wrap { zoom: .5; } }
         .gift { position: absolute; bottom: 0px; width: 150px; left: 172px; z-index: 12; height: 180px; }
         .wrap { height: 300px; width: 800px; margin: 0px auto; position: relative; }
         .ribbon_right { width: 45px; height: 45px; border-radius: 100% 100% 100% 0px; box-shadow: 0px 0px 0px 10px #1495f1 inset; position: absolute; right: 30px; }
@@ -99,8 +101,11 @@
         #scene.show #volumeButton, #scene.show #replayBtn { animation:sceneFade .8s ease 1.4s both; }
         #volumeButton img { transition:transform .2s ease, filter .3s ease; }
         #volumeButton:hover img { transform:scale(1.12); }
-        #replayBtn { position:absolute; top:10px; left:60px; width:40px; height:40px; border:0; border-radius:50%; background:rgba(0,0,0,.35); color:#fff; font-size:22px; line-height:40px; cursor:pointer; z-index:1000; transition:transform .25s ease, background-color .3s ease; }
-        #replayBtn:hover { transform:rotate(-200deg) scale(1.1); background:rgba(0,0,0,.55); }
+        #replayBtn { position:absolute; top:10px; right:10px; height:38px; padding:0 14px; border:2px solid #000; border-radius:0; background:#7a7a7a; color:#e8e8e8; font:10px "Press Start 2P","Courier New",monospace; letter-spacing:1px; text-shadow:2px 2px 0 #3b3b3b; box-shadow:inset -3px -3px 0 #4a4a4a, inset 3px 3px 0 #b4b4b4; image-rendering:pixelated; cursor:pointer; z-index:1000; transition:background-color .2s ease, color .2s ease, transform .1s ease, box-shadow .1s ease; }
+        #replayBtn:hover { background:#6e86d6; color:#ffffa0; text-shadow:2px 2px 0 #3a3f6a; box-shadow:inset -3px -3px 0 #3f4f94, inset 3px 3px 0 #a9b9ff; }
+        #replayBtn:active { transform:translateY(2px); box-shadow:inset 3px 3px 0 #3f4f94, inset -3px -3px 0 #8a9ae0; }
+        #replayBtn:focus-visible { outline:2px solid #fff; outline-offset:2px; }
+        @media (max-width: 600px) { .birthday-text { margin-top:70px; font-size:44px; } }
         .gift { transition:transform .3s ease; }
         @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration:.01ms !important; animation-delay:0s !important; transition-duration:.01ms !important; transition-delay:0s !important; } }
     </style>
@@ -171,7 +176,7 @@
         </section>
         <div class="line"></div>
     </section>
-    <button id="replayBtn" type="button" aria-label="Replay the music video" title="Replay the music video">&#8635;</button>
+    <button id="replayBtn" type="button" aria-label="Replay the music video" title="Replay the music video">REPLAY</button>
 </div>
     <script>
         const audio = document.getElementById("birthdayAudio");
@@ -215,8 +220,12 @@
         });
         // the scene is a fixed 800px wide: shrink it to fit narrow screens
         const wrapEl = document.querySelector('.wrap');
-        function fit() { wrapEl.style.zoom = Math.min(1, window.innerWidth / 800); }
+        function fit() {
+            const vw = Math.min(window.visualViewport ? window.visualViewport.width : Infinity, document.documentElement.clientWidth, window.innerWidth, screen.width || Infinity);
+            wrapEl.style.zoom = Math.min(1, vw / 800);
+        }
         window.addEventListener('resize', fit);
+        window.addEventListener('orientationchange', fit);
         fit();
     </script>
 <script>
