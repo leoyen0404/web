@@ -2,434 +2,422 @@
 <html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QR Studio Pro</title>
-    <meta name="description" content="A modern, dynamic QR code generator and scanner with an interactive UI, encryption, and themes.">
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z'/%3E%3C/svg%3E">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob: mediastream:; connect-src 'self'; base-uri 'none'; form-action 'none'">
+    <meta name="referrer" content="no-referrer">
+    <title>QR Studio · Create &amp; scan QR codes</title>
+    <meta name="description" content="Create and scan QR codes right in your browser. Add a passphrase to encrypt what's inside. Nothing you type or scan is uploaded.">
+    <meta name="color-scheme" content="dark light">
+    <meta name="theme-color" content="#090e1c">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="QR Studio">
+    <meta property="og:description" content="Create and scan QR codes in your browser, with optional passphrase encryption. Nothing is uploaded.">
+    <meta name="twitter:card" content="summary">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23090e1c'/%3E%3Cg fill='none' stroke='%23fff' stroke-width='2.2' stroke-linejoin='round'%3E%3Crect x='7' y='7' width='7' height='7' rx='1.5'/%3E%3Crect x='18' y='7' width='7' height='7' rx='1.5'/%3E%3Crect x='7' y='18' width='7' height='7' rx='1.5'/%3E%3C/g%3E%3Cpath fill='%232D9FFF' d='M18 18h3v3h-3zM22 22h3v3h-3zM22 18h3v3h-3zM18 22h3v3h-3z'/%3E%3C/svg%3E">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+
+    <script>
+        // Apply the saved (or system) theme before first paint to avoid a flash.
+        (function () {
+            var theme = null;
+            try { theme = localStorage.getItem('qr-theme'); } catch (e) {}
+            if (theme !== 'light' && theme !== 'dark') {
+                theme = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+            }
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
         :root {
             --ease-out-quart: cubic-bezier(0.22, 1, 0.36, 1);
             --ease-out-soft: cubic-bezier(0.2, 0.7, 0.2, 1);
-            --radius-frame: 24px;
-            --radius-inner: 12px;
-            --radius-button: 14px;
+            --island-gap: 6px;
+            --btn-size: 44px;
+            --kb: 0px;
         }
 
         html[data-theme='dark'] {
-            --bg-color: #0D1117;
-            --island-bg: #161B22;
-            --border-color: rgba(240, 246, 252, 0.1);
-            --text-primary: #F0F6FC;
-            --text-secondary: #8B949E;
-            --accent-glow: rgba(45, 160, 255, 0.3);
-            --accent-color: #2D9FFF;
-            --field-bg: rgba(240, 246, 252, 0.05);
-            --card-bg: rgba(35, 40, 48, 0.5);
-        }
-
-        html[data-theme='light'] {
-            --bg-color: #F3F4F6;
-            --island-bg: #FFFFFF;
-            --border-color: rgba(0, 0, 0, 0.1);
-            --text-primary: #1F2937;
-            --text-secondary: #6B7280;
-            --accent-glow: rgba(45, 160, 255, 0.3);
-            --accent-color: #007AFF;
-            --field-bg: rgba(0, 0, 0, 0.05);
-            --card-bg: rgba(255, 255, 255, 0.7);
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-primary);
-            overscroll-behavior: none;
-            transition: background-color 0.3s ease, color 0.3s ease;
-        }
-        
-        #theme-toggle {
-            position: fixed;
-            top: 1.5rem;
-            right: 1.5rem;
-            z-index: 2000;
-            min-width: 44px;
-            min-height: 44px;
-        }
-
-        .app-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            padding: 1rem;
-            padding-bottom: 210px;
-            transition: transform 0.55s var(--ease-out-soft);
-            will-change: transform;
-        }
-
-        #qr-code-view {
-            transition: opacity 0.45s var(--ease-out-soft), transform 0.55s var(--ease-out-quart);
-            transform: scale(0.8) translateY(20px);
-            opacity: 0;
-            pointer-events: none;
-            will-change: opacity, transform;
-        }
-        #qr-code-view.active {
-            transform: scale(1) translateY(0);
-            opacity: 1;
-            pointer-events: auto;
-        }
-        #qr-code-view-wrapper {
-            background-color: white;
-            padding: 16px;
-            border-radius: var(--radius-frame);
-            overflow: hidden;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-        }
-        #qr-code-view-wrapper canvas, #qr-code-view-wrapper img {
-             border-radius: var(--radius-inner);
-             display: block;
-        }
-
-        #scan-view {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            gap: 1.5rem;
-            width: 100%;
-            max-width: 500px;
-        }
-        #scan-view.active { display: flex; }
-        #scan-options { display: flex; flex-direction: column; gap: 1rem; width: 100%; }
-        #drop-zone {
-            border: 2px dashed var(--border-color);
-            border-radius: 1.5rem;
-            padding: 2rem;
-            text-align: center;
-            width: 100%;
-            transition: all 0.3s ease;
-            background-color: var(--field-bg);
-        }
-        #drop-zone.dragover {
-            border-color: var(--accent-color);
-            background-color: rgba(45, 160, 255, 0.1);
-        }
-        #video-wrapper {
-            width: 100%;
-            border-radius: 1.5rem;
-            overflow: hidden;
-            border: 1px solid var(--border-color);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            display: none;
-        }
-        #video { width: 100%; height: auto; display: block; }
-        .scan-card {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 1.25rem;
-            transition: all 0.3s ease;
-        }
-
-        /* --- Dynamic Island --- */
-        #dynamic-island {
-            position: fixed;
-            bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem);
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: var(--island-bg);
-            border: 1px solid var(--border-color);
-            box-shadow: 0 10px 36px rgba(0,0,0,0.32), 0 0 0 1px rgba(148, 163, 184, 0.2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: width 0.45s var(--ease-out-quart), height 0.45s var(--ease-out-quart), border-radius 0.45s var(--ease-out-quart), transform 0.3s var(--ease-out-soft), background-color 0.3s ease, border-color 0.3s ease;
-            z-index: 1000;
-            padding: 12px 14px;
-            max-width: min(94vw, 720px);
-            will-change: width, height, border-radius, transform;
-            overflow: visible;
-        }
-        #dynamic-island.keyboard-open { transform: translateX(-50%) translateY(-8px); }
-        #island-content-container {
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            max-width: 100%;
-            overflow: hidden;
-            padding: 6px 10px;
-            box-sizing: border-box;
-        }
-        #scan-drop-hint {
-            user-select: none;
-            white-space: nowrap;
-        }
-        #scan-drop-hint-floating {
-            position: fixed;
-            left: 50%;
-            transform: translateX(-50%);
-            bottom: calc(env(safe-area-inset-bottom, 0px) + 5.9rem);
-            z-index: 999;
-            color: var(--text-secondary);
-            font-size: 12px;
-            background-color: color-mix(in srgb, var(--island-bg) 82%, transparent);
-            border: 1px solid var(--border-color);
-            border-radius: 999px;
-            padding: 4px 10px;
-            backdrop-filter: blur(4px);
-            pointer-events: none;
-            transition: opacity 0.2s ease, transform 0.2s ease;
-        }
-        #scan-drop-hint-floating.hidden {
-            opacity: 0;
-            transform: translateX(-50%) translateY(6px);
-        }
-        body.drop-ready {
-            box-shadow: inset 0 0 0 2px rgba(45, 160, 255, 0.45);
-        }
-        .island-content {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: opacity 0.25s ease, transform 0.25s ease;
-            white-space: nowrap;
-            padding: 0 1px;
-        }
-        .island-content:not(.active) {
-            opacity: 0;
-            transform: scale(0.9);
-            pointer-events: none;
-            position: absolute;
-        }
-        
-        .island-button {
-            background-color: var(--field-bg);
-            border: 1px solid var(--border-color);
-            color: var(--text-secondary);
-            border-radius: var(--radius-button);
-            padding: 10px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 42px;
-            min-height: 42px;
-            line-height: 0;
-            overflow: visible;
-        }
-        .island-button i,
-        .island-button svg {
-            width: 20px;
-            height: 20px;
-            display: block;
-            flex-shrink: 0;
-            overflow: visible;
-        }
-        .island-button:hover:not(:disabled) {
-            background-color: var(--accent-color);
-            border-color: var(--accent-color);
-            color: white;
-        }
-        .island-button.primary {
-             background-color: var(--accent-color);
-             border-color: var(--accent-color);
-             color: white;
-        }
-        .island-button.primary:hover:not(:disabled) { filter: brightness(1.2); }
-        .island-button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .field {
-            width: auto;
-            min-width: 120px;
-            max-width: 320px;
-            background: transparent;
-            border: none;
-            outline: none;
-            color: var(--text-primary);
-            font-size: 16px;
-            padding: 8px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .field::placeholder { color: var(--text-secondary); }
-
-        .hidden { display: none !important; }
-
-        @media (max-width: 640px) {
-            #theme-toggle {
-                top: calc(env(safe-area-inset-top, 0px) + 0.75rem);
-                right: 0.75rem;
-            }
-            .app-container {
-                justify-content: flex-start;
-                padding-top: 6.25rem;
-                padding-bottom: 170px;
-            }
-            #dynamic-island {
-                bottom: calc(env(safe-area-inset-bottom, 0px) + 1.2rem);
-                padding: 10px;
-                max-width: calc(100vw - 6px);
-                transition: width 0.32s var(--ease-out-quart), height 0.32s var(--ease-out-quart), border-radius 0.32s var(--ease-out-quart), transform 0.18s var(--ease-out-soft), background-color 0.25s ease, border-color 0.25s ease;
-            }
-            #scan-drop-hint-floating {
-                bottom: calc(env(safe-area-inset-bottom, 0px) + 6.4rem);
-                font-size: 11px;
-            }
-            #qr-code-view { margin-top: 0.4rem; }
-            #generate-content,
-            #encrypt-content,
-            #decrypt-content {
-                white-space: nowrap;
-                flex-wrap: nowrap;
-                justify-content: flex-start;
-                gap: 0.35rem;
-            }
-            #generate-content #qr-input,
-            #decrypt-content #decrypt-pass,
-            #encrypt-content #enc-pass1,
-            #encrypt-content #enc-pass2 {
-                min-width: 90px;
-                width: auto;
-                flex: 1 1 auto;
-                max-width: 32vw;
-                background-color: transparent;
-                border: none;
-                border-radius: 0;
-                padding: 8px;
-            }
-            #generate-content #qr-input,
-            #decrypt-content #decrypt-pass {
-                min-width: 130px;
-                max-width: 44vw;
-            }
-            #encrypt-content #enc-pass1,
-            #encrypt-content #enc-pass2 {
-                min-width: 90px;
-                max-width: 24vw;
-            }
-            #qr-code-view-wrapper {
-                padding: 12px;
-                border-radius: 20px;
-            }
-            #qr-code-view-wrapper canvas,
-            #qr-code-view-wrapper img {
-                width: min(72vw, 280px) !important;
-                height: auto !important;
-                border-radius: 10px;
-            }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-            *, *::before, *::after {
-                animation: none !important;
-                transition: none !important;
-            }
-        }
-
-        /* --- Refined Liquid Glass Style Pass --- */
-        html[data-theme='dark'] {
-            --bg-color: #090e1c;
+            color-scheme: dark;
+            --bg: #090e1c;
+            --bg-top: #10182b;
+            --bg-bottom: #070b16;
+            --bg-glow-1: rgba(45, 159, 255, 0.22);
+            --bg-glow-2: rgba(141, 112, 255, 0.14);
+            --text: #F0F6FC;
+            --text-2: rgba(240, 246, 252, 0.66);
+            --accent: #2D9FFF;
+            --accent-text: #6CBBFF;
+            --warn: #FACC15;
+            --danger: #FF7B7B;
             --island-bg: rgba(34, 48, 66, 0.34);
-            --island-highlight: rgba(255, 255, 255, 0.76);
-            --island-shadow: rgba(0, 0, 0, 0.28);
             --island-rim: rgba(210, 230, 245, 0.26);
-            --border-color: rgba(240, 246, 252, 0.13);
-            --text-primary: #F0F6FC;
-            --text-secondary: rgba(240, 246, 252, 0.64);
-            --accent-glow: rgba(45, 160, 255, 0.18);
-            --accent-color: #2D9FFF;
-            --field-bg: rgba(240, 246, 252, 0.07);
+            --island-highlight: rgba(255, 255, 255, 0.76);
+            --shadow: rgba(0, 0, 0, 0.28);
             --card-bg: rgba(37, 54, 74, 0.24);
+            --card-border: rgba(255, 255, 255, 0.13);
+            --sheen-1: rgba(255, 255, 255, 0.105);
+            --sheen-2: rgba(255, 255, 255, 0.035);
+            --btn-bg: rgba(255, 255, 255, 0.055);
+            --btn-bg-hover: rgba(255, 255, 255, 0.11);
+            --btn-border: rgba(255, 255, 255, 0.13);
+            --btn-border-hover: rgba(255, 255, 255, 0.26);
+            --btn-inset: rgba(255, 255, 255, 0.18);
+            --primary-bg: linear-gradient(145deg, rgba(255,255,255,0.94), rgba(226,232,240,0.78));
+            --primary-fg: #0f172a;
+            --primary-border: rgba(255, 255, 255, 0.70);
+            --field-placeholder: rgba(240, 246, 252, 0.5);
+            --focus: #6CBBFF;
         }
 
         html[data-theme='light'] {
-            --island-bg: rgba(255, 255, 255, 0.52);
-            --island-highlight: rgba(255, 255, 255, 0.88);
-            --island-shadow: rgba(31, 41, 55, 0.13);
+            color-scheme: light;
+            --bg: #EEF2F7;
+            --bg-top: #F8FAFC;
+            --bg-bottom: #E4E9F1;
+            --bg-glow-1: rgba(45, 159, 255, 0.16);
+            --bg-glow-2: rgba(141, 112, 255, 0.10);
+            --text: #0F172A;
+            --text-2: rgba(15, 23, 42, 0.64);
+            --accent: #0A72E8;
+            --accent-text: #0A62C9;
+            --warn: #B45309;
+            --danger: #C9252D;
+            --island-bg: rgba(255, 255, 255, 0.55);
             --island-rim: rgba(15, 23, 42, 0.12);
-            --border-color: rgba(15, 23, 42, 0.10);
-            --field-bg: rgba(15, 23, 42, 0.045);
-            --card-bg: rgba(255, 255, 255, 0.52);
+            --island-highlight: rgba(255, 255, 255, 0.95);
+            --shadow: rgba(31, 41, 55, 0.14);
+            --card-bg: rgba(255, 255, 255, 0.58);
+            --card-border: rgba(15, 23, 42, 0.08);
+            --sheen-1: rgba(255, 255, 255, 0.6);
+            --sheen-2: rgba(255, 255, 255, 0.2);
+            --btn-bg: rgba(15, 23, 42, 0.04);
+            --btn-bg-hover: rgba(15, 23, 42, 0.08);
+            --btn-border: rgba(15, 23, 42, 0.10);
+            --btn-border-hover: rgba(15, 23, 42, 0.2);
+            --btn-inset: rgba(255, 255, 255, 0.7);
+            --primary-bg: linear-gradient(145deg, #1e293b, #0f172a);
+            --primary-fg: #ffffff;
+            --primary-border: rgba(15, 23, 42, 0.9);
+            --field-placeholder: rgba(15, 23, 42, 0.45);
+            --focus: #0A72E8;
         }
+
+        *, *::before, *::after { box-sizing: border-box; }
+
+        html, body { margin: 0; }
 
         body {
             min-height: 100vh;
+            min-height: 100dvh;
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans TC', 'PingFang TC', sans-serif;
+            color: var(--text);
+            background-color: var(--bg);
             background:
-                radial-gradient(circle at 18% 10%, rgba(45,159,255,0.22), transparent 34%),
-                radial-gradient(circle at 82% 8%, rgba(141,112,255,0.14), transparent 33%),
-                linear-gradient(180deg, #10182b 0%, var(--bg-color) 48%, #070b16 100%);
+                radial-gradient(circle at 18% 10%, var(--bg-glow-1), transparent 34%),
+                radial-gradient(circle at 82% 8%, var(--bg-glow-2), transparent 33%),
+                linear-gradient(180deg, var(--bg-top) 0%, var(--bg) 48%, var(--bg-bottom) 100%);
+            background-attachment: fixed;
+            overscroll-behavior: none;
+            -webkit-font-smoothing: antialiased;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        body::before {
-            content: "";
+        body.drop-ready { box-shadow: inset 0 0 0 3px var(--accent); }
+
+        button, input { font: inherit; color: inherit; }
+        button { cursor: pointer; }
+        [hidden] { display: none !important; }
+
+        .sr-only {
+            position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+            overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+        }
+
+        .icon {
+            width: 20px; height: 20px; flex-shrink: 0; display: block;
+            fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+        }
+
+        :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+        /* --- Header --- */
+        .topbar {
             position: fixed;
-            inset: 0;
+            top: 0; left: 0; right: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: calc(env(safe-area-inset-top, 0px) + 14px) max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px));
             pointer-events: none;
-            z-index: -1;
-            background:
-                linear-gradient(150deg, rgba(255,255,255,0.030), transparent 40%),
-                radial-gradient(circle at 28% 16%, rgba(255,255,255,0.035), transparent 26%);
+            z-index: 1500;
+        }
+        .topbar > * { pointer-events: auto; }
+        .brand {
+            display: flex; align-items: center; gap: 8px;
+            font-weight: 600; font-size: 15px; letter-spacing: -0.01em;
+            color: var(--text); text-decoration: none;
+            background: none; border: 0; padding: 6px 4px;
+        }
+        .brand .icon { color: var(--accent); }
+
+        /* --- Layout --- */
+        .app {
+            min-height: 100vh;
+            min-height: 100dvh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: calc(env(safe-area-inset-top, 0px) + 76px) 16px calc(env(safe-area-inset-bottom, 0px) + 124px);
         }
 
-        #qr-code-view-wrapper,
-        .scan-card,
-        #video-wrapper,
-        #scan-drop-hint-floating {
-            background:
-                linear-gradient(145deg, rgba(255,255,255,0.105), rgba(255,255,255,0.035)),
-                var(--card-bg);
-            border: 1px solid rgba(255,255,255,0.13);
-            box-shadow:
-                0 18px 54px rgba(0,0,0,0.22),
-                inset 0 1px 0 rgba(255,255,255,0.16);
+        .view {
+            width: 100%;
+            max-width: 520px;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            animation: view-in 0.5s var(--ease-out-quart);
+        }
+        .view.active { display: flex; }
+        @keyframes view-in {
+            from { opacity: 0; transform: scale(0.96) translateY(14px); }
+            to { opacity: 1; transform: none; }
+        }
+
+        .glass {
+            background: linear-gradient(145deg, var(--sheen-1), var(--sheen-2)), var(--card-bg);
+            border: 1px solid var(--card-border);
+            box-shadow: 0 18px 54px var(--shadow), inset 0 1px 0 var(--btn-inset);
             backdrop-filter: blur(18px) saturate(1.32);
             -webkit-backdrop-filter: blur(18px) saturate(1.32);
         }
 
-        html[data-theme='light'] #qr-code-view-wrapper,
-        html[data-theme='light'] .scan-card,
-        html[data-theme='light'] #video-wrapper,
-        html[data-theme='light'] #scan-drop-hint-floating {
-            border-color: rgba(15,23,42,0.08);
-            box-shadow:
-                0 18px 48px rgba(31,41,55,0.12),
-                inset 0 1px 0 rgba(255,255,255,0.82);
+        /* --- Home --- */
+        #home-view { text-align: center; gap: 14px; }
+        .app-icon {
+            width: 76px; height: 76px; border-radius: 22px;
+            display: grid; place-items: center;
+            color: var(--accent);
+            margin-bottom: 6px;
         }
+        .app-icon .icon { width: 38px; height: 38px; stroke-width: 1.8; }
+        #home-view h1 {
+            margin: 0;
+            font-size: clamp(28px, 7vw, 40px);
+            line-height: 1.1;
+            letter-spacing: -0.03em;
+            font-weight: 700;
+        }
+        .lead {
+            margin: 0;
+            max-width: 26rem;
+            color: var(--text-2);
+            font-size: 15.5px;
+            line-height: 1.55;
+            text-wrap: balance;
+        }
+        .chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 6px; }
+        .chip {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 6px 12px; border-radius: 999px;
+            font-size: 13px; color: var(--text-2);
+            box-shadow: none;
+        }
+        .chip .icon { width: 15px; height: 15px; }
 
-        #qr-code-view-wrapper {
-            padding: 18px;
+        /* --- Generated QR --- */
+        .qr-card {
+            padding: 14px;
             border-radius: 28px;
         }
+        #qr-canvas {
+            display: block;
+            width: min(72vw, 300px, 48vh);
+            min-width: 180px;
+            height: auto;
+            aspect-ratio: 1;
+            border-radius: 14px;
+            background: #fff;
+        }
+        .qr-caption {
+            margin: 0;
+            max-width: min(88vw, 360px);
+            text-align: center;
+            color: var(--text-2);
+            font-size: 14px;
+            line-height: 1.5;
+            overflow-wrap: anywhere;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 5px 11px; border-radius: 999px;
+            font-size: 13px; font-weight: 600;
+            color: var(--warn);
+            box-shadow: none;
+        }
+        .badge .icon { width: 15px; height: 15px; }
 
+        /* --- Scan --- */
+        .panel {
+            width: 100%;
+            border-radius: 24px;
+            padding: 28px 20px;
+            text-align: center;
+        }
+        .drop-zone {
+            display: flex; flex-direction: column; align-items: center; gap: 10px;
+            border-style: dashed; border-width: 1.5px;
+            cursor: pointer;
+            transition: border-color 0.2s ease, transform 0.2s ease;
+        }
+        html[data-theme='light'] .drop-zone { border-color: rgba(15, 23, 42, 0.22); }
+        .drop-zone:hover, .drop-zone.dragover { border-color: var(--accent) !important; }
+        .drop-zone .icon { width: 40px; height: 40px; stroke-width: 1.6; color: var(--text-2); }
+        .panel h2 { margin: 0; font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
+        .panel p { margin: 0; color: var(--text-2); font-size: 14.5px; line-height: 1.5; }
+        .touch-only { display: none; }
+        @media (hover: none) and (pointer: coarse) {
+            .touch-only { display: initial; }
+            .pointer-only { display: none; }
+        }
+
+        .video-wrap {
+            position: relative;
+            width: 100%;
+            border-radius: 24px;
+            overflow: hidden;
+            padding: 0;
+            background: #000;
+            aspect-ratio: 4 / 3;
+        }
+        #video { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .viewfinder {
+            position: absolute;
+            inset: 50% auto auto 50%;
+            width: min(62%, 260px);
+            aspect-ratio: 1;
+            transform: translate(-50%, -50%);
+            border-radius: 22px;
+            box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.28);
+            pointer-events: none;
+        }
+        .viewfinder::before {
+            content: "";
+            position: absolute; inset: 0;
+            border-radius: inherit;
+            border: 3px solid rgba(255, 255, 255, 0.9);
+            -webkit-mask:
+                linear-gradient(#000 0 0) top left / 28% 28% no-repeat,
+                linear-gradient(#000 0 0) top right / 28% 28% no-repeat,
+                linear-gradient(#000 0 0) bottom left / 28% 28% no-repeat,
+                linear-gradient(#000 0 0) bottom right / 28% 28% no-repeat;
+            mask:
+                linear-gradient(#000 0 0) top left / 28% 28% no-repeat,
+                linear-gradient(#000 0 0) top right / 28% 28% no-repeat,
+                linear-gradient(#000 0 0) bottom left / 28% 28% no-repeat,
+                linear-gradient(#000 0 0) bottom right / 28% 28% no-repeat;
+        }
+        .viewfinder::after {
+            content: "";
+            position: absolute; left: 10%; right: 10%; top: 50%;
+            height: 2px; border-radius: 2px;
+            background: rgba(108, 187, 255, 0.9);
+            box-shadow: 0 0 12px rgba(45, 159, 255, 0.9);
+            animation: sweep 2.2s ease-in-out infinite alternate;
+        }
+        @keyframes sweep { from { top: 14%; } to { top: 86%; } }
+
+        .preview {
+            display: flex; flex-direction: column; align-items: center; gap: 12px;
+            padding: 14px;
+        }
+        #image-preview {
+            display: block;
+            max-width: 100%;
+            max-height: min(46vh, 380px);
+            border-radius: 14px;
+        }
+
+        .lock-card { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        .lock-card .icon { width: 36px; height: 36px; color: var(--warn); stroke-width: 1.8; }
+
+        .result-card { text-align: left; display: flex; flex-direction: column; gap: 14px; padding: 20px; }
+        .result-kind {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 13px; font-weight: 600; color: var(--text-2);
+            text-transform: uppercase; letter-spacing: 0.06em;
+        }
+        .result-kind .icon { width: 16px; height: 16px; }
+        .result-kind .host { text-transform: none; letter-spacing: 0; font-weight: 500; color: var(--accent-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        #result-text {
+            margin: 0;
+            color: var(--text);
+            font-size: 16px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            max-height: 40vh;
+            overflow: auto;
+            user-select: text;
+        }
+        .result-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+        .pill {
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            min-height: var(--btn-size);
+            padding: 0 16px;
+            border-radius: 999px;
+            border: 1px solid var(--btn-border);
+            background: linear-gradient(145deg, var(--sheen-1), transparent), var(--btn-bg);
+            color: var(--text);
+            font-size: 15px; font-weight: 500;
+            text-decoration: none;
+            box-shadow: inset 0 1px 0 var(--btn-inset), 0 7px 18px rgba(0, 0, 0, 0.08);
+            transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+        }
+        .pill:hover { border-color: var(--btn-border-hover); background-color: var(--btn-bg-hover); transform: translateY(-1px); }
+        .pill.primary { background: var(--primary-bg); color: var(--primary-fg); border-color: var(--primary-border); }
+
+        /* --- Dynamic Island --- */
         #dynamic-island {
+            position: fixed;
+            left: 50%;
+            bottom: calc(env(safe-area-inset-bottom, 0px) + 16px + var(--kb));
+            transform: translateX(-50%);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            max-width: calc(100vw - 12px);
+            overflow: hidden;
             isolation: isolate;
+            border-radius: 33px;
             background:
                 linear-gradient(145deg, rgba(255,255,255,0.16), rgba(255,255,255,0.055) 44%, rgba(255,255,255,0.035) 66%, rgba(255,255,255,0.09)),
                 var(--island-bg);
             border: 1px solid var(--island-rim);
             box-shadow:
-                0 16px 42px var(--island-shadow),
+                0 16px 42px var(--shadow),
                 inset 0 1px 0 rgba(255,255,255,0.54),
                 inset 1px 0 0 rgba(255,255,255,0.12),
                 inset 0 -16px 38px rgba(255,255,255,0.028);
-            padding: 10px;
-            overflow: hidden;
             backdrop-filter: blur(28px) saturate(1.48) brightness(1.02);
             -webkit-backdrop-filter: blur(28px) saturate(1.48) brightness(1.02);
+            transition:
+                width 0.45s var(--ease-out-quart),
+                height 0.45s var(--ease-out-quart),
+                border-radius 0.45s var(--ease-out-quart);
         }
-
         #dynamic-island::before {
             content: "";
             position: absolute;
@@ -443,13 +431,10 @@
             opacity: 0.62;
             z-index: -1;
         }
-
         #dynamic-island::after {
             content: "";
             position: absolute;
-            left: 16%;
-            right: 16%;
-            top: 0;
+            left: 16%; right: 16%; top: 0;
             height: 1px;
             border-radius: 999px;
             background: var(--island-highlight);
@@ -457,44 +442,50 @@
             opacity: 0.52;
             pointer-events: none;
         }
-
         #island-content-container {
-            padding: 0;
-            overflow: visible;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
         }
-
         .island-content {
-            gap: 0.45rem;
+            display: flex;
+            align-items: center;
+            gap: var(--island-gap);
+            width: max-content;
+            white-space: nowrap;
             transition:
                 opacity 0.22s var(--ease-out-quart),
                 transform 0.38s var(--ease-out-soft),
                 filter 0.22s var(--ease-out-quart);
         }
-
         .island-content:not(.active) {
+            position: absolute;
             opacity: 0;
             transform: scale(0.94) translateY(3px);
             filter: blur(5px);
+            pointer-events: none;
         }
 
         .island-button {
             position: relative;
             isolation: isolate;
-            background:
-                linear-gradient(145deg, rgba(255,255,255,0.12), rgba(255,255,255,0.035)),
-                rgba(255,255,255,0.055);
-            border: 1px solid rgba(255,255,255,0.13);
-            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            flex-shrink: 0;
+            width: var(--btn-size);
+            height: var(--btn-size);
+            padding: 0;
             border-radius: 999px;
-            min-width: 44px;
-            min-height: 44px;
-            box-shadow:
-                inset 0 1px 0 rgba(255,255,255,0.18),
-                0 7px 18px rgba(0,0,0,0.10);
-            backdrop-filter: blur(16px) saturate(1.35);
-            -webkit-backdrop-filter: blur(16px) saturate(1.35);
+            border: 1px solid var(--btn-border);
+            background: linear-gradient(145deg, var(--sheen-1), var(--sheen-2)), var(--btn-bg);
+            color: var(--text-2);
+            box-shadow: inset 0 1px 0 var(--btn-inset), 0 7px 18px rgba(0,0,0,0.10);
+            transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
         }
-
         .island-button::before {
             content: "";
             position: absolute;
@@ -505,894 +496,1324 @@
             opacity: 0.48;
             z-index: -1;
         }
-
         .island-button:hover:not(:disabled) {
-            color: var(--text-primary);
+            color: var(--text);
+            border-color: var(--btn-border-hover);
+            background-color: var(--btn-bg-hover);
             transform: translateY(-1px) scale(1.025);
-            border-color: rgba(255,255,255,0.24);
-            background-color: rgba(255,255,255,0.095);
         }
-
+        .island-button:active:not(:disabled) { transform: scale(0.97); }
         .island-button.primary {
-            background:
-                radial-gradient(circle at 35% 18%, rgba(255,255,255,0.92), transparent 44%),
-                linear-gradient(145deg, rgba(255,255,255,0.90), rgba(226,232,240,0.72));
-            border-color: rgba(255,255,255,0.70);
-            color: #0f172a;
-            box-shadow:
-                0 8px 18px rgba(0,0,0,.15),
-                inset 0 1px 0 rgba(255,255,255,.86),
-                inset 0 -8px 18px rgba(148,163,184,.20);
+            background: var(--primary-bg);
+            border-color: var(--primary-border);
+            color: var(--primary-fg);
+            box-shadow: 0 8px 18px rgba(0,0,0,.15), inset 0 1px 0 rgba(255,255,255,.5);
         }
-
-        .island-button.primary:hover:not(:disabled) {
-            filter: none;
-            transform: translateY(-1px) scale(1.025);
+        .island-button.primary:hover:not(:disabled) { color: var(--primary-fg); }
+        .island-button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .island-button.labeled {
+            width: auto;
+            padding: 0 18px 0 15px;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text);
         }
-
-        #initial-content {
-            gap: 0.32rem;
-            align-items: center;
-            justify-content: center;
+        .island-button.busy .icon { animation: spin 0.9s linear infinite; }
+        .island-button.busy .icon use { visibility: hidden; }
+        .island-button.busy .icon {
+            border-radius: 50%;
+            border: 2px solid currentColor;
+            border-right-color: transparent;
         }
-
-        #initial-content .island-button {
-            width: 50px;
-            height: 44px;
-            min-width: 50px;
-            min-height: 44px;
-        }
-
-        #scan-menu-content .island-button,
-        #actions-content .island-button,
-        #scan-actions-content .island-button {
-            width: 44px;
-            height: 44px;
-        }
-
-        #scan-actions-content #scan-status {
-            color: rgba(240,246,252,0.70);
-        }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
         .field {
-            color: var(--text-primary);
+            flex-shrink: 0;
+            height: var(--btn-size);
+            min-width: 0;
+            padding: 0 8px;
             background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text);
+            font-size: 16px; /* >= 16px keeps iOS from zooming on focus */
+            text-overflow: ellipsis;
         }
+        .field::placeholder { color: var(--field-placeholder); }
+        .field:focus-visible { outline: none; }
+        #qr-input { width: clamp(120px, calc(100vw - 190px), 360px); }
+        #enc-pass1, #enc-pass2 { width: clamp(80px, calc((100vw - 140px) / 2), 170px); padding: 0 6px; }
+        #decrypt-pass { width: clamp(120px, calc(100vw - 140px), 300px); }
+        .island-key { color: var(--warn); margin: 0 2px 0 6px; }
+        @media (max-width: 479px) { .island-key { display: none; } }
+        @media (max-width: 379px) { #enc-pass1::placeholder, #enc-pass2::placeholder { font-size: 14px; } }
 
-        #theme-toggle {
-            background:
-                linear-gradient(145deg, rgba(255,255,255,0.14), rgba(255,255,255,0.045)),
-                rgba(255,255,255,0.065);
-            border-color: rgba(255,255,255,0.18);
+        #scan-status { color: var(--text-2); font-size: 14px; padding: 0 10px 0 4px; }
+
+        /* --- Theme toggle --- */
+        #theme-toggle { width: var(--btn-size); height: var(--btn-size); }
+
+        /* --- Toast --- */
+        .toast {
+            position: fixed;
+            bottom: calc(env(safe-area-inset-bottom, 0px) + 96px + var(--kb));
+            left: 50%;
+            z-index: 2000;
+            max-width: min(440px, calc(100vw - 32px));
+            padding: 11px 18px;
+            border-radius: 22px;
+            color: #fff;
+            background: #1F6FEB;
+            font-size: 14.5px;
+            font-weight: 500;
+            line-height: 1.35;
+            text-align: center;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+            transform: translate(-50%, 16px) scale(0.96);
+            opacity: 0;
+            transition: transform 0.35s var(--ease-out-quart), opacity 0.25s ease;
+            pointer-events: none;
         }
+        .toast.error { background: #D1242F; }
+        .toast.show { transform: translate(-50%, 0); opacity: 1; }
 
-        body.drop-ready {
-            box-shadow: inset 0 0 0 2px rgba(45, 160, 255, 0.30);
+        .noscript {
+            position: fixed; inset: auto 16px 24px; padding: 14px 18px; border-radius: 16px;
+            background: #D1242F; color: #fff; text-align: center; z-index: 3000;
         }
 
         @media (max-width: 640px) {
-            #dynamic-island {
-                padding: 10px;
-                max-width: calc(100vw - 12px);
-            }
-            #qr-code-view-wrapper {
-                padding: 12px;
-                border-radius: 22px;
-            }
-            #initial-content .island-button {
-                width: 48px;
-                min-width: 48px;
-            }
+            .app { align-items: flex-start; padding-top: calc(env(safe-area-inset-top, 0px) + 84px); }
+            #home-view { margin-top: 6vh; }
+            .qr-card { padding: 12px; border-radius: 24px; }
+            .panel { padding: 24px 16px; }
         }
 
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation: none !important;
+                transition: none !important;
+            }
+        }
     </style>
 </head>
 <body>
-    <button id="theme-toggle" class="island-button" title="Toggle Theme"></button>
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+        <symbol id="i-qr-code" viewBox="0 0 24 24"><rect width="5" height="5" x="3" y="3" rx="1"/><rect width="5" height="5" x="16" y="3" rx="1"/><rect width="5" height="5" x="3" y="16" rx="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v-1"/></symbol>
+        <symbol id="i-pen-tool" viewBox="0 0 24 24"><path d="M15.707 21.293a1 1 0 0 1-1.414 0l-1.586-1.586a1 1 0 0 1 0-1.414l5.586-5.586a1 1 0 0 1 1.414 0l1.586 1.586a1 1 0 0 1 0 1.414z"/><path d="m18 13-1.375-6.874a1 1 0 0 0-.746-.776L3.235 2.028a1 1 0 0 0-1.207 1.207L5.35 15.879a1 1 0 0 0 .776.746L13 18"/><path d="m2.3 2.3 7.286 7.286"/><circle cx="11" cy="11" r="2"/></symbol>
+        <symbol id="i-scan-line" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 12h10"/></symbol>
+        <symbol id="i-lock" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+        <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol>
+        <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+        <symbol id="i-key-round" viewBox="0 0 24 24"><path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"/><circle cx="16.5" cy="7.5" r=".5" fill="currentColor"/></symbol>
+        <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+        <symbol id="i-lock-open" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></symbol>
+        <symbol id="i-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></symbol>
+        <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></symbol>
+        <symbol id="i-image" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></symbol>
+        <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol>
+        <symbol id="i-camera" viewBox="0 0 24 24"><path d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z"/><circle cx="12" cy="13" r="3"/></symbol>
+        <symbol id="i-cloud-upload" viewBox="0 0 24 24"><path d="M12 13v8"/><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="m8 17 4-4 4 4"/></symbol>
+        <symbol id="i-clipboard" viewBox="0 0 24 24"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></symbol>
+        <symbol id="i-trash-2" viewBox="0 0 24 24"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></symbol>
+        <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/></symbol>
+        <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></symbol>
+        <symbol id="i-copy" viewBox="0 0 24 24"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></symbol>
+        <symbol id="i-external-link" viewBox="0 0 24 24"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></symbol>
+        <symbol id="i-refresh-cw" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></symbol>
+        <symbol id="i-share-2" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></symbol>
+        <symbol id="i-shield-check" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
+        <symbol id="i-type" viewBox="0 0 24 24"><path d="M12 4v16"/><path d="M4 7V5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2"/><path d="M9 20h6"/></symbol>
+    </svg>
 
-    <div id="app-container" class="app-container">
-        <div id="qr-code-view"><div id="qr-code-view-wrapper"></div></div>
-        
-        <div id="scan-view">
-            <div id="video-wrapper"><video id="video" playsinline></video></div>
-            <div id="scan-options" class="hidden">
-                <div id="drop-zone" class="scan-card">
-                    <div class="flex flex-col items-center gap-2">
-                        <i data-lucide="upload-cloud" class="w-10 h-10 text-gray-400"></i>
-                        <p class="text-sm text-gray-400">Drag & Drop or <button id="browse-button" class="font-semibold text-blue-400">Browse</button></p>
-                    </div>
+    <header class="topbar">
+        <button type="button" class="brand" id="brand" aria-label="QR Studio home">
+            <svg class="icon" aria-hidden="true"><use href="#i-qr-code"/></svg>
+            <span>QR Studio</span>
+        </button>
+        <button type="button" id="theme-toggle" class="island-button" aria-label="Switch theme">
+            <svg class="icon" aria-hidden="true"><use href="#i-sun"/></svg>
+        </button>
+    </header>
+
+    <main id="app" class="app">
+        <!-- Home / generate / encrypt -->
+        <section id="home-view" class="view active" aria-labelledby="home-title">
+            <div class="app-icon glass" aria-hidden="true"><svg class="icon"><use href="#i-qr-code"/></svg></div>
+            <h1 id="home-title">QR Studio</h1>
+            <p class="lead" id="home-lead"></p>
+            <div class="chips" id="home-chips">
+                <span class="chip glass"><svg class="icon" aria-hidden="true"><use href="#i-shield-check"/></svg>Runs on your device</span>
+                <span class="chip glass"><svg class="icon" aria-hidden="true"><use href="#i-lock"/></svg>Optional passphrase</span>
+                <span class="chip glass"><svg class="icon" aria-hidden="true"><use href="#i-camera"/></svg>Camera, photo or paste</span>
+            </div>
+        </section>
+
+        <!-- Generated QR -->
+        <section id="qr-view" class="view" aria-label="Your QR code">
+            <div class="qr-card glass">
+                <canvas id="qr-canvas" role="img" aria-label="Generated QR code"></canvas>
+            </div>
+            <span id="qr-badge" class="badge glass" hidden><svg class="icon" aria-hidden="true"><use href="#i-lock"/></svg>Passphrase protected</span>
+            <p id="qr-caption" class="qr-caption"></p>
+        </section>
+
+        <!-- Scan -->
+        <section id="scan-view" class="view" aria-label="Scan a QR code">
+            <div id="drop-zone" class="panel glass drop-zone" role="button" tabindex="0" aria-label="Choose an image to scan">
+                <svg class="icon" aria-hidden="true"><use href="#i-cloud-upload"/></svg>
+                <h2>Scan a QR code</h2>
+                <p class="pointer-only">Drop or paste (Ctrl/⌘&nbsp;V) an image, click to choose a file, or use your camera.</p>
+                <p class="touch-only">Use your camera, or tap here to pick a photo or screenshot.</p>
+            </div>
+
+            <div id="video-wrap" class="video-wrap glass" hidden>
+                <video id="video" playsinline muted autoplay></video>
+                <div class="viewfinder" aria-hidden="true"></div>
+            </div>
+
+            <div id="preview" class="preview panel glass" hidden>
+                <img id="image-preview" alt="Image being scanned">
+                <p id="preview-status" role="status"></p>
+            </div>
+
+            <div id="lock-card" class="panel glass lock-card" hidden>
+                <svg class="icon" aria-hidden="true"><use href="#i-lock"/></svg>
+                <h2>This QR code is passphrase protected</h2>
+                <p id="lock-status">Enter the passphrase below to unlock it.</p>
+            </div>
+
+            <div id="result-card" class="panel glass result-card" hidden>
+                <div class="result-kind">
+                    <svg class="icon" aria-hidden="true"><use id="result-icon" href="#i-type"/></svg>
+                    <span id="result-label">Text</span>
+                    <span id="result-host" class="host"></span>
                 </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <button id="start-cam-button" class="scan-card w-full p-4 flex items-center justify-center gap-2 hover:border-blue-400">
-                        <i data-lucide="camera"></i> Start Camera
+                <p id="result-text"></p>
+                <div class="result-actions">
+                    <a id="result-open" class="pill primary" target="_blank" rel="noopener noreferrer" hidden>
+                        <svg class="icon" aria-hidden="true"><use href="#i-external-link"/></svg>Open
+                    </a>
+                    <button type="button" id="result-copy" class="pill">
+                        <svg class="icon" aria-hidden="true"><use href="#i-copy"/></svg>Copy
                     </button>
-                    <button id="paste-button" class="scan-card w-full p-4 flex items-center justify-center gap-2 hover:border-blue-400">
-                        <i data-lucide="clipboard"></i> Paste Image/Text
+                    <button type="button" id="result-again" class="pill">
+                        <svg class="icon" aria-hidden="true"><use href="#i-refresh-cw"/></svg>Scan another
                     </button>
                 </div>
             </div>
-            <div id="image-preview-wrapper" class="hidden w-full flex flex-col items-center gap-4">
-                <img id="image-preview" class="max-w-full max-h-[400px] rounded-xl border" />
-            </div>
-            <div id="scan-result" class="scan-card w-full p-4 text-center hidden break-all"></div>
-            <canvas id="scan-canvas" class="hidden"></canvas>
-        </div>
-    </div>
+        </section>
+    </main>
 
-    <div id="scan-drop-hint-floating" class="hidden">Drop image anywhere</div>
-
-    <div id="dynamic-island">
+    <div id="dynamic-island" role="toolbar" aria-label="QR Studio controls">
         <div id="island-content-container">
-            <!-- Initial State: Mode Toggle -->
+            <!-- Initial: pick a mode -->
             <div id="initial-content" class="island-content active">
-                <button id="to-generate-mode" class="island-button" title="Generate QR Code"><i data-lucide="pen-tool"></i></button>
-                <button id="to-scan-mode" class="island-button" title="Scan QR Code"><i data-lucide="scan-line"></i></button>
+                <button type="button" id="to-generate-mode" class="island-button labeled">
+                    <svg class="icon" aria-hidden="true"><use href="#i-pen-tool"/></svg>Create
+                </button>
+                <button type="button" id="to-scan-mode" class="island-button labeled">
+                    <svg class="icon" aria-hidden="true"><use href="#i-scan-line"/></svg>Scan
+                </button>
             </div>
 
-            <!-- Generate State: Input -->
+            <!-- Generate: text input -->
             <div id="generate-content" class="island-content">
-                <input type="text" id="qr-input" class="field" placeholder="Type a link or text...">
-                <button id="encrypt-toggle" class="island-button" title="Encrypt"><i data-lucide="lock"></i></button>
-                <button id="generate-button" class="island-button primary" title="Generate"><i data-lucide="arrow-right"></i></button>
-                <button class="island-button back-button" title="Back"><i data-lucide="x"></i></button>
+                <input type="text" id="qr-input" class="field" placeholder="Type a link or text…" aria-label="Text or link for the QR code" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go">
+                <button type="button" id="encrypt-toggle" class="island-button" title="Protect with a passphrase" aria-label="Protect with a passphrase"><svg class="icon" aria-hidden="true"><use href="#i-lock"/></svg></button>
+                <button type="button" id="generate-button" class="island-button primary" title="Create QR code" aria-label="Create QR code"><svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></button>
+                <button type="button" class="island-button back-button" title="Close" aria-label="Close"><svg class="icon" aria-hidden="true"><use href="#i-x"/></svg></button>
             </div>
-            
-            <!-- Encrypt State -->
+
+            <!-- Encrypt: passphrase -->
             <div id="encrypt-content" class="island-content">
-                <i data-lucide="key-round" class="text-yellow-400 flex-shrink-0"></i>
-                <input type="password" id="enc-pass1" class="field" placeholder="Passphrase">
-                <input type="password" id="enc-pass2" class="field" placeholder="Confirm">
-                <button id="confirm-encrypt-button" class="island-button primary" title="Confirm & Generate"><i data-lucide="check"></i></button>
-                <button class="island-button back-button" title="Back"><i data-lucide="x"></i></button>
+                <svg class="icon island-key" aria-hidden="true"><use href="#i-key-round"/></svg>
+                <input type="password" id="enc-pass1" class="field" placeholder="Passphrase" aria-label="Passphrase" autocomplete="off" data-1p-ignore data-lpignore="true" enterkeyhint="next">
+                <input type="password" id="enc-pass2" class="field" placeholder="Confirm" aria-label="Confirm passphrase" autocomplete="off" data-1p-ignore data-lpignore="true" enterkeyhint="go">
+                <button type="button" id="confirm-encrypt-button" class="island-button primary" title="Encrypt and create" aria-label="Encrypt and create QR code"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></button>
+                <button type="button" class="island-button back-button" title="Back" aria-label="Back"><svg class="icon" aria-hidden="true"><use href="#i-x"/></svg></button>
             </div>
 
-            <!-- Decrypt State -->
+            <!-- Decrypt: passphrase -->
             <div id="decrypt-content" class="island-content">
-                <i data-lucide="key-round" class="text-yellow-400 flex-shrink-0"></i>
-                <input type="password" id="decrypt-pass" class="field" placeholder="Enter Passphrase">
-                <button id="confirm-decrypt-button" class="island-button primary" title="Decrypt"><i data-lucide="unlock"></i></button>
-                <button class="island-button back-button" title="Cancel"><i data-lucide="x"></i></button>
+                <svg class="icon island-key" aria-hidden="true"><use href="#i-key-round"/></svg>
+                <input type="password" id="decrypt-pass" class="field" placeholder="Enter passphrase" aria-label="Passphrase" autocomplete="off" data-1p-ignore data-lpignore="true" enterkeyhint="done">
+                <button type="button" id="confirm-decrypt-button" class="island-button primary" title="Unlock" aria-label="Unlock"><svg class="icon" aria-hidden="true"><use href="#i-lock-open"/></svg></button>
+                <button type="button" class="island-button back-button" title="Cancel" aria-label="Cancel"><svg class="icon" aria-hidden="true"><use href="#i-x"/></svg></button>
             </div>
 
-            <!-- Actions State -->
+            <!-- Generated: actions -->
             <div id="actions-content" class="island-content">
-                <button class="island-button back-button" title="New QR Code"><i data-lucide="arrow-left"></i></button>
-                <button id="download-button" class="island-button" title="Download PNG"><i data-lucide="download"></i></button>
-                <button id="copy-img-button" class="island-button" title="Copy Image"><i data-lucide="image"></i></button>
-                <button id="copy-text-button" class="island-button" title="Copy Text"><i data-lucide="clipboard-copy"></i></button>
+                <button type="button" class="island-button back-button" title="Edit" aria-label="Back to editing"><svg class="icon" aria-hidden="true"><use href="#i-arrow-left"/></svg></button>
+                <button type="button" id="download-button" class="island-button primary" title="Download PNG" aria-label="Download PNG"><svg class="icon" aria-hidden="true"><use href="#i-download"/></svg></button>
+                <button type="button" id="copy-img-button" class="island-button" title="Copy image" aria-label="Copy image"><svg class="icon" aria-hidden="true"><use href="#i-image"/></svg></button>
+                <button type="button" id="copy-text-button" class="island-button" title="Copy text" aria-label="Copy text"><svg class="icon" aria-hidden="true"><use href="#i-copy"/></svg></button>
+                <button type="button" id="share-button" class="island-button" title="Share" aria-label="Share" hidden><svg class="icon" aria-hidden="true"><use href="#i-share-2"/></svg></button>
             </div>
 
-            <!-- Scan State: Menu -->
+            <!-- Scan: menu -->
             <div id="scan-menu-content" class="island-content">
-                <button class="island-button back-button" title="Back"><i data-lucide="x"></i></button>
-                <button id="island-start-cam-button" class="island-button primary" title="Start Camera"><i data-lucide="camera"></i></button>
-                <button id="island-browse-button" class="island-button" title="Browse Image"><i data-lucide="upload-cloud"></i></button>
-                <button id="island-paste-button" class="island-button" title="Paste Image/Text"><i data-lucide="clipboard"></i></button>
+                <button type="button" class="island-button back-button" title="Close" aria-label="Close"><svg class="icon" aria-hidden="true"><use href="#i-x"/></svg></button>
+                <button type="button" id="island-start-cam-button" class="island-button primary" title="Use camera" aria-label="Use camera"><svg class="icon" aria-hidden="true"><use href="#i-camera"/></svg></button>
+                <button type="button" id="island-browse-button" class="island-button" title="Choose image" aria-label="Choose image"><svg class="icon" aria-hidden="true"><use href="#i-image"/></svg></button>
+                <button type="button" id="island-paste-button" class="island-button" title="Paste from clipboard" aria-label="Paste from clipboard"><svg class="icon" aria-hidden="true"><use href="#i-clipboard"/></svg></button>
             </div>
 
-            <!-- Scan State: Actions -->
+            <!-- Scan: camera running -->
             <div id="scan-actions-content" class="island-content">
-                <button class="island-button back-button" title="Back"><i data-lucide="x"></i></button>
-                <span id="scan-status" class="text-sm text-gray-400 px-2">Scanning...</span>
+                <button type="button" class="island-button back-button" title="Stop camera" aria-label="Stop camera"><svg class="icon" aria-hidden="true"><use href="#i-x"/></svg></button>
+                <span id="scan-status" role="status">Starting camera…</span>
             </div>
         </div>
     </div>
 
-    <!-- Libraries -->
-    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
-    
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <input type="file" id="file-input" accept="image/*" hidden>
+
+    <noscript><div class="noscript">QR Studio needs JavaScript to run.</div></noscript>
+
     <script>
-    // FIX: Changed main event listener to 'load' for better reliability on mobile
-    window.addEventListener('load', () => {
-        // --- DOM Elements ---
-        const island = document.getElementById('dynamic-island');
-        const islandContainer = document.getElementById('island-content-container');
-        const appContainer = document.getElementById('app-container');
-        
-        const qrCodeView = document.getElementById('qr-code-view');
-        const qrCodeViewWrapper = document.getElementById('qr-code-view-wrapper');
-        const scanView = document.getElementById('scan-view');
-        const videoWrapper = document.getElementById('video-wrapper');
-        const video = document.getElementById('video');
-        const scanCanvas = document.getElementById('scan-canvas');
-        const ctx = scanCanvas.getContext('2d');
-        const scanResult = document.getElementById('scan-result');
-        const scanOptions = document.getElementById('scan-options');
-        const dropZone = document.getElementById('drop-zone');
-        const imagePreviewWrapper = document.getElementById('image-preview-wrapper');
-        const imagePreview = document.getElementById('image-preview');
+    (() => {
+        'use strict';
 
-        const fileInput = document.createElement('input');
-        fileInput.type = 'file';
-        fileInput.accept = 'image/*';
-        fileInput.className = 'hidden';
-        document.body.appendChild(fileInput);
-
-        const qrInput = document.getElementById('qr-input');
-        const pass1 = document.getElementById('enc-pass1');
-        const pass2 = document.getElementById('enc-pass2');
-        const decryptPass = document.getElementById('decrypt-pass');
-        const toGenerateModeBtn = document.getElementById('to-generate-mode');
-        const toScanModeBtn = document.getElementById('to-scan-mode');
-        const floatingDropHint = document.getElementById('scan-drop-hint-floating');
-        const islandBrowseButton = document.getElementById('island-browse-button');
-
-        // --- State Management ---
-        let state = {
-            mode: 'initial', // initial, generate, encrypt, generated, scan, scanning, decrypting
-            qrContent: '',
-            mediaStream: null,
-            isScanning: false,
-            dataToDecrypt: null,
-            pendingInitialCleanup: false,
-            hasImagePreview: false,
+        // --- Third-party libraries (pinned, integrity-checked, loaded on demand) ---
+        const CDNS = ['https://cdn.jsdelivr.net/npm/', 'https://unpkg.com/'];
+        const LIBS = {
+            qr: { global: 'qrcode', path: 'qrcode-generator@1.4.4/qrcode.js', integrity: 'sha384-8FWZA6BGMXhsfO+BLtrJK0We6gg5o1JyO8xQm6peWDEUs17ACA5ziE/NIAkl9z2k' },
+            jsqr: { global: 'jsQR', path: 'jsqr@1.4.0/dist/jsQR.js', integrity: 'sha384-b5Ya4Bq3qCyz39m2ISh+4DxjAIljdeFwK/BsXLuj9gugaNwAcj/ia15fxNZL9Nlx' },
+            // Only needed to open legacy codes that were encrypted without WebCrypto.
+            cryptojs: { global: 'CryptoJS', path: 'crypto-js@4.2.0/crypto-js.js', integrity: 'sha384-57VRFGvLpSky5EqUImBJSOkJI+6xYMONZqn8Zh70E+1DyMPpN1vQkaJaN4YqRmln' },
         };
+        const libPromises = {};
+
+        function injectScript(src, integrity) {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = src;
+                script.integrity = integrity;
+                script.crossOrigin = 'anonymous';
+                script.async = true;
+                const timer = setTimeout(() => { script.remove(); reject(new Error('timeout')); }, 15000);
+                script.onload = () => { clearTimeout(timer); resolve(); };
+                script.onerror = () => { clearTimeout(timer); script.remove(); reject(new Error('load failed')); };
+                document.head.appendChild(script);
+            });
+        }
+
+        function loadLib(name) {
+            const lib = LIBS[name];
+            if (window[lib.global]) return Promise.resolve(window[lib.global]);
+            if (!libPromises[name]) {
+                libPromises[name] = (async () => {
+                    for (const base of CDNS) {
+                        try {
+                            await injectScript(base + lib.path, lib.integrity);
+                            if (window[lib.global]) return window[lib.global];
+                        } catch (_) { /* try the next CDN */ }
+                    }
+                    delete libPromises[name];
+                    throw new Error(`Could not load ${name}`);
+                })();
+            }
+            return libPromises[name];
+        }
+
+        // --- DOM ---
+        const $ = (id) => document.getElementById(id);
+        const island = $('dynamic-island');
+        const islandContainer = $('island-content-container');
+        const views = { home: $('home-view'), qr: $('qr-view'), scan: $('scan-view') };
+        const homeLead = $('home-lead');
+        const homeChips = $('home-chips');
+        const qrCanvas = $('qr-canvas');
+        const qrCaption = $('qr-caption');
+        const qrBadge = $('qr-badge');
+        const dropZone = $('drop-zone');
+        const videoWrap = $('video-wrap');
+        const video = $('video');
+        const preview = $('preview');
+        const imagePreview = $('image-preview');
+        const previewStatus = $('preview-status');
+        const lockCard = $('lock-card');
+        const lockStatus = $('lock-status');
+        const resultCard = $('result-card');
+        const resultText = $('result-text');
+        const resultLabel = $('result-label');
+        const resultHost = $('result-host');
+        const resultIcon = $('result-icon');
+        const resultOpen = $('result-open');
+        const fileInput = $('file-input');
+        const qrInput = $('qr-input');
+        const pass1 = $('enc-pass1');
+        const pass2 = $('enc-pass2');
+        const decryptPass = $('decrypt-pass');
+        const browseButton = $('island-browse-button');
+        const confirmEncryptButton = $('confirm-encrypt-button');
+        const confirmDecryptButton = $('confirm-decrypt-button');
+        const generateButton = $('generate-button');
+        const copyImgButton = $('copy-img-button');
+        const copyTextButton = $('copy-text-button');
+        const shareButton = $('share-button');
+        const scanStatus = $('scan-status');
+        const themeToggle = $('theme-toggle');
+        const toastEl = $('toast');
+
+        const PAGE_URL = `${location.origin}${location.pathname}`;
         const enc = new TextEncoder();
         const dec = new TextDecoder();
-        const PAGE_URL = `${window.location.origin}${window.location.pathname}`;
 
-        function recalcActiveIsland() {
+        // --- State ---
+        const MODES = {
+            initial:    { view: 'home', island: 'initial-content' },
+            generate:   { view: 'home', island: 'generate-content', focus: qrInput },
+            encrypt:    { view: 'home', island: 'encrypt-content', focus: pass1 },
+            generated:  { view: 'qr',   island: 'actions-content' },
+            scan:       { view: 'scan', island: 'scan-menu-content' },
+            scanning:   { view: 'scan', island: 'scan-actions-content' },
+            decrypting: { view: 'scan', island: 'decrypt-content', focus: decryptPass },
+            result:     { view: 'scan', island: 'scan-menu-content' },
+        };
+        const HOME_LEAD = {
+            initial: 'Create and scan QR codes right in your browser. Nothing you type or scan is uploaded.',
+            generate: 'Type a link or any text below, then press Enter. Tap the lock to protect it with a passphrase.',
+            encrypt: 'The QR code will link to this page with your text encrypted (AES‑256). Only people who know the passphrase can read it.',
+        };
+
+        const state = {
+            mode: 'initial',
+            qr: null,            // qrcode-generator instance currently shown
+            qrPayload: '',       // exact string encoded in the QR
+            encrypted: false,
+            token: null,         // encrypted payload waiting for a passphrase
+            tokenFromUrl: false,
+            result: '',
+            previewUrl: null,
+            busy: false,
+        };
+
+        // --- Rendering ---
+        function setMode(mode, { focus = true } = {}) {
+            const prevMode = state.mode;
+            state.mode = mode;
+            const config = MODES[mode];
+
+            if (mode !== 'scanning') stopCamera();
+
+            for (const [name, el] of Object.entries(views)) {
+                el.classList.toggle('active', name === config.view);
+            }
+
+            if (config.view === 'home') {
+                homeLead.textContent = HOME_LEAD[mode];
+                homeChips.hidden = mode !== 'initial';
+            }
+
+            if (config.view === 'scan') {
+                const hasPreview = mode === 'scan' && !!state.previewUrl;
+                dropZone.hidden = mode !== 'scan' || hasPreview;
+                preview.hidden = !hasPreview;
+                videoWrap.hidden = mode !== 'scanning';
+                lockCard.hidden = mode !== 'decrypting';
+                resultCard.hidden = mode !== 'result';
+                setBrowseButtonMode(hasPreview);
+            }
+
+            switchIsland(config.island);
+
+            if (focus && prevMode !== mode) {
+                // Move focus into the new controls so keyboard users aren't left on a hidden button.
+                const active = document.activeElement;
+                const lost = !active || active === document.body || !!active.closest('[inert]');
+                const target = config.focus || (lost && (document.getElementById(config.island).querySelector('button.primary:not([hidden]):not(:disabled)') || document.getElementById(config.island).querySelector('button:not([hidden]):not(:disabled)')));
+                if (target) target.focus({ preventScroll: true });
+            }
+
+            if (mode === 'scanning') startCamera();
+            if (config.view === 'scan') getNativeDetector().then((d) => d || loadLib('jsqr')).catch(() => {});
+        }
+
+        function switchIsland(targetId) {
+            for (const el of islandContainer.querySelectorAll('.island-content')) {
+                const active = el.id === targetId;
+                el.classList.toggle('active', active);
+                el.inert = !active;
+                el.setAttribute('aria-hidden', String(!active));
+            }
+            sizeIsland();
+        }
+
+        function sizeIsland() {
             const active = islandContainer.querySelector('.island-content.active');
-            if (active) switchIslandContent(active.id);
+            if (!active) return;
+            const cs = getComputedStyle(island);
+            const padX = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight) + parseFloat(cs.borderLeftWidth) + parseFloat(cs.borderRightWidth);
+            const padY = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom) + parseFloat(cs.borderTopWidth) + parseFloat(cs.borderBottomWidth);
+            const maxWidth = document.documentElement.clientWidth - 12;
+            const width = Math.min(Math.ceil(active.scrollWidth + padX), maxWidth);
+            const height = Math.ceil(active.scrollHeight + padY);
+            island.style.width = `${width}px`;
+            island.style.height = `${height}px`;
+            island.style.borderRadius = `${Math.round(height / 2)}px`;
         }
 
-        function updateModeButtons() {
-            const scanActive = state.mode === 'scan' || state.mode === 'scanning' || state.mode === 'decrypting';
-            toScanModeBtn.classList.toggle('primary', scanActive);
-            toGenerateModeBtn.classList.toggle('primary', !scanActive);
-            floatingDropHint.classList.toggle('hidden', !scanActive);
+        function setBrowseButtonMode(isClear) {
+            const label = isClear ? 'Clear image' : 'Choose image';
+            browseButton.title = label;
+            browseButton.setAttribute('aria-label', label);
+            browseButton.querySelector('use').setAttribute('href', isClear ? '#i-trash-2' : '#i-image');
         }
 
-        function syncScanBrowseClearButton() {
-            const shouldShowClear = state.mode === 'scan' && state.hasImagePreview && !imagePreviewWrapper.classList.contains('hidden') && !!imagePreview.src;
-            setBrowseButtonMode(shouldShowClear);
+        function setBusy(button, busy) {
+            state.busy = busy;
+            button.disabled = busy;
+            button.classList.toggle('busy', busy);
+            button.setAttribute('aria-busy', String(busy));
         }
 
-        function setBrowseButtonMode(isClearMode) {
-            islandBrowseButton.title = isClearMode ? 'Clear Image' : 'Browse Image';
-            islandBrowseButton.innerHTML = `<i data-lucide="${isClearMode ? 'trash-2' : 'upload-cloud'}"></i>`;
-            islandBrowseButton.classList.toggle('primary', isClearMode);
-            lucide.createIcons();
+        // --- Toast ---
+        let toastTimer = null;
+        function hideToast() {
+            clearTimeout(toastTimer);
+            toastEl.classList.remove('show');
+        }
+        function showToast(message, type = 'success') {
+            clearTimeout(toastTimer);
+            toastEl.textContent = message;
+            toastEl.classList.toggle('error', type === 'error');
+            toastEl.classList.remove('show');
+            void toastEl.offsetWidth; // restart the slide-in
+            toastEl.classList.add('show');
+            toastTimer = setTimeout(hideToast, type === 'error' ? 4000 : 2600);
         }
 
-        function clearImagePreview() {
-            imagePreviewWrapper.classList.add('hidden');
-            imagePreview.src = '';
-            fileInput.value = '';
-            state.hasImagePreview = false;
-            state.mode = 'scan';
-            updateUI();
-        }
-
-        // --- UI Update Logic ---
-        function switchIslandContent(targetId) {
-            const allContent = islandContainer.querySelectorAll('.island-content');
-            let targetElement = null;
-
-            allContent.forEach(el => {
-                if (el.id === targetId) {
-                    el.classList.add('active');
-                    targetElement = el;
-                } else {
-                    el.classList.remove('active');
-                }
-            });
-
-            if (targetElement) {
-                const contentWidth = targetElement.scrollWidth;
-                const contentHeight = targetElement.scrollHeight;
-                const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
-                const shellPadding = viewportWidth <= 640 ? 28 : 32;
-                const maxIslandWidth = Math.max(260, viewportWidth - 6);
-                const nextWidth = Math.min(contentWidth + shellPadding + 6, maxIslandWidth);
-                const nextHeight = contentHeight + shellPadding;
-
-                island.style.width = `${nextWidth}px`;
-                island.style.height = `${nextHeight}px`;
-                island.style.borderRadius = `${Math.round(nextHeight / 2)}px`;
-            }
-        }
-
-        function updateUI() {
-            qrCodeView.classList.remove('active');
-            scanView.classList.remove('active');
-            videoWrapper.style.display = 'none';
-            scanResult.classList.add('hidden');
-            scanOptions.classList.add('hidden');
-            imagePreviewWrapper.classList.add('hidden');
-            stopCamera();
-
-            let targetIslandContent = 'initial-content';
-            let newAppScale = 1;
-
-            switch (state.mode) {
-                case 'initial':
-                    targetIslandContent = 'initial-content';
-                    break;
-                case 'generate':
-                    targetIslandContent = 'generate-content';
-                    break;
-                case 'encrypt':
-                    targetIslandContent = 'encrypt-content';
-                    break;
-                case 'generated':
-                    targetIslandContent = 'actions-content';
-                    qrCodeView.classList.add('active');
-                    newAppScale = 0.95;
-                    break;
-                case 'scan':
-                    targetIslandContent = 'scan-menu-content';
-                    scanView.classList.add('active');
-                    scanResult.classList.add('hidden');
-                    if (state.hasImagePreview && imagePreview.src) {
-                        imagePreviewWrapper.classList.remove('hidden');
-                    } else {
-                        imagePreviewWrapper.classList.add('hidden');
-                    }
-                    break;
-                case 'scanning':
-                    targetIslandContent = 'scan-actions-content';
-                    scanView.classList.add('active');
-                    videoWrapper.style.display = 'block';
-                    startCamera();
-                    break;
-                case 'decrypting':
-                    targetIslandContent = 'decrypt-content';
-                    scanView.classList.add('active');
-                    scanResult.classList.remove('hidden');
-                    scanResult.innerHTML = `<p class="text-gray-400">Enter passphrase below to unlock content.</p>`;
-                    break;
-            }
-            
-            appContainer.style.transform = `scale(${newAppScale})`;
-            updateModeButtons();
-            switchIslandContent(targetIslandContent);
-            syncScanBrowseClearButton();
-
-            if (state.pendingInitialCleanup && state.mode === 'initial') {
-                state.pendingInitialCleanup = false;
-                setTimeout(() => {
-                    qrCodeViewWrapper.innerHTML = '';
-                    qrInput.value = '';
-                }, 240);
-            }
-        }
-
-        // --- Event Listeners ---
-        document.getElementById('to-generate-mode').addEventListener('click', () => { state.mode = 'generate'; updateUI(); });
-        document.getElementById('to-scan-mode').addEventListener('click', () => { state.mode = 'scan'; updateUI(); });
-        
-        document.querySelectorAll('.back-button').forEach(btn => {
-            btn.addEventListener('click', () => {
-                if (state.mode === 'scanning') {
-                    state.mode = 'scan';
-                } else if (state.mode === 'generated' || state.mode === 'encrypt') {
-                    state.mode = 'generate';
-                } else if (state.mode === 'decrypting') {
-                    state.mode = 'initial';
-                    state.dataToDecrypt = null;
-                }
-                 else {
-                    state.mode = 'initial';
-                }
-                
-                if (state.mode === 'initial') {
-                    state.pendingInitialCleanup = true;
-                }
-                updateUI();
-            });
-        });
-
-        document.getElementById('generate-button').addEventListener('click', () => generateQrCode(false));
-        qrInput.addEventListener('keyup', e => e.key === 'Enter' && generateQrCode(false));
-
-        document.getElementById('encrypt-toggle').addEventListener('click', () => { state.mode = 'encrypt'; updateUI(); });
-        document.getElementById('confirm-encrypt-button').addEventListener('click', () => {
-               generateQrCode(true);
-        });
-
-        document.getElementById('confirm-decrypt-button').addEventListener('click', async () => {
-            const pass = document.getElementById('decrypt-pass').value;
-            if (!pass || !state.dataToDecrypt) return;
-
-            try {
-                const content = await decryptPayload(state.dataToDecrypt, pass);
-                displayFinalResult(content);
-                showToast('Decryption successful!', 'success');
-                state.mode = 'scan';
-                state.dataToDecrypt = null;
-                document.getElementById('decrypt-pass').value = '';
-            } catch (e) {
-                showToast('Decryption failed. Wrong passphrase?', 'error');
-            }
-        });
-
-        document.getElementById('download-button').addEventListener('click', downloadQrCode);
-        document.getElementById('copy-img-button').addEventListener('click', copyQrImage);
-        document.getElementById('copy-text-button').addEventListener('click', copyQrText);
-        
-        document.getElementById('island-start-cam-button').addEventListener('click', () => { state.mode = 'scanning'; updateUI(); });
-        islandBrowseButton.addEventListener('click', () => {
-            if (!imagePreviewWrapper.classList.contains('hidden')) {
-                clearImagePreview();
-                return;
-            }
-            fileInput.click();
-        });
-        fileInput.addEventListener('change', (e) => handleImageFile(e.target.files[0]));
-        document.getElementById('island-paste-button').addEventListener('click', handlePaste);
-
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => dropZone.addEventListener(eventName, e => {e.preventDefault(); e.stopPropagation();}, false));
-        ['dragenter', 'dragover'].forEach(eventName => dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false));
-        ['dragleave', 'drop'].forEach(eventName => dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false));
-        dropZone.addEventListener('drop', (e) => handleImageFile(e.dataTransfer.files[0]), false);
-
-        const canAcceptDroppedImage = () => ['scan', 'scanning', 'decrypting'].includes(state.mode);
-        let dragDepth = 0;
-
-        document.addEventListener('dragenter', (e) => {
-            if (!canAcceptDroppedImage()) return;
-            if (!e.dataTransfer?.types?.includes('Files')) return;
-            e.preventDefault();
-            dragDepth += 1;
-            document.body.classList.add('drop-ready');
-        });
-        document.addEventListener('dragover', (e) => {
-            if (!canAcceptDroppedImage()) return;
-            if (!e.dataTransfer?.types?.includes('Files')) return;
-            e.preventDefault();
-            e.dataTransfer.dropEffect = 'copy';
-        });
-        document.addEventListener('dragleave', (e) => {
-            if (!canAcceptDroppedImage()) return;
-            if (!e.dataTransfer?.types?.includes('Files')) return;
-            e.preventDefault();
-            dragDepth = Math.max(0, dragDepth - 1);
-            if (dragDepth === 0) document.body.classList.remove('drop-ready');
-        });
-        document.addEventListener('drop', (e) => {
-            if (!canAcceptDroppedImage()) return;
-            if (!e.dataTransfer?.files?.length) return;
-            e.preventDefault();
-            dragDepth = 0;
-            document.body.classList.remove('drop-ready');
-            handleImageFile(e.dataTransfer.files[0]);
-        });
-
-        const themeToggle = document.getElementById('theme-toggle');
-        function applyTheme(theme) {
+        // --- Theme ---
+        function applyTheme(theme, persist) {
             document.documentElement.setAttribute('data-theme', theme);
-            localStorage.setItem('qr-theme', theme);
-            themeToggle.innerHTML = theme === 'light' ? '<i data-lucide="moon"></i>' : '<i data-lucide="sun"></i>';
-            lucide.createIcons();
+            document.querySelector('meta[name="theme-color"]').setAttribute('content', theme === 'light' ? '#EEF2F7' : '#090e1c');
+            const next = theme === 'light' ? 'dark' : 'light';
+            themeToggle.setAttribute('aria-label', `Switch to ${next} theme`);
+            themeToggle.title = `Switch to ${next} theme`;
+            themeToggle.querySelector('use').setAttribute('href', theme === 'light' ? '#i-moon' : '#i-sun');
+            if (persist) {
+                try { localStorage.setItem('qr-theme', theme); } catch (_) {}
+            }
         }
         themeToggle.addEventListener('click', () => {
-            const newTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-            applyTheme(newTheme);
+            applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark', true);
         });
-        applyTheme(localStorage.getItem('qr-theme') || 'dark');
+        applyTheme(document.documentElement.getAttribute('data-theme') || 'dark', false);
 
-        [qrInput, pass1, pass2, decryptPass].forEach(input => {
-            input.addEventListener('focus', () => requestAnimationFrame(recalcActiveIsland));
-        });
-
-        let keyboardBlurTimer = null;
-        let focusedInputCount = 0;
-
-        document.addEventListener('focusin', (e) => {
-            if (!e.target.matches('input')) return;
-            if (keyboardBlurTimer) clearTimeout(keyboardBlurTimer);
-            focusedInputCount += 1;
-            island.classList.add('keyboard-open');
-            requestAnimationFrame(recalcActiveIsland);
-        });
-        document.addEventListener('focusout', (e) => {
-            if (!e.target.matches('input')) return;
-            if (keyboardBlurTimer) clearTimeout(keyboardBlurTimer);
-            focusedInputCount = Math.max(0, focusedInputCount - 1);
-            keyboardBlurTimer = setTimeout(() => {
-                if (focusedInputCount === 0 && (!document.activeElement || !document.activeElement.matches('input'))) {
-                    island.classList.remove('keyboard-open');
-                }
-                recalcActiveIsland();
-            }, 160);
-        });
-        window.addEventListener('resize', () => {
-            recalcActiveIsland();
-        });
-
-        // --- Crypto Functions ---
-        function getSubtleCrypto() {
-            if (!window.crypto) return null;
-            return window.crypto.subtle || window.crypto.webkitSubtle || null;
+        // --- Encoding helpers ---
+        function bytesToBase64url(bytes) {
+            let binary = '';
+            for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+            return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+        }
+        function base64ToBytes(str) {
+            str = str.replace(/\s/g, '').replace(/-/g, '+').replace(/_/g, '/');
+            const binary = atob(str + '='.repeat((4 - (str.length % 4)) % 4));
+            return Uint8Array.from(binary, (c) => c.charCodeAt(0));
         }
 
-        async function deriveKey(passphrase, salt) {
-            const subtle = getSubtleCrypto();
-            if (!subtle) throw new Error('WebCrypto unavailable');
-            const baseKey = await subtle.importKey("raw", enc.encode(passphrase), { name: "PBKDF2" }, false, ["deriveKey"]);
-            return subtle.deriveKey({ name: "PBKDF2", salt, iterations: 250000, hash: "SHA-256" }, baseKey, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+        // --- Crypto ---
+        // v2 (current): URL fragment "#qe=" + base64url( 0x02 | salt[16] | iv[12] | AES-256-GCM ciphertext+tag ),
+        //               key = PBKDF2-SHA256(passphrase, salt, 600k). The fragment is never sent to the server.
+        // v1 (legacy):  "?data=qrenc:" + base64(JSON { v:1, a:'A256GCM', s, i, c }), PBKDF2 250k.
+        // CJS (legacy): "?data=qrenc:" + base64(JSON { v:2, a:'CJS-AES', c }) via CryptoJS passphrase mode.
+        const V2 = 2;
+        const V2_ITERATIONS = 600000;
+        const V1_ITERATIONS = 250000;
+
+        class FormatError extends Error {}
+
+        async function deriveKey(passphrase, salt, iterations) {
+            const baseKey = await crypto.subtle.importKey('raw', enc.encode(passphrase), 'PBKDF2', false, ['deriveKey']);
+            return crypto.subtle.deriveKey(
+                { name: 'PBKDF2', salt, iterations, hash: 'SHA-256' },
+                baseKey,
+                { name: 'AES-GCM', length: 256 },
+                false,
+                ['encrypt', 'decrypt']
+            );
         }
-        function bufToBase64url(buf) { return btoa(String.fromCharCode(...new Uint8Array(buf))).replaceAll("+", "-").replaceAll("/", "_").replace(/=+$/, ""); }
-        function base64urlToBuf(s) {
-            s = s.replaceAll("-", "+").replaceAll("_", "/");
-            const str = atob(s + "=".repeat((4 - s.length % 4) % 4));
-            return new Uint8Array(str.length).map((_, i) => str.charCodeAt(i)).buffer;
+
+        async function encryptText(plaintext, passphrase) {
+            const header = Uint8Array.of(V2);
+            const salt = crypto.getRandomValues(new Uint8Array(16));
+            const iv = crypto.getRandomValues(new Uint8Array(12));
+            const key = await deriveKey(passphrase, salt, V2_ITERATIONS);
+            const cipher = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv, additionalData: header }, key, enc.encode(plaintext)));
+            const out = new Uint8Array(1 + 16 + 12 + cipher.length);
+            out.set(header, 0);
+            out.set(salt, 1);
+            out.set(iv, 17);
+            out.set(cipher, 29);
+            return bytesToBase64url(out);
         }
-        async function encryptPayload(plaintext, passphrase) {
-            const subtle = getSubtleCrypto();
-            if (subtle && window.crypto?.getRandomValues) {
-                const salt = window.crypto.getRandomValues(new Uint8Array(16));
-                const iv = window.crypto.getRandomValues(new Uint8Array(12));
-                const key = await deriveKey(passphrase, salt);
-                const cipher = await subtle.encrypt({ name: "AES-GCM", iv }, key, enc.encode(plaintext));
-                return "qrenc:" + btoa(JSON.stringify({ v: 1, a: "A256GCM", s: bufToBase64url(salt), i: bufToBase64url(iv), c: bufToBase64url(cipher) }));
+
+        async function decryptToken(token, passphrase) {
+            if (token.kind === 'v2') {
+                let bytes;
+                try { bytes = base64ToBytes(token.data); } catch (_) { throw new FormatError(); }
+                if (bytes.length < 1 + 16 + 12 + 16 || bytes[0] !== V2) throw new FormatError();
+                const key = await deriveKey(passphrase, bytes.slice(1, 17), V2_ITERATIONS);
+                const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: bytes.slice(17, 29), additionalData: bytes.slice(0, 1) }, key, bytes.slice(29));
+                return dec.decode(plain);
             }
 
-            if (typeof CryptoJS !== 'undefined') {
-                const cipherText = CryptoJS.AES.encrypt(plaintext, passphrase).toString();
-                return "qrenc:" + btoa(JSON.stringify({ v: 2, a: "CJS-AES", c: cipherText }));
-            }
+            let payload;
+            try { payload = JSON.parse(atob(token.data.slice('qrenc:'.length))); } catch (_) { throw new FormatError(); }
 
-            throw new Error('No encryption backend available');
-        }
-        async function decryptPayload(token, passphrase) {
-            if (!token.startsWith("qrenc:")) throw new Error("Not encrypted QR");
-            const j = JSON.parse(atob(token.slice(6)));
-            if (j.a === 'CJS-AES') {
-                if (typeof CryptoJS === 'undefined') throw new Error('CryptoJS unavailable');
-                const bytes = CryptoJS.AES.decrypt(j.c, passphrase);
-                const plainText = bytes.toString(CryptoJS.enc.Utf8);
-                if (!plainText) throw new Error('Bad passphrase');
-                return plainText;
+            if (payload.a === 'CJS-AES') {
+                const CryptoJS = await loadLib('cryptojs');
+                let plain = '';
+                try { plain = CryptoJS.AES.decrypt(payload.c, passphrase).toString(CryptoJS.enc.Utf8); } catch (_) {}
+                if (!plain) throw new Error('Bad passphrase');
+                return plain;
             }
-
-            const subtle = getSubtleCrypto();
-            if (!subtle) throw new Error('WebCrypto unavailable');
-            const key = await deriveKey(passphrase, base64urlToBuf(j.s));
-            const plain = await subtle.decrypt({ name: "AES-GCM", iv: base64urlToBuf(j.i) }, key, base64urlToBuf(j.c));
+            if (payload.a !== 'A256GCM' || !payload.s || !payload.i || !payload.c) throw new FormatError();
+            const key = await deriveKey(passphrase, base64ToBytes(payload.s), V1_ITERATIONS);
+            const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: base64ToBytes(payload.i) }, key, base64ToBytes(payload.c));
             return dec.decode(plain);
         }
 
-        // --- Core Functionality ---
-        async function generateQrCode(shouldEncrypt = false) {
-            let content = qrInput.value.trim();
-            if (!content) { showToast('Please enter content.', 'error'); return; }
-            let finalQrContent = content;
+        // Recognise an encrypted QR (new "#qe=" links, legacy "?data=qrenc:" links, or a bare legacy token).
+        function extractEncrypted(text) {
+            const value = String(text || '').trim();
+            if (value.startsWith('qrenc:')) return { kind: 'legacy', data: value.replace(/ /g, '+') };
+            let url;
+            try { url = new URL(value); } catch (_) { return null; }
+            if (url.protocol !== 'http:' && url.protocol !== 'https:' && url.protocol !== 'file:') return null;
+            const fromHash = new URLSearchParams(url.hash.slice(1)).get('qe');
+            if (fromHash) return { kind: 'v2', data: fromHash };
+            const legacy = url.searchParams.get('data');
+            if (legacy && legacy.startsWith('qrenc:')) return { kind: 'legacy', data: legacy.replace(/ /g, '+') };
+            return null;
+        }
 
-            if (shouldEncrypt) {
-                if (pass1.value !== pass2.value || !pass1.value) {
-                    showToast('Passphrases do not match.', 'error'); return;
-                }
+        // --- Generate ---
+        function makeQr(qrcodeLib, text) {
+            qrcodeLib.stringToBytes = qrcodeLib.stringToBytesFuncs['UTF-8'];
+            for (const level of ['M', 'L']) {
                 try {
-                    const encryptedData = await encryptPayload(content, pass1.value);
-                    finalQrContent = `${PAGE_URL}?data=${encodeURIComponent(encryptedData)}`;
-                } catch (e) {
-                    showToast('Encryption failed on this device.', 'error'); return;
+                    const qr = qrcodeLib(0, level);
+                    qr.addData(text, 'Byte');
+                    qr.make();
+                    return qr;
+                } catch (_) { /* too long at this level */ }
+            }
+            return null;
+        }
+
+        // Draws the QR with a 4-module white quiet zone so it scans even on dark backgrounds.
+        function drawQr(canvas, qr, targetPx) {
+            const quiet = 4;
+            const count = qr.getModuleCount();
+            const total = count + quiet * 2;
+            const scale = Math.max(2, Math.ceil(targetPx / total));
+            canvas.width = canvas.height = total * scale;
+            const c = canvas.getContext('2d');
+            c.fillStyle = '#ffffff';
+            c.fillRect(0, 0, canvas.width, canvas.height);
+            c.fillStyle = '#000000';
+            for (let row = 0; row < count; row++) {
+                for (let col = 0; col < count; col++) {
+                    if (qr.isDark(row, col)) c.fillRect((col + quiet) * scale, (row + quiet) * scale, scale, scale);
                 }
             }
-            
-            state.qrContent = finalQrContent;
-            qrCodeViewWrapper.innerHTML = '';
-            new QRCode(qrCodeViewWrapper, { text: finalQrContent, width: 256, height: 256, correctLevel: QRCode.CorrectLevel.L });
-            
-            state.mode = 'generated';
-            pass1.value = '';
-            pass2.value = '';
-            updateUI();
+            return canvas;
         }
 
-        function downloadQrCode() {
-            const canvas = qrCodeViewWrapper.querySelector('canvas');
-            if (!canvas) return;
-            const link = document.createElement('a');
-            link.download = 'qrcode.png';
-            link.href = canvas.toDataURL('image/png');
-            link.click();
-        }
+        async function generateQrCode(withPassphrase) {
+            if (state.busy) return;
+            const text = qrInput.value.trim();
+            if (!text) {
+                showToast('Type a link or some text first.', 'error');
+                setMode('generate');
+                qrInput.focus();
+                return;
+            }
 
-        function canvasToBlob(canvas, type = 'image/png') {
-            return new Promise((resolve, reject) => {
-                canvas.toBlob((blob) => {
-                    if (!blob) {
-                        reject(new Error('Failed to create image blob'));
+            let payload = text;
+            const busyButton = withPassphrase ? confirmEncryptButton : generateButton;
+            setBusy(busyButton, true);
+            try {
+                if (withPassphrase) {
+                    if (!pass1.value) { showToast('Choose a passphrase.', 'error'); pass1.focus(); return; }
+                    if (pass1.value !== pass2.value) { showToast('Passphrases don’t match.', 'error'); pass2.select(); return; }
+                    if (!window.isSecureContext || !window.crypto?.subtle) {
+                        showToast('Encryption needs a secure (https) connection.', 'error');
                         return;
                     }
-                    resolve(blob);
-                }, type);
+                    try {
+                        payload = `${PAGE_URL}#qe=${await encryptText(text, pass1.value)}`;
+                    } catch (_) {
+                        showToast('Encryption failed on this device.', 'error');
+                        return;
+                    }
+                }
+
+                let qrcodeLib;
+                try {
+                    qrcodeLib = await loadLib('qr');
+                } catch (_) {
+                    showToast('Couldn’t load the QR generator. Check your connection.', 'error');
+                    return;
+                }
+
+                const qr = makeQr(qrcodeLib, payload);
+                if (!qr) {
+                    showToast(withPassphrase ? 'Too long to encrypt into a QR code. Try shorter text.' : 'Too long for a QR code. Try shorter text.', 'error');
+                    return;
+                }
+
+                state.qr = qr;
+                state.qrPayload = payload;
+                state.encrypted = withPassphrase;
+                drawQr(qrCanvas, qr, 300 * Math.min(window.devicePixelRatio || 1, 3));
+                qrBadge.hidden = !withPassphrase;
+                qrCaption.textContent = withPassphrase
+                    ? 'Scanning opens this page and asks for the passphrase.'
+                    : text;
+                copyTextButton.title = withPassphrase ? 'Copy link' : 'Copy text';
+                copyTextButton.setAttribute('aria-label', copyTextButton.title);
+                pass1.value = '';
+                pass2.value = '';
+                hideToast();
+                setMode('generated');
+            } finally {
+                setBusy(busyButton, false);
+            }
+        }
+
+        function exportCanvas() {
+            return drawQr(document.createElement('canvas'), state.qr, 1024);
+        }
+
+        function canvasToBlob(canvas) {
+            return new Promise((resolve, reject) => {
+                canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('toBlob failed'))), 'image/png');
             });
         }
 
-        async function copyTextWithFallback(text) {
+        async function downloadQrCode() {
+            if (!state.qr) return;
+            try {
+                const blob = await canvasToBlob(exportCanvas());
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'qr-code.png';
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                setTimeout(() => URL.revokeObjectURL(url), 10000);
+            } catch (_) {
+                showToast('Couldn’t save the image.', 'error');
+            }
+        }
+
+        async function copyQrImage() {
+            if (!state.qr) return;
+            try {
+                // Pass a promise so Safari keeps the user gesture while the PNG is encoded.
+                await navigator.clipboard.write([new ClipboardItem({ 'image/png': canvasToBlob(exportCanvas()) })]);
+                showToast('QR code image copied.');
+            } catch (_) {
+                showToast('Couldn’t copy the image here. Use Download instead.', 'error');
+            }
+        }
+
+        async function shareQr() {
+            if (!state.qr) return;
+            try {
+                const file = new File([await canvasToBlob(exportCanvas())], 'qr-code.png', { type: 'image/png' });
+                if (navigator.canShare?.({ files: [file] })) {
+                    await navigator.share({ files: [file], title: 'QR code' });
+                } else {
+                    await navigator.share({ title: 'QR code', text: state.qrPayload });
+                }
+            } catch (err) {
+                if (err?.name !== 'AbortError') showToast('Couldn’t share on this device.', 'error');
+            }
+        }
+
+        async function copyText(text) {
             if (navigator.clipboard?.writeText) {
                 try {
                     await navigator.clipboard.writeText(text);
                     return true;
                 } catch (_) {}
             }
-
             const textarea = document.createElement('textarea');
             textarea.value = text;
             textarea.setAttribute('readonly', '');
-            textarea.style.position = 'fixed';
-            textarea.style.opacity = '0';
-            textarea.style.left = '-9999px';
+            textarea.style.cssText = 'position:fixed;opacity:0;left:-9999px';
             document.body.appendChild(textarea);
             textarea.select();
-            textarea.setSelectionRange(0, textarea.value.length);
-            const copied = document.execCommand('copy');
-            document.body.removeChild(textarea);
+            let copied = false;
+            try { copied = document.execCommand('copy'); } catch (_) {}
+            textarea.remove();
             return copied;
         }
 
-        async function copyQrImage() {
-            const canvas = qrCodeViewWrapper.querySelector('canvas');
-            if (!canvas) return;
-            try {
-                const blob = await canvasToBlob(canvas, 'image/png');
-
-                if (window.ClipboardItem && navigator.clipboard?.write) {
-                    await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-                    showToast('QR code image copied!');
-                    return;
-                }
-
-                if (navigator.canShare && navigator.share && navigator.canShare({ files: [new File([blob], 'qrcode.png', { type: 'image/png' })] })) {
-                    await navigator.share({ files: [new File([blob], 'qrcode.png', { type: 'image/png' })], title: 'QR Code' });
-                    showToast('Image shared.');
-                    return;
-                }
-
-                downloadQrCode();
-                showToast('Clipboard not supported. Image downloaded.');
-            } catch (err) {
-                showToast('Failed to copy image on this device.', 'error');
+        // --- Scan: detection ---
+        let nativeDetector; // undefined = not checked yet, null = unavailable
+        async function getNativeDetector() {
+            if (nativeDetector !== undefined) return nativeDetector;
+            nativeDetector = null;
+            if ('BarcodeDetector' in window) {
+                try {
+                    const formats = await window.BarcodeDetector.getSupportedFormats();
+                    if (formats.includes('qr_code')) nativeDetector = new window.BarcodeDetector({ formats: ['qr_code'] });
+                } catch (_) {}
             }
+            return nativeDetector;
         }
 
-        async function copyQrText() {
-            if (!state.qrContent) return;
-            const copied = await copyTextWithFallback(state.qrContent);
-            if (copied) {
-                showToast('QR code text copied!');
-            } else {
-                showToast('Failed to copy text.', 'error');
-            }
+        const workCanvas = document.createElement('canvas');
+        const workCtx = workCanvas.getContext('2d', { willReadFrequently: true });
+
+        function rasterize(source, srcWidth, srcHeight, maxSide, minSide = 0) {
+            let scale = Math.min(1, maxSide / Math.max(srcWidth, srcHeight));
+            if (minSide && Math.max(srcWidth, srcHeight) < minSide) scale = minSide / Math.max(srcWidth, srcHeight);
+            const width = Math.max(1, Math.round(srcWidth * scale));
+            const height = Math.max(1, Math.round(srcHeight * scale));
+            workCanvas.width = width;
+            workCanvas.height = height;
+            workCtx.imageSmoothingEnabled = scale < 1;
+            workCtx.fillStyle = '#ffffff'; // transparent PNGs: treat transparency as white
+            workCtx.fillRect(0, 0, width, height);
+            workCtx.drawImage(source, 0, 0, width, height);
+            return workCtx.getImageData(0, 0, width, height);
         }
-        
-        // --- Scanning Logic ---
+
+        async function detectInImage(img) {
+            const detector = await getNativeDetector();
+            if (detector) {
+                try {
+                    const codes = await detector.detect(img);
+                    const hit = codes.find((c) => c.rawValue);
+                    if (hit) return hit.rawValue;
+                } catch (_) {}
+            }
+            const jsQR = await loadLib('jsqr');
+            const w = img.naturalWidth;
+            const h = img.naturalHeight;
+            for (const maxSide of [1200, 2400]) {
+                const data = rasterize(img, w, h, maxSide, 600);
+                const code = jsQR(data.data, data.width, data.height, { inversionAttempts: 'attemptBoth' });
+                if (code?.data) return code.data;
+                if (Math.max(w, h) <= maxSide) break;
+            }
+            return null;
+        }
+
+        async function detectInVideo() {
+            const detector = await getNativeDetector();
+            if (detector) {
+                try {
+                    const codes = await detector.detect(video);
+                    const hit = codes.find((c) => c.rawValue);
+                    return hit ? hit.rawValue : null;
+                } catch (_) {
+                    nativeDetector = null; // fall back to jsQR from now on
+                }
+            }
+            if (!window.jsQR) return null;
+            const data = rasterize(video, video.videoWidth, video.videoHeight, 720);
+            const code = window.jsQR(data.data, data.width, data.height, { inversionAttempts: 'dontInvert' });
+            return code?.data || null;
+        }
+
+        // --- Scan: camera ---
+        let cameraSession = 0;
+        let mediaStream = null;
+
         async function startCamera() {
-            if (state.mediaStream) return;
+            const session = ++cameraSession;
+            scanStatus.textContent = 'Starting camera…';
+            sizeIsland();
+
+            const fail = (message) => {
+                if (session !== cameraSession) return;
+                showToast(message, 'error');
+                setMode('scan');
+            };
+
+            if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
+                fail('The camera needs a secure (https) connection and a supported browser.');
+                return;
+            }
+
             try {
-                state.mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-                video.srcObject = state.mediaStream;
+                const [stream] = await Promise.all([
+                    navigator.mediaDevices.getUserMedia({
+                        audio: false,
+                        video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
+                    }),
+                    getNativeDetector().then((d) => d || loadLib('jsqr')),
+                ]);
+                if (session !== cameraSession) {
+                    stream.getTracks().forEach((t) => t.stop());
+                    return;
+                }
+                mediaStream = stream;
+                video.srcObject = stream;
                 await video.play();
-                state.isScanning = true;
-                requestAnimationFrame(tick);
+                if (session !== cameraSession) return;
+                scanStatus.textContent = 'Point at a QR code';
+                sizeIsland();
+                scanLoop(session);
             } catch (err) {
-                showToast('Camera access denied.', 'error');
-                state.mode = 'scan';
-                updateUI();
+                if (session !== cameraSession) return;
+                stopCamera();
+                switch (err?.name) {
+                    case 'NotAllowedError':
+                    case 'SecurityError':
+                        fail('Camera access was blocked. Allow it in your browser settings.');
+                        break;
+                    case 'NotFoundError':
+                    case 'OverconstrainedError':
+                        fail('No camera found on this device.');
+                        break;
+                    case 'NotReadableError':
+                        fail('The camera is being used by another app.');
+                        break;
+                    default:
+                        fail(err?.message?.startsWith('Could not load')
+                            ? 'Couldn’t load the scanner. Check your connection.'
+                            : 'Couldn’t start the camera.');
+                }
             }
         }
 
         function stopCamera() {
-            if (state.mediaStream) {
-                state.mediaStream.getTracks().forEach(track => track.stop());
-            }
+            cameraSession++;
+            if (mediaStream) mediaStream.getTracks().forEach((t) => t.stop());
+            mediaStream = null;
             video.srcObject = null;
-            state.mediaStream = null;
-            state.isScanning = false;
         }
 
-        function tick() {
-            if (state.isScanning && video.readyState === video.HAVE_ENOUGH_DATA) {
-                scanCanvas.width = video.videoWidth;
-                scanCanvas.height = video.videoHeight;
-                ctx.drawImage(video, 0, 0, scanCanvas.width, scanCanvas.height);
-                const imageData = ctx.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
-                const code = jsQR(imageData.data, imageData.width, imageData.height);
-                
-                if (code) {
-                    state.isScanning = false; 
-                    processScanResult(code.data);
-                } else {
-                    requestAnimationFrame(tick);
-                }
-            } else if (state.isScanning) {
-                requestAnimationFrame(tick);
-            }
-        }
-        
-        function handleImageFile(file) {
-            if (!file || !file.type.startsWith('image/')) {
-                showToast('Please select an image file.', 'error');
-                return;
-            }
-            const reader = new FileReader();
-            reader.onload = e => {
-                imagePreview.src = e.target.result;
-                imagePreviewWrapper.classList.remove('hidden');
-                state.hasImagePreview = true;
-                syncScanBrowseClearButton();
-
-                const img = new Image();
-                img.onload = () => {
-                    scanCanvas.width = img.width;
-                    scanCanvas.height = img.height;
-                    ctx.drawImage(img, 0, 0);
-                    try {
-                        const code = jsQR(ctx.getImageData(0, 0, img.width, img.height).data, img.width, img.height);
-                        if (code) {
-                            processScanResult(code.data);
-                        } else {
-                            showToast('No QR code found in this image.', 'error');
-                        }
-                    } catch (error) {
-                        console.error("QR Scanning Error:", error);
-                        showToast('Could not scan this image.', 'error');
-                    }
-                };
-                img.onerror = () => {
-                    showToast('Could not load the image file.', 'error');
-                    imagePreviewWrapper.classList.add('hidden');
-                    state.hasImagePreview = false;
-                    state.mode = 'scan';
-                    updateUI();
-                };
-                img.src = e.target.result;
-            };
-            reader.onerror = () => {
-                showToast('Failed to read the file.', 'error');
-            };
-            reader.readAsDataURL(file);
-        }
-
-        async function handlePaste() {
-            try {
-                const items = await navigator.clipboard.read();
-                for (const item of items) {
-                    if (item.types.some(type => type.startsWith('image/'))) {
-                        const blob = await item.getType(item.types.find(t => t.startsWith('image/')));
-                        handleImageFile(new File([blob], "pasted.png", { type: blob.type }));
+        function scanLoop(session) {
+            let last = 0;
+            const step = async (now) => {
+                if (session !== cameraSession) return;
+                if (now - last >= 120 && video.readyState >= video.HAVE_CURRENT_DATA && video.videoWidth) {
+                    last = now;
+                    let text = null;
+                    try { text = await detectInVideo(); } catch (_) {}
+                    if (session !== cameraSession) return;
+                    if (text) {
+                        stopCamera();
+                        handleDecoded(text);
                         return;
                     }
                 }
-                const text = await navigator.clipboard.readText();
-                if (text) {
-                    qrInput.value = text;
-                    state.mode = 'generate';
-                    updateUI();
-                    showToast('Text pasted. Ready to generate.');
-                } else {
-                    showToast('Clipboard does not contain an image or text.', 'error');
-                }
-            } catch (err) { showToast('Clipboard permission denied.', 'error'); }
+                requestAnimationFrame(step);
+            };
+            requestAnimationFrame(step);
         }
 
-        // FIX: Improved logic to handle both direct scans and URL-based scans
-        async function processScanResult(data) {
-            if (state.mode === 'scanning') {
-                stopCamera();
-            }
-            
-            let potentialEncryptedData = null;
+        // --- Scan: images ---
+        let imageScanId = 0;
 
-            try {
-                const url = new URL(data);
-                const dataParam = url.searchParams.get('data');
-                if (dataParam) {
-                    potentialEncryptedData = decodeURIComponent(dataParam);
-                }
-            } catch (e) {
-                // Not a valid URL, do nothing
-            }
+        function setPreview(url) {
+            if (state.previewUrl) URL.revokeObjectURL(state.previewUrl);
+            state.previewUrl = url;
+            if (url) imagePreview.src = url;
+            else imagePreview.removeAttribute('src');
+        }
 
-            const dataToTest = potentialEncryptedData || data;
+        function loadImage(url) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => resolve(img);
+                img.onerror = () => reject(new Error('decode failed'));
+                img.src = url;
+            });
+        }
 
-            if (dataToTest.startsWith("qrenc:")) {
-                state.dataToDecrypt = dataToTest;
-                state.mode = 'decrypting';
-                updateUI();
-                showToast('Encrypted QR detected. Enter passphrase.');
+        async function scanImageFile(file) {
+            const looksLikeImage = file && (file.type?.startsWith('image/') || /\.(png|jpe?g|gif|webp|bmp|avif|heic|heif)$/i.test(file.name || ''));
+            if (!looksLikeImage) {
+                showToast('Please choose an image file.', 'error');
                 return;
             }
-            
-            displayFinalResult(data);
-        }
-
-        function displayFinalResult(content) {
-            imagePreviewWrapper.classList.add('hidden');
-            state.hasImagePreview = false;
-            scanResult.innerHTML = '';
-            scanResult.classList.remove('hidden');
-            scanView.classList.add('active');
-            
-            const resultText = document.createElement('p');
-            resultText.textContent = content;
-            resultText.className = 'mb-4';
-
-            const actions = document.createElement('div');
-            actions.className = 'flex flex-wrap gap-2 justify-center';
-            
-            const copyBtn = document.createElement('button');
-            copyBtn.innerHTML = '<i data-lucide="copy"></i><span class="ml-2">Copy</span>';
-            copyBtn.className = 'island-button';
-            copyBtn.onclick = async () => {
-                const copied = await copyTextWithFallback(content);
-                showToast(copied ? 'Copied to clipboard!' : 'Failed to copy text.', copied ? 'success' : 'error');
-            };
-            actions.appendChild(copyBtn);
+            const scanId = ++imageScanId;
+            setPreview(URL.createObjectURL(file));
+            previewStatus.textContent = 'Looking for a QR code…';
+            setMode('scan', { focus: false });
 
             try {
-                new URL(content);
-                const openBtn = document.createElement('button');
-                openBtn.innerHTML = '<i data-lucide="external-link"></i><span class="ml-2">Open</span>';
-                openBtn.className = 'island-button primary';
-                openBtn.onclick = () => window.open(content, '_blank');
-                actions.appendChild(openBtn);
-            } catch (_) {}
-
-            const scanAgainBtn = document.createElement('button');
-            scanAgainBtn.innerHTML = '<i data-lucide="refresh-cw"></i><span class="ml-2">Scan Again</span>';
-            scanAgainBtn.className = 'island-button';
-            scanAgainBtn.onclick = () => {
-                scanResult.classList.add('hidden');
-                scanResult.innerHTML = '';
-                state.mode = 'scan';
-                updateUI();
-            };
-            actions.appendChild(scanAgainBtn);
-
-            scanResult.appendChild(resultText);
-            scanResult.appendChild(actions);
-            lucide.createIcons();
-            showToast('QR Code Detected!');
-            state.mode = 'scan';
-            updateModeButtons();
-            switchIslandContent('scan-menu-content');
-        }
-
-        function showToast(message, type = 'success') {
-            const toast = document.createElement('div');
-            toast.textContent = message;
-            toast.className = 'fixed top-5 left-1/2 -translate-x-1/2 p-3 px-5 rounded-full text-white shadow-lg z-[2000] transition-all duration-300';
-            toast.style.backgroundColor = type === 'success' ? 'var(--accent-color)' : '#E5484D';
-            toast.style.transform = 'translateY(-100px) translateX(-50%)';
-            document.body.appendChild(toast);
-            setTimeout(() => { toast.style.transform = 'translateY(0) translateX(-50%)'; }, 50);
-            setTimeout(() => {
-                toast.style.transform = 'translateY(-100px) translateX(-50%)';
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
-        }
-        
-        function handleUrlData() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const encryptedData = urlParams.get('data');
-
-            if (encryptedData) {
-                const decodedData = decodeURIComponent(encryptedData);
-                if (decodedData.startsWith("qrenc:")) {
-                    state.dataToDecrypt = decodedData;
-                    state.mode = 'decrypting';
-                    updateUI();
-                    showToast('Encrypted data loaded. Enter passphrase.');
+                const img = await loadImage(state.previewUrl);
+                const text = await detectInImage(img);
+                if (scanId !== imageScanId) return;
+                if (text) {
+                    setPreview(null);
+                    handleDecoded(text);
                 } else {
-                    state.mode = 'scan';
-                    updateUI();
-                    displayFinalResult(decodedData);
+                    previewStatus.textContent = 'No QR code found in this image. Try a sharper or closer shot.';
+                    showToast('No QR code found in this image.', 'error');
                 }
+            } catch (err) {
+                if (scanId !== imageScanId) return;
+                setPreview(null);
+                setMode('scan', { focus: false });
+                showToast(err?.message?.startsWith('Could not load')
+                    ? 'Couldn’t load the scanner. Check your connection.'
+                    : 'Couldn’t open this image.', 'error');
             }
         }
 
-        // --- Initial Load ---
-        updateUI();
-        lucide.createIcons();
-        handleUrlData();
-    });
+        function clearImagePreview() {
+            imageScanId++;
+            setPreview(null);
+            fileInput.value = '';
+            setMode('scan', { focus: false });
+        }
+
+        // --- Scan: results ---
+        function linkInfo(text) {
+            let url;
+            try { url = new URL(text.trim()); } catch (_) { return null; }
+            if (url.protocol === 'http:' || url.protocol === 'https:') return { href: url.href, host: url.host, web: true };
+            if (url.protocol === 'mailto:' || url.protocol === 'tel:' || url.protocol === 'sms:') return { href: url.href, host: '', web: false };
+            return null;
+        }
+
+        function handleDecoded(text) {
+            if (navigator.vibrate) navigator.vibrate(30);
+            const token = extractEncrypted(text);
+            if (token) {
+                state.token = token;
+                state.tokenFromUrl = false;
+                lockStatus.textContent = 'Enter the passphrase below to unlock it.';
+                setMode('decrypting');
+                return;
+            }
+            showResult(text, false);
+        }
+
+        function showResult(text, decrypted) {
+            state.result = text;
+            resultText.textContent = text;
+            const link = linkInfo(text);
+            resultIcon.setAttribute('href', decrypted ? '#i-lock-open' : link ? '#i-link' : '#i-type');
+            resultLabel.textContent = decrypted ? 'Unlocked' : link ? (link.web ? 'Link' : 'Contact link') : 'Text';
+            resultHost.textContent = link?.host ? `· ${link.host}` : '';
+            resultOpen.hidden = !link;
+            if (link) {
+                resultOpen.href = link.href;
+                if (link.web) resultOpen.target = '_blank';
+                else resultOpen.removeAttribute('target');
+            } else {
+                resultOpen.removeAttribute('href');
+            }
+            setMode('result');
+            showToast(decrypted ? 'Unlocked.' : 'QR code found.');
+        }
+
+        async function confirmDecrypt() {
+            if (state.busy || !state.token) return;
+            const passphrase = decryptPass.value;
+            if (!passphrase) {
+                showToast('Enter the passphrase.', 'error');
+                decryptPass.focus();
+                return;
+            }
+            if (!window.isSecureContext || !window.crypto?.subtle) {
+                showToast('Unlocking needs a secure (https) connection.', 'error');
+                return;
+            }
+            setBusy(confirmDecryptButton, true);
+            lockStatus.textContent = 'Unlocking…';
+            try {
+                const text = await decryptToken(state.token, passphrase);
+                decryptPass.value = '';
+                state.token = null;
+                clearTokenFromUrl();
+                showResult(text, true);
+            } catch (err) {
+                const message = err instanceof FormatError
+                    ? 'This encrypted QR code is damaged or unsupported.'
+                    : err?.message?.startsWith('Could not load')
+                        ? 'Couldn’t load the decryption library. Check your connection.'
+                        : 'Wrong passphrase. Try again.';
+                lockStatus.textContent = 'Enter the passphrase below to unlock it.';
+                showToast(message, 'error');
+                decryptPass.select();
+            } finally {
+                setBusy(confirmDecryptButton, false);
+            }
+        }
+
+        function clearTokenFromUrl() {
+            if (!state.tokenFromUrl) return;
+            state.tokenFromUrl = false;
+            try { history.replaceState(null, '', location.pathname); } catch (_) {}
+        }
+
+        // --- Clipboard input ---
+        function handlePastedText(text) {
+            const value = String(text || '').trim();
+            if (!value) {
+                showToast('The clipboard is empty.', 'error');
+                return;
+            }
+            if (extractEncrypted(value)) {
+                handleDecoded(value);
+                return;
+            }
+            qrInput.value = value;
+            setMode('generate');
+            showToast('Text pasted. Press Enter to create the QR code.');
+        }
+
+        async function pasteFromClipboard() {
+            const clipboard = navigator.clipboard;
+            if (!clipboard?.read && !clipboard?.readText) {
+                showToast('Clipboard access isn’t available here. Press Ctrl/⌘ V instead.', 'error');
+                return;
+            }
+            try {
+                if (clipboard.read) {
+                    const items = await clipboard.read();
+                    for (const item of items) {
+                        const type = item.types.find((t) => t.startsWith('image/'));
+                        if (type) {
+                            const blob = await item.getType(type);
+                            scanImageFile(new File([blob], 'pasted-image', { type: blob.type || type }));
+                            return;
+                        }
+                    }
+                    for (const item of items) {
+                        if (item.types.includes('text/plain')) {
+                            handlePastedText(await (await item.getType('text/plain')).text());
+                            return;
+                        }
+                    }
+                    showToast('The clipboard has no image or text.', 'error');
+                    return;
+                }
+                handlePastedText(await clipboard.readText());
+            } catch (_) {
+                showToast('Clipboard access was blocked. Press Ctrl/⌘ V instead.', 'error');
+            }
+        }
+
+        function isEditable(el) {
+            return el instanceof HTMLElement && (el.isContentEditable || el.matches('input, textarea'));
+        }
+
+        // --- Navigation ---
+        function goBack() {
+            switch (state.mode) {
+                case 'generate':
+                    setMode('initial');
+                    break;
+                case 'encrypt':
+                    pass1.value = '';
+                    pass2.value = '';
+                    setMode('generate');
+                    break;
+                case 'generated':
+                    setMode('generate');
+                    break;
+                case 'scanning':
+                    setMode('scan');
+                    break;
+                case 'decrypting':
+                    decryptPass.value = '';
+                    state.token = null;
+                    if (state.tokenFromUrl) {
+                        clearTokenFromUrl();
+                        setMode('initial');
+                    } else {
+                        setMode('scan');
+                    }
+                    break;
+                case 'scan':
+                case 'result':
+                    imageScanId++;
+                    setPreview(null);
+                    setMode('initial');
+                    break;
+            }
+        }
+
+        // --- Events ---
+        $('to-generate-mode').addEventListener('click', () => setMode('generate'));
+        $('to-scan-mode').addEventListener('click', () => setMode('scan'));
+        $('brand').addEventListener('click', () => {
+            if (state.mode === 'decrypting') clearTokenFromUrl();
+            imageScanId++;
+            setPreview(null);
+            setMode('initial');
+        });
+        document.querySelectorAll('.back-button').forEach((btn) => btn.addEventListener('click', goBack));
+
+        generateButton.addEventListener('click', () => generateQrCode(false));
+        $('encrypt-toggle').addEventListener('click', () => {
+            if (!qrInput.value.trim()) {
+                showToast('Type a link or some text first.', 'error');
+                qrInput.focus();
+                return;
+            }
+            setMode('encrypt');
+        });
+        confirmEncryptButton.addEventListener('click', () => generateQrCode(true));
+        confirmDecryptButton.addEventListener('click', confirmDecrypt);
+
+        // Enter submits; ignore Enter while an IME (e.g. Chinese/Japanese input) is composing.
+        const onEnter = (el, fn) => el.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.isComposing && e.keyCode !== 229) {
+                e.preventDefault();
+                fn();
+            }
+        });
+        onEnter(qrInput, () => generateQrCode(false));
+        onEnter(pass1, () => pass2.focus());
+        onEnter(pass2, () => generateQrCode(true));
+        onEnter(decryptPass, confirmDecrypt);
+
+        $('download-button').addEventListener('click', downloadQrCode);
+        copyImgButton.addEventListener('click', copyQrImage);
+        copyTextButton.addEventListener('click', async () => {
+            if (!state.qrPayload) return;
+            const copied = await copyText(state.qrPayload);
+            showToast(copied ? (state.encrypted ? 'Link copied.' : 'Text copied.') : 'Couldn’t copy the text.', copied ? 'success' : 'error');
+        });
+        shareButton.addEventListener('click', shareQr);
+        copyImgButton.hidden = !(window.ClipboardItem && navigator.clipboard?.write);
+        shareButton.hidden = !navigator.share;
+
+        $('island-start-cam-button').addEventListener('click', () => setMode('scanning'));
+        browseButton.addEventListener('click', () => {
+            if (state.mode === 'scan' && state.previewUrl) clearImagePreview();
+            else fileInput.click();
+        });
+        $('island-paste-button').addEventListener('click', pasteFromClipboard);
+        fileInput.addEventListener('change', () => {
+            const file = fileInput.files?.[0];
+            fileInput.value = '';
+            if (file) scanImageFile(file);
+        });
+
+        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                fileInput.click();
+            }
+        });
+
+        $('result-copy').addEventListener('click', async () => {
+            const copied = await copyText(state.result);
+            showToast(copied ? 'Copied.' : 'Couldn’t copy the text.', copied ? 'success' : 'error');
+        });
+        $('result-again').addEventListener('click', () => setMode('scan'));
+
+        // Drag & drop an image anywhere on the page.
+        let dragDepth = 0;
+        const hasFiles = (e) => Array.from(e.dataTransfer?.types || []).includes('Files');
+        document.addEventListener('dragenter', (e) => {
+            if (!hasFiles(e)) return;
+            e.preventDefault();
+            dragDepth++;
+            document.body.classList.add('drop-ready');
+            dropZone.classList.add('dragover');
+        });
+        document.addEventListener('dragover', (e) => {
+            if (!hasFiles(e)) return;
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'copy';
+        });
+        document.addEventListener('dragleave', (e) => {
+            if (!hasFiles(e)) return;
+            dragDepth = Math.max(0, dragDepth - 1);
+            if (dragDepth === 0) {
+                document.body.classList.remove('drop-ready');
+                dropZone.classList.remove('dragover');
+            }
+        });
+        document.addEventListener('drop', (e) => {
+            if (!hasFiles(e)) return;
+            e.preventDefault();
+            dragDepth = 0;
+            document.body.classList.remove('drop-ready');
+            dropZone.classList.remove('dragover');
+            const file = Array.from(e.dataTransfer.files).find((f) => f.type.startsWith('image/')) || e.dataTransfer.files[0];
+            scanImageFile(file);
+        });
+
+        // Ctrl/⌘ V: images are scanned; text outside an input starts a new QR (or unlocks an encrypted link).
+        document.addEventListener('paste', (e) => {
+            const file = Array.from(e.clipboardData?.files || []).find((f) => f.type.startsWith('image/'));
+            if (file) {
+                e.preventDefault();
+                scanImageFile(file);
+                return;
+            }
+            if (isEditable(e.target) || state.busy) return;
+            const text = e.clipboardData?.getData('text/plain');
+            if (text && ['initial', 'scan', 'result'].includes(state.mode)) {
+                e.preventDefault();
+                handlePastedText(text);
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !e.isComposing && state.mode !== 'initial') {
+                e.preventDefault();
+                goBack();
+            }
+        });
+
+        // Release the camera when the tab is hidden.
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden && state.mode === 'scanning') setMode('scan', { focus: false });
+        });
+
+        // Keep the island above on-screen keyboards and sized to its content.
+        let resizeFrame = 0;
+        const onViewportChange = () => {
+            cancelAnimationFrame(resizeFrame);
+            resizeFrame = requestAnimationFrame(() => {
+                const vv = window.visualViewport;
+                let keyboard = 0;
+                if (vv && Math.abs(vv.scale - 1) < 0.01) keyboard = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+                document.documentElement.style.setProperty('--kb', `${Math.round(keyboard)}px`);
+                sizeIsland();
+            });
+        };
+        window.addEventListener('resize', onViewportChange);
+        window.visualViewport?.addEventListener('resize', onViewportChange);
+        window.visualViewport?.addEventListener('scroll', onViewportChange);
+        document.fonts?.ready.then(sizeIsland);
+
+        // --- Start ---
+        function openTokenFromUrl() {
+            const urlToken = extractEncrypted(location.href);
+            if (!urlToken) return false;
+            imageScanId++;
+            setPreview(null);
+            decryptPass.value = '';
+            lockStatus.textContent = 'Enter the passphrase below to unlock it.';
+            state.token = urlToken;
+            state.tokenFromUrl = true;
+            setMode('decrypting');
+            return true;
+        }
+        // An encrypted link opened while this page is already showing only changes the hash.
+        window.addEventListener('hashchange', openTokenFromUrl);
+        if (!openTokenFromUrl()) setMode('initial');
+
+        // Warm up the generator so the first "Create" is instant.
+        const warmUp = () => loadLib('qr').catch(() => {});
+        if ('requestIdleCallback' in window) requestIdleCallback(warmUp, { timeout: 3000 });
+        else setTimeout(warmUp, 1500);
+    })();
     </script>
 </body>
 </html>
