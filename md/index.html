@@ -138,12 +138,23 @@
             .preview-content{padding:20px 16px 60px;font-size:16px}
             #statusbar{font-size:10px;padding:0 10px}
             .sidebar{width:280px}
+            .workspace-body[data-mode="split"]{flex-direction:column}
+            .workspace-body[data-mode="split"] .editor-pane,.workspace-body[data-mode="split"] .preview-pane{min-height:0}
+            .divider{width:auto;height:8px;cursor:row-resize;touch-action:none}
+            .divider-handle{width:24px;height:2px;opacity:.6}
         }
         @media(max-width:400px){.mode-switcher{gap:1px}.mode-btn{padding:4px 8px;font-size:10px}}
         @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-        .preview-content>*{animation:fadeIn .25s ease both}
+        .preview-content.fade-in>*{animation:fadeIn .25s ease both}
         @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
         @media print{#toolbar,#statusbar,.sidebar,.sidebar-overlay,.editor-pane,.divider{display:none!important}.preview-pane{display:block!important;overflow:visible!important}.preview-content{max-width:100%!important;padding:0!important}body{background:#fff;color:#000;overflow:visible}}
+        /* File list (sidebar) */
+        .file-list{display:flex;flex-direction:column;gap:2px}
+        .file-link{display:block;padding:7px 10px;border-radius:6px;color:var(--text-2);text-decoration:none;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:background .15s,color .15s}
+        .file-link:hover{background:var(--surface-2);color:var(--text)}
+        .file-link.active{background:var(--accent-dim);color:var(--accent)}
+        .file-link.draft{font-style:italic}
+
         /* File source + restore (status bar) */
         .status-source{max-width:40vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
         .status-btn{border:1px solid var(--border);border-radius:4px;background:var(--surface-2);color:var(--accent);font:inherit;font-size:11px;padding:1px 8px;cursor:pointer}
@@ -188,6 +199,11 @@
             </button>
         </div>
         <div class="sidebar-content">
+            <div class="setting-group">
+                <label class="setting-label">Files</label>
+                <nav class="file-list" id="fileList"></nav>
+            </div>
+            <hr class="setting-divider">
             <div class="setting-group">
                 <label class="setting-label">Theme</label>
                 <div class="theme-grid" id="themeGrid">
@@ -490,7 +506,8 @@ Footnotes work too.[^1]
        RENDERING
        ═══════════════════════════════════════════ */
 
-    function renderMarkdown(text) {
+    function renderMarkdown(text, fade = false) {
+        preview.classList.toggle('fade-in', fade);
         let html;
         try {
             html = marked.parse(text);
@@ -517,7 +534,7 @@ Footnotes work too.[^1]
     function showText(text) {
         editor.value = text;
         clearTimeout(renderTimeout);
-        renderMarkdown(text);
+        renderMarkdown(text, true);
         updateStats();
     }
 
@@ -647,6 +664,7 @@ Footnotes work too.[^1]
         setSource('');
         showText(text);
         set('content', text);
+        renderFileList();
     }
 
     async function openFile(url) {
@@ -689,6 +707,50 @@ Footnotes work too.[^1]
         restoreBtn.hidden = true;
         flashSaved('Restored');
     });
+
+    /* ═══════════════════════════════════════════
+       FILE LIST
+       Markdown files in this folder, read from the GitHub repo
+       (cached 10 min to stay under GitHub's 60 requests/hour limit).
+       ═══════════════════════════════════════════ */
+
+    const FILES_API = 'https://api.github.com/repos/leoyen0404/web/contents/md';
+
+    async function listFiles() {
+        const cached = get('files', null);
+        if (cached && Date.now() - cached.at < 10 * 60 * 1000) return cached.names;
+        try {
+            const res = await fetch(FILES_API);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const names = (await res.json())
+                .filter(f => f.type === 'file' && /\.(md|markdown)$/i.test(f.name))
+                .map(f => f.name);
+            set('files', { at: Date.now(), names });
+            return names;
+        } catch (err) {
+            console.warn('[Inkwell] Could not list files:', err);
+            return cached ? cached.names : [];
+        }
+    }
+
+    async function renderFileList() {
+        const list = $('fileList');
+        const link = (href, label, active, extra = '') => {
+            const a = document.createElement('a');
+            a.href = href;
+            a.textContent = label;
+            a.title = label;
+            a.className = `file-link ${extra} ${active ? 'active' : ''}`;
+            return a;
+        };
+        const current = sourceUrl && !/^[a-z][a-z0-9+.-]*:|\//i.test(sourceUrl) ? sourceUrl : null;
+        const names = await listFiles();
+        if (current && !names.includes(current)) names.unshift(current);
+        list.replaceChildren(
+            link(location.pathname, 'My draft', !sourceUrl, 'draft'),
+            ...names.map(n => link('?' + encodeURIComponent(n), n.replace(/\.(md|markdown)$/i, ''), n === current))
+        );
+    }
 
     /* ═══════════════════════════════════════════
        UI EVENTS
@@ -789,8 +851,17 @@ Footnotes work too.[^1]
     }
 
     /* Resizable divider */
-    function onDown(e) { if (currentMode !== 'split') return; isDragging = true; divider.classList.add('dragging'); document.body.style.cursor = 'col-resize'; document.body.style.userSelect = 'none'; e.preventDefault(); }
-    function onMove(e) { if (!isDragging) return; const x = e.touches ? e.touches[0].clientX : e.clientX; const r = workspaceBody.getBoundingClientRect(); const p = Math.min(Math.max(((x - r.left) / r.width) * 100, 15), 85); editorPane.style.flex = `0 0 ${p}%`; previewPane.style.flex = `0 0 ${100 - p - 0.4}%`; }
+    function onDown(e) { if (currentMode !== 'split') return; isDragging = true; divider.classList.add('dragging'); document.body.style.cursor = getComputedStyle(divider).cursor; document.body.style.userSelect = 'none'; e.preventDefault(); }
+    function onMove(e) {
+        if (!isDragging) return;
+        const pt = e.touches ? e.touches[0] : e;
+        const r = workspaceBody.getBoundingClientRect();
+        const stacked = getComputedStyle(workspaceBody).flexDirection === 'column';
+        const frac = stacked ? (pt.clientY - r.top) / r.height : (pt.clientX - r.left) / r.width;
+        const p = Math.min(Math.max(frac * 100, 15), 85);
+        editorPane.style.flex = `0 0 ${p}%`;
+        previewPane.style.flex = `0 0 ${100 - p - 0.4}%`;
+    }
     function onUp() { if (!isDragging) return; isDragging = false; divider.classList.remove('dragging'); document.body.style.cursor = ''; document.body.style.userSelect = ''; }
     divider.addEventListener('mousedown', onDown);
     divider.addEventListener('touchstart', onDown, { passive: false });
@@ -857,6 +928,7 @@ Footnotes work too.[^1]
     } else {
         openDraft();
     }
+    renderFileList();
 });
 </script>
 </body>
