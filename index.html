@@ -320,7 +320,7 @@
   <header>
     <div class="container">
       <nav class="navbar">
-        <a href="#home" class="logo">
+        <a href="/" class="logo">
           <i class="fas fa-stream"></i>
           <span>QuickNav</span>
         </a>
@@ -343,7 +343,9 @@
             type="text"
             id="searchInput"
             placeholder="Search for links..."
-            onkeydown="if (event.key === 'Enter') searchFunction()"
+            autocomplete="off"
+            oninput="searchFunction()"
+            onkeydown="if (event.key === 'Escape') { this.value = ''; searchFunction(); }"
           />
           <button type="button" onclick="searchFunction()" aria-label="Search">
             <i class="fas fa-search"></i> Search
@@ -363,7 +365,7 @@
       "pages": [
         {
           "name": "Dashboard",
-          "url": "#home",
+          "url": "/",
           "icon": "fa-home"
         }
       ]
@@ -377,27 +379,27 @@
           "pages": [
             {
               "name": "CPS Test",
-              "url": "https://bw4s.dpdns.org/cps/",
+              "url": "/cps/",
               "icon": "fa-mouse-pointer"
             },
             {
               "name": "QR Code",
-              "url": "https://bw4s.dpdns.org/qrcode/",
+              "url": "/qrcode/",
               "icon": "fa-qrcode"
             },
             {
               "name": "Score Script",
-              "url": "https://bw4s.dpdns.org/score/",
+              "url": "/score/",
               "icon": "fa-clipboard-list"
             },
             {
               "name": "Color Picker",
-              "url": "https://bw4s.dpdns.org/color/",
+              "url": "/color/",
               "icon": "fa-palette"
             },
             {
               "name": "Nav Editor",
-              "url": "https://bw4s.dpdns.org/navEditor/",
+              "url": "/navEditor/",
               "icon": "fa-edit"
             }
           ]
@@ -407,7 +409,7 @@
           "pages": [
             {
               "name": "Render Test",
-              "url": "https://bw4s.dpdns.org/render/",
+              "url": "/render/",
               "icon": "fa-server"
             }
           ]
@@ -420,17 +422,17 @@
       "pages": [
         {
           "name": "NN",
-          "url": "https://bw4s.dpdns.org/nn/",
+          "url": "/nn/",
           "icon": "fa-brain"
         },
         {
           "name": "PTCG",
-          "url": "https://bw4s.dpdns.org/ptcg/",
+          "url": "/ptcg/",
           "icon": "fa-gamepad"
         },
         {
           "name": "English Helper",
-          "url": "https://bw4s.dpdns.org/english/",
+          "url": "/english/",
           "icon": "fa-language"
         }
       ]
@@ -444,22 +446,22 @@
           "pages": [
             {
               "name": "HappyBirthdayWinter",
-              "url": "https://bw4s.dpdns.org/HappyBirthdayWinter/",
+              "url": "/HappyBirthdayWinter/",
               "icon": "fa-birthday-cake"
             },
             {
               "name": "Capsule Wallpaper",
-              "url": "https://bw4s.dpdns.org/capsuleWallpaper/",
+              "url": "/capsuleWallpaper/",
               "icon": "fa-image"
             },
             {
               "name": "GeoArt",
-              "url": "https://bw4s.dpdns.org/geoart/",
+              "url": "/geoart/",
               "icon": "fa-shapes"
             },
             {
               "name": "Cue Cards",
-              "url": "https://bw4s.dpdns.org/cue/",
+              "url": "/cue/",
               "icon": "fa-layer-group"
             }
           ]
@@ -469,7 +471,7 @@
           "pages": [
             {
               "name": "JS Animation",
-              "url": "https://bw4s.dpdns.org/animation/",
+              "url": "/animation/",
               "icon": "fa-film"
             }
           ]
@@ -485,7 +487,7 @@
           "pages": [
             {
               "name": "Old Notes",
-              "url": "https://bw4s.dpdns.org/note/",
+              "url": "/note/",
               "icon": "fa-archive"
             },
             {
@@ -495,7 +497,7 @@
             },
             {
               "name": "Skin Viewer",
-              "url": "https://bw4s.dpdns.org/skin/",
+              "url": "/skin/",
               "icon": "fa-user-astronaut"
             }
           ]
@@ -505,12 +507,12 @@
           "pages": [
             {
               "name": "Cube",
-              "url": "https://bw4s.dpdns.org/cube/",
+              "url": "/cube/",
               "icon": "fa-cube"
             },
             {
               "name": "Track Not Found",
-              "url": "https://bw4s.dpdns.org/track-not-found/",
+              "url": "/track-not-found/",
               "icon": "fa-ghost"
             }
           ]
@@ -656,7 +658,8 @@
     // Close mobile menu when a link inside it is clicked
     navMenu.addEventListener('click', (e) => {
         // Check if the clicked element is an anchor tag and not a dropdown toggle
-        if (e.target.tagName === 'A' && e.target.getAttribute('href') !== '#') {
+        const clickedLink = e.target.closest('a');
+        if (clickedLink && clickedLink.getAttribute('href') !== '#') {
             if (window.innerWidth <= 768) { // Only on mobile
                 navMenu.classList.remove('active');
                 menuToggle.setAttribute('aria-expanded', 'false');
@@ -722,8 +725,9 @@
         noResults.style.color = 'var(--grey-dark)';
         noResults.innerHTML = `
           <i class="fas fa-meh" style="font-size: 2rem; margin-bottom: 10px; color: var(--grey-light);"></i><br>
-          No results found for "<strong>${input.value}</strong>"
+          No results found for "<strong></strong>"
         `;
+        noResults.querySelector('strong').textContent = input.value;
         resultsContainer.appendChild(noResults);
       }
     }
