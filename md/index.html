@@ -4,8 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Markdown Viewer</title>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    
+
+    <!-- 版本鎖在大版號，避免 CDN 自動升級到不相容的新版 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/styles/github.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.18/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked@18/lib/marked.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/highlight.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked-highlight@2/lib/index.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked-gfm-heading-id@4/lib/index.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked-footnote@1/dist/index.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.18/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked-katex-extension@5/lib/index.umd.js"></script>
+
     <style>
         /* 基礎排版：左邊編輯器，右邊預覽 */
         body {
@@ -14,9 +25,12 @@
             margin: 0;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             color: #333;
+            background: #fff;
         }
         #editor-container, #preview-container {
             flex: 1;
+            min-width: 0;
+            min-height: 0;
             display: flex;
             flex-direction: column;
         }
@@ -30,8 +44,22 @@
             border-bottom: 1px solid #ddd;
             font-weight: bold;
             display: flex;
+            align-items: center;
             justify-content: space-between;
+            gap: 10px;
         }
+        .header button {
+            font: inherit;
+            font-size: 12px;
+            font-weight: normal;
+            padding: 2px 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background: #fff;
+            cursor: pointer;
+        }
+        .header button:hover { background: #f3f3f3; }
+        #status { font-size: 12px; color: #666; font-weight: normal; text-align: right; }
         #editor {
             flex: 1;
             padding: 20px;
@@ -47,25 +75,58 @@
             padding: 20px;
             overflow-y: auto;
             line-height: 1.6;
+            overflow-wrap: break-word;
         }
-        /* 簡單的 Markdown 元素樣式 */
+
+        /* Markdown 元素樣式 */
+        #preview > :first-child { margin-top: 0; }
+        #preview h1, #preview h2 { border-bottom: 1px solid #e3e3e3; padding-bottom: .3em; }
+        #preview h1, #preview h2, #preview h3, #preview h4, #preview h5, #preview h6 { scroll-margin-top: 12px; }
+        #preview a { color: #0969da; }
         #preview img { max-width: 100%; }
-        #preview blockquote { border-left: 4px solid #ccc; margin: 0; padding-left: 16px; color: #666; }
-        #preview code { background: #eee; padding: 2px 4px; border-radius: 4px; }
-        #preview pre code { display: block; padding: 10px; overflow-x: auto; }
+        #preview hr { border: none; border-top: 2px solid #e3e3e3; margin: 24px 0; }
+        #preview blockquote { border-left: 4px solid #ccc; margin: 0 0 16px; padding-left: 16px; color: #666; }
+        #preview code { background: #eee; padding: 2px 4px; border-radius: 4px; font-size: .9em; }
+        #preview pre { background: #f0f0f0; border-radius: 6px; overflow-x: auto; }
+        #preview pre code { display: block; padding: 12px; background: none; overflow-x: auto; }
+        #preview table { border-collapse: collapse; margin: 0 0 16px; display: block; overflow-x: auto; max-width: 100%; }
+        #preview th, #preview td { border: 1px solid #d0d0d0; padding: 6px 12px; }
+        #preview th { background: #eee; }
+        #preview tr:nth-child(2n) td { background: #f3f3f3; }
+        #preview li > input[type="checkbox"] { margin: 0 6px 0 0; vertical-align: middle; }
+        #preview ul:has(> li > input[type="checkbox"]) { list-style: none; padding-left: 1.2em; }
+        #preview kbd { display: inline-block; padding: 1px 6px; font-size: .85em; font-family: monospace; border: 1px solid #ccc; border-bottom-width: 2px; border-radius: 4px; background: #fafafa; }
+        #preview mark { background: #fff3a3; padding: 0 2px; }
+        #preview details { margin: 0 0 16px; }
+        #preview summary { cursor: pointer; }
+        #preview .katex-display { overflow-x: auto; overflow-y: hidden; }
+        #preview .footnotes { font-size: .9em; color: #555; border-top: 1px solid #e3e3e3; margin-top: 32px; }
+        #preview .error { color: #b00020; }
+
+        /* 手機：上下排列 */
+        @media (max-width: 700px) {
+            body { flex-direction: column; }
+            #preview-container { border-left: none; border-top: 1px solid #ddd; }
+        }
     </style>
 </head>
 <body>
 
     <div id="editor-container">
-        <div class="header">Markdown 編輯器</div>
-        <textarea id="editor" placeholder="正在載入..."></textarea>
+        <div class="header">
+            <span>Markdown 編輯器</span>
+            <span>
+                <button id="restore-btn" hidden>還原我的編輯</button>
+                <button id="clear-btn" hidden>清空</button>
+            </span>
+        </div>
+        <textarea id="editor" placeholder="正在載入..." spellcheck="false"></textarea>
     </div>
 
     <div id="preview-container">
         <div class="header">
             <span>預覽畫面</span>
-            <span id="status" style="font-size: 12px; color: #666; font-weight: normal;"></span>
+            <span id="status"></span>
         </div>
         <div id="preview"></div>
     </div>
@@ -74,79 +135,184 @@
         const editor = document.getElementById('editor');
         const preview = document.getElementById('preview');
         const statusText = document.getElementById('status');
+        const restoreBtn = document.getElementById('restore-btn');
+        const clearBtn = document.getElementById('clear-btn');
 
-        // 1. 核心渲染功能：將 Markdown 轉成 HTML 並顯示
-        function updatePreview(text) {
-            preview.innerHTML = marked.parse(text);
+        const DEFAULT_MSG = "# 歡迎使用 Markdown Viewer\n\n- 在網址後方加上 `?demo.md` 來載入同層資料夾的檔案。\n- 或者在左側直接開始打字，內容會自動存在這台裝置上。";
+
+        // 本機儲存：沒帶參數時的草稿，與每個檔案各自的編輯分開存，互不覆蓋
+        const DRAFT_KEY = 'md_draft';
+        const editKey = (url) => 'md_edit:' + url;
+        const store = {
+            get(key) { try { return localStorage.getItem(key); } catch { return null; } },
+            set(key, value) { try { localStorage.setItem(key, value); } catch {} },
+            remove(key) { try { localStorage.removeItem(key); } catch {} },
+        };
+
+        // 目前文件：null 表示本機草稿，否則為載入的檔案網址
+        let sourceUrl = null;
+        let baseUrl = location.href;
+
+        // 1. Markdown 設定（擴充套件若 CDN 載入失敗就略過，不影響基本功能）
+        if (window.markedHighlight && window.hljs) {
+            marked.use(markedHighlight.markedHighlight({
+                emptyLangClass: 'hljs',
+                langPrefix: 'hljs language-',
+                highlight(code, lang) {
+                    const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+                    return hljs.highlight(code, { language }).value;
+                }
+            }));
         }
+        if (window.markedGfmHeadingId) marked.use(markedGfmHeadingId.gfmHeadingId());
+        if (window.markedFootnote) marked.use(markedFootnote());
+        if (window.markedKatex) marked.use(markedKatex({ throwOnError: false }));
 
-        // 2. 監聽編輯器輸入：即時更新預覽，並自動存入 localStorage
-        editor.addEventListener('input', (e) => {
-            const currentText = e.target.value;
-            updatePreview(currentText);
-            localStorage.setItem('md_cache', currentText);
-            statusText.textContent = '已自動儲存至本機';
+        marked.use({
+            // ==螢光標記==
+            extensions: [{
+                name: 'mark',
+                level: 'inline',
+                start(src) { return src.indexOf('=='); },
+                tokenizer(src) {
+                    const match = /^==(?=\S)([\s\S]*?\S)==/.exec(src);
+                    if (match) {
+                        return { type: 'mark', raw: match[0], tokens: this.lexer.inlineTokens(match[1]) };
+                    }
+                },
+                renderer(token) { return `<mark>${this.parser.parseInline(token.tokens)}</mark>`; }
+            }],
+            // 相對路徑的圖片與連結，以 md 檔所在位置為準
+            walkTokens(token) {
+                if ((token.type === 'image' || token.type === 'link') && token.href && !/^([a-z][a-z0-9+.-]*:|#|\/\/)/i.test(token.href)) {
+                    try { token.href = new URL(token.href, baseUrl).href; } catch {}
+                }
+            }
         });
 
-        // 3. 讀取快取 (Fallback) 邏輯
-        function loadFromCache(errorMessage = '') {
-            const cachedText = localStorage.getItem('md_cache');
-            if (cachedText) {
-                editor.value = cachedText;
-                updatePreview(cachedText);
-                statusText.textContent = errorMessage ? `${errorMessage} (已載入上次編輯紀錄)` : '已載入本機快取';
+        // 2. 核心渲染功能：將 Markdown 轉成 HTML 並顯示（經過消毒，避免外部檔案執行腳本）
+        function updatePreview(text) {
+            let html;
+            try {
+                html = marked.parse(text);
+            } catch (err) {
+                html = `<p class="error">渲染失敗：${err.message}</p>`;
+            }
+            preview.innerHTML = window.DOMPurify ? DOMPurify.sanitize(html) : html;
+            const heading = preview.querySelector('h1, h2');
+            document.title = heading ? `${heading.textContent} - Markdown Viewer` : 'Markdown Viewer';
+        }
+
+        function show(text) {
+            editor.value = text;
+            updatePreview(text);
+        }
+
+        // 長文件打字時不必每個字都重新渲染
+        let renderTimer;
+        function scheduleRender() {
+            clearTimeout(renderTimer);
+            renderTimer = setTimeout(() => updatePreview(editor.value), 120);
+        }
+
+        // 3. 監聽編輯器輸入：即時更新預覽，並自動存入 localStorage
+        editor.addEventListener('input', () => {
+            scheduleRender();
+            store.set(sourceUrl ? editKey(sourceUrl) : DRAFT_KEY, editor.value);
+            restoreBtn.hidden = true;
+            statusText.textContent = sourceUrl ? '編輯已存在本機（原檔不會被改動）' : '已自動儲存至本機';
+        });
+
+        restoreBtn.addEventListener('click', () => {
+            const saved = store.get(editKey(sourceUrl));
+            if (saved !== null) show(saved);
+            restoreBtn.hidden = true;
+            statusText.textContent = '已還原上次的編輯';
+        });
+
+        clearBtn.addEventListener('click', () => {
+            if (editor.value && !confirm('確定要清空草稿嗎？')) return;
+            store.remove(DRAFT_KEY);
+            show('');
+            editor.focus();
+            statusText.textContent = '新文件';
+        });
+
+        // GitHub Pages 處理 Django 筆記時加的 {% raw %} 包裝，顯示時拿掉
+        function stripLiquidRaw(text) {
+            return text.replace(/^﻿?\s*\{%-?\s*raw\s*-?%\}[ \t]*\r?\n/, '')
+                       .replace(/\r?\n[ \t]*\{%-?\s*endraw\s*-?%\}\s*$/, '\n');
+        }
+
+        // 4. 沒帶參數：讀取本機草稿
+        function loadDraft() {
+            clearBtn.hidden = false;
+            let draft = store.get(DRAFT_KEY);
+            if (draft === null) {
+                // 舊版只有一個 md_cache，搬過來一次
+                draft = store.get('md_cache');
+                store.remove('md_cache');
+                if (draft !== null) store.set(DRAFT_KEY, draft);
+            }
+            if (draft) {
+                show(draft);
+                statusText.textContent = '已載入本機草稿';
             } else {
-                // 如果連快取都沒有，給予預設提示
-                const defaultMsg = "# 歡迎使用 Markdown Viewer\n\n- 在網址後方加上 `?demo.md` 來載入同層資料夾的檔案。\n- 或者在左側直接開始打字。";
-                editor.value = defaultMsg;
-                updatePreview(defaultMsg);
+                show(DEFAULT_MSG);
                 statusText.textContent = '新文件';
             }
         }
 
-        // 4. 網頁載入時的初始化邏輯 (解析 URL)
-        window.addEventListener('DOMContentLoaded', () => {
-            const searchParam = window.location.search;
+        // 5. 有帶參數：每次都向伺服器拿最新版本
+        async function loadFile(url) {
+            sourceUrl = url;
+            try { baseUrl = new URL(url, location.href).href; } catch {}
+            statusText.textContent = `正在載入: ${url}...`;
+            const saved = store.get(editKey(url));
 
-            // 判斷 URL 是否有帶參數 (例如 ?demo.md)
-            if (searchParam && searchParam.startsWith('?')) {
-                // 支援 ?url=xxx.md 或直接 ?xxx.md
-                const params = new URLSearchParams(searchParam);
-                let fetchUrl = params.get('url');
-                
-                if (!fetchUrl) {
-                    // 如果沒有 'url='，就把 '?' 後面的一整串當作檔案路徑
-                    fetchUrl = decodeURIComponent(searchParam.substring(1));
+            try {
+                // no-cache：仍可用瀏覽器快取，但一定先跟伺服器確認有沒有更新
+                const response = await fetch(url, { cache: 'no-cache' });
+                if (!response.ok) throw new Error(`找不到檔案 (${response.status})`);
+                const text = stripLiquidRaw(await response.text());
+                show(text);
+
+                if (saved !== null && saved !== text) {
+                    restoreBtn.hidden = false;
+                    statusText.textContent = '已載入最新版本（本機有你之前的編輯）';
+                } else {
+                    store.remove(editKey(url));
+                    statusText.textContent = '載入成功';
                 }
-
-                statusText.textContent = `正在載入: ${fetchUrl}...`;
-
-                // 執行網路請求抓取檔案
-                fetch(fetchUrl)
-                    .then(response => {
-                        if (!response.ok) throw new Error(`找不到檔案 (${response.status})`);
-                        return response.text();
-                    })
-                    .then(markdownText => {
-                        // 成功抓到檔案，填入編輯器與預覽
-                        editor.value = markdownText;
-                        updatePreview(markdownText);
-                        
-                        // 將抓到的內容寫入快取，這樣重整時如果不帶參數也會出現這份文件
-                        localStorage.setItem('md_cache', markdownText);
-                        statusText.textContent = '載入成功';
-                    })
-                    .catch(err => {
-                        console.error('Fetch 失敗:', err);
-                        // 如果抓不到指定的網址，就退回去讀取上次的紀錄
-                        loadFromCache(`讀取 ${fetchUrl} 失敗`);
-                    });
-
-            } else {
-                // 如果 URL 沒有帶任何參數，直接讀取快取
-                loadFromCache();
+            } catch (err) {
+                console.error('Fetch 失敗:', err);
+                if (saved !== null) {
+                    show(saved);
+                    statusText.textContent = `讀取 ${url} 失敗（顯示本機的編輯）`;
+                } else {
+                    editor.value = '';
+                    preview.innerHTML = '';
+                    const p = document.createElement('p');
+                    p.className = 'error';
+                    p.textContent = `讀取 ${url} 失敗：${err.message}`;
+                    preview.appendChild(p);
+                    statusText.textContent = '載入失敗';
+                }
             }
-        });
+        }
+
+        // 6. 網頁載入時的初始化邏輯 (解析 URL)
+        // 支援 ?url=xxx.md 或直接 ?xxx.md
+        const search = location.search.substring(1);
+        if (search) {
+            let url = new URLSearchParams(search).get('url');
+            if (!url) {
+                try { url = decodeURIComponent(search); } catch { url = search; }
+            }
+            loadFile(url);
+        } else {
+            loadDraft();
+        }
     </script>
 </body>
 </html>
