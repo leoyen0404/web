@@ -1,159 +1,469 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="en" data-theme="obsidian">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Markdown Viewer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Inkwell — Markdown Studio</title>
 
-    <!-- 版本鎖在大版號，避免 CDN 自動升級到不相容的新版 -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/styles/github.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=JetBrains+Mono:wght@400;500&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.18/dist/katex.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/marked@18/lib/marked.umd.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/highlight.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/marked-highlight@2/lib/index.umd.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/marked-gfm-heading-id@4/lib/index.umd.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/marked-footnote@1/dist/index.umd.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.18/dist/katex.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/marked-katex-extension@5/lib/index.umd.js"></script>
 
     <style>
-        /* 基礎排版：左邊編輯器，右邊預覽 */
-        body {
-            display: flex;
-            height: 100vh;
-            margin: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            color: #333;
-            background: #fff;
-        }
-        #editor-container, #preview-container {
-            flex: 1;
-            min-width: 0;
-            min-height: 0;
-            display: flex;
-            flex-direction: column;
-        }
-        #preview-container {
-            background-color: #f9f9f9;
-            border-left: 1px solid #ddd;
-        }
-        .header {
-            padding: 10px 20px;
-            background: #eee;
-            border-bottom: 1px solid #ddd;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-        }
-        .header button {
-            font: inherit;
-            font-size: 12px;
-            font-weight: normal;
-            padding: 2px 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            background: #fff;
-            cursor: pointer;
-        }
-        .header button:hover { background: #f3f3f3; }
-        #status { font-size: 12px; color: #666; font-weight: normal; text-align: right; }
-        #editor {
-            flex: 1;
-            padding: 20px;
-            border: none;
-            resize: none;
-            font-family: "Courier New", Courier, monospace;
-            font-size: 16px;
-            line-height: 1.5;
-            outline: none;
-        }
-        #preview {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-            line-height: 1.6;
-            overflow-wrap: break-word;
-        }
+        [data-theme="obsidian"]{--bg:#0e0e0c;--surface:#161614;--surface-2:#1e1e1b;--border:#2a2926;--border-focus:#3d3a35;--text:#ddd8ce;--text-2:#8a857b;--text-3:#5c5850;--accent:#e0944c;--accent-hover:#f0a45c;--accent-dim:rgba(224,148,76,.12);--accent-dim-2:rgba(224,148,76,.06);--editor-bg:#111110;--preview-bg:#141412;--code-bg:#1a1916;--scrollbar:#2a2926;--scrollbar-hover:#3d3a35;--shadow:rgba(0,0,0,.5);--hl-str:#a8c47a;--hl-num:#c99be0;--hl-fn:#7fb2d6}
+        [data-theme="paper"]{--bg:#f5f0e6;--surface:#ece7dd;--surface-2:#e4dfd5;--border:#d4cfc5;--border-focus:#b0a99d;--text:#2c2723;--text-2:#6e675e;--text-3:#9e968b;--accent:#b85c30;--accent-hover:#c86c40;--accent-dim:rgba(184,92,48,.1);--accent-dim-2:rgba(184,92,48,.05);--editor-bg:#f0ebe1;--preview-bg:#f8f4ec;--code-bg:#ece7dd;--scrollbar:#c8c1b5;--scrollbar-hover:#b0a99d;--shadow:rgba(0,0,0,.08);--hl-str:#5a7d2a;--hl-num:#8a4fa8;--hl-fn:#2f6f9f}
+        [data-theme="nord"]{--bg:#2e3440;--surface:#3b4252;--surface-2:#434c5e;--border:#4c566a;--border-focus:#616e88;--text:#eceff4;--text-2:#d8dee9;--text-3:#81a1c1;--accent:#88c0d0;--accent-hover:#8fbcbb;--accent-dim:rgba(136,192,208,.12);--accent-dim-2:rgba(136,192,208,.06);--editor-bg:#2e3440;--preview-bg:#353b49;--code-bg:#2e3440;--scrollbar:#4c566a;--scrollbar-hover:#616e88;--shadow:rgba(0,0,0,.3);--hl-str:#a3be8c;--hl-num:#b48ead;--hl-fn:#ebcb8b}
+        [data-theme="dracula"]{--bg:#282a36;--surface:#2d2f3d;--surface-2:#343746;--border:#44475a;--border-focus:#6272a4;--text:#f8f8f2;--text-2:#ccc;--text-3:#6272a4;--accent:#ff79c6;--accent-hover:#ff92d0;--accent-dim:rgba(255,121,198,.12);--accent-dim-2:rgba(255,121,198,.06);--editor-bg:#282a36;--preview-bg:#2c2e3a;--code-bg:#1e1f29;--scrollbar:#44475a;--scrollbar-hover:#6272a4;--shadow:rgba(0,0,0,.3);--hl-str:#f1fa8c;--hl-num:#bd93f9;--hl-fn:#50fa7b}
+        [data-theme="solarized"]{--bg:#002b36;--surface:#073642;--surface-2:#0a4050;--border:#0a4050;--border-focus:#2aa198;--text:#93a1a1;--text-2:#839496;--text-3:#657b83;--accent:#b58900;--accent-hover:#cb9b00;--accent-dim:rgba(181,137,0,.15);--accent-dim-2:rgba(181,137,0,.07);--editor-bg:#002b36;--preview-bg:#003844;--code-bg:#001e26;--scrollbar:#0a4050;--scrollbar-hover:#2aa198;--shadow:rgba(0,0,0,.4);--hl-str:#2aa198;--hl-num:#d33682;--hl-fn:#268bd2}
+        [data-theme="monokai"]{--bg:#272822;--surface:#2d2e27;--surface-2:#383830;--border:#49483e;--border-focus:#75715e;--text:#f8f8f2;--text-2:#a6a597;--text-3:#75715e;--accent:#a6e22e;--accent-hover:#b8f040;--accent-dim:rgba(166,226,46,.12);--accent-dim-2:rgba(166,226,46,.06);--editor-bg:#272822;--preview-bg:#2c2d26;--code-bg:#1e1f1c;--scrollbar:#49483e;--scrollbar-hover:#75715e;--shadow:rgba(0,0,0,.3);--hl-str:#e6db74;--hl-num:#ae81ff;--hl-fn:#66d9ef}
 
-        /* Markdown 元素樣式 */
-        #preview > :first-child { margin-top: 0; }
-        #preview h1, #preview h2 { border-bottom: 1px solid #e3e3e3; padding-bottom: .3em; }
-        #preview h1, #preview h2, #preview h3, #preview h4, #preview h5, #preview h6 { scroll-margin-top: 12px; }
-        #preview a { color: #0969da; }
-        #preview img { max-width: 100%; }
-        #preview hr { border: none; border-top: 2px solid #e3e3e3; margin: 24px 0; }
-        #preview blockquote { border-left: 4px solid #ccc; margin: 0 0 16px; padding-left: 16px; color: #666; }
-        #preview code { background: #eee; padding: 2px 4px; border-radius: 4px; font-size: .9em; }
-        #preview pre { background: #f0f0f0; border-radius: 6px; overflow-x: auto; }
-        #preview pre code { display: block; padding: 12px; background: none; overflow-x: auto; }
-        #preview table { border-collapse: collapse; margin: 0 0 16px; display: block; overflow-x: auto; max-width: 100%; }
-        #preview th, #preview td { border: 1px solid #d0d0d0; padding: 6px 12px; }
-        #preview th { background: #eee; }
-        #preview tr:nth-child(2n) td { background: #f3f3f3; }
-        #preview li > input[type="checkbox"] { margin: 0 6px 0 0; vertical-align: middle; }
-        #preview ul:has(> li > input[type="checkbox"]) { list-style: none; padding-left: 1.2em; }
-        #preview kbd { display: inline-block; padding: 1px 6px; font-size: .85em; font-family: monospace; border: 1px solid #ccc; border-bottom-width: 2px; border-radius: 4px; background: #fafafa; }
-        #preview mark { background: #fff3a3; padding: 0 2px; }
-        #preview details { margin: 0 0 16px; }
-        #preview summary { cursor: pointer; }
-        #preview .katex-display { overflow-x: auto; overflow-y: hidden; }
-        #preview .footnotes { font-size: .9em; color: #555; border-top: 1px solid #e3e3e3; margin-top: 32px; }
-        #preview .error { color: #b00020; }
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+        html{height:100%;-webkit-text-size-adjust:100%}
+        body{height:100%;overflow:hidden;font-family:'Syne',system-ui,sans-serif;font-size:14px;line-height:1.5;background:var(--bg);color:var(--text);transition:background .3s,color .3s}
+        ::selection{background:var(--accent-dim);color:var(--accent)}
+        ::-webkit-scrollbar{width:6px;height:6px}
+        ::-webkit-scrollbar-track{background:transparent}
+        ::-webkit-scrollbar-thumb{background:var(--scrollbar);border-radius:3px}
+        ::-webkit-scrollbar-thumb:hover{background:var(--scrollbar-hover)}
 
-        /* 手機：上下排列 */
-        @media (max-width: 700px) {
-            body { flex-direction: column; }
-            #preview-container { border-left: none; border-top: 1px solid #ddd; }
+        #app{display:flex;height:100%;width:100%;overflow:hidden}
+        .sidebar-overlay{position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:opacity .3s;backdrop-filter:blur(2px)}
+        .sidebar-overlay.active{opacity:1;pointer-events:all}
+        .sidebar{position:fixed;left:0;top:0;bottom:0;width:300px;z-index:1000;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;transform:translateX(-100%);transition:transform .3s cubic-bezier(.4,0,.2,1);overflow:hidden}
+        .sidebar.open{transform:translateX(0)}
+        @media(min-width:1024px){.sidebar{position:relative;z-index:1;transform:none;flex-shrink:0}.sidebar.closed{display:none}.sidebar-overlay{display:none}}
+        .sidebar-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);flex-shrink:0}
+        .sidebar-title{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--text-2)}
+        .sidebar-content{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:20px}
+        .sidebar-footer{padding:16px 20px;border-top:1px solid var(--border);flex-shrink:0;display:flex;flex-direction:column;gap:10px}
+        .sidebar-actions{display:flex;gap:8px;flex-wrap:wrap}
+        .sidebar-hint{font-size:11px;color:var(--text-3);text-align:center}
+        .setting-group{display:flex;flex-direction:column;gap:8px}
+        .setting-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-2);display:flex;justify-content:space-between;align-items:center}
+        .setting-label span{font-weight:400;color:var(--text-3);font-size:11px}
+        .setting-divider{border:none;border-top:1px solid var(--border);margin:4px 0}
+        .theme-grid{display:flex;gap:8px;flex-wrap:wrap}
+        .theme-btn{width:36px;height:36px;border-radius:50%;border:2.5px solid transparent;cursor:pointer;transition:all .2s;outline:none}
+        .theme-btn:hover{transform:scale(1.1)}
+        .theme-btn.active{border-color:var(--accent);box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--accent)}
+        .theme-btn[data-theme="obsidian"]{background:#e0944c}
+        .theme-btn[data-theme="paper"]{background:#b85c30}
+        .theme-btn[data-theme="nord"]{background:#88c0d0}
+        .theme-btn[data-theme="dracula"]{background:#ff79c6}
+        .theme-btn[data-theme="solarized"]{background:#b58900}
+        .theme-btn[data-theme="monokai"]{background:#a6e22e}
+        input[type="range"]{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:2px;background:var(--border);outline:none;cursor:pointer}
+        input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--accent);border:2px solid var(--surface);box-shadow:0 1px 3px var(--shadow);cursor:pointer;transition:transform .15s}
+        input[type="range"]::-webkit-slider-thumb:hover{transform:scale(1.2)}
+        input[type="range"]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--accent);border:2px solid var(--surface);cursor:pointer}
+        select{font-family:'Syne',sans-serif;font-size:13px;background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:8px 12px;width:100%;cursor:pointer;outline:none;transition:border-color .2s}
+        select:focus{border-color:var(--accent)}
+        .toggle-label{display:flex!important;align-items:center;gap:10px;cursor:pointer;text-transform:none!important;font-weight:400!important;font-size:13px!important;color:var(--text)!important;letter-spacing:0!important;user-select:none}
+        .toggle-label input{display:none}
+        .toggle-slider{width:36px;height:20px;border-radius:10px;background:var(--border);position:relative;flex-shrink:0;transition:background .2s;margin-left:auto}
+        .toggle-slider::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--text-3);transition:all .2s}
+        .toggle-label input:checked+.toggle-slider{background:var(--accent)}
+        .toggle-label input:checked+.toggle-slider::after{transform:translateX(16px);background:var(--bg)}
+        .btn-icon{width:36px;height:36px;border:none;border-radius:8px;background:transparent;color:var(--text-2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+        .btn-icon:hover{background:var(--surface-2);color:var(--text)}
+        .btn-secondary{flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:6px;background:var(--surface-2);color:var(--text);font-family:'Syne',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap}
+        .btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
+
+        #workspace{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+        #toolbar{height:48px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--surface)}
+        .toolbar-left,.toolbar-right{display:flex;align-items:center;gap:6px}
+        .app-title{font-size:15px;font-weight:700;letter-spacing:-.02em;color:var(--accent);user-select:none}
+        .mode-switcher{display:flex;background:var(--surface-2);border-radius:8px;padding:3px;gap:2px}
+        .mode-btn{padding:5px 14px;border:none;border-radius:6px;background:transparent;color:var(--text-3);font-family:'Syne',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap}
+        .mode-btn:hover{color:var(--text-2)}
+        .mode-btn.active{background:var(--accent);color:var(--bg)}
+        .workspace-body{flex:1;display:flex;overflow:hidden;position:relative}
+        .workspace-body[data-mode="editor"] .preview-pane,.workspace-body[data-mode="editor"] .divider{display:none}
+        .workspace-body[data-mode="preview"] .editor-pane,.workspace-body[data-mode="preview"] .divider{display:none}
+        .editor-pane{flex:1;display:flex;min-width:0;position:relative;background:var(--editor-bg)}
+        #editor{width:100%;height:100%;resize:none;border:none;outline:none;background:transparent;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:var(--editor-fs,14px);line-height:var(--editor-lh,1.7);padding:24px;tab-size:4;white-space:var(--editor-wrap,pre-wrap);overflow-wrap:break-word}
+        #editor::placeholder{color:var(--text-3);font-style:italic}
+        .divider{width:6px;cursor:col-resize;position:relative;flex-shrink:0;background:var(--border);transition:background .15s;display:flex;align-items:center;justify-content:center}
+        .divider:hover,.divider.dragging{background:var(--accent)}
+        .divider-handle{width:2px;height:24px;border-radius:1px;background:var(--text-3);opacity:0;transition:opacity .15s}
+        .divider:hover .divider-handle{opacity:1;background:var(--bg)}
+        .preview-pane{flex:1;display:flex;justify-content:center;overflow-y:auto;background:var(--preview-bg)}
+        .preview-content{width:100%;max-width:var(--preview-mw,720px);padding:32px 24px 80px;font-family:var(--preview-font,'Crimson Pro',Georgia,serif);font-size:var(--preview-fs,17px);line-height:var(--preview-lh,1.75);color:var(--text)}
+        #statusbar{height:28px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;border-top:1px solid var(--border);flex-shrink:0;background:var(--surface);font-size:11px;color:var(--text-3)}
+        .status-left{display:flex;align-items:center;gap:6px}
+        .status-sep{opacity:.4}
+        .status-right{display:flex;align-items:center;gap:8px}
+        .save-indicator{opacity:0;transition:opacity .3s;color:var(--accent)}
+        .save-indicator.show{opacity:1}
+
+        .preview-content h1,.preview-content h2,.preview-content h3,.preview-content h4,.preview-content h5,.preview-content h6{font-family:'Syne',sans-serif;font-weight:700;line-height:1.25;margin-top:1.8em;margin-bottom:.6em;color:var(--text)}
+        .preview-content h1{font-size:2em;letter-spacing:-.03em;margin-top:0}
+        .preview-content h2{font-size:1.5em;letter-spacing:-.02em}
+        .preview-content h3{font-size:1.2em}
+        .preview-content h4{font-size:1.05em}
+        .preview-content p{margin-bottom:1em}
+        .preview-content a{color:var(--accent);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:2px;transition:color .15s}
+        .preview-content a:hover{color:var(--accent-hover)}
+        .preview-content strong{font-weight:700}
+        .preview-content em{font-style:italic}
+        .preview-content del{text-decoration:line-through;opacity:.6}
+        .preview-content hr{border:none;border-top:1px solid var(--border);margin:2em 0}
+        .preview-content img{max-width:100%;border-radius:8px;margin:1em 0}
+        .preview-content ul,.preview-content ol{margin-bottom:1em;padding-left:1.5em}
+        .preview-content li{margin-bottom:.35em}
+        .preview-content li>ul,.preview-content li>ol{margin-top:.35em;margin-bottom:0}
+        .preview-content input[type="checkbox"]{appearance:none;-webkit-appearance:none;width:16px;height:16px;border:2px solid var(--border-focus);border-radius:3px;vertical-align:middle;margin-right:6px;position:relative;top:-1px;cursor:default}
+        .preview-content input[type="checkbox"]:checked{background:var(--accent);border-color:var(--accent)}
+        .preview-content input[type="checkbox"]:checked::after{content:'\2713';position:absolute;top:-1px;left:2px;font-size:12px;color:var(--bg);font-weight:700}
+        .preview-content blockquote{border-left:3px solid var(--accent);margin:1.2em 0;padding:.5em 0 .5em 1.2em;color:var(--text-2);font-style:italic;background:var(--accent-dim-2);border-radius:0 6px 6px 0}
+        .preview-content blockquote p:last-child{margin-bottom:0}
+        .preview-content code{font-family:'JetBrains Mono',monospace;font-size:.85em;background:var(--code-bg);padding:2px 6px;border-radius:4px;border:1px solid var(--border)}
+        .preview-content pre{margin:1.2em 0;border-radius:8px;overflow:hidden;border:1px solid var(--border)}
+        .preview-content pre code{display:block;padding:16px 20px;overflow-x:auto;background:var(--code-bg);border:none;border-radius:0;font-size:13px;line-height:1.6}
+        .preview-content table{width:100%;border-collapse:collapse;margin:1.2em 0;font-size:.95em}
+        .preview-content th,.preview-content td{border:1px solid var(--border);padding:10px 14px;text-align:left}
+        .preview-content th{background:var(--surface-2);font-weight:600;font-family:'Syne',sans-serif;font-size:.85em;text-transform:uppercase;letter-spacing:.04em}
+        .preview-content tr:nth-child(even) td{background:var(--accent-dim-2)}
+
+        .preview-content .katex-display{margin:1.2em 0;overflow-x:auto;overflow-y:hidden;padding:4px 0}
+        .latex-error{color:#e74c3c;font-size:.85em;font-family:'JetBrains Mono',monospace;background:rgba(231,76,60,.1);padding:2px 6px;border-radius:4px}
+
+        @media(max-width:640px){
+            #toolbar{padding:0 8px;height:44px}
+            .app-title{font-size:14px}
+            .mode-btn{padding:4px 10px;font-size:11px}
+            .btn-icon{width:32px;height:32px}
+            #editor{padding:16px;font-size:14px}
+            .preview-content{padding:20px 16px 60px;font-size:16px}
+            #statusbar{font-size:10px;padding:0 10px}
+            .sidebar{width:280px}
+            .workspace-body[data-mode="split"]{flex-direction:column}
+            .workspace-body[data-mode="split"] .editor-pane,.workspace-body[data-mode="split"] .preview-pane{min-height:0}
+            .divider{width:auto;height:8px;cursor:row-resize;touch-action:none}
+            .divider-handle{width:24px;height:2px;opacity:.6}
         }
+        @media(max-width:400px){.mode-switcher{gap:1px}.mode-btn{padding:4px 8px;font-size:10px}}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+        .preview-content.fade-in>*{animation:fadeIn .25s ease both}
+        @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+        @media print{#toolbar,#statusbar,.sidebar,.sidebar-overlay,.editor-pane,.divider{display:none!important}.preview-pane{display:block!important;overflow:visible!important}.preview-content{max-width:100%!important;padding:0!important}body{background:#fff;color:#000;overflow:visible}}
+        /* File list (sidebar) */
+        .file-list{display:flex;flex-direction:column;gap:2px}
+        .file-link{display:block;padding:7px 10px;border-radius:6px;color:var(--text-2);text-decoration:none;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:background .15s,color .15s}
+        .file-link:hover{background:var(--surface-2);color:var(--text)}
+        .file-link.active{background:var(--accent-dim);color:var(--accent)}
+        .file-link.draft{font-style:italic}
+
+        /* File source + restore (status bar) */
+        .status-source{max-width:40vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .status-btn{border:1px solid var(--border);border-radius:4px;background:var(--surface-2);color:var(--accent);font:inherit;font-size:11px;padding:1px 8px;cursor:pointer}
+        .status-btn:hover{border-color:var(--accent)}
+        .status-error{color:#e74c3c}
+
+        /* Extra markdown elements */
+        .preview-content h1,.preview-content h2,.preview-content h3,.preview-content h4,.preview-content h5,.preview-content h6{scroll-margin-top:16px}
+        .preview-content > :first-child{margin-top:0}
+        .preview-content table{display:block;overflow-x:auto}
+        .preview-content li:has(> input[type="checkbox"]){list-style:none;margin-left:-1.2em}
+        .preview-content mark{background:var(--accent-dim);color:var(--text);padding:0 3px;border-radius:3px}
+        .preview-content kbd{font-family:'JetBrains Mono',monospace;font-size:.8em;padding:1px 6px;border:1px solid var(--border-focus);border-bottom-width:2px;border-radius:4px;background:var(--surface-2)}
+        .preview-content details{margin:1em 0;padding:.6em 1em;border:1px solid var(--border);border-radius:8px;background:var(--surface)}
+        .preview-content summary{cursor:pointer;font-weight:600}
+        .preview-content details[open] summary{margin-bottom:.6em}
+        .preview-content sub,.preview-content sup{line-height:0}
+        .preview-content .footnotes{margin-top:3em;padding-top:1em;border-top:1px solid var(--border);font-size:.9em;color:var(--text-2)}
+        .preview-content .footnotes h2{font-size:1em;margin-top:0}
+        .preview-content .footnotes ol{padding-left:1.2em}
+        .preview-content .load-error{color:#e74c3c;font-family:'Syne',sans-serif}
+
+        /* Syntax highlighting (follows the theme) */
+        .hljs-keyword,.hljs-selector-tag,.hljs-built_in,.hljs-tag,.hljs-meta .hljs-keyword{color:var(--accent)}
+        .hljs-string,.hljs-regexp,.hljs-addition,.hljs-attribute,.hljs-template-tag,.hljs-template-variable{color:var(--hl-str)}
+        .hljs-number,.hljs-literal,.hljs-symbol,.hljs-bullet,.hljs-variable.constant_{color:var(--hl-num)}
+        .hljs-title,.hljs-title.function_,.hljs-title.class_,.hljs-section,.hljs-name,.hljs-selector-id,.hljs-selector-class,.hljs-attr{color:var(--hl-fn)}
+        .hljs-comment,.hljs-quote,.hljs-meta{color:var(--text-3);font-style:italic}
+        .hljs-deletion{color:#e74c3c}
+        .hljs-emphasis{font-style:italic}
+        .hljs-strong{font-weight:700}
     </style>
 </head>
 <body>
-
-    <div id="editor-container">
-        <div class="header">
-            <span>Markdown 編輯器</span>
-            <span>
-                <button id="restore-btn" hidden>還原我的編輯</button>
-                <button id="clear-btn" hidden>清空</button>
-            </span>
+<div id="app">
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+    <aside id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <span class="sidebar-title">Settings</span>
+            <button id="closeSidebar" class="btn-icon" title="Close">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="4" y1="4" x2="14" y2="14"/><line x1="14" y1="4" x2="4" y2="14"/></svg>
+            </button>
         </div>
-        <textarea id="editor" placeholder="正在載入..." spellcheck="false"></textarea>
-    </div>
-
-    <div id="preview-container">
-        <div class="header">
-            <span>預覽畫面</span>
-            <span id="status"></span>
+        <div class="sidebar-content">
+            <div class="setting-group">
+                <label class="setting-label">Files</label>
+                <nav class="file-list" id="fileList"></nav>
+            </div>
+            <hr class="setting-divider">
+            <div class="setting-group">
+                <label class="setting-label">Theme</label>
+                <div class="theme-grid" id="themeGrid">
+                    <button class="theme-btn active" data-theme="obsidian" title="Obsidian"></button>
+                    <button class="theme-btn" data-theme="paper" title="Paper"></button>
+                    <button class="theme-btn" data-theme="nord" title="Nord"></button>
+                    <button class="theme-btn" data-theme="dracula" title="Dracula"></button>
+                    <button class="theme-btn" data-theme="solarized" title="Solarized"></button>
+                    <button class="theme-btn" data-theme="monokai" title="Monokai"></button>
+                </div>
+            </div>
+            <hr class="setting-divider">
+            <div class="setting-group">
+                <label class="setting-label">Editor Font Size <span id="edFsVal">14px</span></label>
+                <input type="range" id="edFs" min="11" max="24" value="14">
+            </div>
+            <div class="setting-group">
+                <label class="setting-label">Preview Font Size <span id="pvFsVal">17px</span></label>
+                <input type="range" id="pvFs" min="14" max="24" value="17">
+            </div>
+            <div class="setting-group">
+                <label class="setting-label">Line Height <span id="lhVal">1.7</span></label>
+                <input type="range" id="lh" min="1.2" max="2.2" step="0.05" value="1.7">
+            </div>
+            <div class="setting-group">
+                <label class="setting-label">Preview Width <span id="mwVal">720px</span></label>
+                <input type="range" id="mw" min="480" max="1200" step="10" value="720">
+            </div>
+            <hr class="setting-divider">
+            <div class="setting-group">
+                <label class="setting-label">Preview Font</label>
+                <select id="pFont">
+                    <option value="'Crimson Pro', Georgia, serif">Crimson Pro</option>
+                    <option value="Georgia, 'Times New Roman', serif">Georgia</option>
+                    <option value="'Segoe UI', system-ui, sans-serif">System Sans</option>
+                    <option value="'JetBrains Mono', monospace">Monospace</option>
+                </select>
+            </div>
+            <hr class="setting-divider">
+            <div class="setting-group">
+                <label class="toggle-label"><span>Word Wrap</span><input type="checkbox" id="wordWrap" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="setting-group">
+                <label class="toggle-label"><span>Auto-save</span><input type="checkbox" id="autoSave" checked><span class="toggle-slider"></span></label>
+            </div>
         </div>
-        <div id="preview"></div>
-    </div>
+        <div class="sidebar-footer">
+            <div class="sidebar-actions">
+                <button id="importBtn" class="btn-secondary">Import</button>
+                <button id="exportMdBtn" class="btn-secondary">Save .md</button>
+                <button id="exportHtmlBtn" class="btn-secondary">Save HTML</button>
+            </div>
+            <input type="file" id="fileInput" accept=".md,.txt,.markdown,.html" hidden>
+            <p class="sidebar-hint">Drag &amp; drop files to import</p>
+        </div>
+    </aside>
 
-    <script>
-        const editor = document.getElementById('editor');
-        const preview = document.getElementById('preview');
-        const statusText = document.getElementById('status');
-        const restoreBtn = document.getElementById('restore-btn');
-        const clearBtn = document.getElementById('clear-btn');
+    <main id="workspace">
+        <header id="toolbar">
+            <div class="toolbar-left">
+                <button id="toggleSidebar" class="btn-icon" title="Settings">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="3" y1="5" x2="17" y2="5"/><line x1="3" y1="10" x2="17" y2="10"/><line x1="3" y1="15" x2="17" y2="15"/></svg>
+                </button>
+                <span class="app-title">Inkwell</span>
+            </div>
+            <div class="toolbar-center">
+                <div class="mode-switcher" id="modeSwitcher">
+                    <button class="mode-btn" data-mode="editor">Editor</button>
+                    <button class="mode-btn active" data-mode="split">Split</button>
+                    <button class="mode-btn" data-mode="preview">Preview</button>
+                </div>
+            </div>
+            <div class="toolbar-right">
+                <button id="clearBtn" class="btn-icon" title="New Document">
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11 2H5a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V6l-4-4z"/><path d="M11 2v4h4"/><line x1="7" y1="10" x2="11" y2="10"/></svg>
+                </button>
+            </div>
+        </header>
+        <div id="workspaceBody" class="workspace-body" data-mode="split">
+            <div id="editorPane" class="editor-pane">
+                <textarea id="editor" spellcheck="false" placeholder="Start writing Markdown..."></textarea>
+            </div>
+            <div id="divider" class="divider"><div class="divider-handle"></div></div>
+            <div id="previewPane" class="preview-pane">
+                <div id="preview" class="preview-content"></div>
+            </div>
+        </div>
+        <footer id="statusbar">
+            <div class="status-left">
+                <span id="wordCount">0 words</span>
+                <span class="status-sep">&middot;</span>
+                <span id="charCount">0 chars</span>
+                <span class="status-sep">&middot;</span>
+                <span id="lineCount">0 lines</span>
+            </div>
+            <div class="status-right">
+                <span id="saveIndicator" class="save-indicator">Saved</span>
+                <button id="restoreBtn" class="status-btn" hidden title="This file changed or you edited it before — bring back your local edits">Restore my edits</button>
+                <span id="sourceInfo" class="status-source" hidden></span>
+                <span class="status-sep" id="sourceSep" hidden>&middot;</span>
+                <span>Markdown + LaTeX</span>
+            </div>
+        </footer>
+    </main>
+</div>
 
-        const DEFAULT_MSG = "# 歡迎使用 Markdown Viewer\n\n- 在網址後方加上 `?demo.md` 來載入同層資料夾的檔案。\n- 或者在左側直接開始打字，內容會自動存在這台裝置上。";
 
-        // 本機儲存：沒帶參數時的草稿，與每個檔案各自的編輯分開存，互不覆蓋
-        const DRAFT_KEY = 'md_draft';
-        const editKey = (url) => 'md_edit:' + url;
-        const store = {
-            get(key) { try { return localStorage.getItem(key); } catch { return null; } },
-            set(key, value) { try { localStorage.setItem(key, value); } catch {} },
-            remove(key) { try { localStorage.removeItem(key); } catch {} },
-        };
+<!-- Pinned to major versions so the CDN can't silently swap in a breaking release -->
+<script src="https://cdn.jsdelivr.net/npm/marked@18/lib/marked.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/highlight.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked-highlight@2/lib/index.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked-gfm-heading-id@4/lib/index.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked-footnote@1/dist/index.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.18/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked-katex-extension@5/lib/index.umd.js"></script>
 
-        // 目前文件：null 表示本機草稿，否則為載入的檔案網址
-        let sourceUrl = null;
-        let baseUrl = location.href;
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const $ = id => document.getElementById(id);
+    const editor = $('editor');
+    const preview = $('preview');
+    const sidebar = $('sidebar');
+    const sidebarOverlay = $('sidebarOverlay');
+    const themeGrid = $('themeGrid');
+    const workspaceBody = $('workspaceBody');
+    const divider = $('divider');
+    const editorPane = $('editorPane');
+    const previewPane = $('previewPane');
+    const saveIndicator = $('saveIndicator');
+    const restoreBtn = $('restoreBtn');
+    const sourceInfo = $('sourceInfo');
+    const sourceSep = $('sourceSep');
 
-        // 1. Markdown 設定（擴充套件若 CDN 載入失敗就略過，不影響基本功能）
+    let currentMode = 'split';
+    let isDragging = false;
+    let saveTimeout = null;
+    let renderTimeout = null;
+
+    // null = your own draft; otherwise the URL of the file opened with ?file.md
+    let sourceUrl = null;
+    let baseUrl = location.href;
+
+    const DEFAULT = `# Welcome to Inkwell
+
+> A beautiful, customizable Markdown editor with live LaTeX rendering.
+
+---
+
+## Getting Started
+
+Write in **bold**, *italic*, ~~strikethrough~~, ==highlight==, or \`inline code\`.
+
+Open a file next to this page by adding it to the address: \`?demo.md\`
+
+## Task Lists
+
+- [x] Live Markdown preview
+- [x] LaTeX math support
+- [x] Multiple color themes
+- [ ] World domination
+
+## Inline Math
+
+The quadratic formula: $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$
+
+Euler's identity: $e^{i\\pi} + 1 = 0$
+
+## Display Equations
+
+The fundamental theorem of calculus:
+
+$$
+\\frac{d}{dx}\\left[\\int_{a}^{x} f(t)\\,dt\\right] = f(x)
+$$
+
+The Fourier transform:
+
+$$
+\\hat{f}(\\xi) = \\int_{-\\infty}^{\\infty} f(x)\\,e^{-2\\pi i x \\xi}\\,dx
+$$
+
+A matrix equation:
+
+$$
+\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}
+\\cdot
+\\begin{pmatrix} x \\\\ y \\end{pmatrix}
+=
+\\begin{pmatrix} ax + by \\\\ cx + dy \\end{pmatrix}
+$$
+
+## Code Blocks
+
+Python — recursive Fibonacci:
+
+\`\`\`python
+from functools import lru_cache
+
+@lru_cache(maxsize=None)
+def fib(n: int) -> int:
+    if n < 2:
+        return n
+    return fib(n - 1) + fib(n - 2)
+
+print([fib(i) for i in range(15)])
+\`\`\`
+
+JavaScript — async data fetching:
+
+\`\`\`javascript
+async function fetchUsers(ids) {
+    const requests = ids.map(id =>
+        fetch(\`/api/users/\${id}\`).then(r => r.json())
+    );
+    return Promise.all(requests);
+}
+
+const users = await fetchUsers([1, 2, 3]);
+console.log(users.map(u => u.name));
+\`\`\`
+
+Shell — project setup:
+
+\`\`\`bash
+git clone https://github.com/user/project.git
+cd project
+npm install && npm run build
+echo "Ready for development!"
+\`\`\`
+
+## Blockquotes
+
+> "The universe is not only queerer than we suppose, but queerer than we *can* suppose."
+> — J.B.S. Haldane
+
+## Tables
+
+| Feature | Status | Priority |
+|---------|--------|----------|
+| Live Preview | Done | High |
+| LaTeX Math | Done | High |
+| Syntax Highlighting | Done | Medium |
+| Themes | Done | Medium |
+
+Footnotes work too.[^1]
+
+[^1]: Like this one.
+
+---
+
+*Built with care. Write beautifully.*`;
+
+    /* ═══════════════════════════════════════════
+       MARKED SETUP
+       Each extension is optional: if its CDN script fails, the rest still works.
+       ═══════════════════════════════════════════ */
+
+    function initMarked() {
+        marked.use({ breaks: true, gfm: true });
         if (window.markedHighlight && window.hljs) {
             marked.use(markedHighlight.markedHighlight({
                 emptyLangClass: 'hljs',
@@ -167,152 +477,459 @@
         if (window.markedGfmHeadingId) marked.use(markedGfmHeadingId.gfmHeadingId());
         if (window.markedFootnote) marked.use(markedFootnote());
         if (window.markedKatex) marked.use(markedKatex({ throwOnError: false }));
-
         marked.use({
-            // ==螢光標記==
+            // ==highlight==
             extensions: [{
                 name: 'mark',
                 level: 'inline',
                 start(src) { return src.indexOf('=='); },
                 tokenizer(src) {
-                    const match = /^==(?=\S)([\s\S]*?\S)==/.exec(src);
-                    if (match) {
-                        return { type: 'mark', raw: match[0], tokens: this.lexer.inlineTokens(match[1]) };
-                    }
+                    const m = /^==(?=\S)([\s\S]*?\S)==/.exec(src);
+                    if (m) return { type: 'mark', raw: m[0], tokens: this.lexer.inlineTokens(m[1]) };
                 },
                 renderer(token) { return `<mark>${this.parser.parseInline(token.tokens)}</mark>`; }
             }],
-            // 相對路徑的圖片與連結，以 md 檔所在位置為準
+            // Relative images/links resolve from the .md file's folder
             walkTokens(token) {
                 if ((token.type === 'image' || token.type === 'link') && token.href && !/^([a-z][a-z0-9+.-]*:|#|\/\/)/i.test(token.href)) {
                     try { token.href = new URL(token.href, baseUrl).href; } catch {}
                 }
             }
         });
+    }
 
-        // 2. 核心渲染功能：將 Markdown 轉成 HTML 並顯示（經過消毒，避免外部檔案執行腳本）
-        function updatePreview(text) {
-            let html;
+    function escapeHtml(s) {
+        return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    /* ═══════════════════════════════════════════
+       RENDERING
+       ═══════════════════════════════════════════ */
+
+    function renderMarkdown(text, fade = false) {
+        preview.classList.toggle('fade-in', fade);
+        let html;
+        try {
+            html = marked.parse(text);
+        } catch (e) {
+            console.error('[Inkwell] Parse error:', e);
+            preview.innerHTML = `<p class="latex-error">Parse error: ${escapeHtml(e.message)}</p>`;
+            return;
+        }
+        // Sanitize so a file loaded with ?url= can't run scripts on this site
+        preview.innerHTML = window.DOMPurify ? DOMPurify.sanitize(html) : html;
+
+        const heading = preview.querySelector('h1, h2');
+        document.title = heading ? `${heading.textContent} — Inkwell` : 'Inkwell — Markdown Studio';
+    }
+
+    function scheduleRender() {
+        clearTimeout(renderTimeout);
+        renderTimeout = setTimeout(() => {
+            renderMarkdown(editor.value);
+            updateStats();
+        }, 80);
+    }
+
+    function showText(text) {
+        editor.value = text;
+        clearTimeout(renderTimeout);
+        renderMarkdown(text, true);
+        updateStats();
+    }
+
+    /* ═══════════════════════════════════════════
+       STATS
+       ═══════════════════════════════════════════ */
+
+    function updateStats() {
+        const t = editor.value;
+        const w = t.trim() ? t.trim().split(/\s+/).length : 0;
+        $('wordCount').textContent = `${w} word${w !== 1 ? 's' : ''}`;
+        $('charCount').textContent = `${t.length} chars`;
+        $('lineCount').textContent = `${t ? t.split('\n').length : 0} lines`;
+    }
+
+    /* ═══════════════════════════════════════════
+       PERSISTENCE
+       Your draft (iw-content) and each opened file's edits (iw-edit:<url>)
+       are stored separately, so opening a file never overwrites the draft.
+       ═══════════════════════════════════════════ */
+
+    function get(k, f) { try { const v = localStorage.getItem('iw-' + k); return v !== null ? JSON.parse(v) : f; } catch { return f; } }
+    function set(k, v) { try { localStorage.setItem('iw-' + k, JSON.stringify(v)); } catch {} }
+    function del(k) { try { localStorage.removeItem('iw-' + k); } catch {} }
+
+    const contentKey = () => sourceUrl ? 'edit:' + sourceUrl : 'content';
+
+    function flashSaved(label = 'Saved') {
+        saveIndicator.textContent = label;
+        saveIndicator.classList.add('show');
+        setTimeout(() => saveIndicator.classList.remove('show'), 1500);
+    }
+
+    function saveNow() {
+        clearTimeout(saveTimeout);
+        set(contentKey(), editor.value);
+        flashSaved(sourceUrl ? 'Saved locally' : 'Saved');
+    }
+
+    function debouncedSave() {
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(saveNow, 800);
+    }
+
+    function applyVar(name, val) { document.documentElement.style.setProperty(name, val); }
+
+    function loadSettings() {
+        const theme = get('theme', 'obsidian');
+        document.documentElement.setAttribute('data-theme', theme);
+        themeGrid.querySelectorAll('.theme-btn').forEach(b => b.classList.toggle('active', b.dataset.theme === theme));
+
+        const sliders = [
+            ['edFs', 14, '--editor-fs', 'px'],
+            ['pvFs', 17, '--preview-fs', 'px'],
+            ['lh', 1.7, null, ''],
+            ['mw', 720, '--preview-mw', 'px']
+        ];
+        sliders.forEach(([id, def, prop, unit]) => {
+            const v = get(id, def);
+            $(id).value = v;
+            $(id + 'Val').textContent = v + unit;
+            if (prop) applyVar(prop, v + unit);
+            if (id === 'lh') { applyVar('--editor-lh', v); applyVar('--preview-lh', v); }
+        });
+
+        const pf = get('pFont', "'Crimson Pro', Georgia, serif");
+        $('pFont').value = pf;
+        applyVar('--preview-font', pf);
+
+        const ww = get('ww', true);
+        $('wordWrap').checked = ww;
+        applyVar('--editor-wrap', ww ? 'pre-wrap' : 'pre');
+
+        $('autoSave').checked = get('as', true);
+
+        currentMode = get('mode', 'split');
+        applyMode(currentMode);
+
+        if (window.innerWidth >= 1024) {
+            const sb = get('sb', true);
+            sidebar.classList.toggle('open', sb);
+            sidebar.classList.toggle('closed', !sb);
+        }
+    }
+
+    /* ═══════════════════════════════════════════
+       DOCUMENT SOURCES
+       ═══════════════════════════════════════════ */
+
+    function setSource(text, isError = false) {
+        sourceInfo.hidden = sourceSep.hidden = !text;
+        sourceInfo.textContent = text || '';
+        sourceInfo.title = text || '';
+        sourceInfo.classList.toggle('status-error', isError);
+    }
+
+    // The notes are wrapped in {% raw %} so GitHub Pages' Jekyll build leaves them alone; hide that here
+    function stripLiquidRaw(text) {
+        return text.replace(/^﻿?\s*\{%-?\s*raw\s*-?%\}[ \t]*\r?\n/, '')
+                   .replace(/\r?\n[ \t]*\{%-?\s*endraw\s*-?%\}\s*$/, '\n');
+    }
+
+    function openDraft() {
+        sourceUrl = null;
+        baseUrl = location.href;
+        restoreBtn.hidden = true;
+        setSource('');
+        let draft = get('content', null);
+        if (draft === null) {
+            // Carry over a draft from the plain viewer that briefly replaced Inkwell
             try {
-                html = marked.parse(text);
-            } catch (err) {
-                html = `<p class="error">渲染失敗：${err.message}</p>`;
-            }
-            preview.innerHTML = window.DOMPurify ? DOMPurify.sanitize(html) : html;
-            const heading = preview.querySelector('h1, h2');
-            document.title = heading ? `${heading.textContent} - Markdown Viewer` : 'Markdown Viewer';
+                draft = localStorage.getItem('md_draft') ?? localStorage.getItem('md_cache');
+                localStorage.removeItem('md_draft');
+                localStorage.removeItem('md_cache');
+            } catch {}
+            if (draft !== null) set('content', draft);
         }
+        showText(draft !== null ? draft : DEFAULT);
+    }
 
-        function show(text) {
-            editor.value = text;
-            updatePreview(text);
-        }
+    // Leave file mode (drop ?file.md from the address) and use the draft
+    function switchToDraft(text) {
+        if (sourceUrl) history.replaceState(null, '', location.pathname + location.hash);
+        sourceUrl = null;
+        baseUrl = location.href;
+        restoreBtn.hidden = true;
+        setSource('');
+        showText(text);
+        set('content', text);
+        renderFileList();
+    }
 
-        // 長文件打字時不必每個字都重新渲染
-        let renderTimer;
-        function scheduleRender() {
-            clearTimeout(renderTimer);
-            renderTimer = setTimeout(() => updatePreview(editor.value), 120);
-        }
+    async function openFile(url) {
+        sourceUrl = url;
+        try { baseUrl = new URL(url, location.href).href; } catch {}
+        const name = decodeURIComponent(url.split(/[?#]/)[0].split('/').pop() || url);
+        setSource(`Loading ${name}…`);
+        preview.innerHTML = '';
+        const saved = get('edit:' + url, null);
 
-        // 3. 監聽編輯器輸入：即時更新預覽，並自動存入 localStorage
-        editor.addEventListener('input', () => {
-            scheduleRender();
-            store.set(sourceUrl ? editKey(sourceUrl) : DRAFT_KEY, editor.value);
-            restoreBtn.hidden = true;
-            statusText.textContent = sourceUrl ? '編輯已存在本機（原檔不會被改動）' : '已自動儲存至本機';
-        });
-
-        restoreBtn.addEventListener('click', () => {
-            const saved = store.get(editKey(sourceUrl));
-            if (saved !== null) show(saved);
-            restoreBtn.hidden = true;
-            statusText.textContent = '已還原上次的編輯';
-        });
-
-        clearBtn.addEventListener('click', () => {
-            if (editor.value && !confirm('確定要清空草稿嗎？')) return;
-            store.remove(DRAFT_KEY);
-            show('');
-            editor.focus();
-            statusText.textContent = '新文件';
-        });
-
-        // GitHub Pages 處理 Django 筆記時加的 {% raw %} 包裝，顯示時拿掉
-        function stripLiquidRaw(text) {
-            return text.replace(/^﻿?\s*\{%-?\s*raw\s*-?%\}[ \t]*\r?\n/, '')
-                       .replace(/\r?\n[ \t]*\{%-?\s*endraw\s*-?%\}\s*$/, '\n');
-        }
-
-        // 4. 沒帶參數：讀取本機草稿
-        function loadDraft() {
-            clearBtn.hidden = false;
-            let draft = store.get(DRAFT_KEY);
-            if (draft === null) {
-                // 舊版只有一個 md_cache，搬過來一次
-                draft = store.get('md_cache');
-                store.remove('md_cache');
-                if (draft !== null) store.set(DRAFT_KEY, draft);
-            }
-            if (draft) {
-                show(draft);
-                statusText.textContent = '已載入本機草稿';
+        try {
+            // no-cache: always ask the server whether the file changed, so new pushes show up immediately
+            const res = await fetch(url, { cache: 'no-cache' });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const text = stripLiquidRaw(await res.text());
+            showText(text);
+            setSource(name);
+            if (saved !== null && saved !== text) {
+                restoreBtn.hidden = false;
             } else {
-                show(DEFAULT_MSG);
-                statusText.textContent = '新文件';
+                del('edit:' + url);
+            }
+        } catch (err) {
+            console.error('[Inkwell] Could not load', url, err);
+            if (saved !== null) {
+                showText(saved);
+                setSource(`${name} (offline — showing your local edits)`, true);
+            } else {
+                editor.value = '';
+                updateStats();
+                preview.innerHTML = `<p class="load-error">Couldn't load <code>${escapeHtml(url)}</code> (${escapeHtml(err.message)}).</p>`;
+                setSource(`${name} — failed to load`, true);
             }
         }
+    }
 
-        // 5. 有帶參數：每次都向伺服器拿最新版本
-        async function loadFile(url) {
-            sourceUrl = url;
-            try { baseUrl = new URL(url, location.href).href; } catch {}
-            statusText.textContent = `正在載入: ${url}...`;
-            const saved = store.get(editKey(url));
+    restoreBtn.addEventListener('click', () => {
+        const saved = get('edit:' + sourceUrl, null);
+        if (saved !== null) showText(saved);
+        restoreBtn.hidden = true;
+        flashSaved('Restored');
+    });
 
-            try {
-                // no-cache：仍可用瀏覽器快取，但一定先跟伺服器確認有沒有更新
-                const response = await fetch(url, { cache: 'no-cache' });
-                if (!response.ok) throw new Error(`找不到檔案 (${response.status})`);
-                const text = stripLiquidRaw(await response.text());
-                show(text);
+    /* ═══════════════════════════════════════════
+       FILE LIST
+       Markdown files in this folder, read from the GitHub repo
+       (cached 10 min to stay under GitHub's 60 requests/hour limit).
+       ═══════════════════════════════════════════ */
 
-                if (saved !== null && saved !== text) {
-                    restoreBtn.hidden = false;
-                    statusText.textContent = '已載入最新版本（本機有你之前的編輯）';
-                } else {
-                    store.remove(editKey(url));
-                    statusText.textContent = '載入成功';
-                }
-            } catch (err) {
-                console.error('Fetch 失敗:', err);
-                if (saved !== null) {
-                    show(saved);
-                    statusText.textContent = `讀取 ${url} 失敗（顯示本機的編輯）`;
-                } else {
-                    editor.value = '';
-                    preview.innerHTML = '';
-                    const p = document.createElement('p');
-                    p.className = 'error';
-                    p.textContent = `讀取 ${url} 失敗：${err.message}`;
-                    preview.appendChild(p);
-                    statusText.textContent = '載入失敗';
-                }
-            }
+    const FILES_API = 'https://api.github.com/repos/leoyen0404/web/contents/md';
+
+    async function listFiles() {
+        const cached = get('files', null);
+        if (cached && Date.now() - cached.at < 10 * 60 * 1000) return cached.names;
+        try {
+            const res = await fetch(FILES_API);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const names = (await res.json())
+                .filter(f => f.type === 'file' && /\.(md|markdown)$/i.test(f.name))
+                .map(f => f.name);
+            set('files', { at: Date.now(), names });
+            return names;
+        } catch (err) {
+            console.warn('[Inkwell] Could not list files:', err);
+            return cached ? cached.names : [];
         }
+    }
 
-        // 6. 網頁載入時的初始化邏輯 (解析 URL)
-        // 支援 ?url=xxx.md 或直接 ?xxx.md
-        const search = location.search.substring(1);
-        if (search) {
-            let url = new URLSearchParams(search).get('url');
-            if (!url) {
-                try { url = decodeURIComponent(search); } catch { url = search; }
-            }
-            loadFile(url);
+    async function renderFileList() {
+        const list = $('fileList');
+        const link = (href, label, active, extra = '') => {
+            const a = document.createElement('a');
+            a.href = href;
+            a.textContent = label;
+            a.title = label;
+            a.className = `file-link ${extra} ${active ? 'active' : ''}`;
+            return a;
+        };
+        const current = sourceUrl && !/^[a-z][a-z0-9+.-]*:|\//i.test(sourceUrl) ? sourceUrl : null;
+        const names = await listFiles();
+        if (current && !names.includes(current)) names.unshift(current);
+        list.replaceChildren(
+            link(location.pathname, 'My draft', !sourceUrl, 'draft'),
+            ...names.map(n => link('?' + encodeURIComponent(n), n.replace(/\.(md|markdown)$/i, ''), n === current))
+        );
+    }
+
+    /* ═══════════════════════════════════════════
+       UI EVENTS
+       ═══════════════════════════════════════════ */
+
+    /* Theme */
+    themeGrid.addEventListener('click', e => {
+        const b = e.target.closest('.theme-btn');
+        if (!b) return;
+        document.documentElement.setAttribute('data-theme', b.dataset.theme);
+        themeGrid.querySelectorAll('.theme-btn').forEach(x => x.classList.remove('active'));
+        b.classList.add('active');
+        set('theme', b.dataset.theme);
+    });
+
+    /* Sliders */
+    function bindSlider(id, valId, suffix, prop, storeKey, extra) {
+        $(id).addEventListener('input', e => {
+            const v = e.target.value;
+            $(valId).textContent = v + suffix;
+            if (prop) applyVar(prop, v + suffix);
+            if (extra) extra(v);
+            set(storeKey, v);
+        });
+    }
+    bindSlider('edFs', 'edFsVal', 'px', '--editor-fs', 'edFs');
+    bindSlider('pvFs', 'pvFsVal', 'px', '--preview-fs', 'pvFs');
+    bindSlider('lh', 'lhVal', '', null, 'lh', v => { applyVar('--editor-lh', v); applyVar('--preview-lh', v); });
+    bindSlider('mw', 'mwVal', 'px', '--preview-mw', 'mw');
+
+    $('pFont').addEventListener('change', e => { applyVar('--preview-font', e.target.value); set('pFont', e.target.value); });
+    $('wordWrap').addEventListener('change', e => { applyVar('--editor-wrap', e.target.checked ? 'pre-wrap' : 'pre'); set('ww', e.target.checked); });
+    $('autoSave').addEventListener('change', e => set('as', e.target.checked));
+
+    /* Sidebar */
+    function toggleSidebar() {
+        const open = sidebar.classList.contains('open');
+        if (window.innerWidth >= 1024) {
+            sidebar.classList.toggle('open', !open);
+            sidebar.classList.toggle('closed', open);
+            set('sb', !open);
         } else {
-            loadDraft();
+            sidebar.classList.toggle('open', !open);
+            sidebarOverlay.classList.toggle('active', !open);
         }
-    </script>
+    }
+    $('toggleSidebar').addEventListener('click', toggleSidebar);
+    $('closeSidebar').addEventListener('click', toggleSidebar);
+    sidebarOverlay.addEventListener('click', toggleSidebar);
+
+    /* Mode */
+    function applyMode(m) {
+        currentMode = m;
+        workspaceBody.setAttribute('data-mode', m);
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === m));
+        set('mode', m);
+    }
+    $('modeSwitcher').addEventListener('click', e => { const b = e.target.closest('.mode-btn'); if (b) applyMode(b.dataset.mode); });
+
+    /* Editor */
+    function onEdit() {
+        scheduleRender();
+        restoreBtn.hidden = true;
+        if ($('autoSave').checked) debouncedSave();
+    }
+    editor.addEventListener('input', onEdit);
+    editor.addEventListener('keydown', e => {
+        if (e.key === 'Tab') {
+            e.preventDefault();
+            const s = editor.selectionStart, en = editor.selectionEnd;
+            if (e.shiftKey) {
+                const ls = editor.value.lastIndexOf('\n', s - 1) + 1;
+                if (editor.value.substring(ls, ls + 4) === '    ') {
+                    editor.value = editor.value.substring(0, ls) + editor.value.substring(ls + 4);
+                    editor.selectionStart = editor.selectionEnd = s - 4;
+                }
+            } else {
+                editor.value = editor.value.substring(0, s) + '    ' + editor.value.substring(en);
+                editor.selectionStart = editor.selectionEnd = s + 4;
+            }
+            onEdit();
+        }
+    });
+
+    document.addEventListener('keydown', e => {
+        const m = e.ctrlKey || e.metaKey;
+        if (m && e.key === 's') { e.preventDefault(); saveNow(); }
+        if (m && e.key === '\\') { e.preventDefault(); toggleSidebar(); }
+        if (m && e.key === 'b') { e.preventDefault(); wrapSel('**', '**'); }
+        if (m && e.key === 'i') { e.preventDefault(); wrapSel('*', '*'); }
+    });
+
+    function wrapSel(a, b) {
+        const s = editor.selectionStart, e = editor.selectionEnd, sel = editor.value.substring(s, e);
+        editor.value = editor.value.substring(0, s) + a + sel + b + editor.value.substring(e);
+        editor.selectionStart = s + a.length; editor.selectionEnd = e + a.length;
+        editor.focus(); onEdit();
+    }
+
+    /* Resizable divider */
+    function onDown(e) { if (currentMode !== 'split') return; isDragging = true; divider.classList.add('dragging'); document.body.style.cursor = getComputedStyle(divider).cursor; document.body.style.userSelect = 'none'; e.preventDefault(); }
+    function onMove(e) {
+        if (!isDragging) return;
+        const pt = e.touches ? e.touches[0] : e;
+        const r = workspaceBody.getBoundingClientRect();
+        const stacked = getComputedStyle(workspaceBody).flexDirection === 'column';
+        const frac = stacked ? (pt.clientY - r.top) / r.height : (pt.clientX - r.left) / r.width;
+        const p = Math.min(Math.max(frac * 100, 15), 85);
+        editorPane.style.flex = `0 0 ${p}%`;
+        previewPane.style.flex = `0 0 ${100 - p - 0.4}%`;
+    }
+    function onUp() { if (!isDragging) return; isDragging = false; divider.classList.remove('dragging'); document.body.style.cursor = ''; document.body.style.userSelect = ''; }
+    divider.addEventListener('mousedown', onDown);
+    divider.addEventListener('touchstart', onDown, { passive: false });
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('touchmove', onMove, { passive: false });
+    document.addEventListener('mouseup', onUp);
+    document.addEventListener('touchend', onUp);
+
+    /* File import — goes into your draft */
+    function importFile(f) {
+        if (!f) return;
+        if (!sourceUrl && editor.value.trim() && editor.value !== DEFAULT && !confirm(`Replace your draft with ${f.name}?`)) return;
+        const r = new FileReader();
+        r.onload = ev => { switchToDraft(ev.target.result); flashSaved('Imported'); };
+        r.readAsText(f);
+    }
+    $('importBtn').addEventListener('click', () => $('fileInput').click());
+    $('fileInput').addEventListener('change', e => { importFile(e.target.files[0]); e.target.value = ''; });
+    document.addEventListener('dragover', e => { e.preventDefault(); e.stopPropagation(); });
+    document.addEventListener('drop', e => { e.preventDefault(); e.stopPropagation(); importFile(e.dataTransfer.files[0]); });
+
+    /* File export */
+    function dl(name, content, type) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([content], { type })); a.download = name; document.body.appendChild(a); a.click(); document.body.removeChild(a); }
+    function exportName(ext) {
+        const base = sourceUrl ? decodeURIComponent(sourceUrl.split(/[?#]/)[0].split('/').pop()).replace(/\.(md|markdown|txt)$/i, '') : 'document';
+        return (base || 'document') + ext;
+    }
+    $('exportMdBtn').addEventListener('click', () => dl(exportName('.md'), editor.value, 'text/markdown'));
+    $('exportHtmlBtn').addEventListener('click', () => {
+        dl(exportName('.html'), `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${escapeHtml(document.title)}</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.18/dist/katex.min.css"><style>body{max-width:720px;margin:2rem auto;padding:0 1rem;font-family:Georgia,serif;line-height:1.75;color:#2c2723}h1,h2,h3,h4,h5,h6{font-family:system-ui,sans-serif;margin-top:1.5em}a{color:#b85c30}code{background:#f0ebe1;padding:2px 6px;border-radius:3px;font-size:.9em}pre{background:#f0ebe1;padding:1rem;border-radius:6px;overflow-x:auto}pre code{padding:0;background:none}blockquote{border-left:3px solid #b85c30;margin:1em 0;padding:.5em 1em;color:#6e675e}table{border-collapse:collapse;width:100%}th,td{border:1px solid #d4cfc5;padding:8px 12px}th{background:#ece7dd}img{max-width:100%}hr{border:none;border-top:1px solid #d4cfc5;margin:2em 0}mark{background:#f3dfb8}.katex-display{margin:1em 0;overflow-x:auto}.hljs-keyword,.hljs-built_in,.hljs-tag{color:#b85c30}.hljs-string{color:#5a7d2a}.hljs-number,.hljs-literal{color:#8a4fa8}.hljs-title,.hljs-attr{color:#2f6f9f}.hljs-comment{color:#9e968b;font-style:italic}</style></head><body>${preview.innerHTML}</body></html>`, 'text/html');
+    });
+
+    /* New document */
+    $('clearBtn').addEventListener('click', () => {
+        const msg = sourceUrl ? 'Close this file and start a new document? Your saved draft will be replaced.' : 'Start a new document?';
+        if ((sourceUrl || editor.value.trim()) && !confirm(msg)) return;
+        switchToDraft('');
+        editor.focus();
+    });
+
+    /* Scroll sync */
+    let syncLock = false;
+    editor.addEventListener('scroll', () => { if (syncLock || currentMode !== 'split') return; syncLock = true; const p = editor.scrollTop / (editor.scrollHeight - editor.clientHeight || 1); previewPane.scrollTop = p * (previewPane.scrollHeight - previewPane.clientHeight); requestAnimationFrame(() => syncLock = false); });
+
+    /* ═══════════════════════════════════════════
+       INIT
+       ═══════════════════════════════════════════ */
+
+    if (typeof marked === 'undefined') {
+        preview.innerHTML = '<p class="load-error">Couldn\'t load the Markdown parser. Check your connection and reload.</p>';
+        return;
+    }
+    initMarked();
+    loadSettings();
+
+    // ?demo.md or ?url=https://…/file.md opens a file; no query opens your draft
+    const search = location.search.substring(1);
+    if (search) {
+        let url = new URLSearchParams(search).get('url');
+        if (!url) {
+            try { url = decodeURIComponent(search); } catch { url = search; }
+        }
+        openFile(url);
+    } else {
+        openDraft();
+    }
+    renderFileList();
+});
+</script>
 </body>
 </html>
