@@ -154,6 +154,29 @@
     .pos { color: var(--good); }
     .neg { color: var(--bad); }
 
+    .nn-status { color: var(--muted); margin: 0 0 12px; }
+    .nn-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+    .progress { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; margin: 8px 0 12px; }
+    .progress div { height: 100%; width: 0; background: var(--accent); transition: width 0.2s; }
+    .training-log {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      border-radius: 8px;
+      max-height: 220px;
+      overflow-y: auto;
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+      font-size: 0.8rem;
+    }
+    .training-log div { padding: 2px 0; }
+    details { margin-top: 12px; }
+    summary { cursor: pointer; color: var(--muted); }
+    .ai-compare { width: 100%; border-collapse: collapse; font-size: 0.92rem; margin-bottom: 14px; }
+    .ai-compare th, .ai-compare td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: left; }
+    .ai-compare th { color: var(--muted); font-weight: 500; }
+    .conf { color: var(--muted); font-size: 0.85em; }
+
     .note { font-size: 0.85rem; color: var(--muted); }
     .note ul { padding-left: 20px; margin: 6px 0; }
 
@@ -198,6 +221,29 @@
       <div class="score-bar"><div class="score-fill" id="scoreFill"></div></div>
       <p class="verdict">綜合指數：<span id="scoreValue">0</span> / 100 —— <span id="verdictText"></span></p>
     </div>
+
+    <div class="card">
+      <h3>🤖 神經網路解讀（可能胡說八道）</h3>
+      <p class="nn-status" id="nnStatus">正在載入 TensorFlow…</p>
+      <div class="nn-actions">
+        <button id="trainButton" disabled>🎓 訓練模型（20 輪）</button>
+        <button id="resetButton" class="secondary" disabled>♻️ 重置模型</button>
+      </div>
+      <div class="progress" id="trainProgress" hidden><div id="trainProgressFill"></div></div>
+      <div id="aiResult" hidden>
+        <table class="ai-compare">
+          <thead><tr><th>項目</th><th>傳統計算</th><th>AI 猜測</th><th></th></tr></thead>
+          <tbody id="aiCompareBody"></tbody>
+        </table>
+        <div class="hex-row" id="aiHexRow"></div>
+        <div class="score-bar"><div class="score-fill" id="aiScoreFill"></div></div>
+        <p class="verdict">AI 綜合指數：<span id="aiScoreValue">0</span> / 100 —— <span id="aiVerdictText"></span></p>
+      </div>
+      <details id="logDetails">
+        <summary>訓練紀錄</summary>
+        <div class="training-log" id="trainingLog"></div>
+      </details>
+    </div>
   </div>
 
   <div class="card note">
@@ -208,6 +254,7 @@
       <li>動爻＝(年＋月＋日＋時) ÷ 6 之餘數（餘 0 作 6），由下往上數。</li>
       <li>互卦取本卦二至四爻為下、三至五爻為上；變卦為本卦動爻陰陽互換。</li>
       <li>含動爻之卦為「用」，另一卦為「體」。以五行生剋判斷：用生體 100、比和 75、體克用 60、體生用 35、用克體 10；本卦 40%、互卦 20%、變卦 40% 加權。</li>
+      <li>🤖 神經網路：以 TensorFlow.js 在瀏覽器中訓練一個小型網路（輸入年、月、日、時數，輸出上卦、下卦、動爻），讓它「模仿」上述規則。未訓練時是隨機權重、純屬亂猜；訓練越多越接近，但很難完全學會餘數運算，所以常常把結果搞砸。訓練成果存在本機瀏覽器。</li>
       <li>此為傳統術數規則的忠實計算，僅供文化體驗與自我反思，不構成任何決策依據。</li>
     </ul>
   </div>
@@ -370,12 +417,25 @@ function cast(dateStr, timeStr) {
   const hourIdx = Math.floor((h + 1) / 2) % 12;
   const hourNum = hourIdx + 1;
 
-  const sumUpper = yearNum + lunar.month + lunar.day;
+  return {
+    input: { y, mo, d, h, mi },
+    lunar, ganzhi: STEMS[stemIdx] + BRANCHES[branchIdx], yearNum, hourNum, hourBranch: BRANCHES[hourIdx],
+    ...castFromNumbers(yearNum, lunar.month, lunar.day, hourNum)
+  };
+}
+
+// 年、月、日、時數 → 上卦、下卦、動爻
+function castFromNumbers(yearNum, month, day, hourNum) {
+  const sumUpper = yearNum + month + day;
   const sumAll = sumUpper + hourNum;
   const upper = mod1(sumUpper, 8);
   const lower = mod1(sumAll, 8);
   const moving = mod1(sumAll, 6);
+  return { sumUpper, sumAll, ...buildReading(upper, lower, moving) };
+}
 
+// 上卦、下卦、動爻 → 本卦、互卦、變卦與體用評分
+function buildReading(upper, lower, moving) {
   const lines = [...TRIGRAMS[lower].lines, ...TRIGRAMS[upper].lines];
   const main = hexFromLines(lines);
   const mutual = hexFromLines([...lines.slice(1, 4), ...lines.slice(2, 5)]);
@@ -398,12 +458,7 @@ function cast(dateStr, timeStr) {
   ];
   const score = Math.round(stages.reduce((s, x) => s + x.rel.score * x.weight, 0));
 
-  return {
-    input: { y, mo, d, h, mi },
-    lunar, ganzhi: STEMS[stemIdx] + BRANCHES[branchIdx], yearNum, hourNum, hourBranch: BRANCHES[hourIdx],
-    sumUpper, sumAll, upper, lower, moving,
-    main, mutual, changed, ti, yong, stages, score
-  };
+  return { upper, lower, moving, main, mutual, changed, ti, yong, stages, score };
 }
 
 function verdictOf(score) {
@@ -459,11 +514,7 @@ function showResult(r) {
     <tr><td>下卦</td><td>${r.sumAll} ÷ 8 餘 ${r.sumAll % 8} → ${triLabel(r.lower)}</td></tr>
     <tr><td>動爻</td><td>${r.sumAll} ÷ 6 餘 ${r.sumAll % 6} → 第 ${r.moving} 爻（${lineName(r.moving, movingYang)}）</td></tr>`;
 
-  const row = document.getElementById('hexRow');
-  row.innerHTML = '';
-  row.appendChild(renderHex('本卦・現況', r.main, r.moving));
-  row.appendChild(renderHex('互卦・過程', r.mutual, 0));
-  row.appendChild(renderHex('變卦・結果', r.changed, r.moving));
+  renderHexRow(document.getElementById('hexRow'), r);
 
   document.getElementById('tiyongDesc').textContent =
     `動爻在${r.moving <= 3 ? '下' : '上'}卦，故 ${triLabel(r.yong)} 為「用」（所問之事、外在環境），` +
@@ -480,15 +531,26 @@ function showResult(r) {
     </tr>`;
   }).join('');
 
-  const v = verdictOf(r.score);
-  const fill = document.getElementById('scoreFill');
+  showScore(r.score, 'scoreFill', 'scoreValue', 'verdictText');
+  document.getElementById('output').hidden = false;
+}
+
+function renderHexRow(row, r) {
+  row.innerHTML = '';
+  row.appendChild(renderHex('本卦・現況', r.main, r.moving));
+  row.appendChild(renderHex('互卦・過程', r.mutual, 0));
+  row.appendChild(renderHex('變卦・結果', r.changed, r.moving));
+}
+
+function showScore(score, fillId, valueId, verdictId) {
+  const v = verdictOf(score);
+  const fill = document.getElementById(fillId);
   fill.style.width = '0';
-  const verdictEl = document.getElementById('verdictText');
+  const verdictEl = document.getElementById(verdictId);
   verdictEl.textContent = v.text;
   verdictEl.className = v.cls;
-  document.getElementById('scoreValue').textContent = r.score;
-  document.getElementById('output').hidden = false;
-  requestAnimationFrame(() => requestAnimationFrame(() => { fill.style.width = `${r.score}%`; }));
+  document.getElementById(valueId).textContent = score;
+  requestAnimationFrame(() => requestAnimationFrame(() => { fill.style.width = `${score}%`; }));
 }
 
 function showError(msg) {
@@ -496,6 +558,229 @@ function showError(msg) {
   el.textContent = msg;
   el.hidden = !msg;
 }
+
+// ===== 神經網路（TensorFlow.js）=====
+// 讓小型網路從「年、月、日、時數」學習預測上卦、下卦、動爻。
+// 它看不到規則本身，只能從範例中猜，所以結果常常是錯的。
+const TFJS_URL = 'https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js';
+const NN_STORE = 'localstorage://nn-iching-model';
+const NN_EPOCHS_KEY = 'nn-iching-epochs';
+const EPOCHS_PER_CLICK = 20;
+const TRAIN_SIZE = 6000;
+const VAL_SIZE = 1000;
+const INPUT_SIZE = 12 + 12 + 30 + 12;
+const HEADS = [['upper', 8], ['lower', 8], ['moving', 6]];
+
+let nnModel = null;
+let nnEpochs = 0;
+let nnTraining = false;
+let lastReading = null;
+
+const nnStatus = document.getElementById('nnStatus');
+const trainButton = document.getElementById('trainButton');
+const resetButton = document.getElementById('resetButton');
+
+function loadTf() {
+  return new Promise((resolve, reject) => {
+    if (window.tf) return resolve();
+    const script = document.createElement('script');
+    script.src = TFJS_URL;
+    script.onload = resolve;
+    script.onerror = () => reject(new Error('無法載入 TensorFlow.js'));
+    document.head.appendChild(script);
+  });
+}
+
+// 年(1–12)、月(1–12)、日(1–30)、時(1–12) 各自 one-hot 後串接
+function encode(yearNum, month, day, hourNum) {
+  const v = new Array(INPUT_SIZE).fill(0);
+  v[yearNum - 1] = 1;
+  v[12 + month - 1] = 1;
+  v[24 + day - 1] = 1;
+  v[54 + hourNum - 1] = 1;
+  return v;
+}
+
+function buildModel() {
+  const input = tf.input({ shape: [INPUT_SIZE] });
+  let x = tf.layers.dense({ units: 96, activation: 'relu' }).apply(input);
+  x = tf.layers.dense({ units: 96, activation: 'relu' }).apply(x);
+  const outputs = HEADS.map(([name, n]) => tf.layers.dense({ units: n, activation: 'softmax', name }).apply(x));
+  return tf.model({ inputs: input, outputs });
+}
+
+function compileModel(model) {
+  model.compile({ optimizer: tf.train.adam(0.003), loss: 'categoricalCrossentropy', metrics: ['accuracy'] });
+}
+
+function readEpochs() {
+  try { return Number(localStorage.getItem(NN_EPOCHS_KEY)) || 0; } catch (e) { return 0; }
+}
+
+function writeEpochs(n) {
+  try { localStorage.setItem(NN_EPOCHS_KEY, String(n)); } catch (e) { /* 無法儲存就算了 */ }
+}
+
+async function initModel() {
+  try {
+    nnModel = await tf.loadLayersModel(NN_STORE);
+    nnEpochs = readEpochs();
+  } catch (e) {
+    nnModel = buildModel();
+    nnEpochs = 0;
+  }
+  compileModel(nnModel);
+}
+
+function updateNnStatus() {
+  nnStatus.textContent = nnEpochs === 0
+    ? '模型尚未訓練：權重是隨機的，下面的答案純屬亂猜。按「訓練模型」讓它學學看。'
+    : `模型已訓練 ${nnEpochs} 輪。它只看過範例、沒看過規則，所以仍可能猜錯。`;
+}
+
+function logTraining(message, isError = false) {
+  const entry = document.createElement('div');
+  entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+  if (isError) entry.className = 'neg';
+  const log = document.getElementById('trainingLog');
+  log.appendChild(entry);
+  log.scrollTop = log.scrollHeight;
+}
+
+function makeDataset(size) {
+  const xs = [];
+  const labels = HEADS.map(() => []);
+  for (let i = 0; i < size; i++) {
+    const nums = [1 + Math.floor(Math.random() * 12), 1 + Math.floor(Math.random() * 12),
+      1 + Math.floor(Math.random() * 30), 1 + Math.floor(Math.random() * 12)];
+    const r = castFromNumbers(...nums);
+    xs.push(encode(...nums));
+    labels[0].push(r.upper - 1);
+    labels[1].push(r.lower - 1);
+    labels[2].push(r.moving - 1);
+  }
+  return {
+    xs: tf.tensor2d(xs),
+    ys: HEADS.map(([, n], i) => tf.oneHot(tf.tensor1d(labels[i], 'int32'), n)),
+    labels
+  };
+}
+
+// 自行計算驗證集上每個輸出頭的準確率（tfjs 多輸出模型的 val 指標不可靠）
+function evaluateHeads(data) {
+  const preds = tf.tidy(() => nnModel.predict(data.xs).map(t => t.argMax(-1).dataSync()));
+  return preds.map((pred, i) => {
+    let correct = 0;
+    pred.forEach((v, j) => { if (v === data.labels[i][j]) correct++; });
+    return `${Math.round((correct / pred.length) * 100)}%`;
+  });
+}
+
+async function trainModel() {
+  if (!nnModel || nnTraining) return;
+  nnTraining = true;
+  trainButton.disabled = resetButton.disabled = true;
+  const progress = document.getElementById('trainProgress');
+  const fill = document.getElementById('trainProgressFill');
+  progress.hidden = false;
+  fill.style.width = '0';
+  document.getElementById('logDetails').open = true;
+
+  const train = makeDataset(TRAIN_SIZE);
+  const val = makeDataset(VAL_SIZE);
+  logTraining(`產生 ${TRAIN_SIZE} 筆訓練資料、${VAL_SIZE} 筆驗證資料，開始訓練…`);
+  try {
+    let done = 0;
+    await nnModel.fit(train.xs, train.ys, {
+      epochs: EPOCHS_PER_CLICK,
+      batchSize: 128,
+      shuffle: true,
+      callbacks: {
+        onEpochEnd: async (epoch, logs) => {
+          done++;
+          nnEpochs++;
+          fill.style.width = `${(done / EPOCHS_PER_CLICK) * 100}%`;
+          const [accUpper, accLower, accMoving] = evaluateHeads(val);
+          logTraining(`第 ${nnEpochs} 輪　損失 ${logs.loss.toFixed(3)}　驗證準確率：上卦 ${accUpper}、下卦 ${accLower}、動爻 ${accMoving}`);
+          updateNnStatus();
+          await tf.nextFrame();
+        }
+      }
+    });
+    logTraining('✅ 本次訓練完成');
+    writeEpochs(nnEpochs);
+    try { await nnModel.save(NN_STORE); } catch (e) { logTraining('（無法儲存模型到瀏覽器，重新整理後會遺失）'); }
+  } catch (e) {
+    logTraining(`訓練錯誤：${e.message}`, true);
+  } finally {
+    tf.dispose([train.xs, ...train.ys, val.xs, ...val.ys]);
+    nnTraining = false;
+    trainButton.disabled = resetButton.disabled = false;
+    progress.hidden = true;
+    showAi();
+  }
+}
+
+async function resetModel() {
+  if (nnTraining) return;
+  if (nnModel) nnModel.dispose();
+  try { await tf.io.removeModel(NN_STORE); } catch (e) { /* 本來就沒存 */ }
+  nnModel = buildModel();
+  compileModel(nnModel);
+  nnEpochs = 0;
+  writeEpochs(0);
+  logTraining('♻️ 模型已重置為隨機權重');
+  updateNnStatus();
+  showAi();
+}
+
+function predictAi(r) {
+  return tf.tidy(() => {
+    const x = tf.tensor2d([encode(r.yearNum, r.lunar.month, r.lunar.day, r.hourNum)]);
+    return nnModel.predict(x).map(t => {
+      const probs = t.dataSync();
+      let best = 0;
+      for (let i = 1; i < probs.length; i++) if (probs[i] > probs[best]) best = i;
+      return { value: best + 1, conf: probs[best] };
+    });
+  });
+}
+
+function showAi() {
+  if (!nnModel || nnTraining || !lastReading) return;
+  const r = lastReading;
+  const [up, low, mov] = predictAi(r);
+  const ai = buildReading(up.value, low.value, mov.value);
+  const pct = c => `<span class="conf">（信心 ${(c * 100).toFixed(0)}%）</span>`;
+  const mark = ok => (ok ? '<span class="pos">✓</span>' : '<span class="neg">✗ 搞錯了</span>');
+  const rows = [
+    ['上卦', triLabel(r.upper), triLabel(ai.upper) + pct(up.conf), r.upper === ai.upper],
+    ['下卦', triLabel(r.lower), triLabel(ai.lower) + pct(low.conf), r.lower === ai.lower],
+    ['動爻', `第 ${r.moving} 爻`, `第 ${ai.moving} 爻` + pct(mov.conf), r.moving === ai.moving],
+    ['本卦', r.main.name, ai.main.name, r.main.num === ai.main.num],
+    ['綜合指數', r.score, ai.score, r.score === ai.score]
+  ];
+  document.getElementById('aiCompareBody').innerHTML = rows
+    .map(([k, a, b, ok]) => `<tr><td>${k}</td><td>${a}</td><td>${b}</td><td>${mark(ok)}</td></tr>`)
+    .join('');
+  renderHexRow(document.getElementById('aiHexRow'), ai);
+  showScore(ai.score, 'aiScoreFill', 'aiScoreValue', 'aiVerdictText');
+  document.getElementById('aiResult').hidden = false;
+}
+
+trainButton.addEventListener('click', trainModel);
+resetButton.addEventListener('click', resetModel);
+
+loadTf()
+  .then(initModel)
+  .then(() => {
+    trainButton.disabled = resetButton.disabled = false;
+    updateNnStatus();
+    showAi();
+  })
+  .catch(e => {
+    nnStatus.textContent = `${e.message}，AI 版本暫時無法使用（傳統計算不受影響）。`;
+  });
 
 // ===== 互動 =====
 const dateInput = document.getElementById('dateInput');
@@ -519,7 +804,9 @@ function run() {
     return;
   }
   try {
-    showResult(cast(dateInput.value, timeInput.value));
+    lastReading = cast(dateInput.value, timeInput.value);
+    showResult(lastReading);
+    showAi();
   } catch (e) {
     showError(`分析失敗：${e.message}`);
   }
