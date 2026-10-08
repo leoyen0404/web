@@ -130,6 +130,11 @@ footer { text-align: center; color: var(--yan); font-size: 13px; letter-spacing:
 
 .instant, .instant * { transition: none !important; animation: none !important; }
 
+@media (min-width: 640px) {
+  .text { flex-direction: row; align-items: flex-start; gap: 30px; }
+  .verse { flex: none; border-top: 0; padding: 0 28px 0 0; border-right: 1px solid var(--line); }
+  .reading { flex: 1; }
+}
 @media (max-width: 460px) {
   .text { flex-direction: column; }
   .seal { width: 72px; height: 72px; } .seal b { font-size: 18px; }
