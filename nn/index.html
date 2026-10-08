@@ -1,128 +1,188 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>梅花易卜</title>
-  <script src="https://cdn.jsdelivr.net/npm/lunar-javascript@1.7.7/lunar.js"></script>
-  <style>
-    :root {
-      --bg: #f5f6fa; --card: #ffffff; --text: #2c3e50; --muted: #7f8c8d; --line: #2c3e50;
-      --accent: #3498db; --moving: #e67e22; --border: #e3e6ee; --good: #27ae60; --bad: #c0392b;
-    }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #14171c; --card: #1e232a; --text: #e6e9ef; --muted: #9aa3ad; --line: #e6e9ef;
-        --accent: #5dade2; --moving: #f0a04b; --border: #2f3640; --good: #52c77e; --bad: #e5675a;
-      }
-    }
-    * { box-sizing: border-box; }
-    body {
-      font-family: 'Segoe UI', 'PingFang TC', 'Noto Sans TC', Arial, sans-serif;
-      max-width: 860px; margin: 0 auto; padding: 20px 16px 40px;
-      background: var(--bg); color: var(--text); line-height: 1.6;
-    }
-    h1 { margin: 0 0 4px; font-size: 1.7rem; }
-    h3 { margin: 0 0 12px; }
-    .subtitle { color: var(--muted); margin: 0 0 20px; }
-    .card { background: var(--card); padding: 22px; border-radius: 14px; border: 1px solid var(--border);
-      box-shadow: 0 2px 6px rgba(0,0,0,.06); margin-bottom: 18px; }
-    .controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
-    .controls label { display: flex; flex-direction: column; font-size: .9rem; color: var(--muted); gap: 4px; }
-    input, select { padding: 10px 12px; border: 2px solid var(--accent); border-radius: 8px; font-size: 16px;
-      background: var(--card); color: var(--text); }
-    button { padding: 11px 22px; background: var(--accent); color: #fff; border: none; border-radius: 8px;
-      font-size: 15px; cursor: pointer; }
-    button.secondary { background: transparent; color: var(--accent); border: 2px solid var(--accent); }
-    button:disabled { opacity: .5; cursor: not-allowed; }
-    .status { color: var(--muted); font-size: .9rem; margin: 12px 0 0; }
-    .error { color: var(--bad); }
-    .pos { color: var(--good); } .neg { color: var(--bad); }
-    .lunar { font-size: 1.05rem; margin: 0 0 14px; color: var(--muted); }
-    .hex-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
-    @media (max-width: 640px) { .hex-row { grid-template-columns: 1fr; } }
-    .hex { text-align: center; }
-    .hex .stage { font-size: .85rem; color: var(--muted); }
-    .hex .name { font-size: 1.25rem; font-weight: 600; margin: 4px 0 2px; }
-    .hex .kw { color: var(--accent); font-size: .95rem; }
-    .hex .judgement { font-size: .9rem; text-align: left; margin-top: 10px; }
-    .hex .tri { font-size: .8rem; color: var(--muted); }
-    .lines { display: inline-flex; flex-direction: column; gap: 7px; margin: 10px 0 4px; }
-    .yao { display: flex; gap: 12px; width: 120px; height: 13px; position: relative; }
-    .yao span { flex: 1; background: var(--line); border-radius: 2px; }
-    .yao.yang span:nth-child(2) { display: none; }
-    .yao.moving span { background: var(--moving); }
-    .yao.moving::after { content: attr(data-mark); position: absolute; right: -22px; top: -6px;
-      color: var(--moving); font-size: .85rem; font-weight: 700; }
-    .gap { height: 6px; }
-    .score-bar { height: 18px; background: var(--border); border-radius: 9px; overflow: hidden; margin: 10px 0; }
-    .score-fill { height: 100%; width: 0; background: linear-gradient(90deg, #e74c3c, #f1c40f, #2ecc71);
-      background-size: 100vw 100%; transition: width .6s ease; }
-    .verdict { font-size: 1.15rem; font-weight: 600; margin: 0; }
-    table { width: 100%; border-collapse: collapse; font-size: .92rem; }
-    th, td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: left; }
-    th { color: var(--muted); font-weight: 500; }
-    pre { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px;
-      overflow-x: auto; font-size: .85rem; margin: 10px 0 0; }
-    details { margin-top: 14px; } summary { cursor: pointer; color: var(--muted); }
-    .note { font-size: .85rem; color: var(--muted); }
-    .note ul { padding-left: 20px; margin: 6px 0; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>梅花易卜</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;900&family=LXGW+WenKai+TC:wght@400;700&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/lunar-javascript@1.7.7/lunar.js"></script>
+<style>
+/* Layout: a night altar. Bagua ring and title, the casting form as a low altar, the result as one divination slip. A veil covers the screen while the hexagram is cast. One dark world by design. */
+:root {
+  --xuan: #0e1218;        /* 玄 night ground */
+  --xuan-2: #151b23;      /* slip surface */
+  --line: #2a323c;        /* hairlines */
+  --jin: #c9ab6c;         /* 泥金 accent */
+  --jin-dim: #7d6c47;
+  --zhu: #b8402e;         /* 朱砂 seal */
+  --xue: #ebe3d0;         /* 宣 paper-white text */
+  --yan: #8e939a;         /* 煙 muted text */
+  --title: "Noto Serif TC", "Songti TC", "PMingLiU", serif;
+  --kai: "LXGW WenKai TC", "Kaiti TC", "BiauKai", "DFKai-SB", "STKaiti", serif;
+  color-scheme: dark;
+}
+html, body { background: var(--xuan); }
+body { color: var(--xue); font-family: var(--kai); font-size: 17px; line-height: 1.85; }
+#sky { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+.wrap { position: relative; z-index: 1; max-width: 640px; margin: 0 auto; padding-inline: 18px; padding-block: 28px 64px; display: grid; gap: 30px; }
+
+/* ring */
+.ringsvg .r1, .ringsvg .r2 { fill: none; stroke: var(--jin-dim); stroke-width: .6; }
+.ringsvg .tri rect { fill: var(--jin-dim); }
+.ringsvg .tri text { fill: var(--jin-dim); font-family: var(--title); font-size: 13px; }
+.ringsvg svg { width: 100%; height: auto; display: block; }
+
+.crest { position: relative; display: grid; justify-items: center; padding-block: 34px 6px; }
+#ring { position: absolute; top: -18px; left: 50%; width: min(340px, 92vw); transform: translateX(-50%); opacity: .5; }
+@media (prefers-reduced-motion: no-preference) {
+  #ring svg .tri { animation: turn 240s linear infinite; transform-origin: 0 0; }
+  @keyframes turn { to { transform: rotate(360deg); } }
+}
+h1 { position: relative; font-family: var(--title); font-weight: 900; font-size: clamp(44px, 12vw, 64px); letter-spacing: .32em; margin: 92px 0 0 .32em; line-height: 1.1; color: var(--xue); text-shadow: 0 0 24px rgba(201,171,108,.18); }
+.motto { position: relative; margin: 10px 0 0; color: var(--jin); letter-spacing: .5em; font-size: 14px; padding-left: .5em; }
+
+/* altar */
+.altar { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px 14px; align-items: end; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding-block: 18px; }
+.field { display: grid; gap: 4px; min-width: 0; }
+.field label { color: var(--jin); font-family: var(--title); font-size: 15px; letter-spacing: .2em; }
+input, select { width: 100%; font: inherit; font-size: 16px; color: var(--xue); background: transparent; border: 0; border-bottom: 1px solid var(--jin-dim); border-radius: 0; padding: 6px 2px; color-scheme: dark; }
+select option { background: var(--xuan-2); color: var(--xue); }
+#go { grid-column: 1 / -1; justify-self: center; font-family: var(--title); font-weight: 900; font-size: 20px; letter-spacing: .6em; padding: 10px 18px 10px calc(18px + .6em); color: var(--xue); background: var(--zhu); border: 0; border-radius: 3px; cursor: pointer; box-shadow: inset 0 0 0 2px rgba(235,227,208,.18), 0 6px 18px rgba(184,64,46,.25); transition: filter .3s, opacity .3s; }
+#go:hover { filter: brightness(1.08); }
+#go:disabled { opacity: .6; cursor: progress; }
+input:focus-visible, select:focus-visible, button:focus-visible { outline: 1px solid var(--jin); outline-offset: 4px; }
+.altar-foot { grid-column: 1 / -1; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 4px 12px; }
+#lunar { margin: 0; color: var(--yan); font-size: 15px; letter-spacing: .12em; }
+#sound { font: inherit; font-size: 13px; letter-spacing: .15em; color: var(--yan); background: none; border: 1px solid var(--line); border-radius: 2px; padding: 2px 10px; cursor: pointer; }
+#sound[aria-pressed="true"] { color: var(--jin); border-color: var(--jin-dim); }
+
+/* veil */
+.veil { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; align-content: center; gap: 26px; padding-inline: 16px;
+  background: radial-gradient(circle at 50% 44%, rgba(24,30,40,.96), rgba(5,7,10,.985) 70%);
+  opacity: 0; visibility: hidden; transition: opacity .8s ease, visibility 0s linear .8s; cursor: pointer; }
+.veil.on { opacity: 1; visibility: visible; transition: opacity .8s ease; }
+.veil.on.fade { opacity: 0; }
+.vstage { position: relative; width: min(380px, 80vw); }
+#vring .tri rect, #vring .tri text { fill: var(--jin); }
+#vring .r1, #vring .r2 { stroke: var(--jin); opacity: .6; }
+#vring svg { filter: drop-shadow(0 0 14px rgba(201,171,108,.35)); }
+#pillars { position: absolute; inset: 0; display: flex; flex-direction: row-reverse; justify-content: center; align-items: center; gap: 4px; }
+.pillar { writing-mode: vertical-rl; font-family: var(--title); font-weight: 900; font-size: clamp(16px, 4.6vw, 21px); letter-spacing: .12em; color: var(--xue); opacity: 0; filter: blur(8px); transform: translateY(10px); transition: opacity .8s ease, filter .8s ease, transform .8s ease; padding-inline: 2px; }
+.pillar.shown { opacity: 1; filter: none; transform: none; }
+#whisper { margin: 0; font-size: 18px; letter-spacing: .6em; padding-left: .6em; color: var(--jin); min-height: 1.6em; text-align: center; }
+.veil .hint { position: absolute; bottom: calc(22px + env(safe-area-inset-bottom, 0px)); left: 0; right: 0; text-align: center; color: var(--yan); font-size: 12px; letter-spacing: .3em; }
+
+/* slip */
+.slip { background: var(--xuan-2); border: 1px solid var(--line); border-radius: 2px; padding-inline: clamp(16px, 5vw, 32px); padding-block: 22px 28px; display: grid; gap: 26px; position: relative; box-shadow: 0 20px 60px rgba(0,0,0,.35); }
+.slip::before, .slip::after { content: ""; position: absolute; left: 10px; right: 10px; height: 1px; background: var(--jin-dim); opacity: .6; }
+.slip::before { top: 8px; } .slip::after { bottom: 8px; }
+.slip-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 16px; color: var(--yan); font-size: 14px; letter-spacing: .12em; }
+
+.rest { justify-items: center; text-align: center; color: var(--yan); padding-block: 40px; }
+.rest .ghost { display: flex; flex-direction: column; gap: 9px; width: 96px; }
+.rest .ghost i { height: 10px; border: 1px dashed var(--jin-dim); border-radius: 1px; opacity: .55; }
+.rest p { margin: 0; letter-spacing: .3em; line-height: 2.1; }
+
+.trio { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr) minmax(0, 1fr); gap: 10px; align-items: end; }
+.gua { margin: 0; display: grid; justify-items: center; gap: 10px; opacity: 0; transition: opacity .7s ease; }
+.gua.shown { opacity: 1; }
+.gua figcaption { color: var(--yan); font-size: 13px; letter-spacing: .4em; padding-left: .4em; }
+.yaos { display: flex; flex-direction: column-reverse; gap: 8px; width: min(76px, 80%); }
+.ben .yaos { width: min(108px, 64%); gap: 10px; }
+.yao { height: 9px; display: flex; gap: 16%; position: relative; }
+.ben .yao { height: 12px; }
+.yao i { flex: 1; background: var(--jin); border-radius: 1px 3px 2px 1px; clip-path: inset(0 100% 0 0); transition: clip-path .55s cubic-bezier(.3,.7,.2,1), background .6s, box-shadow .6s; }
+.yao i + i { transition-delay: .14s; }
+.yao.drawn i { clip-path: inset(0 0 0 0); }
+.yl { position: absolute; left: calc(100% + 10px); top: 50%; transform: translateY(-50%); font-style: normal; font-size: 13px; color: var(--yan); white-space: nowrap; opacity: 0; transition: opacity .6s .25s; letter-spacing: .05em; }
+.yao.drawn .yl { opacity: 1; }
+.yao.dong.lit i { background: var(--zhu); box-shadow: 0 0 12px rgba(184,64,46,.7); }
+.yao.dong.lit .yl { color: var(--zhu); }
+.gname, .gno { opacity: 0; transform: translateY(6px); transition: opacity .8s ease, transform .8s ease; }
+.gua.named .gname, .gua.named .gno { opacity: 1; transform: none; }
+.gname { font-family: var(--title); font-weight: 600; font-size: 17px; letter-spacing: .1em; text-align: center; line-height: 1.3; }
+.ben .gname { font-weight: 900; font-size: 23px; color: var(--xue); }
+.gno { color: var(--yan); font-size: 13px; }
+
+.judge { display: flex; align-items: center; justify-content: center; gap: 22px; }
+.seal { width: 84px; height: 84px; background: var(--zhu); border-radius: 4px; display: grid; place-items: center; box-shadow: inset 0 0 0 3px var(--xuan-2), inset 0 0 0 5px rgba(235,227,208,.5);
+  opacity: 0; transform: rotate(-5deg) scale(2.1); transition: transform .26s cubic-bezier(.55,0,.8,.2), opacity .14s; }
+.seal.down { opacity: 1; transform: rotate(-5deg) scale(1); }
+.seal span { writing-mode: vertical-rl; font-family: var(--title); font-weight: 900; font-size: 21px; letter-spacing: .08em; color: var(--xue); line-height: 1; }
+.verdict .lv { font-family: var(--title); font-weight: 900; font-size: clamp(40px, 11vw, 54px); color: var(--jin); line-height: 1.05; letter-spacing: .1em; }
+.verdict .sub { color: var(--yan); letter-spacing: .2em; }
+.step { opacity: 0; transform: translateY(8px); transition: opacity .9s ease, transform .9s ease; }
+.step.shown { opacity: 1; transform: none; }
+.shake { animation: shake .4s ease-out; }
+@keyframes shake { 20% { transform: translate(-2px, 1px); } 40% { transform: translate(2px, -1px); } 60% { transform: translate(-1px, 1px); } 80% { transform: translate(1px, 0); } }
+
+.text { display: flex; gap: 22px; align-items: flex-start; }
+.verse { margin: 0; writing-mode: vertical-rl; max-height: 15em; border-left: 1px solid var(--line); padding-left: 18px; font-size: 19px; letter-spacing: .14em; line-height: 1.9; flex: none; max-width: 46%; overflow-x: auto; }
+.verse span { opacity: 0; filter: blur(4px); transition: opacity .7s ease, filter .9s ease; }
+.verse.inked span { opacity: 1; filter: none; }
+.verse .vt { font-family: var(--title); font-weight: 900; color: var(--jin); margin-bottom: .6em; display: inline-block; }
+.reading { min-width: 0; display: grid; gap: 10px; }
+.reading p { margin: 0; }
+.reading .word { color: var(--jin); font-size: 19px; }
+.hush { text-align: center; color: var(--yan); letter-spacing: .1em; }
+footer { text-align: center; color: var(--yan); font-size: 13px; letter-spacing: .2em; }
+
+.instant, .instant * { transition: none !important; animation: none !important; }
+
+@media (max-width: 460px) {
+  .text { flex-direction: column; }
+  .verse { writing-mode: horizontal-tb; max-height: none; max-width: none; border-left: 0; border-top: 1px solid var(--line); padding: 14px 0 0; }
+  .verse .vt { margin: 0 .6em 0 0; }
+  .seal { width: 72px; height: 72px; } .seal span { font-size: 18px; }
+  .trio { grid-template-columns: minmax(0, .9fr) minmax(0, 1.5fr) minmax(0, .9fr); gap: 6px; }
+  .ben .yaos { width: 58%; }
+  .yl { font-size: 11px; left: calc(100% + 6px); }
+  .gname { font-size: 14px; } .ben .gname { font-size: 19px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .yao i, .gname, .gno, .step, .verse span, .pillar, .gua, .seal { transition-duration: .2s !important; transition-delay: 0s !important; }
+  .seal { transform: rotate(-5deg) scale(1); }
+}
+
+.verify { color: var(--yan); font-size: 13px; letter-spacing: .08em; }
+</style>
 </head>
 <body>
-  <h1>🀄 梅花易卜</h1>
-  <p class="subtitle">時間起卦——整個推演由一個內嵌的小型神經網路（Transformer）逐字寫出，再與規則計算互相驗證。</p>
+<canvas id="sky" aria-hidden="true"></canvas>
+<main class="wrap">
+  <header class="crest">
+    <div id="ring" class="ringsvg"></div>
+    <h1>梅花易卜</h1>
+    <p class="motto">一時一卦 · 心誠則靈</p>
+  </header>
 
-  <div class="card">
-    <form class="controls" id="form">
-      <label>時間<input type="datetime-local" id="when" min="1900-01-01T00:00" max="2100-12-31T23:59"></label>
-      <label>所問<select id="topic">
-        <option>綜合</option><option>事業</option><option>財運</option><option>感情</option>
-        <option>健康</option><option>考試</option><option>出行</option>
-      </select></label>
-      <button type="submit" id="go" disabled>🔮 起卦</button>
-      <button type="button" id="nowButton" class="secondary">⏱ 現在</button>
-    </form>
-    <p class="status" id="status">正在載入模型…</p>
-  </div>
+  <form class="altar" id="altar">
+    <div class="field"><label for="when">時</label><input id="when" type="datetime-local" min="1900-01-01T00:00" max="2100-12-31T23:59" required></div>
+    <div class="field"><label for="topic">問</label>
+      <select id="topic">
+        <option value="綜合">總運</option><option value="事業">事業</option><option value="財運">財帛</option>
+        <option value="感情">姻緣</option><option value="健康">康寧</option><option value="考試">功名</option><option value="出行">出行</option>
+      </select></div>
+    <button type="submit" id="go">起卦</button>
+    <div class="altar-foot"><p id="lunar">　</p><button type="button" id="sound" aria-pressed="true">鐘聲　開</button></div>
+  </form>
 
-  <div id="output" hidden>
-    <div class="card">
-      <p class="lunar" id="lunarText"></p>
-      <div class="hex-row" id="hexRow"></div>
-    </div>
+  <section id="oracle" aria-live="polite">
+    <article class="slip rest">
+      <div class="ghost" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <p>擇一時辰　默念所問<br>按「起卦」</p>
+    </article>
+  </section>
 
-    <div class="card">
-      <h3>⚖️ 體用與吉凶</h3>
-      <p id="tiyong"></p>
-      <table>
-        <thead><tr><th>對象</th><th>關係</th><th>說明</th></tr></thead>
-        <tbody id="termBody"></tbody>
-      </table>
-      <div class="score-bar"><div class="score-fill" id="scoreFill"></div></div>
-      <p class="verdict">指數 <span id="scoreValue">0</span> / 100 —— <span id="levelText"></span></p>
-      <p id="advice"></p>
-    </div>
+  <footer>卜辭僅供玩賞　吉凶仍在人為<br>推演由內嵌的小型神經網路（約 83 萬參數）在本機完成</footer>
+</main>
 
-    <div class="card">
-      <h3>🤖 模型推演過程</h3>
-      <p class="status" id="checkText" style="margin-top:0"></p>
-      <details>
-        <summary>查看模型逐字寫出的原文</summary>
-        <pre id="rawText"></pre>
-      </details>
-    </div>
-  </div>
-
-  <div class="card note">
-    <strong>說明</strong>
-    <ul>
-      <li>模型：4 層 Transformer、128 維、4 個注意力頭、約 83 萬參數，權重存於 <code>model.bin</code>（float16），在你的瀏覽器裡用 CPU 執行，不連線、不用 GPU。</li>
-      <li>輸入：農曆年支、月、日、時支、月支。模型依序寫出：上卦、下卦、動爻、本／互／變卦、體用、各項生剋與月令加減分、總分與吉凶。</li>
-      <li>驗證：頁面另用傳統公式（上卦＝年＋月＋日、下卦再加時、動爻＝總和除六取餘）獨立算一次，與模型比對。</li>
-      <li>僅供文化體驗與自我反思，不構成任何決策依據。</li>
-    </ul>
-  </div>
+<div class="veil" id="veil" aria-hidden="true">
+  <div class="vstage"><div id="vring" class="ringsvg"></div><div id="pillars"></div></div>
+  <p id="whisper"></p>
+  <p class="hint">輕觸略過</p>
+</div>
 
 <script>
 // ===== 八卦（先天數 1–8）=====
@@ -208,7 +268,6 @@ const HEXAGRAMS = [
 
 const HEX_BY_TRIGRAMS = {};
 HEXAGRAMS.forEach(h => { HEX_BY_TRIGRAMS[`${h.upper}-${h.lower}`] = h; });
-
 
 
 // ===== 小型 Transformer 推論（純 JS、CPU）=====
@@ -340,21 +399,12 @@ function parseReading(raw) {
   };
 }
 
-
-// ===== 文字 =====
+// ===== 文字資料 =====
 const ZHI = '子丑寅卯辰巳午未申酉戌亥';
-const REL_TEXT = {
-  '用生體': '外力相助，主得外助',
-  '比和': '同氣相助，主同心協力',
-  '體剋用': '你能掌控，事可成但費心力',
-  '體生用': '付出耗損，主耗洩精神',
-  '用剋體': '受制阻礙，主外有阻力'
-};
-const SEASON_TEXT = {
-  '旺': '體得月令，根基穩固', '相': '月令生體，暗有扶持', '休': '體洩於時，其力稍衰',
-  '囚': '體受時制，宜養精神', '死': '時令剋體，元氣受損'
-};
-const TAG_NAME = { '用': '本卦・用', '互': '互卦', '變': '變卦' };
+const SEAL = { '大吉': '上上籤', '吉': '上吉籤', '平': '中平籤', '小凶': '中下籤', '凶': '下下籤' };
+const REL_LEAD = { '用生體': '用來生體，主得外助', '比和': '體用比和，主同心協力', '體剋用': '體剋用，事可成而費心力', '體生用': '體生用，主耗洩精神', '用剋體': '用來剋體，主外有阻力' };
+const REL_END = { '用生體': '終得其助', '比和': '終歸和順', '體剋用': '終可勝之', '體生用': '終有所耗', '用剋體': '終受其制' };
+const SEASON_TEXT = { '旺': '體得月令，根基穩固', '相': '月令生體，暗有扶持', '休': '體洩於時，其力稍衰', '囚': '體受時制，宜養精神', '死': '時令剋體，元氣受損' };
 const ADVICE = {
   '大吉': ['天時地利，所謀必遂，宜乘勢而進。', '貴人在側，順水行舟，可放手為之。', '陽氣方盛，百事亨通，勿失良機。'],
   '吉': ['事有可成，循序而進，勿貪其多。', '小有所得，守正則吉。', '諸事順遂，然細微處仍宜謹慎。'],
@@ -363,145 +413,323 @@ const ADVICE = {
   '凶': ['時運未濟，宜靜不宜動。', '慎防損耗與爭端，退守為上。', '且養其身，待時而發。']
 };
 const TOPIC_LEAD = { '綜合': '', '事業': '問事業：', '財運': '問財帛：', '感情': '問姻緣：', '健康': '問康寧：', '考試': '問功名：', '出行': '問出行：' };
-const LINE_NAMES = ['初', '二', '三', '四', '五', '上'];
+const LINE_POS = ['初', '二', '三', '四', '五', '上'];
+const DIGITS = '〇一二三四五六七八九';
+const cn = n => (n < 10 ? DIGITS[n] : n < 20 ? '十' + (n % 10 ? DIGITS[n % 10] : '') : DIGITS[Math.floor(n / 10)] + '十' + (n % 10 ? DIGITS[n % 10] : ''));
 
-// ===== 規則驗算（獨立於模型）=====
+const HEX_BY_NUM = Object.fromEntries(HEXAGRAMS.map(h => [h.num, h]));
+const hexLines = h => [...TRIGRAMS[h.lower].lines, ...TRIGRAMS[h.upper].lines];
+const shortName = h => (h.upper === h.lower ? TRIGRAMS[h.upper].name : h.name.slice(2));
+const lineName = (idx, yang) => { const w = yang ? '九' : '六'; return idx === 0 ? '初' + w : idx === 5 ? '上' + w : w + LINE_POS[idx]; };
+
+// ===== 規則驗算（與模型各算各的）=====
 const mod1 = (n, m) => (n % m) || m;
-const triFromLines = l => Number(Object.keys(TRIGRAMS).find(k => TRIGRAMS[k].lines.join('') === l.join('')));
-const hexFromLines = l => HEX_BY_TRIGRAMS[`${triFromLines(l.slice(3))}-${triFromLines(l.slice(0, 3))}`].num;
+const triOf = l => Number(Object.keys(TRIGRAMS).find(k => TRIGRAMS[k].lines.join('') === l.join('')));
+const hexOf = l => HEX_BY_TRIGRAMS[`${triOf(l.slice(3))}-${triOf(l.slice(0, 3))}`].num;
 function ruleCast(yearNum, month, day, hourNum) {
-  const upper = mod1(yearNum + month + day, 8);
-  const sum = yearNum + month + day + hourNum;
+  const upper = mod1(yearNum + month + day, 8), sum = yearNum + month + day + hourNum;
   const lower = mod1(sum, 8), moving = mod1(sum, 6);
   const lines = [...TRIGRAMS[lower].lines, ...TRIGRAMS[upper].lines];
   const changed = lines.slice(); changed[moving - 1] = 1 - changed[moving - 1];
-  return { moving, ben: hexFromLines(lines), hu: hexFromLines([...lines.slice(1, 4), ...lines.slice(2, 5)]), bian: hexFromLines(changed) };
+  return { moving, ben: hexOf(lines), hu: hexOf([...lines.slice(1, 4), ...lines.slice(2, 5)]), bian: hexOf(changed) };
 }
 
-// ===== 顯示 =====
+// ===== 畫面小工具 =====
 const $ = id => document.getElementById(id);
-const HEX_BY_NUM = Object.fromEntries(HEXAGRAMS.map(h => [h.num, h]));
-const triLabel = n => `${TRIGRAMS[n].name}${TRIGRAMS[n].image}（${TRIGRAMS[n].element}）`;
-const lineName = (pos, yang) => (pos === 1 || pos === 6 ? LINE_NAMES[pos - 1] + (yang ? '九' : '六') : (yang ? '九' : '六') + LINE_NAMES[pos - 1]);
-
-function renderHex(stage, num, movingPos) {
-  const hex = HEX_BY_NUM[num];
-  const lines = [...TRIGRAMS[hex.lower].lines, ...TRIGRAMS[hex.upper].lines];
-  const html = lines.map((yang, i) => {
-    const moving = i + 1 === movingPos;
-    return `<div class="yao ${yang ? 'yang' : 'yin'}${moving ? ' moving' : ''}" data-mark="${moving ? (yang ? '○' : '×') : ''}" title="${lineName(i + 1, yang)}"><span></span><span></span></div>`
-      + (i === 2 ? '<div class="gap"></div>' : '');
-  }).reverse().join('');
-  const el = document.createElement('div');
-  el.className = 'hex';
-  el.innerHTML = `<div class="stage">${stage}</div><div class="lines">${html}</div>
-    <div class="tri">上 ${triLabel(hex.upper)}・下 ${triLabel(hex.lower)}</div>
-    <div class="name">第 ${hex.num} 卦　${hex.name}</div><div class="kw">${hex.keyword}</div>
-    <div class="judgement">卦辭：${hex.text}</div>`;
-  return el;
-}
-
-const levelClass = l => (l === '大吉' || l === '吉' ? 'pos' : l === '小凶' || l === '凶' ? 'neg' : '');
-const relClass = r => (r === '用生體' || r === '比和' || r === '體剋用' ? 'pos' : 'neg');
-
-function show(input, r, check, ms) {
-  $('lunarText').textContent = `${input.ganzhi}年 ${input.monthName}月${input.dayName}　${input.hourZhi}時（${input.solar}）`;
-  const row = $('hexRow');
-  row.innerHTML = '';
-  row.append(renderHex('本卦・現況', r.ben, r.moving), renderHex('互卦・過程', r.hu, 0), renderHex('變卦・結果', r.bian, r.moving));
-
-  $('tiyong').textContent = `體：${r.ti.tri}（${r.ti.el}，代表你）　用：${r.yong.tri}（${r.yong.el}，代表所問之事）。動爻在第 ${r.moving} 爻。`;
-  const rows = r.terms.map(t => `<tr><td>${TAG_NAME[t.tag]}・${t.tri}</td><td class="${relClass(t.rel)}">${t.rel}</td><td>${REL_TEXT[t.rel] || ''}（${t.pts > 0 ? '+' : ''}${t.pts}）</td></tr>`);
-  if (r.season) rows.push(`<tr><td>月令</td><td>${r.season}</td><td>${SEASON_TEXT[r.season] || ''}</td></tr>`);
-  $('termBody').innerHTML = rows.join('');
-
-  const fill = $('scoreFill');
-  fill.style.width = '0';
-  $('scoreValue').textContent = r.score;
-  const level = $('levelText');
-  level.textContent = r.level;
-  level.className = levelClass(r.level);
-  const tips = ADVICE[r.level] || [''];
-  $('advice').textContent = TOPIC_LEAD[input.topic] + tips[(input.day + input.hourIdx) % tips.length];
-  requestAnimationFrame(() => requestAnimationFrame(() => { fill.style.width = `${r.score}%`; }));
-
-  const ok = check.moving === r.moving && check.ben === r.ben && check.hu === r.hu && check.bian === r.bian;
-  $('checkText').innerHTML = (ok ? '<span class="pos">✓ 與規則驗算完全一致</span>' : '<span class="neg">✗ 與規則驗算不一致</span>')
-    + `　動爻 ${check.moving}、本卦 ${check.ben}、互卦 ${check.hu}、變卦 ${check.bian}　·　推演 ${ms.toFixed(0)} ms`;
-  $('rawText').textContent = r.raw;
-  $('output').hidden = false;
-}
-
-// ===== 互動 =====
-let model = null;
-const statusEl = $('status');
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const pad = n => String(n).padStart(2, '0');
 
-function setNow() {
-  const d = new Date();
-  $('when').value = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+// 八卦環（標題與起卦幕共用）
+function ringSvg() {
+  const angle = { '乾': 90, '兌': 135, '離': 180, '震': 225, '坤': 270, '艮': 315, '坎': 0, '巽': 45 };
+  const linesByName = Object.fromEntries(Object.values(TRIGRAMS).map(t => [t.name, t.lines]));
+  let g = '';
+  for (const name in angle) {
+    const bars = linesByName[name].map((yang, i) => {
+      const y = -107 - 11 * i;
+      return yang ? `<rect x="-22" y="${y}" width="44" height="6" rx="1"/>`
+        : `<rect x="-22" y="${y}" width="19" height="6" rx="1"/><rect x="3" y="${y}" width="19" height="6" rx="1"/>`;
+    }).join('');
+    g += `<g transform="rotate(${90 - angle[name]})">${bars}<text x="0" y="-136" text-anchor="middle">${name}</text></g>`;
+  }
+  return `<svg viewBox="-160 -160 320 320" aria-hidden="true"><circle r="88" class="r1"/><circle r="150" class="r2"/><g class="tri">${g}</g></svg>`;
+}
+$('ring').innerHTML = ringSvg();
+$('vring').innerHTML = ringSvg();
+
+// 星空背景（固定種子，每次相同）
+(function sky() {
+  const canvas = $('sky'), ctx = canvas.getContext('2d');
+  function draw() {
+    const w = canvas.width = innerWidth * devicePixelRatio, h = canvas.height = innerHeight * devicePixelRatio;
+    ctx.clearRect(0, 0, w, h);
+    let seed = 7;
+    const rnd = () => (seed = 16807 * seed % 2147483647) / 2147483647;
+    for (let i = 0; i < 220; i++) {
+      ctx.fillStyle = `rgba(236,228,210,${(0.55 * rnd() + 0.08).toFixed(2)})`;
+      ctx.beginPath();
+      ctx.arc(rnd() * w, rnd() * h, (1.1 * rnd() + 0.3) * devicePixelRatio, 0, 7);
+      ctx.fill();
+    }
+  }
+  draw();
+  addEventListener('resize', draw);
+})();
+
+// ===== 聲音 =====
+let soundOn = true, audio = null;
+try { soundOn = localStorage.getItem('yi-sound') !== 'off'; } catch (e) { /* 無法讀取就用預設 */ }
+const soundBtn = $('sound');
+const showSound = () => { soundBtn.textContent = soundOn ? '鐘聲　開' : '鐘聲　關'; soundBtn.setAttribute('aria-pressed', String(soundOn)); };
+showSound();
+soundBtn.addEventListener('click', () => {
+  soundOn = !soundOn; showSound();
+  try { localStorage.setItem('yi-sound', soundOn ? 'on' : 'off'); } catch (e) { /* 忽略 */ }
+});
+function getAudio() {
+  if (!soundOn) return null;
+  try {
+    audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+    if (audio.state === 'suspended') audio.resume();
+    return audio;
+  } catch (e) { return null; }
+}
+function bell(freq = 392, gain = 0.16, secs = 4) {
+  if (skipping) return;
+  const ac = getAudio(); if (!ac) return;
+  const t = ac.currentTime, master = ac.createGain();
+  master.gain.value = gain; master.connect(ac.destination);
+  [[1, 1], [2.76, 0.45], [5.4, 0.22], [8.93, 0.1]].forEach(([ratio, amp]) => {
+    const osc = ac.createOscillator(), env = ac.createGain();
+    osc.type = 'sine'; osc.frequency.value = freq * ratio;
+    env.gain.setValueAtTime(0, t);
+    env.gain.linearRampToValueAtTime(amp, t + 0.008);
+    env.gain.exponentialRampToValueAtTime(1e-4, t + secs / ratio ** 0.5);
+    osc.connect(env); env.connect(master);
+    osc.start(t); osc.stop(t + secs);
+  });
+}
+function tick() {
+  if (skipping) return;
+  const ac = getAudio(); if (!ac) return;
+  const t = ac.currentTime, osc = ac.createOscillator(), env = ac.createGain();
+  osc.type = 'triangle';
+  osc.frequency.setValueAtTime(900, t);
+  osc.frequency.exponentialRampToValueAtTime(420, t + 0.08);
+  env.gain.setValueAtTime(0.12, t);
+  env.gain.exponentialRampToValueAtTime(1e-4, t + 0.12);
+  osc.connect(env); env.connect(ac.destination);
+  osc.start(t); osc.stop(t + 0.15);
 }
 
+// ===== 日期 → 農曆五個輸入 =====
 function readInput() {
   const [date, time] = $('when').value.split('T');
-  if (!date || !time) throw new Error('請選擇日期與時間。');
+  if (!date || !time) throw new Error('請擇定時辰。');
   const [y, m, d] = date.split('-').map(Number);
   const [h, mi] = time.split(':').map(Number);
-  if (y < 1900 || y > 2100) throw new Error('僅支援 1900–2100 年。');
+  if (y < 1900 || y > 2100) throw new Error('此卦僅通一九〇〇至二一〇〇年間之時。');
   if (typeof Solar === 'undefined') throw new Error('農曆函式庫載入失敗，請檢查網路後重新整理。');
   const lunar = Solar.fromYmdHms(y, m, d, h, mi, 0).getLunar();
+  const monthName = lunar.getMonthInChinese().replace('腊', '臘').replace('闰', '閏');
   const hourZhi = lunar.getTimeZhi();
   return {
     yearZhi: lunar.getYearZhi(), month: Math.abs(lunar.getMonth()), day: lunar.getDay(),
-    hourZhi, hourIdx: ZHI.indexOf(hourZhi), monthZhi: lunar.getMonthZhi(),
-    ganzhi: lunar.getYearInGanZhi(),
-    monthName: lunar.getMonthInChinese().replace('腊', '臘').replace('闰', '閏'),
-    dayName: lunar.getDayInChinese(),
-    solar: `${y}-${pad(m)}-${pad(d)} ${pad(h)}:${pad(mi)}`, topic: $('topic').value
+    hourZhi, monthZhi: lunar.getMonthZhi(),
+    pillars: [lunar.getYearInGanZhi() + '年', monthName + '月', lunar.getDayInChinese(), hourZhi + '時'],
+    text: `${lunar.getYearInGanZhi()}年　${monthName}月${lunar.getDayInChinese()}　${hourZhi}時`
   };
 }
+function showLunar() {
+  try { $('lunar').textContent = readInput().text; } catch (e) { $('lunar').textContent = e.message; }
+}
 
-function run() {
-  statusEl.className = 'status';
+// ===== 卦的圖形與判詞 =====
+function guaHtml(num, label, movingPos, cls) {
+  const h = HEX_BY_NUM[num];
+  const yao = hexLines(h).map((yang, i) =>
+    `<span class="yao${i + 1 === movingPos ? ' dong' : ''}">${yang ? '<i></i>' : '<i></i><i></i>'}`
+    + (cls === 'ben' ? `<em class="yl">${lineName(i, yang)}${i + 1 === movingPos ? '・動' : ''}</em>` : '') + '</span>').join('');
+  return `<figure class="gua ${cls}"><figcaption>${label}</figcaption><div class="yaos">${yao}</div>
+    <div class="gname">${h.name}</div><div class="gno">第${cn(num)}卦</div></figure>`;
+}
+
+function slipHtml(r, input, topic, check, ms) {
+  const ben = HEX_BY_NUM[r.ben], hu = HEX_BY_NUM[r.hu], bian = HEX_BY_NUM[r.bian];
+  const tips = ADVICE[r.level] || ADVICE['平'];
+  const bianTerm = r.terms[3];
+  const verse = [...ben.text].map(c => `<span>${c}</span>`).join('');
+  const ok = check.moving === r.moving && check.ben === r.ben && check.hu === r.hu && check.bian === r.bian;
+  return `<article class="slip" id="slip">
+    <header class="slip-head step"><span>${input.text}</span><span>動在${cn(r.moving)}爻</span></header>
+    <div class="trio">${guaHtml(r.hu, '互卦', 0, 'hu')}${guaHtml(r.ben, '本卦', r.moving, 'ben')}${guaHtml(r.bian, '變卦', 0, 'bian')}</div>
+    <div class="judge">
+      <div class="seal" role="img" aria-label="${SEAL[r.level]}"><span>${SEAL[r.level]}</span></div>
+      <div class="verdict step"><div class="lv">${r.level}</div><div class="sub">${shortName(ben)}之${shortName(bian)}</div></div>
+    </div>
+    <div class="text">
+      <blockquote class="verse"><span class="vt">${shortName(ben)}</span>${verse}</blockquote>
+      <div class="reading">
+        <p class="step">始於「${ben.keyword}」，經「${hu.keyword}」，終於「${bian.keyword}」。</p>
+        <p class="step">體${r.ti.tri}屬${r.ti.el}，用${r.yong.tri}屬${r.yong.el}，${REL_LEAD[r.terms[0] ? r.terms[0].rel : '比和'] || ''}；${bianTerm ? `變見${bianTerm.tri}，${REL_END[bianTerm.rel] || ''}` : ''}${r.season ? '；' + SEASON_TEXT[r.season] : ''}。</p>
+        <p class="word step">${TOPIC_LEAD[topic]}${tips[(r.ben + r.moving) % tips.length]}</p>
+        <p class="step verify">${ok ? '✓ 模型與規則驗算一致' : '✗ 模型與規則驗算不一致'}　·　${r.score} 分　·　推演 ${ms.toFixed(0)} ms</p>
+      </div>
+    </div>
+  </article>`;
+}
+
+// ===== 起卦流程（含動畫與略過）=====
+let model = null, running = false, skipping = false, timers = [];
+const wait = ms => new Promise(resolve => {
+  if (skipping) return resolve();
+  const id = setTimeout(resolve, ms);
+  timers.push(() => { clearTimeout(id); resolve(); });
+});
+function skipAnimation() {
+  if (!running || skipping) return;
+  skipping = true;
+  timers.splice(0).forEach(cancel => cancel());
+}
+
+const spin = { angle: 0, speed: 0.02, target: 0.02, raf: 0 };
+function spinStep() {
+  spin.speed += 0.04 * (spin.target - spin.speed);
+  spin.angle += spin.speed;
+  const tri = $('vring').querySelector('.tri');
+  if (tri) tri.setAttribute('transform', `rotate(${spin.angle.toFixed(2)})`);
+  spin.raf = requestAnimationFrame(spinStep);
+}
+
+function finish() {
+  const slip = $('slip');
+  if (slip && skipping) {
+    slip.classList.add('instant');
+    slip.querySelectorAll('.yao').forEach(e => e.classList.add('drawn', 'lit'));
+    slip.querySelectorAll('.gua').forEach(e => e.classList.add('named', 'shown'));
+    slip.querySelectorAll('.step').forEach(e => e.classList.add('shown'));
+    slip.querySelector('.verse').classList.add('inked');
+    slip.querySelector('.seal').classList.add('down');
+    slip.querySelectorAll('.verse span').forEach(e => { e.style.transitionDelay = '0ms'; });
+  }
+  $('veil').classList.remove('on', 'fade');
+  cancelAnimationFrame(spin.raf);
+  running = false; skipping = false;
+  const go = $('go');
+  go.disabled = false; go.textContent = '再卜';
+}
+
+async function cast() {
+  if (running) return;
+  if (!model) { $('oracle').innerHTML = '<p class="hush">模型尚在載入，請稍候。</p>'; return; }
+  let input;
+  try { input = readInput(); } catch (e) { $('oracle').innerHTML = `<p class="hush">${e.message}</p>`; return; }
+  running = true; skipping = false; timers = [];
+  const go = $('go'), veil = $('veil'), pillars = $('pillars'), whisper = $('whisper'), rm = reduceMotion.matches;
+  go.disabled = true; go.textContent = '靜心';
+  pillars.innerHTML = input.pillars.map(p => `<span class="pillar">${p}</span>`).join('');
+  whisper.textContent = '凝神　默念所問';
+  veil.classList.add('on'); veil.classList.remove('fade');
+  if (!rm) { spin.speed = 0.02; spin.target = 0.25; cancelAnimationFrame(spin.raf); spin.raf = requestAnimationFrame(spinStep); }
+  bell(330, 0.14, 5);
+  await wait(60);
+
+  // 推演在幕後進行：把五個輸入交給模型，解析它寫出的結果
+  let reading = null, ms = 0;
   try {
-    const input = readInput();
     const prompt = model.template.replace('{0}', input.yearZhi).replace('{1}', input.month).replace('{2}', input.day)
       .replace('{3}', input.hourZhi).replace('{4}', input.monthZhi);
     const t0 = performance.now();
-    const reading = parseReading(model.generate(prompt));
-    const ms = performance.now() - t0;
-    if (!reading) throw new Error('模型輸出格式無法解析。');
-    const check = ruleCast(ZHI.indexOf(input.yearZhi) + 1, input.month, input.day, input.hourIdx + 1);
-    show(input, reading, check, ms);
-    statusEl.textContent = `模型：${model.info.layers} 層・${model.info.dim} 維・約 ${(model.info.params / 1e6).toFixed(2)}M 參數`;
-  } catch (e) {
-    statusEl.textContent = e.message;
-    statusEl.className = 'status error';
+    reading = parseReading(model.generate(prompt));
+    ms = performance.now() - t0;
+  } catch (e) { reading = null; }
+
+  await wait(rm ? 400 : 1100);
+  whisper.textContent = '以時起卦';
+  for (const p of pillars.children) { p.classList.add('shown'); tick(); await wait(rm ? 120 : 320); }
+  if (!rm) spin.target = 3.2;
+  await wait(rm ? 300 : 900);
+
+  if (!reading) {
+    veil.classList.remove('on'); cancelAnimationFrame(spin.raf);
+    running = false; skipping = false; go.disabled = false; go.textContent = '起卦';
+    $('oracle').innerHTML = '<p class="hush">天機混沌，請換一時辰再卜。</p>';
+    return;
   }
+
+  const check = ruleCast(ZHI.indexOf(input.yearZhi) + 1, input.month, input.day, ZHI.indexOf(input.hourZhi) + 1);
+  $('oracle').innerHTML = slipHtml(reading, input, $('topic').value, check, ms);
+  const slip = $('slip');
+  if (skipping) return finish();
+
+  whisper.textContent = '卦成';
+  spin.target = 0.02;
+  await wait(rm ? 200 : 500);
+  veil.classList.add('fade');
+  $('oracle').scrollIntoView({ behavior: rm ? 'auto' : 'smooth', block: 'start' });
+  await wait(rm ? 100 : 600);
+  veil.classList.remove('on', 'fade');
+  cancelAnimationFrame(spin.raf);
+  slip.querySelector('.slip-head').classList.add('shown');
+
+  // 本卦一爻一爻畫出，動爻發亮
+  const ben = slip.querySelector('.gua.ben');
+  ben.classList.add('shown');
+  for (const yao of ben.querySelectorAll('.yao')) { yao.classList.add('drawn'); tick(); await wait(rm ? 90 : 380); }
+  await wait(rm ? 100 : 300);
+  const moving = ben.querySelector('.yao.dong');
+  if (moving) moving.classList.add('lit');
+  bell(587, 0.07, 2.2);
+  await wait(rm ? 150 : 700);
+  ben.classList.add('named');
+  await wait(rm ? 150 : 500);
+  for (const cls of ['hu', 'bian']) {
+    const gua = slip.querySelector('.gua.' + cls);
+    gua.classList.add('shown');
+    for (const yao of gua.querySelectorAll('.yao')) { yao.classList.add('drawn'); await wait(rm ? 30 : 70); }
+    gua.classList.add('named');
+    await wait(rm ? 100 : 300);
+  }
+
+  // 蓋印、定吉凶
+  await wait(rm ? 100 : 400);
+  slip.querySelector('.seal').classList.add('down');
+  setTimeout(() => { if (!skipping && !rm) slip.classList.add('shake'); bell(262, 0.2, 6); }, rm ? 0 : 230);
+  await wait(rm ? 200 : 700);
+  slip.querySelector('.verdict').classList.add('shown');
+  await wait(rm ? 150 : 600);
+
+  // 卦辭逐字顯影，再逐段出現解讀
+  const verse = slip.querySelector('.verse');
+  [...verse.querySelectorAll('span:not(.vt)')].forEach((s, i) => { s.style.transitionDelay = (rm ? 0 : 60 * i) + 'ms'; });
+  verse.classList.add('inked');
+  await wait(rm ? 200 : 300 + 60 * verse.querySelectorAll('span').length);
+  for (const p of slip.querySelectorAll('.reading .step')) { p.classList.add('shown'); await wait(rm ? 100 : 450); }
+  finish();
 }
 
-$('form').addEventListener('submit', e => {
-  e.preventDefault();
-  $('go').disabled = true;
-  statusEl.textContent = '推演中…';
-  setTimeout(() => { run(); $('go').disabled = false; }, 30);   // 先讓畫面更新再開始運算
-});
-$('nowButton').addEventListener('click', () => { setNow(); $('form').requestSubmit(); });
+// ===== 啟動 =====
+$('veil').addEventListener('click', skipAnimation);
+$('oracle').addEventListener('click', skipAnimation);
+addEventListener('keydown', e => { if (e.key === 'Escape') skipAnimation(); });
+$('when').addEventListener('input', () => { showLunar(); $('go').textContent = '起卦'; });
+$('topic').addEventListener('change', () => { $('go').textContent = '起卦'; });
+$('altar').addEventListener('submit', e => { e.preventDefault(); cast(); });
 
-setNow();
-const t0 = performance.now();
+(function setNow() {
+  const d = new Date();
+  $('when').value = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+})();
+showLunar();
+
+$('go').disabled = true;
 fetch('model.bin')
   .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.arrayBuffer(); })
-  .then(buf => {
-    model = loadModel(buf);
-    statusEl.textContent = `模型已載入（${(buf.byteLength / 1e6).toFixed(1)} MB，${(performance.now() - t0).toFixed(0)} ms）。`;
-    $('go').disabled = false;
-    $('form').requestSubmit();
-  })
+  .then(buf => { model = loadModel(buf); $('go').disabled = false; })
   .catch(e => {
-    statusEl.textContent = `模型載入失敗：${e.message}。請透過網站（http/https）開啟，直接開檔案無法讀取 model.bin。`;
-    statusEl.className = 'status error';
+    $('oracle').innerHTML = `<p class="hush">模型載入失敗（${e.message}）。請由網站開啟，直接開檔案讀不到 model.bin。</p>`;
   });
+
 </script>
 </body>
 </html>
