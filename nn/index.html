@@ -3,259 +3,124 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>易經時空分析</title>
+  <title>梅花易卜</title>
+  <script src="https://cdn.jsdelivr.net/npm/lunar-javascript@1.7.7/lunar.js"></script>
   <style>
     :root {
-      --bg: #f5f6fa;
-      --card: #ffffff;
-      --text: #2c3e50;
-      --muted: #7f8c8d;
-      --line: #2c3e50;
-      --accent: #3498db;
-      --moving: #e67e22;
-      --border: #e3e6ee;
-      --good: #27ae60;
-      --bad: #c0392b;
+      --bg: #f5f6fa; --card: #ffffff; --text: #2c3e50; --muted: #7f8c8d; --line: #2c3e50;
+      --accent: #3498db; --moving: #e67e22; --border: #e3e6ee; --good: #27ae60; --bad: #c0392b;
     }
     @media (prefers-color-scheme: dark) {
-      :root:not([data-theme="light"]) {
-        --bg: #14171c;
-        --card: #1e232a;
-        --text: #e6e9ef;
-        --muted: #9aa3ad;
-        --line: #e6e9ef;
-        --accent: #5dade2;
-        --moving: #f0a04b;
-        --border: #2f3640;
-        --good: #52c77e;
-        --bad: #e5675a;
+      :root {
+        --bg: #14171c; --card: #1e232a; --text: #e6e9ef; --muted: #9aa3ad; --line: #e6e9ef;
+        --accent: #5dade2; --moving: #f0a04b; --border: #2f3640; --good: #52c77e; --bad: #e5675a;
       }
     }
-
     * { box-sizing: border-box; }
-
     body {
       font-family: 'Segoe UI', 'PingFang TC', 'Noto Sans TC', Arial, sans-serif;
-      max-width: 860px;
-      margin: 0 auto;
-      padding: 20px 16px 40px;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.6;
+      max-width: 860px; margin: 0 auto; padding: 20px 16px 40px;
+      background: var(--bg); color: var(--text); line-height: 1.6;
     }
-
     h1 { margin: 0 0 4px; font-size: 1.7rem; }
     h3 { margin: 0 0 12px; }
     .subtitle { color: var(--muted); margin: 0 0 20px; }
-
-    .card {
-      background: var(--card);
-      padding: 22px;
-      border-radius: 14px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
-      border: 1px solid var(--border);
-      margin-bottom: 18px;
-    }
-
-    .controls {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      align-items: flex-end;
-    }
-    .controls label { display: flex; flex-direction: column; font-size: 0.9rem; color: var(--muted); gap: 4px; }
-
-    input[type="date"], input[type="time"] {
-      padding: 10px 12px;
-      border: 2px solid var(--accent);
-      border-radius: 8px;
-      font-size: 16px;
-      background: var(--card);
-      color: var(--text);
-    }
-
-    button {
-      padding: 11px 22px;
-      background: var(--accent);
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      font-size: 15px;
-      cursor: pointer;
-      transition: transform 0.15s, box-shadow 0.15s;
-    }
+    .card { background: var(--card); padding: 22px; border-radius: 14px; border: 1px solid var(--border);
+      box-shadow: 0 2px 6px rgba(0,0,0,.06); margin-bottom: 18px; }
+    .controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+    .controls label { display: flex; flex-direction: column; font-size: .9rem; color: var(--muted); gap: 4px; }
+    input, select { padding: 10px 12px; border: 2px solid var(--accent); border-radius: 8px; font-size: 16px;
+      background: var(--card); color: var(--text); }
+    button { padding: 11px 22px; background: var(--accent); color: #fff; border: none; border-radius: 8px;
+      font-size: 15px; cursor: pointer; }
     button.secondary { background: transparent; color: var(--accent); border: 2px solid var(--accent); }
-    button:hover { transform: translateY(-1px); box-shadow: 0 3px 8px rgba(52,152,219,0.25); }
-
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    .status { color: var(--muted); font-size: .9rem; margin: 12px 0 0; }
     .error { color: var(--bad); }
-
-    .calc { font-size: 0.95rem; }
-    .calc table { border-collapse: collapse; width: 100%; }
-    .calc td { padding: 4px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
-    .calc td:first-child { color: var(--muted); white-space: nowrap; width: 1%; }
-
-    .hex-row {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 14px;
-    }
-    @media (max-width: 640px) {
-      .hex-row { grid-template-columns: 1fr; }
-    }
-
-    .hex {
-      text-align: center;
-      animation: fadeIn 0.4s ease;
-    }
-    .hex .stage { font-size: 0.85rem; color: var(--muted); }
+    .pos { color: var(--good); } .neg { color: var(--bad); }
+    .lunar { font-size: 1.05rem; margin: 0 0 14px; color: var(--muted); }
+    .hex-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+    @media (max-width: 640px) { .hex-row { grid-template-columns: 1fr; } }
+    .hex { text-align: center; }
+    .hex .stage { font-size: .85rem; color: var(--muted); }
     .hex .name { font-size: 1.25rem; font-weight: 600; margin: 4px 0 2px; }
-    .hex .kw { color: var(--accent); font-size: 0.95rem; margin-bottom: 8px; }
-    .hex .judgement { font-size: 0.9rem; text-align: left; margin-top: 10px; }
-    .hex .tri { font-size: 0.8rem; color: var(--muted); }
-
+    .hex .kw { color: var(--accent); font-size: .95rem; }
+    .hex .judgement { font-size: .9rem; text-align: left; margin-top: 10px; }
+    .hex .tri { font-size: .8rem; color: var(--muted); }
     .lines { display: inline-flex; flex-direction: column; gap: 7px; margin: 10px 0 4px; }
     .yao { display: flex; gap: 12px; width: 120px; height: 13px; position: relative; }
     .yao span { flex: 1; background: var(--line); border-radius: 2px; }
     .yao.yang span:nth-child(2) { display: none; }
     .yao.moving span { background: var(--moving); }
-    .yao.moving::after {
-      content: attr(data-mark);
-      position: absolute;
-      right: -22px;
-      top: -6px;
-      color: var(--moving);
-      font-size: 0.85rem;
-      font-weight: 700;
-    }
+    .yao.moving::after { content: attr(data-mark); position: absolute; right: -22px; top: -6px;
+      color: var(--moving); font-size: .85rem; font-weight: 700; }
     .gap { height: 6px; }
-
-    .score-bar {
-      height: 18px;
-      background: var(--border);
-      border-radius: 9px;
-      overflow: hidden;
-      margin: 10px 0;
-    }
-    .score-fill {
-      height: 100%;
-      width: 0;
-      background: linear-gradient(90deg, #e74c3c, #f1c40f, #2ecc71);
-      background-size: 100vw 100%;
-      transition: width 0.6s ease;
-    }
-    .verdict { font-size: 1.15rem; font-weight: 600; }
-
-    .rel-table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
-    .rel-table th, .rel-table td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: left; }
-    .rel-table th { color: var(--muted); font-weight: 500; }
-    @media (max-width: 640px) {
-      .rel-table th:nth-child(5), .rel-table td:nth-child(5) { display: none; }
-    }
-    .pos { color: var(--good); }
-    .neg { color: var(--bad); }
-
-    .nn-status { color: var(--muted); margin: 0 0 12px; }
-    .nn-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
-    button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
-    .progress { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; margin: 8px 0 12px; }
-    .progress div { height: 100%; width: 0; background: var(--accent); transition: width 0.2s; }
-    .training-log {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      padding: 10px 12px;
-      border-radius: 8px;
-      max-height: 220px;
-      overflow-y: auto;
-      font-family: ui-monospace, Menlo, Consolas, monospace;
-      font-size: 0.8rem;
-    }
-    .training-log div { padding: 2px 0; }
-    details { margin-top: 12px; }
-    summary { cursor: pointer; color: var(--muted); }
-    .ai-compare { width: 100%; border-collapse: collapse; font-size: 0.92rem; margin-bottom: 14px; }
-    .ai-compare th, .ai-compare td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: left; }
-    .ai-compare th { color: var(--muted); font-weight: 500; }
-    .conf { color: var(--muted); font-size: 0.85em; }
-
-    .note { font-size: 0.85rem; color: var(--muted); }
+    .score-bar { height: 18px; background: var(--border); border-radius: 9px; overflow: hidden; margin: 10px 0; }
+    .score-fill { height: 100%; width: 0; background: linear-gradient(90deg, #e74c3c, #f1c40f, #2ecc71);
+      background-size: 100vw 100%; transition: width .6s ease; }
+    .verdict { font-size: 1.15rem; font-weight: 600; margin: 0; }
+    table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+    th, td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: left; }
+    th { color: var(--muted); font-weight: 500; }
+    pre { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px;
+      overflow-x: auto; font-size: .85rem; margin: 10px 0 0; }
+    details { margin-top: 14px; } summary { cursor: pointer; color: var(--muted); }
+    .note { font-size: .85rem; color: var(--muted); }
     .note ul { padding-left: 20px; margin: 6px 0; }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(8px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
   </style>
 </head>
 <body>
-  <h1>🀄 易經時空分析系統</h1>
-  <p class="subtitle">梅花易數・時間起卦 —— 由農曆年、月、日、時推出卦象，同一時間必得同一卦。</p>
+  <h1>🀄 梅花易卜</h1>
+  <p class="subtitle">時間起卦——整個推演由一個內嵌的小型神經網路（Transformer）逐字寫出，再與規則計算互相驗證。</p>
 
   <div class="card">
-    <div class="controls">
-      <label>日期<input type="date" id="dateInput"></label>
-      <label>時間<input type="time" id="timeInput" step="60"></label>
-      <button id="nowButton" class="secondary">⏱ 現在</button>
-      <button id="castButton">🔮 起卦分析</button>
-    </div>
-    <p id="errorMsg" class="error" hidden></p>
+    <form class="controls" id="form">
+      <label>時間<input type="datetime-local" id="when" min="1900-01-01T00:00" max="2100-12-31T23:59"></label>
+      <label>所問<select id="topic">
+        <option>綜合</option><option>事業</option><option>財運</option><option>感情</option>
+        <option>健康</option><option>考試</option><option>出行</option>
+      </select></label>
+      <button type="submit" id="go" disabled>🔮 起卦</button>
+      <button type="button" id="nowButton" class="secondary">⏱ 現在</button>
+    </form>
+    <p class="status" id="status">正在載入模型…</p>
   </div>
 
   <div id="output" hidden>
-    <div class="card calc">
-      <h3>🧮 起卦計算</h3>
-      <table id="calcTable"></table>
-    </div>
-
     <div class="card">
-      <h3>☯️ 卦象</h3>
+      <p class="lunar" id="lunarText"></p>
       <div class="hex-row" id="hexRow"></div>
     </div>
 
     <div class="card">
-      <h3>⚖️ 體用分析</h3>
-      <p id="tiyongDesc"></p>
-      <table class="rel-table">
-        <thead><tr><th>階段</th><th>體 vs 對象</th><th>關係</th><th>分數</th><th>權重</th></tr></thead>
-        <tbody id="relBody"></tbody>
+      <h3>⚖️ 體用與吉凶</h3>
+      <p id="tiyong"></p>
+      <table>
+        <thead><tr><th>對象</th><th>關係</th><th>說明</th></tr></thead>
+        <tbody id="termBody"></tbody>
       </table>
       <div class="score-bar"><div class="score-fill" id="scoreFill"></div></div>
-      <p class="verdict">綜合指數：<span id="scoreValue">0</span> / 100 —— <span id="verdictText"></span></p>
+      <p class="verdict">指數 <span id="scoreValue">0</span> / 100 —— <span id="levelText"></span></p>
+      <p id="advice"></p>
     </div>
 
     <div class="card">
-      <h3>🤖 神經網路解讀（可能胡說八道）</h3>
-      <p class="nn-status" id="nnStatus">正在載入 TensorFlow…</p>
-      <div class="nn-actions">
-        <button id="trainButton" disabled>🎓 訓練模型（20 輪）</button>
-        <button id="resetButton" class="secondary" disabled>♻️ 重置模型</button>
-      </div>
-      <div class="progress" id="trainProgress" hidden><div id="trainProgressFill"></div></div>
-      <div id="aiResult" hidden>
-        <table class="ai-compare">
-          <thead><tr><th>項目</th><th>傳統計算</th><th>AI 猜測</th><th></th></tr></thead>
-          <tbody id="aiCompareBody"></tbody>
-        </table>
-        <div class="hex-row" id="aiHexRow"></div>
-        <div class="score-bar"><div class="score-fill" id="aiScoreFill"></div></div>
-        <p class="verdict">AI 綜合指數：<span id="aiScoreValue">0</span> / 100 —— <span id="aiVerdictText"></span></p>
-      </div>
-      <details id="logDetails">
-        <summary>訓練紀錄</summary>
-        <div class="training-log" id="trainingLog"></div>
+      <h3>🤖 模型推演過程</h3>
+      <p class="status" id="checkText" style="margin-top:0"></p>
+      <details>
+        <summary>查看模型逐字寫出的原文</summary>
+        <pre id="rawText"></pre>
       </details>
     </div>
   </div>
 
   <div class="card note">
-    <strong>規則說明</strong>
+    <strong>說明</strong>
     <ul>
-      <li>年數＝農曆年地支序（子1…亥12）；月數、日數＝農曆月、日（閏月以本月計）；時數＝時辰地支序（子1…亥12）。23 點後屬次日子時。</li>
-      <li>上卦＝(年＋月＋日) ÷ 8 之餘數；下卦＝(年＋月＋日＋時) ÷ 8 之餘數（餘 0 作 8）。先天數：乾1 兌2 離3 震4 巽5 坎6 艮7 坤8。</li>
-      <li>動爻＝(年＋月＋日＋時) ÷ 6 之餘數（餘 0 作 6），由下往上數。</li>
-      <li>互卦取本卦二至四爻為下、三至五爻為上；變卦為本卦動爻陰陽互換。</li>
-      <li>含動爻之卦為「用」，另一卦為「體」。以五行生剋判斷：用生體 100、比和 75、體克用 60、體生用 35、用克體 10；本卦 40%、互卦 20%、變卦 40% 加權。</li>
-      <li>🤖 神經網路：以 TensorFlow.js 在瀏覽器中訓練一個小型網路（輸入年、月、日、時數，輸出上卦、下卦、動爻），讓它「模仿」上述規則。未訓練時是隨機權重、純屬亂猜；訓練越多越接近，但很難完全學會餘數運算，所以常常把結果搞砸。訓練成果存在本機瀏覽器。</li>
-      <li>此為傳統術數規則的忠實計算，僅供文化體驗與自我反思，不構成任何決策依據。</li>
+      <li>模型：4 層 Transformer、128 維、4 個注意力頭、約 83 萬參數，權重存於 <code>model.bin</code>（float16），在你的瀏覽器裡用 CPU 執行，不連線、不用 GPU。</li>
+      <li>輸入：農曆年支、月、日、時支、月支。模型依序寫出：上卦、下卦、動爻、本／互／變卦、體用、各項生剋與月令加減分、總分與吉凶。</li>
+      <li>驗證：頁面另用傳統公式（上卦＝年＋月＋日、下卦再加時、動爻＝總和除六取餘）獨立算一次，與模型比對。</li>
+      <li>僅供文化體驗與自我反思，不構成任何決策依據。</li>
     </ul>
   </div>
 
@@ -344,481 +209,299 @@ const HEXAGRAMS = [
 const HEX_BY_TRIGRAMS = {};
 HEXAGRAMS.forEach(h => { HEX_BY_TRIGRAMS[`${h.upper}-${h.lower}`] = h; });
 
-const STEMS = '甲乙丙丁戊己庚辛壬癸';
-const BRANCHES = '子丑寅卯辰巳午未申酉戌亥';
-const LUNAR_MONTHS = ['正','二','三','四','五','六','七','八','九','十','冬','臘'];
-const LINE_POS = ['初','二','三','四','五','上'];
 
-// ===== 五行生剋 =====
-const GENERATES = { 木: '火', 火: '土', 土: '金', 金: '水', 水: '木' };
-const OVERCOMES = { 木: '土', 土: '水', 水: '火', 火: '金', 金: '木' };
 
-// 以「體」為中心，看對象五行與體的關係
-function relation(ti, other) {
-  if (ti === other) return { label: '比和', score: 75, note: '同氣相助，平順' };
-  if (GENERATES[other] === ti) return { label: '生體', score: 100, note: '外力相助，大吉' };
-  if (OVERCOMES[ti] === other) return { label: '體克', score: 60, note: '可以掌控，需費心力' };
-  if (GENERATES[ti] === other) return { label: '洩體', score: 35, note: '付出耗損，小有不利' };
-  return { label: '克體', score: 10, note: '受制阻礙，宜守' };
-}
+// ===== 小型 Transformer 推論（純 JS、CPU）=====
+// 檔案格式：4 位元組標頭長度 n、n 位元組 JSON 標頭、補齊到 4 的倍數、其後為 float16 權重。
+function loadModel(buf) {
+  const n = new DataView(buf).getUint32(0, true);
+  const head = JSON.parse(new TextDecoder().decode(new Uint8Array(buf, 4, n)));
+  const start = 4 + n + (4 - (4 + n) % 4) % 4;
+  const half = new Uint16Array(buf, start, (buf.byteLength - start) / 2);
 
-// ===== 農曆換算（瀏覽器內建中國曆法）=====
-const lunarFormatter = (() => {
-  try {
-    return new Intl.DateTimeFormat('en-u-ca-chinese', {
-      year: 'numeric', month: 'numeric', day: 'numeric', timeZone: 'UTC'
-    });
-  } catch (e) {
-    return null;
+  const lut = new Float32Array(65536);
+  for (let i = 0; i < 65536; i++) {
+    const s = i & 0x8000 ? -1 : 1, e = (i >> 10) & 31, m = i & 1023;
+    lut[i] = e === 0 ? s * 2 ** -14 * (m / 1024) : e === 31 ? (m ? NaN : s * Infinity) : s * 2 ** (e - 15) * (1 + m / 1024);
   }
-})();
+  const W = {};
+  for (const t of head.t) {
+    const size = t.s.reduce((a, b) => a * b, 1);
+    const w = new Float32Array(size);
+    for (let i = 0; i < size; i++) w[i] = lut[half[t.o + i]];
+    W[t.n] = w;
+  }
 
-function toLunar(y, m, d) {
-  // 用 UTC 正午避免時區造成日期偏移
-  const parts = lunarFormatter.formatToParts(new Date(Date.UTC(y, m - 1, d, 12)));
-  const get = type => (parts.find(p => p.type === type) || {}).value || '';
-  const year = parseInt(get('relatedYear') || get('year'), 10);
-  const monthRaw = get('month');
-  const month = parseInt(monthRaw, 10);
-  const day = parseInt(get('day'), 10);
-  if (!year || !month || !day) throw new Error('無法解析農曆日期');
-  return { year, month, day, leap: /bis|閏/.test(monthRaw) };
-}
+  const { q1: D, q2: HEADS, q3: V, q4: LAYERS, q5: CTX } = head.c;
+  const HD = D / HEADS;
+  const vocab = head.v;
+  const id = Object.fromEntries(vocab.map((ch, i) => [ch, i]));
+  const START = id['\x02'], END = id['\x03'];
 
-// ===== 起卦 =====
-function linesToTrigram(lines) {
-  const key = lines.join('');
-  return Number(Object.keys(TRIGRAMS).find(k => TRIGRAMS[k].lines.join('') === key));
-}
+  const linear = (w, b, x, out, rows, cols) => {
+    for (let r = 0; r < rows; r++) {
+      let sum = b ? b[r] : 0;
+      const base = r * cols;
+      for (let c = 0; c < cols; c++) sum += w[base + c] * x[c];
+      out[r] = sum;
+    }
+  };
+  const layerNorm = (x, g, b, out) => {
+    let mean = 0, v = 0;
+    for (let i = 0; i < x.length; i++) mean += x[i];
+    mean /= x.length;
+    for (let i = 0; i < x.length; i++) v += (x[i] - mean) ** 2;
+    const inv = 1 / Math.sqrt(v / x.length + 1e-5);
+    for (let i = 0; i < x.length; i++) out[i] = (x[i] - mean) * inv * g[i] + b[i];
+  };
+  const gelu = x => 0.5 * x * (1 + Math.tanh(0.7978845608028654 * (x + 0.044715 * x * x * x)));
 
-function hexFromLines(lines) {
-  const lower = linesToTrigram(lines.slice(0, 3));
-  const upper = linesToTrigram(lines.slice(3, 6));
-  return { ...HEX_BY_TRIGRAMS[`${upper}-${lower}`], lines };
-}
+  // 貪婪解碼：把提示文字逐字送入，之後每步取機率最高的字，直到結束符或上限
+  function generate(prompt) {
+    const tokens = [START];
+    for (const ch of prompt) {
+      if (!(ch in id)) throw new Error(`詞表沒有「${ch}」`);
+      tokens.push(id[ch]);
+    }
+    const promptLen = tokens.length;
+    const kc = [], vc = [];
+    for (let l = 0; l < LAYERS; l++) { kc.push(new Float32Array(CTX * D)); vc.push(new Float32Array(CTX * D)); }
+    const x = new Float32Array(D), h = new Float32Array(D), qkv = new Float32Array(3 * D),
+      att = new Float32Array(D), tmp = new Float32Array(D), ff = new Float32Array(4 * D),
+      logits = new Float32Array(V), score = new Float32Array(CTX);
+    let out = '';
 
-function mod1(n, m) {
-  const r = n % m;
-  return r === 0 ? m : r;
-}
-
-function cast(dateStr, timeStr) {
-  const [y, mo, d] = dateStr.split('-').map(Number);
-  const [h, mi] = timeStr.split(':').map(Number);
-
-  // 23 點後屬次日子時
-  const dayDate = new Date(Date.UTC(y, mo - 1, d));
-  if (h === 23) dayDate.setUTCDate(dayDate.getUTCDate() + 1);
-  const lunar = toLunar(dayDate.getUTCFullYear(), dayDate.getUTCMonth() + 1, dayDate.getUTCDate());
-
-  const branchIdx = ((lunar.year - 4) % 12 + 12) % 12;
-  const stemIdx = ((lunar.year - 4) % 10 + 10) % 10;
-  const yearNum = branchIdx + 1;
-  const hourIdx = Math.floor((h + 1) / 2) % 12;
-  const hourNum = hourIdx + 1;
+    for (let pos = 0; pos < CTX; pos++) {
+      for (let i = 0; i < D; i++) x[i] = W.a[tokens[pos] * D + i] + W.b[pos * D + i];
+      for (let l = 0; l < LAYERS; l++) {
+        const p = `z${l}.`;
+        layerNorm(x, W[p + 'e'], W[p + 'f'], h);
+        linear(W[p + 'g'], W[p + 'h'], h, qkv, 3 * D, D);
+        kc[l].set(qkv.subarray(D, 2 * D), pos * D);
+        vc[l].set(qkv.subarray(2 * D), pos * D);
+        for (let hd = 0; hd < HEADS; hd++) {
+          const o = hd * HD;
+          let max = -Infinity;
+          for (let t = 0; t <= pos; t++) {
+            let s = 0;
+            for (let i = 0; i < HD; i++) s += qkv[o + i] * kc[l][t * D + o + i];
+            score[t] = s / Math.sqrt(HD);
+            if (score[t] > max) max = score[t];
+          }
+          let sum = 0;
+          for (let t = 0; t <= pos; t++) { score[t] = Math.exp(score[t] - max); sum += score[t]; }
+          for (let i = 0; i < HD; i++) {
+            let a = 0;
+            for (let t = 0; t <= pos; t++) a += score[t] * vc[l][t * D + o + i];
+            att[o + i] = a / sum;
+          }
+        }
+        linear(W[p + 'i'], W[p + 'j'], att, tmp, D, D);
+        for (let i = 0; i < D; i++) x[i] += tmp[i];
+        layerNorm(x, W[p + 'k'], W[p + 'l'], h);
+        linear(W[p + 'm'], W[p + 'n'], h, ff, 4 * D, D);
+        for (let i = 0; i < 4 * D; i++) ff[i] = gelu(ff[i]);
+        linear(W[p + 'o'], W[p + 'p'], ff, tmp, D, 4 * D);
+        for (let i = 0; i < D; i++) x[i] += tmp[i];
+      }
+      if (pos < promptLen - 1) continue;           // 還在讀提示，不需要輸出
+      layerNorm(x, W.c, W.d, h);
+      linear(W.a, null, h, logits, V, D);          // 輸出層與字嵌入共用權重
+      let best = 0;
+      for (let i = 1; i < V; i++) if (logits[i] > logits[best]) best = i;
+      if (best === END) break;
+      out += vocab[best];
+      tokens.push(best);
+    }
+    return out;
+  }
 
   return {
-    input: { y, mo, d, h, mi },
-    lunar, ganzhi: STEMS[stemIdx] + BRANCHES[branchIdx], yearNum, hourNum, hourBranch: BRANCHES[hourIdx],
-    ...castFromNumbers(yearNum, lunar.month, lunar.day, hourNum)
+    generate,
+    template: head.p,
+    info: { layers: LAYERS, dim: D, heads: HEADS, vocab: V, context: CTX, params: Object.values(W).reduce((s, w) => s + w.length, 0) }
   };
 }
 
-// 年、月、日、時數 → 上卦、下卦、動爻
-function castFromNumbers(yearNum, month, day, hourNum) {
-  const sumUpper = yearNum + month + day;
-  const sumAll = sumUpper + hourNum;
-  const upper = mod1(sumUpper, 8);
-  const lower = mod1(sumAll, 8);
-  const moving = mod1(sumAll, 6);
-  return { sumUpper, sumAll, ...buildReading(upper, lower, moving) };
+// 解析模型輸出的最後幾行：動爻、三卦序號、體用、各項生剋、月令、分數與吉凶
+function parseReading(raw) {
+  const lines = raw.trim().split('\n');
+  const mv = /動\d+→(\d)/.exec(lines[2] || '');
+  const gua = /本\D+?(\d+)互\D+?(\d+)變\D+?(\d+)/.exec(lines[3] || '');
+  const tiyong = /體(.)(.)用(.)(.)/.exec(lines[4] || '');
+  const final = /^(\d+)(\S+)$/.exec(lines[7] || '');
+  if (!mv || !gua || !tiyong || !final) return null;
+  return {
+    moving: +mv[1], ben: +gua[1], hu: +gua[2], bian: +gua[3],
+    ti: { tri: tiyong[1], el: tiyong[2] }, yong: { tri: tiyong[3], el: tiyong[4] },
+    terms: [...(lines[5] || '').matchAll(/(用|互|變)(.):(\S+?)([+-]\d+)/g)].map(m => ({ tag: m[1], tri: m[2], rel: m[3], pts: +m[4] })),
+    season: (/季(.)([+-]\d+)/.exec(lines[5] || '') || [])[1] || null,
+    score: +final[1], level: final[2], raw
+  };
 }
 
-// 上卦、下卦、動爻 → 本卦、互卦、變卦與體用評分
-function buildReading(upper, lower, moving) {
+
+// ===== 文字 =====
+const ZHI = '子丑寅卯辰巳午未申酉戌亥';
+const REL_TEXT = {
+  '用生體': '外力相助，主得外助',
+  '比和': '同氣相助，主同心協力',
+  '體剋用': '你能掌控，事可成但費心力',
+  '體生用': '付出耗損，主耗洩精神',
+  '用剋體': '受制阻礙，主外有阻力'
+};
+const SEASON_TEXT = {
+  '旺': '體得月令，根基穩固', '相': '月令生體，暗有扶持', '休': '體洩於時，其力稍衰',
+  '囚': '體受時制，宜養精神', '死': '時令剋體，元氣受損'
+};
+const TAG_NAME = { '用': '本卦・用', '互': '互卦', '變': '變卦' };
+const ADVICE = {
+  '大吉': ['天時地利，所謀必遂，宜乘勢而進。', '貴人在側，順水行舟，可放手為之。', '陽氣方盛，百事亨通，勿失良機。'],
+  '吉': ['事有可成，循序而進，勿貪其多。', '小有所得，守正則吉。', '諸事順遂，然細微處仍宜謹慎。'],
+  '平': ['吉凶參半，宜守不宜攻。', '時機未至，靜觀其變。', '守常待時，蓄勢以應。'],
+  '小凶': ['阻滯漸生，宜斂鋒芒，多聽人言。', '事多反覆，暫緩大計，先除隱患。', '宜退一步，免招口舌。'],
+  '凶': ['時運未濟，宜靜不宜動。', '慎防損耗與爭端，退守為上。', '且養其身，待時而發。']
+};
+const TOPIC_LEAD = { '綜合': '', '事業': '問事業：', '財運': '問財帛：', '感情': '問姻緣：', '健康': '問康寧：', '考試': '問功名：', '出行': '問出行：' };
+const LINE_NAMES = ['初', '二', '三', '四', '五', '上'];
+
+// ===== 規則驗算（獨立於模型）=====
+const mod1 = (n, m) => (n % m) || m;
+const triFromLines = l => Number(Object.keys(TRIGRAMS).find(k => TRIGRAMS[k].lines.join('') === l.join('')));
+const hexFromLines = l => HEX_BY_TRIGRAMS[`${triFromLines(l.slice(3))}-${triFromLines(l.slice(0, 3))}`].num;
+function ruleCast(yearNum, month, day, hourNum) {
+  const upper = mod1(yearNum + month + day, 8);
+  const sum = yearNum + month + day + hourNum;
+  const lower = mod1(sum, 8), moving = mod1(sum, 6);
   const lines = [...TRIGRAMS[lower].lines, ...TRIGRAMS[upper].lines];
-  const main = hexFromLines(lines);
-  const mutual = hexFromLines([...lines.slice(1, 4), ...lines.slice(2, 5)]);
-  const changedLines = lines.slice();
-  changedLines[moving - 1] = 1 - changedLines[moving - 1];
-  const changed = hexFromLines(changedLines);
-
-  // 動爻在下卦 → 下卦為用、上卦為體；反之亦然
-  const yongIsLower = moving <= 3;
-  const ti = yongIsLower ? upper : lower;
-  const yong = yongIsLower ? lower : upper;
-  const changedYong = yongIsLower ? changed.lower : changed.upper;
-
-  const tiEl = TRIGRAMS[ti].element;
-  const stages = [
-    { stage: '本卦（現況）', target: yong, rel: relation(tiEl, TRIGRAMS[yong].element), weight: 0.4 },
-    { stage: '互卦・上（過程）', target: mutual.upper, rel: relation(tiEl, TRIGRAMS[mutual.upper].element), weight: 0.1 },
-    { stage: '互卦・下（過程）', target: mutual.lower, rel: relation(tiEl, TRIGRAMS[mutual.lower].element), weight: 0.1 },
-    { stage: '變卦（結果）', target: changedYong, rel: relation(tiEl, TRIGRAMS[changedYong].element), weight: 0.4 }
-  ];
-  const score = Math.round(stages.reduce((s, x) => s + x.rel.score * x.weight, 0));
-
-  return { upper, lower, moving, main, mutual, changed, ti, yong, stages, score };
-}
-
-function verdictOf(score) {
-  if (score >= 80) return { text: '大吉：順勢而為，可積極行動', cls: 'pos' };
-  if (score >= 62) return { text: '吉：大致順利，穩中求進', cls: 'pos' };
-  if (score >= 45) return { text: '平：吉凶參半，量力而行', cls: '' };
-  if (score >= 28) return { text: '小凶：多有耗損，宜謹慎保守', cls: 'neg' };
-  return { text: '凶：阻力明顯，宜靜待時機', cls: 'neg' };
+  const changed = lines.slice(); changed[moving - 1] = 1 - changed[moving - 1];
+  return { moving, ben: hexFromLines(lines), hu: hexFromLines([...lines.slice(1, 4), ...lines.slice(2, 5)]), bian: hexFromLines(changed) };
 }
 
 // ===== 顯示 =====
-function triLabel(n) {
-  const t = TRIGRAMS[n];
-  return `${t.name}${t.image}（${t.element}）`;
-}
+const $ = id => document.getElementById(id);
+const HEX_BY_NUM = Object.fromEntries(HEXAGRAMS.map(h => [h.num, h]));
+const triLabel = n => `${TRIGRAMS[n].name}${TRIGRAMS[n].image}（${TRIGRAMS[n].element}）`;
+const lineName = (pos, yang) => (pos === 1 || pos === 6 ? LINE_NAMES[pos - 1] + (yang ? '九' : '六') : (yang ? '九' : '六') + LINE_NAMES[pos - 1]);
 
-function lineName(pos, yang) {
-  // 初九、九二…上九；初六、六二…上六
-  const num = yang ? '九' : '六';
-  return pos === 1 || pos === 6 ? LINE_POS[pos - 1] + num : num + LINE_POS[pos - 1];
-}
-
-function renderHex(stageLabel, hex, movingPos) {
+function renderHex(stage, num, movingPos) {
+  const hex = HEX_BY_NUM[num];
+  const lines = [...TRIGRAMS[hex.lower].lines, ...TRIGRAMS[hex.upper].lines];
+  const html = lines.map((yang, i) => {
+    const moving = i + 1 === movingPos;
+    return `<div class="yao ${yang ? 'yang' : 'yin'}${moving ? ' moving' : ''}" data-mark="${moving ? (yang ? '○' : '×') : ''}" title="${lineName(i + 1, yang)}"><span></span><span></span></div>`
+      + (i === 2 ? '<div class="gap"></div>' : '');
+  }).reverse().join('');
   const el = document.createElement('div');
   el.className = 'hex';
-  const linesHtml = hex.lines.map((yang, i) => {
-    const pos = i + 1;
-    const isMoving = pos === movingPos;
-    const mark = isMoving ? (yang ? '○' : '×') : '';
-    return `<div class="yao ${yang ? 'yang' : 'yin'}${isMoving ? ' moving' : ''}" data-mark="${mark}" title="${lineName(pos, yang)}"><span></span><span></span></div>`
-      + (pos === 3 ? '<div class="gap"></div>' : '');
-  }).reverse().join('');
-  el.innerHTML = `
-    <div class="stage">${stageLabel}</div>
-    <div class="lines">${linesHtml}</div>
+  el.innerHTML = `<div class="stage">${stage}</div><div class="lines">${html}</div>
     <div class="tri">上 ${triLabel(hex.upper)}・下 ${triLabel(hex.lower)}</div>
-    <div class="name">第 ${hex.num} 卦　${hex.name}</div>
-    <div class="kw">${hex.keyword}</div>
+    <div class="name">第 ${hex.num} 卦　${hex.name}</div><div class="kw">${hex.keyword}</div>
     <div class="judgement">卦辭：${hex.text}</div>`;
   return el;
 }
 
-function showResult(r) {
-  const pad = n => String(n).padStart(2, '0');
-  const lunarText = `${r.ganzhi}年 ${r.lunar.leap ? '閏' : ''}${LUNAR_MONTHS[r.lunar.month - 1]}月 ${r.lunar.day} 日 ${r.hourBranch}時`;
-  const movingYang = r.main.lines[r.moving - 1];
+const levelClass = l => (l === '大吉' || l === '吉' ? 'pos' : l === '小凶' || l === '凶' ? 'neg' : '');
+const relClass = r => (r === '用生體' || r === '比和' || r === '體剋用' ? 'pos' : 'neg');
 
-  document.getElementById('calcTable').innerHTML = `
-    <tr><td>國曆</td><td>${r.input.y}-${pad(r.input.mo)}-${pad(r.input.d)} ${pad(r.input.h)}:${pad(r.input.mi)}${r.input.h === 23 ? '（23 點後以次日計）' : ''}</td></tr>
-    <tr><td>農曆</td><td>${lunarText}</td></tr>
-    <tr><td>取數</td><td>年 ${r.yearNum}（${r.ganzhi[1]}）＋ 月 ${r.lunar.month} ＋ 日 ${r.lunar.day} ＝ ${r.sumUpper}；再 ＋ 時 ${r.hourNum}（${r.hourBranch}）＝ ${r.sumAll}</td></tr>
-    <tr><td>上卦</td><td>${r.sumUpper} ÷ 8 餘 ${r.sumUpper % 8} → ${triLabel(r.upper)}</td></tr>
-    <tr><td>下卦</td><td>${r.sumAll} ÷ 8 餘 ${r.sumAll % 8} → ${triLabel(r.lower)}</td></tr>
-    <tr><td>動爻</td><td>${r.sumAll} ÷ 6 餘 ${r.sumAll % 6} → 第 ${r.moving} 爻（${lineName(r.moving, movingYang)}）</td></tr>`;
-
-  renderHexRow(document.getElementById('hexRow'), r);
-
-  document.getElementById('tiyongDesc').textContent =
-    `動爻在${r.moving <= 3 ? '下' : '上'}卦，故 ${triLabel(r.yong)} 為「用」（所問之事、外在環境），` +
-    `${triLabel(r.ti)} 為「體」（自身）。以體之五行「${TRIGRAMS[r.ti].element}」對照各階段：`;
-
-  document.getElementById('relBody').innerHTML = r.stages.map(s => {
-    const cls = s.rel.score >= 60 ? 'pos' : s.rel.score <= 35 ? 'neg' : '';
-    return `<tr>
-      <td>${s.stage}</td>
-      <td>${TRIGRAMS[r.ti].element} vs ${triLabel(s.target)}</td>
-      <td class="${cls}">${s.rel.label}：${s.rel.note}</td>
-      <td>${s.rel.score}</td>
-      <td>${Math.round(s.weight * 100)}%</td>
-    </tr>`;
-  }).join('');
-
-  showScore(r.score, 'scoreFill', 'scoreValue', 'verdictText');
-  document.getElementById('output').hidden = false;
-}
-
-function renderHexRow(row, r) {
+function show(input, r, check, ms) {
+  $('lunarText').textContent = `${input.ganzhi}年 ${input.monthName}月${input.dayName}　${input.hourZhi}時（${input.solar}）`;
+  const row = $('hexRow');
   row.innerHTML = '';
-  row.appendChild(renderHex('本卦・現況', r.main, r.moving));
-  row.appendChild(renderHex('互卦・過程', r.mutual, 0));
-  row.appendChild(renderHex('變卦・結果', r.changed, r.moving));
-}
+  row.append(renderHex('本卦・現況', r.ben, r.moving), renderHex('互卦・過程', r.hu, 0), renderHex('變卦・結果', r.bian, r.moving));
 
-function showScore(score, fillId, valueId, verdictId) {
-  const v = verdictOf(score);
-  const fill = document.getElementById(fillId);
+  $('tiyong').textContent = `體：${r.ti.tri}（${r.ti.el}，代表你）　用：${r.yong.tri}（${r.yong.el}，代表所問之事）。動爻在第 ${r.moving} 爻。`;
+  const rows = r.terms.map(t => `<tr><td>${TAG_NAME[t.tag]}・${t.tri}</td><td class="${relClass(t.rel)}">${t.rel}</td><td>${REL_TEXT[t.rel] || ''}（${t.pts > 0 ? '+' : ''}${t.pts}）</td></tr>`);
+  if (r.season) rows.push(`<tr><td>月令</td><td>${r.season}</td><td>${SEASON_TEXT[r.season] || ''}</td></tr>`);
+  $('termBody').innerHTML = rows.join('');
+
+  const fill = $('scoreFill');
   fill.style.width = '0';
-  const verdictEl = document.getElementById(verdictId);
-  verdictEl.textContent = v.text;
-  verdictEl.className = v.cls;
-  document.getElementById(valueId).textContent = score;
-  requestAnimationFrame(() => requestAnimationFrame(() => { fill.style.width = `${score}%`; }));
+  $('scoreValue').textContent = r.score;
+  const level = $('levelText');
+  level.textContent = r.level;
+  level.className = levelClass(r.level);
+  const tips = ADVICE[r.level] || [''];
+  $('advice').textContent = TOPIC_LEAD[input.topic] + tips[(input.day + input.hourIdx) % tips.length];
+  requestAnimationFrame(() => requestAnimationFrame(() => { fill.style.width = `${r.score}%`; }));
+
+  const ok = check.moving === r.moving && check.ben === r.ben && check.hu === r.hu && check.bian === r.bian;
+  $('checkText').innerHTML = (ok ? '<span class="pos">✓ 與規則驗算完全一致</span>' : '<span class="neg">✗ 與規則驗算不一致</span>')
+    + `　動爻 ${check.moving}、本卦 ${check.ben}、互卦 ${check.hu}、變卦 ${check.bian}　·　推演 ${ms.toFixed(0)} ms`;
+  $('rawText').textContent = r.raw;
+  $('output').hidden = false;
 }
 
-function showError(msg) {
-  const el = document.getElementById('errorMsg');
-  el.textContent = msg;
-  el.hidden = !msg;
+// ===== 互動 =====
+let model = null;
+const statusEl = $('status');
+const pad = n => String(n).padStart(2, '0');
+
+function setNow() {
+  const d = new Date();
+  $('when').value = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-// ===== 神經網路（TensorFlow.js）=====
-// 讓小型網路從「年、月、日、時數」學習預測上卦、下卦、動爻。
-// 它看不到規則本身，只能從範例中猜，所以結果常常是錯的。
-const TFJS_URL = 'https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js';
-const NN_STORE = 'localstorage://nn-iching-model';
-const NN_EPOCHS_KEY = 'nn-iching-epochs';
-const EPOCHS_PER_CLICK = 20;
-const TRAIN_SIZE = 6000;
-const VAL_SIZE = 1000;
-const INPUT_SIZE = 12 + 12 + 30 + 12;
-const HEADS = [['upper', 8], ['lower', 8], ['moving', 6]];
-
-let nnModel = null;
-let nnEpochs = 0;
-let nnTraining = false;
-let lastReading = null;
-
-const nnStatus = document.getElementById('nnStatus');
-const trainButton = document.getElementById('trainButton');
-const resetButton = document.getElementById('resetButton');
-
-function loadTf() {
-  return new Promise((resolve, reject) => {
-    if (window.tf) return resolve();
-    const script = document.createElement('script');
-    script.src = TFJS_URL;
-    script.onload = resolve;
-    script.onerror = () => reject(new Error('無法載入 TensorFlow.js'));
-    document.head.appendChild(script);
-  });
-}
-
-// 年(1–12)、月(1–12)、日(1–30)、時(1–12) 各自 one-hot 後串接
-function encode(yearNum, month, day, hourNum) {
-  const v = new Array(INPUT_SIZE).fill(0);
-  v[yearNum - 1] = 1;
-  v[12 + month - 1] = 1;
-  v[24 + day - 1] = 1;
-  v[54 + hourNum - 1] = 1;
-  return v;
-}
-
-function buildModel() {
-  const input = tf.input({ shape: [INPUT_SIZE] });
-  let x = tf.layers.dense({ units: 96, activation: 'relu' }).apply(input);
-  x = tf.layers.dense({ units: 96, activation: 'relu' }).apply(x);
-  const outputs = HEADS.map(([name, n]) => tf.layers.dense({ units: n, activation: 'softmax', name }).apply(x));
-  return tf.model({ inputs: input, outputs });
-}
-
-function compileModel(model) {
-  model.compile({ optimizer: tf.train.adam(0.003), loss: 'categoricalCrossentropy', metrics: ['accuracy'] });
-}
-
-function readEpochs() {
-  try { return Number(localStorage.getItem(NN_EPOCHS_KEY)) || 0; } catch (e) { return 0; }
-}
-
-function writeEpochs(n) {
-  try { localStorage.setItem(NN_EPOCHS_KEY, String(n)); } catch (e) { /* 無法儲存就算了 */ }
-}
-
-async function initModel() {
-  try {
-    nnModel = await tf.loadLayersModel(NN_STORE);
-    nnEpochs = readEpochs();
-  } catch (e) {
-    nnModel = buildModel();
-    nnEpochs = 0;
-  }
-  compileModel(nnModel);
-}
-
-function updateNnStatus() {
-  nnStatus.textContent = nnEpochs === 0
-    ? '模型尚未訓練：權重是隨機的，下面的答案純屬亂猜。按「訓練模型」讓它學學看。'
-    : `模型已訓練 ${nnEpochs} 輪。它只看過範例、沒看過規則，所以仍可能猜錯。`;
-}
-
-function logTraining(message, isError = false) {
-  const entry = document.createElement('div');
-  entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
-  if (isError) entry.className = 'neg';
-  const log = document.getElementById('trainingLog');
-  log.appendChild(entry);
-  log.scrollTop = log.scrollHeight;
-}
-
-function makeDataset(size) {
-  const xs = [];
-  const labels = HEADS.map(() => []);
-  for (let i = 0; i < size; i++) {
-    const nums = [1 + Math.floor(Math.random() * 12), 1 + Math.floor(Math.random() * 12),
-      1 + Math.floor(Math.random() * 30), 1 + Math.floor(Math.random() * 12)];
-    const r = castFromNumbers(...nums);
-    xs.push(encode(...nums));
-    labels[0].push(r.upper - 1);
-    labels[1].push(r.lower - 1);
-    labels[2].push(r.moving - 1);
-  }
+function readInput() {
+  const [date, time] = $('when').value.split('T');
+  if (!date || !time) throw new Error('請選擇日期與時間。');
+  const [y, m, d] = date.split('-').map(Number);
+  const [h, mi] = time.split(':').map(Number);
+  if (y < 1900 || y > 2100) throw new Error('僅支援 1900–2100 年。');
+  if (typeof Solar === 'undefined') throw new Error('農曆函式庫載入失敗，請檢查網路後重新整理。');
+  const lunar = Solar.fromYmdHms(y, m, d, h, mi, 0).getLunar();
+  const hourZhi = lunar.getTimeZhi();
   return {
-    xs: tf.tensor2d(xs),
-    ys: HEADS.map(([, n], i) => tf.oneHot(tf.tensor1d(labels[i], 'int32'), n)),
-    labels
+    yearZhi: lunar.getYearZhi(), month: Math.abs(lunar.getMonth()), day: lunar.getDay(),
+    hourZhi, hourIdx: ZHI.indexOf(hourZhi), monthZhi: lunar.getMonthZhi(),
+    ganzhi: lunar.getYearInGanZhi(),
+    monthName: lunar.getMonthInChinese().replace('腊', '臘').replace('闰', '閏'),
+    dayName: lunar.getDayInChinese(),
+    solar: `${y}-${pad(m)}-${pad(d)} ${pad(h)}:${pad(mi)}`, topic: $('topic').value
   };
 }
 
-// 自行計算驗證集上每個輸出頭的準確率（tfjs 多輸出模型的 val 指標不可靠）
-function evaluateHeads(data) {
-  const preds = tf.tidy(() => nnModel.predict(data.xs).map(t => t.argMax(-1).dataSync()));
-  return preds.map((pred, i) => {
-    let correct = 0;
-    pred.forEach((v, j) => { if (v === data.labels[i][j]) correct++; });
-    return `${Math.round((correct / pred.length) * 100)}%`;
-  });
-}
-
-async function trainModel() {
-  if (!nnModel || nnTraining) return;
-  nnTraining = true;
-  trainButton.disabled = resetButton.disabled = true;
-  const progress = document.getElementById('trainProgress');
-  const fill = document.getElementById('trainProgressFill');
-  progress.hidden = false;
-  fill.style.width = '0';
-  document.getElementById('logDetails').open = true;
-
-  const train = makeDataset(TRAIN_SIZE);
-  const val = makeDataset(VAL_SIZE);
-  logTraining(`產生 ${TRAIN_SIZE} 筆訓練資料、${VAL_SIZE} 筆驗證資料，開始訓練…`);
-  try {
-    let done = 0;
-    await nnModel.fit(train.xs, train.ys, {
-      epochs: EPOCHS_PER_CLICK,
-      batchSize: 128,
-      shuffle: true,
-      callbacks: {
-        onEpochEnd: async (epoch, logs) => {
-          done++;
-          nnEpochs++;
-          fill.style.width = `${(done / EPOCHS_PER_CLICK) * 100}%`;
-          const [accUpper, accLower, accMoving] = evaluateHeads(val);
-          logTraining(`第 ${nnEpochs} 輪　損失 ${logs.loss.toFixed(3)}　驗證準確率：上卦 ${accUpper}、下卦 ${accLower}、動爻 ${accMoving}`);
-          updateNnStatus();
-          await tf.nextFrame();
-        }
-      }
-    });
-    logTraining('✅ 本次訓練完成');
-    writeEpochs(nnEpochs);
-    try { await nnModel.save(NN_STORE); } catch (e) { logTraining('（無法儲存模型到瀏覽器，重新整理後會遺失）'); }
-  } catch (e) {
-    logTraining(`訓練錯誤：${e.message}`, true);
-  } finally {
-    tf.dispose([train.xs, ...train.ys, val.xs, ...val.ys]);
-    nnTraining = false;
-    trainButton.disabled = resetButton.disabled = false;
-    progress.hidden = true;
-    showAi();
-  }
-}
-
-async function resetModel() {
-  if (nnTraining) return;
-  if (nnModel) nnModel.dispose();
-  try { await tf.io.removeModel(NN_STORE); } catch (e) { /* 本來就沒存 */ }
-  nnModel = buildModel();
-  compileModel(nnModel);
-  nnEpochs = 0;
-  writeEpochs(0);
-  logTraining('♻️ 模型已重置為隨機權重');
-  updateNnStatus();
-  showAi();
-}
-
-function predictAi(r) {
-  return tf.tidy(() => {
-    const x = tf.tensor2d([encode(r.yearNum, r.lunar.month, r.lunar.day, r.hourNum)]);
-    return nnModel.predict(x).map(t => {
-      const probs = t.dataSync();
-      let best = 0;
-      for (let i = 1; i < probs.length; i++) if (probs[i] > probs[best]) best = i;
-      return { value: best + 1, conf: probs[best] };
-    });
-  });
-}
-
-function showAi() {
-  if (!nnModel || nnTraining || !lastReading) return;
-  const r = lastReading;
-  const [up, low, mov] = predictAi(r);
-  const ai = buildReading(up.value, low.value, mov.value);
-  const pct = c => `<span class="conf">（信心 ${(c * 100).toFixed(0)}%）</span>`;
-  const mark = ok => (ok ? '<span class="pos">✓</span>' : '<span class="neg">✗ 搞錯了</span>');
-  const rows = [
-    ['上卦', triLabel(r.upper), triLabel(ai.upper) + pct(up.conf), r.upper === ai.upper],
-    ['下卦', triLabel(r.lower), triLabel(ai.lower) + pct(low.conf), r.lower === ai.lower],
-    ['動爻', `第 ${r.moving} 爻`, `第 ${ai.moving} 爻` + pct(mov.conf), r.moving === ai.moving],
-    ['本卦', r.main.name, ai.main.name, r.main.num === ai.main.num],
-    ['綜合指數', r.score, ai.score, r.score === ai.score]
-  ];
-  document.getElementById('aiCompareBody').innerHTML = rows
-    .map(([k, a, b, ok]) => `<tr><td>${k}</td><td>${a}</td><td>${b}</td><td>${mark(ok)}</td></tr>`)
-    .join('');
-  renderHexRow(document.getElementById('aiHexRow'), ai);
-  showScore(ai.score, 'aiScoreFill', 'aiScoreValue', 'aiVerdictText');
-  document.getElementById('aiResult').hidden = false;
-}
-
-trainButton.addEventListener('click', trainModel);
-resetButton.addEventListener('click', resetModel);
-
-loadTf()
-  .then(initModel)
-  .then(() => {
-    trainButton.disabled = resetButton.disabled = false;
-    updateNnStatus();
-    showAi();
-  })
-  .catch(e => {
-    nnStatus.textContent = `${e.message}，AI 版本暫時無法使用（傳統計算不受影響）。`;
-  });
-
-// ===== 互動 =====
-const dateInput = document.getElementById('dateInput');
-const timeInput = document.getElementById('timeInput');
-
-function setNow() {
-  const now = new Date();
-  const pad = n => String(n).padStart(2, '0');
-  dateInput.value = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-  timeInput.value = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
-}
-
 function run() {
-  showError('');
-  if (!lunarFormatter) {
-    showError('此瀏覽器不支援農曆換算（Intl 中國曆法），請改用新版 Chrome、Safari 或 Firefox。');
-    return;
-  }
-  if (!dateInput.value || !timeInput.value) {
-    showError('請選擇日期與時間。');
-    return;
-  }
+  statusEl.className = 'status';
   try {
-    lastReading = cast(dateInput.value, timeInput.value);
-    showResult(lastReading);
-    showAi();
+    const input = readInput();
+    const prompt = model.template.replace('{0}', input.yearZhi).replace('{1}', input.month).replace('{2}', input.day)
+      .replace('{3}', input.hourZhi).replace('{4}', input.monthZhi);
+    const t0 = performance.now();
+    const reading = parseReading(model.generate(prompt));
+    const ms = performance.now() - t0;
+    if (!reading) throw new Error('模型輸出格式無法解析。');
+    const check = ruleCast(ZHI.indexOf(input.yearZhi) + 1, input.month, input.day, input.hourIdx + 1);
+    show(input, reading, check, ms);
+    statusEl.textContent = `模型：${model.info.layers} 層・${model.info.dim} 維・約 ${(model.info.params / 1e6).toFixed(2)}M 參數`;
   } catch (e) {
-    showError(`分析失敗：${e.message}`);
+    statusEl.textContent = e.message;
+    statusEl.className = 'status error';
   }
 }
 
-document.getElementById('nowButton').addEventListener('click', () => { setNow(); run(); });
-document.getElementById('castButton').addEventListener('click', run);
-dateInput.addEventListener('change', run);
-timeInput.addEventListener('change', run);
+$('form').addEventListener('submit', e => {
+  e.preventDefault();
+  $('go').disabled = true;
+  statusEl.textContent = '推演中…';
+  setTimeout(() => { run(); $('go').disabled = false; }, 30);   // 先讓畫面更新再開始運算
+});
+$('nowButton').addEventListener('click', () => { setNow(); $('form').requestSubmit(); });
 
 setNow();
-run();
+const t0 = performance.now();
+fetch('model.bin')
+  .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.arrayBuffer(); })
+  .then(buf => {
+    model = loadModel(buf);
+    statusEl.textContent = `模型已載入（${(buf.byteLength / 1e6).toFixed(1)} MB，${(performance.now() - t0).toFixed(0)} ms）。`;
+    $('go').disabled = false;
+    $('form').requestSubmit();
+  })
+  .catch(e => {
+    statusEl.textContent = `模型載入失敗：${e.message}。請透過網站（http/https）開啟，直接開檔案無法讀取 model.bin。`;
+    statusEl.className = 'status error';
+  });
 </script>
 </body>
 </html>
