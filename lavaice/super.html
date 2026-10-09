@@ -1,0 +1,2730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LAVICE — Superbot</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /*
+         * SUPERBOT — "night chart" art direction.
+         * The arena is drawn as a thermal survey map; the HUD is the
+         * instrument cluster around it. Cream ink on deep navy, ember and
+         * glacier for the terrain, one signal colour (chartreuse) for the bot.
+         */
+        :root {
+            --abyss: #070a10;
+            --ink: #ece7da;
+            --ink-2: rgba(236, 231, 218, .64);
+            --ink-3: rgba(236, 231, 218, .36);
+            --rule: rgba(236, 231, 218, .16);
+            --ember: #ff6a2b;
+            --ice: #7fe0ff;
+            --signal: #d6ff3f;
+            --alert: #ff4259;
+            --serif: 'Instrument Serif', 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+            --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+            --pad: 30px;
+        }
+
+        * { box-sizing: border-box; }
+        html, body { height: 100%; }
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: var(--abyss);
+            color: var(--ink);
+            font-family: var(--mono);
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        #terrain, #stage { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; }
+        #terrain { z-index: 0; }
+        #stage { z-index: 1; }
+
+        /* Darkens the top and bottom margins so the instruments stay legible. */
+        .scrim {
+            position: fixed; inset: 0; z-index: 2; pointer-events: none;
+            background:
+                linear-gradient(180deg, rgba(5, 7, 12, .78) 0, rgba(5, 7, 12, .34) 90px, rgba(5, 7, 12, 0) 170px),
+                linear-gradient(0deg, rgba(5, 7, 12, .78) 0, rgba(5, 7, 12, .34) 90px, rgba(5, 7, 12, 0) 170px);
+        }
+        /* Damage flash. Its own layer, so fading it never repaints the screen. */
+        .hurt {
+            position: absolute; inset: 0; opacity: 0; will-change: opacity;
+            background: radial-gradient(ellipse at center, transparent 62%, rgba(255, 48, 66, .30) 100%);
+        }
+
+        /* Map neatline: ticks every 20px, long ticks every 100px, aligned to world coordinates. */
+        .frame {
+            position: fixed; inset: 12px; z-index: 3; pointer-events: none;
+            border: 1px solid rgba(236, 231, 218, .12);
+            background:
+                repeating-linear-gradient(90deg, rgba(236, 231, 218, .42) 0 1px, transparent 1px 100px) 88px 0 / 100% 7px no-repeat,
+                repeating-linear-gradient(90deg, rgba(236, 231, 218, .16) 0 1px, transparent 1px 20px) 8px 0 / 100% 3px no-repeat,
+                repeating-linear-gradient(90deg, rgba(236, 231, 218, .42) 0 1px, transparent 1px 100px) 88px 100% / 100% 7px no-repeat,
+                repeating-linear-gradient(90deg, rgba(236, 231, 218, .16) 0 1px, transparent 1px 20px) 8px 100% / 100% 3px no-repeat,
+                repeating-linear-gradient(180deg, rgba(236, 231, 218, .42) 0 1px, transparent 1px 100px) 0 88px / 7px 100% no-repeat,
+                repeating-linear-gradient(180deg, rgba(236, 231, 218, .16) 0 1px, transparent 1px 20px) 0 8px / 3px 100% no-repeat,
+                repeating-linear-gradient(180deg, rgba(236, 231, 218, .42) 0 1px, transparent 1px 100px) 100% 88px / 7px 100% no-repeat,
+                repeating-linear-gradient(180deg, rgba(236, 231, 218, .16) 0 1px, transparent 1px 20px) 100% 8px / 3px 100% no-repeat;
+        }
+
+        .hud { position: fixed; z-index: 4; pointer-events: none; animation: hud-in .9s cubic-bezier(.2, .7, .2, 1) both; }
+        @keyframes hud-in { from { opacity: 0; transform: translateY(var(--rise, 8px)); } to { opacity: 1; transform: none; } }
+
+        .eyebrow {
+            font: 500 10px/1 var(--mono);
+            letter-spacing: .24em;
+            text-transform: uppercase;
+            color: var(--ink-3);
+        }
+
+        /* ---- top left: wordmark ---- */
+        .tl { top: var(--pad); left: var(--pad); --rise: -8px; }
+        .mark { display: flex; align-items: baseline; gap: 12px; }
+        .mark-name { font: italic 400 46px/0.9 var(--serif); letter-spacing: -.01em; }
+        .mark-tag {
+            font: 700 9.5px/1 var(--mono); letter-spacing: .32em; text-transform: uppercase;
+            color: var(--abyss); background: var(--signal);
+            padding: 5px 6px 5px 9px; transform: translateY(-7px);
+        }
+        .status { display: flex; align-items: center; gap: 9px; margin-top: 14px; font: 500 11px/1 var(--mono); letter-spacing: .08em; color: var(--ink-2); }
+        .status i { position: relative; width: 7px; height: 7px; border-radius: 50%; background: var(--signal); }
+        .status i::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: var(--signal); opacity: 0; animation: beacon 1.6s ease-out infinite; }
+        .status.manual i { background: var(--ice); }
+        .status.paused i { background: var(--ink-3); }
+        .status.manual i::after, .status.paused i::after { animation: none; }
+        @keyframes beacon { 0% { transform: scale(1); opacity: .55; } 100% { transform: scale(3.6); opacity: 0; } }
+        .status-detail { color: var(--ink-3); }
+        .meta + .meta { margin-top: 0; }
+        .meta { margin-top: 9px; font: 400 10px/1.5 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
+
+        /* ---- top centre: survival clock ---- */
+        .tc { top: calc(var(--pad) - 4px); left: 50%; width: 340px; margin-left: -170px; text-align: center; --rise: -8px; }
+        .digits { font: 400 78px/0.92 var(--serif); margin-top: 8px; letter-spacing: 0; white-space: nowrap; transition: color .6s; }
+        .digits b { display: inline-block; width: .5em; font-weight: 400; text-align: center; }
+        .digits i { display: inline-block; width: .24em; font-style: normal; text-align: center; transform: translateY(-.06em); color: var(--ink-2); }
+        .digits em { font-style: normal; font-size: .42em; color: var(--ink-3); margin-left: .08em; }
+        .digits em b { width: .52em; }
+        .cleared .digits { color: var(--signal); }
+        .track { position: relative; height: 3px; margin: 14px 20px 0; background: var(--rule); }
+        .track-fill { position: absolute; inset: 0; background: var(--ink); transform: scaleX(0); transform-origin: left; transition: transform .25s linear, background .6s; }
+        .cleared .track-fill { background: var(--signal); }
+        .track-goal { position: absolute; top: -5px; width: 1px; height: 13px; background: var(--ink); left: 83.33%; transition: left .8s cubic-bezier(.2, .7, .2, 1); }
+        .track-goal::after { content: ""; position: absolute; left: -3px; top: -5px; border: 3.5px solid transparent; border-top-color: var(--ink); }
+        .clock-meta { display: flex; justify-content: space-between; margin: 10px 20px 0; font: 500 10px/1 var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--ink-3); }
+        .cleared #goal-text { color: var(--signal); }
+
+        /* ---- top right: score ---- */
+        .tr { top: var(--pad); right: var(--pad); text-align: right; --rise: -8px; }
+        .score { font: 400 50px/0.95 var(--serif); margin-top: 7px; font-variant-numeric: tabular-nums lining-nums; }
+        .row { display: flex; justify-content: flex-end; gap: 22px; margin: 13px 0 0; }
+        .row div { display: flex; flex-direction: column; gap: 6px; }
+        dl, dt, dd { margin: 0; }
+        dt { font: 500 9.5px/1 var(--mono); letter-spacing: .2em; text-transform: uppercase; color: var(--ink-3); }
+        dd { font: 500 15px/1 var(--mono); font-variant-numeric: tabular-nums; color: var(--ink); }
+
+        /* ---- bottom left: vitals ---- */
+        .bl { bottom: var(--pad); left: var(--pad); width: 250px; }
+        .meter + .meter { margin-top: 14px; }
+        .meter-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 7px; }
+        .meter-val { white-space: nowrap; font: 500 13px/1 var(--mono); font-variant-numeric: tabular-nums; letter-spacing: .04em; }
+        .bar { height: 8px; background: rgba(236, 231, 218, .1);
+            -webkit-mask-image: repeating-linear-gradient(90deg, #000 0 10.5px, transparent 10.5px 12.5px);
+            mask-image: repeating-linear-gradient(90deg, #000 0 10.5px, transparent 10.5px 12.5px); }
+        .bar.thin { height: 4px; }
+        .bar i { display: block; height: 100%; width: 100%; background: var(--ink); transform-origin: left; }
+        #dash-bar { background: var(--ice); }
+        .ready #dash-bar { background: var(--signal); }
+        #mine-bar { background: var(--ink-3); }
+        .ready #mine-bar, .live #mine-bar { background: var(--signal); }
+        .live .meter-val { color: var(--signal); }
+        .ready .meter-val { color: var(--signal); }
+        .warn #hp-bar { background: #ffb347; }
+        .crit #hp-bar { background: var(--alert); animation: crit .5s steps(2) infinite; }
+        .crit .meter-val { color: var(--alert); }
+        @keyframes crit { 50% { opacity: .45; } }
+
+        /* ---- bottom right: cortex ---- */
+        .br { bottom: var(--pad); right: var(--pad); width: 336px; }
+        .cortex-head { display: flex; justify-content: space-between; padding-bottom: 8px; border-bottom: 1px solid var(--rule); }
+        .cortex-body { display: flex; gap: 18px; align-items: center; margin-top: 12px; }
+        #radar { width: 132px; height: 132px; flex: none; }
+        .readout { flex: 1; display: grid; gap: 7px; }
+        .readout div { display: flex; justify-content: space-between; align-items: center; }
+        .readout dd { font-size: 11.5px; }
+        .readout dt { letter-spacing: .16em; }
+        #intent { color: var(--signal); letter-spacing: .1em; }
+        .pips { display: inline-flex; gap: 2px; }
+        .pips i { width: 5px; height: 9px; background: rgba(236, 231, 218, .16); }
+        .pips i.on { background: var(--ink); }
+        .pips.hot i.on { background: var(--ember); }
+        .pips.max i.on { background: var(--alert); }
+
+        /* ---- bottom centre: controls ---- */
+        .bc { bottom: calc(var(--pad) - 2px); left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 6px; pointer-events: auto; white-space: nowrap; animation-name: hud-in-c; }
+        @keyframes hud-in-c { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
+        .bc button, .bc a {
+            appearance: none; background: none; border: 0; cursor: pointer; text-decoration: none;
+            display: inline-flex; align-items: center; gap: 7px; padding: 7px 9px;
+            font: 500 10px/1 var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--ink-3);
+            transition: color .15s;
+        }
+        .bc button:hover, .bc a:hover { color: var(--ink); }
+        .bc button:focus-visible, .bc a:focus-visible { outline: 1px solid var(--signal); outline-offset: 1px; }
+        .bc kbd { font: 700 9.5px/1 var(--mono); min-width: 19px; padding: 4px 0; text-align: center; border: 1px solid currentColor; opacity: .85; }
+        .bc button.on { color: var(--ink); }
+        .bc button.on kbd { background: var(--signal); border-color: var(--signal); color: var(--abyss); opacity: 1; }
+        .bc .sep { width: 1px; height: 14px; background: var(--rule); margin: 0 6px; }
+        .speed { display: inline-flex; align-items: center; }
+        .speed .eyebrow { margin-right: 4px; }
+        .speed button { padding: 7px 6px; letter-spacing: .06em; }
+        .speed button.on { color: var(--signal); }
+
+        /* ---- milestone banner ---- */
+        .banner { top: 232px; left: 0; right: 0; text-align: center; font: italic 400 30px/1 var(--serif); color: var(--signal); opacity: 0; animation: none; text-shadow: 0 2px 24px rgba(0, 0, 0, .8); }
+        .banner.show { animation: banner 4.2s ease both; }
+        @keyframes banner { 0% { opacity: 0; transform: translateY(10px); } 12%, 78% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translateY(-8px); } }
+
+        /* ---- debrief ---- */
+        .debrief {
+            position: fixed; z-index: 6; left: 50%; top: 50%; width: 400px; transform: translate(-50%, -50%);
+            padding: 30px 34px 26px; text-align: center;
+            background: rgba(7, 10, 16, .86); border: 1px solid var(--rule);
+            backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+            animation: debrief-in .5s cubic-bezier(.2, .7, .2, 1) both;
+        }
+        .debrief[hidden] { display: none; }
+        @keyframes debrief-in { from { opacity: 0; transform: translate(-50%, -46%); } to { opacity: 1; transform: translate(-50%, -50%); } }
+        .debrief h2 { margin: 16px 0 0; font: 400 84px/0.9 var(--serif); }
+        .debrief .verdict { margin: 12px 0 0; font: italic 400 22px/1.2 var(--serif); color: var(--ink-2); }
+        .debrief .verdict.ok { color: var(--signal); }
+        .debrief .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 24px 0 0; padding: 18px 0; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+        .debrief .grid div { display: flex; flex-direction: column; gap: 8px; }
+        .relaunch { margin-top: 18px; font: 500 10px/1 var(--mono); letter-spacing: .2em; text-transform: uppercase; color: var(--ink-3); }
+        .relaunch i { display: block; height: 2px; margin-top: 10px; background: var(--rule); }
+        .relaunch b { display: block; height: 100%; width: 0; background: var(--signal); }
+
+        /* compact controls once the bottom row gets crowded */
+        @media (max-width: 1440px) {
+            .bc span, .bc a, .bc .speed .eyebrow, .bc .sep:last-of-type { display: none; }
+        }
+        @media (max-width: 1240px) { .status-detail { display: none; } }
+        @media (max-width: 1080px) {
+            .br { display: none; }
+            .bc { left: auto; right: calc(var(--pad) - 8px); transform: none; animation-name: hud-in; }
+            .digits { font-size: 60px; }
+            .tc { width: 280px; margin-left: -140px; }
+            .mark-name { font-size: 38px; }
+            .score { font-size: 38px; }
+        }
+        @media (max-width: 760px) {
+            :root { --pad: 22px; }
+            .meta, .row { display: none; }
+            .tc { top: 92px; }
+            .bl { width: 168px; }
+            .bc { gap: 0; }
+            .bc .sep { margin: 0 3px; }
+            .bc button { padding: 7px 5px; }
+            .banner { top: 262px; font-size: 24px; }
+            .debrief { width: calc(100vw - 44px); padding: 24px 20px 20px; }
+            .debrief h2 { font-size: 64px; }
+        }
+        @media (max-width: 520px) {
+            .bc { bottom: calc(var(--pad) + 84px); }
+            .tr .eyebrow { display: none; }
+        }
+        @media (max-height: 600px) { .br { display: none; } .banner { top: 190px; } }
+        /* ---- field guide ---- */
+        .guide {
+            position: fixed; z-index: 7; left: 50%; top: 50%; width: min(680px, calc(100vw - 32px)); max-height: calc(100vh - 32px);
+            transform: translate(-50%, -50%); overflow-y: auto; padding: 28px 32px 24px;
+            background: rgba(7, 10, 16, .92); border: 1px solid var(--rule);
+            backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+            user-select: text; -webkit-user-select: text;
+        }
+        .guide[hidden] { display: none; }
+        .guide h2 { margin: 10px 0 0; font: italic 400 40px/1 var(--serif); }
+        .guide .lede { margin: 10px 0 0; font: italic 400 19px/1.3 var(--serif); color: var(--ink-2); }
+        .guide h3 { margin: 22px 0 10px; padding-top: 14px; border-top: 1px solid var(--rule); font: 500 10px/1 var(--mono); letter-spacing: .24em; text-transform: uppercase; color: var(--signal); }
+        .guide .keys { display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; align-items: baseline; }
+        .guide .keys dt { letter-spacing: 0; text-transform: none; white-space: nowrap; }
+        .guide .keys dd, .guide li { font: 400 12.5px/1.5 var(--mono); color: var(--ink-2); }
+        .guide kbd { display: inline-block; font: 700 10px/1 var(--mono); min-width: 20px; padding: 4px 5px; margin-right: 3px; text-align: center; color: var(--ink); border: 1px solid var(--ink-3); }
+        .guide ul { margin: 0; padding: 0 0 0 16px; }
+        .guide li + li { margin-top: 6px; }
+        .guide b { font-weight: 500; color: var(--ink); }
+        .guide .ember { color: var(--ember); } .guide .ice { color: var(--ice); } .guide .sig { color: var(--signal); }
+        .guide .go { margin-top: 22px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+        .guide .go button { appearance: none; cursor: pointer; border: 0; padding: 10px 16px; background: var(--signal); color: var(--abyss); font: 700 10.5px/1 var(--mono); letter-spacing: .2em; text-transform: uppercase; }
+        .guide .go button:focus-visible { outline: 1px solid var(--ink); outline-offset: 2px; }
+
+        /* ---- play mode: instruments fold away until hovered ---- */
+        .bc-handle { display: none; }
+        body.play .scrim { opacity: .45; }
+        body.play .tl, body.play .tc, body.play .tr, body.play .bl, body.play .br { pointer-events: auto; }
+        body.play .hud:not(.banner) { animation: none; opacity: .5; transition: opacity .2s; }
+        body.play .hud:not(.banner):hover, body.play .hud:not(.banner):focus-within { opacity: 1; }
+        body.play .tl:not(:hover) .status, body.play .tl:not(:hover) .meta,
+        body.play .tc:not(:hover) .eyebrow, body.play .tc:not(:hover) .track, body.play .tc:not(:hover) .clock-meta,
+        body.play .tr:not(:hover) .eyebrow, body.play .tr:not(:hover) .row,
+        body.play .bl:not(:hover) .meter-head,
+        body.play .br:not(:hover) .cortex-body,
+        body.play .bc:not(:hover):not(:focus-within) > :not(.bc-handle) { display: none; }
+        body.play .mark-name { font-size: 26px; transition: font-size .2s; }
+        body.play .mark-tag { transform: translateY(-3px); }
+        body.play .tl:hover .mark-name { font-size: 46px; }
+        body.play .tl:hover .mark-tag { transform: translateY(-7px); }
+        body.play .digits { font-size: 34px; margin-top: 0; transition: font-size .2s; }
+        body.play .tc:hover .digits { font-size: 78px; margin-top: 8px; }
+        body.play .score { font-size: 26px; margin-top: 0; transition: font-size .2s; }
+        body.play .tr:hover .score { font-size: 50px; margin-top: 7px; }
+        body.play .bl { width: 150px; transition: width .2s; }
+        body.play .bl:hover { width: 250px; }
+        body.play .bl:not(:hover) .meter + .meter { margin-top: 6px; }
+        body.play .bl:not(:hover) .bar { height: 4px; }
+        body.play .br { width: auto; min-width: 120px; }
+        body.play .br:hover { width: 336px; }
+        body.play .br:not(:hover) .cortex-head { border-bottom: 0; padding-bottom: 0; gap: 14px; }
+        body.play .bc-handle { display: inline-block; padding: 7px 9px; }
+        body.play .bc:hover .bc-handle, body.play .bc:focus-within .bc-handle { display: none; }
+
+        @media (prefers-reduced-motion: reduce) { .hud, .debrief { animation: none; } .status i::after { animation: none; } }
+    </style>
+</head>
+<body>
+
+    <canvas id="terrain"></canvas>
+    <canvas id="stage"></canvas>
+    <div class="scrim" id="scrim"><div class="hurt" id="hurt"></div></div>
+    <div class="frame"></div>
+
+    <header class="hud tl">
+        <div class="mark"><span class="mark-name">Lavice</span><span class="mark-tag" id="mark-tag">Superbot</span></div>
+        <div class="status" id="status"><i></i><span id="status-text">Autopilot</span><span class="status-detail" id="status-detail"></span></div>
+        <div class="meta" id="arena-meta"></div>
+        <div class="meta" id="perf-meta" title="Time between frames · of which the simulation (bot + rules) and drawing calls. The rest is the GPU and the browser."></div>
+    </header>
+
+    <section class="hud tc" id="clock-wrap" aria-label="Survival time">
+        <div class="eyebrow">Survival time</div>
+        <div class="digits" id="clock"><b>0</b><b>0</b><i>:</i><b>0</b><b>0</b><em>.<b>0</b></em></div>
+        <div class="track"><div class="track-fill" id="track-fill"></div><div class="track-goal" id="track-goal"></div></div>
+        <div class="clock-meta"><span id="goal-text">Target 05:00</span><span id="best-text">Best —</span></div>
+    </section>
+
+    <section class="hud tr">
+        <div class="eyebrow">Score</div>
+        <div class="score" id="score">0</div>
+        <dl class="row">
+            <div><dt>Wave</dt><dd id="wave">1</dd></div>
+            <div><dt>Hostiles</dt><dd id="hostiles">0</dd></div>
+            <div><dt>Kills</dt><dd id="kills">0</dd></div>
+        </dl>
+    </section>
+
+    <section class="hud bl">
+        <div class="meter" id="m-hp">
+            <div class="meter-head"><span class="eyebrow">Integrity</span><span class="meter-val" id="hp-val">100</span></div>
+            <div class="bar"><i id="hp-bar"></i></div>
+        </div>
+        <div class="meter ready" id="m-dash">
+            <div class="meter-head"><span class="eyebrow">Dash</span><span class="meter-val" id="dash-val">Ready</span></div>
+            <div class="bar thin"><i id="dash-bar"></i></div>
+        </div>
+        <div class="meter" id="m-mine">
+            <div class="meter-head"><span class="eyebrow">Mine</span><span class="meter-val" id="mine-val" title="Seconds until the next mine can be laid; once ready, seconds until it is laid automatically">30s</span></div>
+            <div class="bar thin"><i id="mine-bar"></i></div>
+        </div>
+    </section>
+
+    <section class="hud br" id="cortex">
+        <div class="cortex-head"><span class="eyebrow">Cortex</span><span class="eyebrow" id="think-ms">— ms</span></div>
+        <div class="cortex-body">
+            <canvas id="radar" width="264" height="264"></canvas>
+            <dl class="readout">
+                <div><dt>Intent</dt><dd id="intent">—</dd></div>
+                <div><dt>Doctrine</dt><dd id="doctrine">—</dd></div>
+                <div><dt>Threat</dt><dd><span class="pips" id="threat"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></dd></div>
+                <div><dt>Inflow</dt><dd id="inflow">0.00/s</dd></div>
+                <div><dt>Lava · Ice</dt><dd id="swarm">0 · 0</dd></div>
+                <div><dt>Dashes</dt><dd id="dash-n">0</dd></div>
+                <div><dt>Hits taken</dt><dd id="hit-n">0</dd></div>
+                <div><dt>Mine kills</dt><dd id="mine-n">0</dd></div>
+            </dl>
+        </div>
+    </section>
+
+    <nav class="hud bc" aria-label="Controls">
+        <span class="bc-handle eyebrow">Controls · G guide</span>
+        <button type="button" data-act="pause"><kbd>P</kbd><span>Pause</span></button>
+        <i class="sep"></i>
+        <div class="speed" title="Keys 1–4"><span class="eyebrow">Speed</span><button type="button" data-speed="1" class="on">1×</button><button type="button" data-speed="2">2×</button><button type="button" data-speed="4">4×</button><button type="button" data-speed="8">8×</button></div>
+        <i class="sep"></i>
+        <button type="button" data-act="overlay" class="on"><kbd>V</kbd><span>Tactical</span></button>
+        <button type="button" data-act="auto" class="on"><kbd>B</kbd><span>Autopilot</span></button>
+        <button type="button" data-act="doctrine"><kbd>H</kbd><span id="doctrine-label">Endurance</span></button>
+        <button type="button" data-act="mine" title="Manual control only"><kbd>E</kbd><span>Mine</span></button>
+        <button type="button" data-act="costume" title="Next costume · Shift for the previous one"><kbd>C</kbd><span id="costume-label">Default</span></button>
+        <button type="button" data-act="restart"><kbd>R</kbd><span>Restart</span></button>
+        <button type="button" data-act="guide"><kbd>G</kbd><span>Guide</span></button>
+        <i class="sep"></i>
+        <a href="super.html?play" id="mode-link">Play it yourself ↗</a>
+        <a href="lite.html">Lite ↗</a>
+        <a href="index.html">Classic ↗</a>
+    </nav>
+
+    <div class="hud banner" id="banner"></div>
+
+    <section class="guide" id="guide" hidden aria-label="Field guide">
+        <div class="eyebrow">Field guide</div>
+        <h2>Stay alive on the lavice.</h2>
+        <p class="lede">Survive as long as you can. Five minutes is the mark the Superbot is built to beat.</p>
+
+        <h3>Controls</h3>
+        <dl class="keys">
+            <dt><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></dt><dd>Move.</dd>
+            <dt><kbd>←</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>→</kbd></dt><dd>Hold to fire. Two arrows together fire diagonally.</dd>
+            <dt><kbd>Space</kbd></dt><dd>Dash in the direction you are moving (straight up if standing still). Recharges in under a second.</dd>
+            <dt><kbd>E</kbd></dt><dd>Lay the landmine where you stand, once the Mine meter reads Ready.</dd>
+            <dt><kbd>P</kbd> <kbd>R</kbd> <kbd>G</kbd></dt><dd>Pause · restart · this guide.</dd>
+            <dt><kbd>C</kbd></dt><dd>Change costume: default, alien, ninja, melon, black hole, orca, clock, donut. Looks only.</dd>
+            <dt><kbd>B</kbd> <kbd>1</kbd>–<kbd>4</kbd></dt><dd>Hand over to the Superbot (the run stops counting as yours) · game speed 1× to 8×.</dd>
+        </dl>
+
+        <h3>What hurts</h3>
+        <ul>
+            <li><b>Lavice</b> — the glowing blue masses with a molten rim. Pressing against the rim burns you; being inside one slows you to a crawl and burns about 30 integrity a second. It drifts constantly: the <b>dashed line</b> shows where the rim is heading.</li>
+            <li><b class="ember">Lava debris</b> — slow, takes 5 hits, 400 points. You walk more than twice as fast as it does.</li>
+            <li><b class="ice">Ice dust</b> — almost as fast as you, dies to 1 hit, 150 points. Shoot these first.</li>
+            <li>Any touch costs <b>10 integrity</b> and knocks you back. You regain about 3 a second.</li>
+            <li><b>The map edge</b> — pinned against it you cannot be knocked clear, so one enemy hits again and again and a full bar is gone in a blink.</li>
+        </ul>
+
+        <h3>Your tools</h3>
+        <ul>
+            <li><b>Dash</b> — passes through lavice and through enemies without harm. Do not end a dash inside lavice or beyond the edge of the map: out there you are frozen and burning.</li>
+            <li><b class="sig">Landmine</b> — ready 30 seconds after the last one; at 60 seconds it is laid for you. Enemies within its outer ring abandon you and go for the mine. The first to touch it lights a short fuse, then everything inside the dashed ring dies. Only one exists at a time, lavice covering it for 3 seconds destroys it, the blast cannot hurt you, and its kills score nothing.</li>
+            <li><b>Gun</b> — shots stop at lavice. Every 1,200 points raises the wave, and each wave makes enemies arrive faster.</li>
+        </ul>
+
+        <h3>How to last</h3>
+        <ul>
+            <li>Keep moving through open ground; corners and narrow pockets are where runs end.</li>
+            <li>Shooting lava debris is a trade: points now, a faster swarm for the rest of the run. The Superbot's default is to kill only ice dust and outrun the rest.</li>
+            <li>Lay the mine when a pack is close behind you, then walk away — it will pull them in.</li>
+            <li>Save the dash for getting out, not for getting around.</li>
+        </ul>
+
+        <div class="go"><span class="eyebrow">The top-left, top and bottom instruments expand when you point at them</span><button type="button" id="guide-go">Start · Space</button></div>
+    </section>
+
+    <section class="debrief" id="debrief" hidden>
+        <div class="eyebrow">Run <span id="d-run">01</span> · signal lost</div>
+        <h2 id="d-time">00:00</h2>
+        <p class="verdict" id="d-verdict"></p>
+        <dl class="grid">
+            <div><dt>Score</dt><dd id="d-score">0</dd></div>
+            <div><dt>Wave</dt><dd id="d-wave">1</dd></div>
+            <div><dt>Kills</dt><dd id="d-kills">0</dd></div>
+            <div><dt>Hostiles</dt><dd id="d-host">0</dd></div>
+        </dl>
+        <div class="relaunch"><span id="d-count">Press space to relaunch</span><i><b id="d-bar"></b></i></div>
+    </section>
+
+    <!--
+        CORE RULES
+        A line-for-line port of the classic build's simulation (index.html):
+        same noise, same spawn curve, same speeds, damage, dash and knockback.
+        Only presentation moved out — cosmetic moments are reported through
+        fx() and drawn by the renderer below. tools/sim.mjs runs this exact
+        block headlessly to measure the bot.
+    -->
+    <script id="lavice-core">
+        // --- FAST NOISE (Permutation Table) ---
+        const Simplex = (function() {
+            const p = new Uint8Array(256);
+            for(let i=0; i<256; i++) p[i] = i;
+            for(let i=255; i>0; i--) {
+                const r = Math.floor(Math.random() * (i+1));
+                [p[i], p[r]] = [p[r], p[i]];
+            }
+            const perm = new Uint8Array(512);
+            const permMod12 = new Uint8Array(512);
+            for(let i=0; i<512; i++) {
+                perm[i] = p[i & 255];
+                permMod12[i] = perm[i] % 12;
+            }
+            const grad3 = [[1,1,0],[-1,1,0],[1,-1,0],[-1,-1,0],[1,0,1],[-1,0,1],[1,0,-1],[-1,0,-1],[0,1,1],[0,-1,1],[0,1,-1],[0,-1,-1]];
+
+            return {
+                perm,
+                noise3D: function(xin, yin, zin) {
+                    let n0, n1, n2, n3;
+                    const F3 = 1.0/3.0;
+                    const s = (xin+yin+zin)*F3;
+                    const i = Math.floor(xin+s);
+                    const j = Math.floor(yin+s);
+                    const k = Math.floor(zin+s);
+                    const G3 = 1.0/6.0;
+                    const t = (i+j+k)*G3;
+                    const X0 = i-t;
+                    const Y0 = j-t;
+                    const Z0 = k-t;
+                    const x0 = xin-X0;
+                    const y0 = yin-Y0;
+                    const z0 = zin-Z0;
+                    let i1, j1, k1;
+                    let i2, j2, k2;
+                    if(x0>=y0) {
+                        if(y0>=z0) { i1=1; j1=0; k1=0; i2=1; j2=1; k2=0; }
+                        else if(x0>=z0) { i1=1; j1=0; k1=0; i2=1; j2=0; k2=1; }
+                        else { i1=0; j1=0; k1=1; i2=1; j2=0; k2=1; }
+                    } else {
+                        if(y0<z0) { i1=0; j1=0; k1=1; i2=0; j2=1; k2=1; }
+                        else if(x0<z0) { i1=0; j1=1; k1=0; i2=0; j2=1; k2=1; }
+                        else { i1=0; j1=1; k1=0; i2=1; j2=1; k2=0; }
+                    }
+                    const x1 = x0 - i1 + G3;
+                    const y1 = y0 - j1 + G3;
+                    const z1 = z0 - k1 + G3;
+                    const x2 = x0 - i2 + 2.0*G3;
+                    const y2 = y0 - j2 + 2.0*G3;
+                    const z2 = z0 - k2 + 2.0*G3;
+                    const x3 = x0 - 1.0 + 3.0*G3;
+                    const y3 = y0 - 1.0 + 3.0*G3;
+                    const z3 = z0 - 1.0 + 3.0*G3;
+                    const ii = i & 255;
+                    const jj = j & 255;
+                    const kk = k & 255;
+                    const gi0 = permMod12[ii+perm[jj+perm[kk]]];
+                    const gi1 = permMod12[ii+i1+perm[jj+j1+perm[kk+k1]]];
+                    const gi2 = permMod12[ii+i2+perm[jj+j2+perm[kk+k2]]];
+                    const gi3 = permMod12[ii+1+perm[jj+1+perm[kk+1]]];
+                    let t0 = 0.6 - x0*x0 - y0*y0 - z0*z0;
+                    if(t0<0) n0 = 0.0; else { t0 *= t0; n0 = t0 * t0 * (grad3[gi0][0]*x0 + grad3[gi0][1]*y0 + grad3[gi0][2]*z0); }
+                    let t1 = 0.6 - x1*x1 - y1*y1 - z1*z1;
+                    if(t1<0) n1 = 0.0; else { t1 *= t1; n1 = t1 * t1 * (grad3[gi1][0]*x1 + grad3[gi1][1]*y1 + grad3[gi1][2]*z1); }
+                    let t2 = 0.6 - x2*x2 - y2*y2 - z2*z2;
+                    if(t2<0) n2 = 0.0; else { t2 *= t2; n2 = t2 * t2 * (grad3[gi2][0]*x2 + grad3[gi2][1]*y2 + grad3[gi2][2]*z2); }
+                    let t3 = 0.6 - x3*x3 - y3*y3 - z3*z3;
+                    if(t3<0) n3 = 0.0; else { t3 *= t3; n3 = t3 * t3 * (grad3[gi3][0]*x3 + grad3[gi3][1]*y3 + grad3[gi3][2]*z3); }
+                    return 32.0*(n0 + n1 + n2 + n3);
+                }
+            };
+        })();
+
+        // --- GAME CONSTANTS ---
+        const CELL_SIZE = 8;
+        const WALL_THRESHOLD = 0.15;
+        const NOISE_SCALE = 0.05;
+        const TIME_SCALE = 0.1;
+
+        // --- STATE ---
+        let width = 0, height = 0;
+        let gameTime = 0;
+        let score = 0;
+        let wave = 1;
+        let isGameOver = false;
+        let frame = 0;
+
+        const player = {
+            x: 0, y: 0,
+            radius: 12,
+            speed: 4,
+            dashSpeed: 15,
+            isDashing: false,
+            dashCooldown: 0,
+            dashMax: 50,
+            dashDuration: 0,
+            vx: 0, vy: 0,
+            hp: 100,
+            maxHp: 100
+        };
+
+        let bullets = [];
+        let enemies = [];
+        const keys = {};
+
+        // --- LANDMINE (Superbot mode only; the classic build has none) ---
+        // One mine on the map at a time. It can be laid 30 s after the last one
+        // and is laid automatically at 60 s. It is a lure: enemies inside its
+        // lure radius go for the mine instead of the player. The first one to
+        // step on it lights a short fuse, and the blast kills every enemy in
+        // range. Lavice covering it for 3 s swallows it (unless the fuse is
+        // already lit). The blast does not hurt the player. Its kills award no
+        // score: score drives the wave, and the wave drives the spawn rate, so
+        // a scoring mine would bring in more enemies than it removes.
+        const MINE = {
+            enabled: true,
+            minDelay: 30 * 60,
+            maxDelay: 60 * 60,
+            radius: 10,
+            lureRadius: 190,
+            fuseFrames: 40,
+            blastRadius: 130,
+            buryFrames: 3 * 60,
+            scores: false
+        };
+        let mine = null;        // { x, y, buried, age, fuse }  fuse < 0 until tripped
+        let mineTimer = 0;      // frames since the last mine was laid
+
+        // Cosmetic event sink (kind, x, y, a, b). Never affects the rules.
+        let fx = function() {};
+
+        function setArena(w, h) {
+            width = w;
+            height = h;
+        }
+
+        function findSafeSpawn() {
+            let attempts = 0;
+            let safe = false;
+            while(!safe && attempts < 100) {
+                let tx = Math.random() * width;
+                let ty = Math.random() * height;
+                if (!isWall(tx, ty)) {
+                    player.x = tx;
+                    player.y = ty;
+                    safe = true;
+                }
+                attempts++;
+            }
+            if (!safe) {
+                player.x = width/2;
+                player.y = height/2;
+            }
+        }
+
+        function resetGame() {
+            score = 0;
+            wave = 1;
+            gameTime = 0;
+            isGameOver = false;
+            enemies = [];
+            bullets = [];
+            findSafeSpawn();
+            player.hp = player.maxHp;
+            player.dashCooldown = 0;
+            mine = null;
+            mineTimer = 0;
+            fx('reset', player.x, player.y);
+        }
+
+        function mineReady() {
+            return MINE.enabled && !isGameOver && mineTimer >= MINE.minDelay;
+        }
+
+        function tryPlaceMine() {
+            if (!mineReady()) return false;
+            if (mine) fx('mine_lost', mine.x, mine.y, 'replaced');
+            mine = {
+                x: Math.max(0, Math.min(width, player.x)),
+                y: Math.max(0, Math.min(height, player.y)),
+                buried: 0, age: 0, fuse: -1
+            };
+            mineTimer = 0;
+            fx('mine_set', mine.x, mine.y);
+            return true;
+        }
+
+        function updateMine() {
+            mineTimer++;
+            if (mineTimer >= MINE.maxDelay) tryPlaceMine();
+            if (!mine) return;
+            mine.age++;
+
+            if (mine.fuse < 0) {
+                if (isWall(mine.x, mine.y)) {
+                    if (++mine.buried > MINE.buryFrames) {
+                        fx('mine_lost', mine.x, mine.y, 'buried');
+                        mine = null;
+                        return;
+                    }
+                } else {
+                    mine.buried = 0;
+                }
+
+                for (let i = 0; i < enemies.length; i++) {
+                    const e = enemies[i];
+                    if (Math.hypot(e.x - mine.x, e.y - mine.y) < e.radius + MINE.radius) {
+                        mine.fuse = MINE.fuseFrames;
+                        fx('mine_trip', mine.x, mine.y);
+                        break;
+                    }
+                }
+                return;
+            }
+            if (--mine.fuse > 0) return;
+
+            const bx = mine.x, by = mine.y;
+            let killed = 0;
+            mine = null;
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                const e = enemies[i];
+                if (Math.hypot(e.x - bx, e.y - by) < MINE.blastRadius) {
+                    enemies.splice(i, 1);
+                    if (MINE.scores) score += e.type === 'ice_dust' ? 150 : 400;
+                    killed++;
+                    fx('mine_kill', e.x, e.y, e.type);
+                }
+            }
+            fx('mine_blast', bx, by, killed);
+        }
+
+        function tryDash() {
+            if (player.dashCooldown <= 0) {
+                player.isDashing = true;
+                player.dashDuration = 8;
+                player.dashCooldown = player.dashMax;
+                if (player.vx === 0 && player.vy === 0) player.vy = -1;
+                fx('dash', player.x, player.y);
+            }
+        }
+
+        function getNoise(x, y) {
+            return Simplex.noise3D(x * NOISE_SCALE / CELL_SIZE, y * NOISE_SCALE / CELL_SIZE, gameTime * TIME_SCALE);
+        }
+
+        function isWall(x, y) {
+            if (x < 0 || x > width || y < 0 || y > height) return true;
+            return getNoise(x, y) > WALL_THRESHOLD;
+        }
+
+        function spawnEnemy() {
+            let ex, ey, attempts = 0;
+            do {
+                ex = Math.random() * width;
+                ey = Math.random() * height;
+                attempts++;
+            } while (isWall(ex, ey) && attempts < 50);
+
+            if (attempts < 50) {
+                // Lava Debris (heavy) & Ice Dust (fast)
+                const type = Math.random() > 0.7 ? 'ice_dust' : 'lava_debris';
+                enemies.push({
+                    x: ex, y: ey,
+                    type: type,
+                    speed: type === 'ice_dust' ? 3.5 : 1.5,
+                    hp: type === 'ice_dust' ? 1 : 5,
+                    radius: type === 'ice_dust' ? 8 : 14,
+                    angle: 0
+                });
+                fx('spawn', ex, ey, type);
+            }
+        }
+
+        // Chance per frame that a new enemy appears. It climbs with the wave,
+        // and the wave climbs with score — every kill raises it.
+        function spawnChance() {
+            return 0.008 + (wave * 0.0005);
+        }
+
+        function update() {
+            if (isGameOver) return;
+
+            gameTime += 0.01;
+
+            if (Math.random() < spawnChance()) spawnEnemy();
+            if (score > wave * 1200) wave++;
+
+            // --- PLAYER MOVEMENT ---
+            let dx = 0;
+            let dy = 0;
+            if (keys['KeyW']) dy = -1;
+            if (keys['KeyS']) dy = 1;
+            if (keys['KeyA']) dx = -1;
+            if (keys['KeyD']) dx = 1;
+
+            if (dx !== 0 || dy !== 0) {
+                const len = Math.sqrt(dx*dx + dy*dy);
+                dx /= len;
+                dy /= len;
+            }
+
+            let currentSpeed = player.isDashing ? player.dashSpeed : player.speed;
+
+            // Inside lavice: frozen to a crawl and burning.
+            const noiseVal = getNoise(player.x, player.y);
+            const inLavice = noiseVal > WALL_THRESHOLD;
+
+            if (inLavice && !player.isDashing) {
+                currentSpeed *= 0.2;
+                player.hp -= 0.5;
+                fx('burn', player.x, player.y);
+            }
+
+            player.vx = dx * currentSpeed;
+            player.vy = dy * currentSpeed;
+
+            let nextX = player.x + player.vx;
+            let nextY = player.y + player.vy;
+
+            if (!player.isDashing) {
+                if (!isWall(nextX, player.y)) {
+                    player.x = nextX;
+                } else {
+                    player.vx = 0;
+                    player.hp -= 0.2;   // touching the shoreline burns
+                }
+
+                if (!isWall(player.x, nextY)) {
+                    player.y = nextY;
+                } else {
+                    player.vy = 0;
+                    player.hp -= 0.2;
+                }
+            } else {
+                player.x = nextX;
+                player.y = nextY;
+                player.dashDuration--;
+                if (player.dashDuration <= 0) player.isDashing = false;
+            }
+
+            if (player.hp <= 0) die();
+            if (player.hp < player.maxHp) player.hp += 0.05;
+
+            if (player.dashCooldown > 0) player.dashCooldown--;
+
+            // --- SHOOTING ---
+            let shootX = 0;
+            let shootY = 0;
+            if (keys['ArrowUp']) shootY = -1;
+            else if (keys['ArrowDown']) shootY = 1;
+            if (keys['ArrowLeft']) shootX = -1;
+            else if (keys['ArrowRight']) shootX = 1;
+
+            if ((shootX !== 0 || shootY !== 0) && frame % 8 === 0) {
+                bullets.push({
+                    x: player.x, y: player.y,
+                    vx: shootX * 12, vy: shootY * 12,
+                    life: 50
+                });
+                fx('shot', player.x, player.y, shootX, shootY);
+            }
+
+            // --- BULLETS ---
+            for(let i=bullets.length-1; i>=0; i--) {
+                let b = bullets[i];
+                b.x += b.vx;
+                b.y += b.vy;
+                b.life--;
+
+                if (isWall(b.x, b.y)) {
+                    bullets.splice(i, 1);
+                    fx('ricochet', b.x, b.y, b.vx, b.vy);
+                    continue;
+                }
+                if (b.life <= 0) bullets.splice(i, 1);
+            }
+
+            // --- ENEMIES ---
+            for(let i=enemies.length-1; i>=0; i--) {
+                let e = enemies[i];
+                let dx = player.x - e.x;
+                let dy = player.y - e.y;
+                let dist = Math.sqrt(dx*dx + dy*dy);
+
+                // A live mine lures enemies in its radius away from the player.
+                let mx = dx, my = dy, md = dist;
+                e.lured = false;
+                if (mine) {
+                    const lx = mine.x - e.x, ly = mine.y - e.y;
+                    const ld = Math.sqrt(lx*lx + ly*ly);
+                    if (ld < MINE.lureRadius) { mx = lx; my = ly; md = ld; e.lured = true; }
+                }
+
+                if (md > 0) {
+                    e.x += (mx/md) * e.speed;
+                    e.y += (my/md) * e.speed;
+                }
+
+                e.angle += 0.1;
+
+                if (isWall(e.x, e.y)) {
+                    e.x -= (mx/md) * e.speed;
+                    if (isWall(e.x, e.y)) e.y -= (my/md) * e.speed;
+                }
+
+                if (dist < player.radius + e.radius && !player.isDashing) {
+                    player.hp -= 10;    // contact damage
+                    // Push back
+                    player.x += (dx/dist) * 20;
+                    player.y += (dy/dist) * 20;
+                    // Never let knockback create an unrecoverable out-of-bounds trap.
+                    player.x = Math.max(player.radius, Math.min(width - player.radius, player.x));
+                    player.y = Math.max(player.radius, Math.min(height - player.radius, player.y));
+                    fx('hurt', player.x, player.y);
+                }
+
+                for(let j=bullets.length-1; j>=0; j--) {
+                    let b = bullets[j];
+                    let bDist = Math.hypot(b.x - e.x, b.y - e.y);
+                    if (bDist < e.radius + 8) {
+                        e.hp--;
+                        bullets.splice(j, 1);
+                        fx('hit', e.x, e.y, e.radius);
+
+                        if (e.hp <= 0) {
+                            enemies.splice(i, 1);
+                            score += e.type === 'ice_dust' ? 150 : 400;
+                            fx('kill', e.x, e.y, e.type);
+                        }
+                        break;
+                    }
+                }
+            }
+
+            if (MINE.enabled) updateMine();
+        }
+
+        function die() {
+            isGameOver = true;
+            fx('death', player.x, player.y);
+        }
+
+        // Boot the arena exactly like the classic build's first resize().
+        setArena(window.innerWidth, window.innerHeight);
+        findSafeSpawn();
+    </script>
+
+    <script src="super-bot.js"></script>
+
+    <script>
+    (() => {
+        'use strict';
+
+        const $ = (id) => document.getElementById(id);
+        const terrainCanvas = $('terrain');
+        const stage = $('stage');
+        const ctx = stage.getContext('2d');
+        const reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        const COLOR = { ink: '#ece7da', ember: '#ff6a2b', emberHot: '#ffc27a', ice: '#7fe0ff', frost: '#e2f8ff', signal: '#d6ff3f', alert: '#ff4259', basalt: '#2a1210' };
+        const GOAL_FRAMES = 5 * 60 * 60;         // five minutes of 60Hz simulation
+        const STEP_MS = 1000 / 60;
+        // ?play: you fly it, the instruments fold away until hovered, and the guide opens first.
+        const PLAY = /[?&]play\b/.test(location.search);
+        const BEST_KEY = PLAY ? 'lavice.play.best.v1' : 'lavice.superbot.best.v1';
+        if (PLAY) document.body.classList.add('play');
+
+        // Presentation randomness stays off Math.random so it can never
+        // disturb the simulation's own random stream.
+        let fxSeed = 0x2545f491;
+        const frand = () => { fxSeed ^= fxSeed << 13; fxSeed ^= fxSeed >>> 17; fxSeed ^= fxSeed << 5; return (fxSeed >>> 0) / 4294967296; };
+
+        // ------------------------------------------------------------- state
+
+        const bot = new SuperBot();
+        window.superBot = bot;
+
+        const view = {
+            dpr: 1, tScale: 1,
+            autopilot: !PLAY, overlay: true, paused: false, speed: 1, guide: false,
+            shake: 0, shakeX: 0, shakeY: 0, hurt: 0, tension: 0, breath: 0, costume: 'default',
+            gaze: { focus: null, hold: 0, swarm: false, mode: 'idle', x: 0, y: 0, tx: 0, ty: 1, blink: 0, nextBlink: 200, clock: 0,
+                      emote: 'calm', level: 0, scare: 0, relief: 0, e: [1, 1, 0, 1, 1, 0] },
+            runFrames: 0, runNo: 1, kills: 0, hitsTaken: 0, dashes: 0, mineKills: 0, pure: true,
+            cleared: false, deadAt: 0, thinkMs: 0, muteFx: false,
+            best: null
+        };
+        try { view.best = JSON.parse(localStorage.getItem(BEST_KEY) || 'null'); } catch (e) { view.best = null; }
+
+        // Render quality. Level 0 is the full picture; each step down sheds work
+        // the GPU does per pixel. ?quality=0..3 pins a level; otherwise govern()
+        // steps down while frames arrive late and the script is not the cause.
+        const QUALITY = [
+            { terrain: 1, stage: 1, every: 1 },
+            { terrain: 1, stage: 1, every: 2 },         // terrain shader on alternate frames; the shore moves slowly
+            { terrain: 0.7, stage: 0.8, every: 2 },
+            { terrain: 0.5, stage: 0.6, every: 2 }
+        ];
+        const pinned = /[?&]quality=([0-3])\b/.exec(location.search);
+        const perf = {
+            level: pinned ? Number(pinned[1]) : 0, auto: !pinned,
+            dt: STEP_MS, js: 0, sim: 0,         // smoothed frame interval, script time and the simulation's share of it, ms
+            late: 0, calm: 0, settle: 0,        // ms spent late / on time; no decisions before `settle`
+            retry: 20000, raisedAt: -1e9,       // how long frames must hold before trying a level up again
+            before: 0, futile: 0,               // frame interval before the last step down; steps that did not help
+            frames: 0, shown: 0, redrawTerrain: true
+        };
+
+        const sparks = [], rings = [], labels = [], ghosts = [];
+        const MAX_SPARKS = 420, MAX_RINGS = 90, MAX_LABELS = 28;
+
+        // ------------------------------------------------------- fx from core
+
+        function burst(x, y, n, speed, color, life, size) {
+            for (let i = 0; i < n && sparks.length < MAX_SPARKS; i++) {
+                const a = frand() * Math.PI * 2, s = speed * (0.35 + frand() * 0.65);
+                sparks.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life, max: life, color, size: size * (0.6 + frand() * 0.8) });
+            }
+        }
+
+        fx = function(kind, x, y, a, b) {
+            // counters always count; visuals are skipped while fast-forwarding blind
+            if (kind === 'dash') view.dashes++;
+            else if (kind === 'kill') view.kills++;
+            else if (kind === 'mine_kill') { view.kills++; view.mineKills++; }
+            else if (kind === 'hurt') view.hitsTaken++;
+            if (view.muteFx) return;
+            const fast = view.speed > 2;
+            if (rings.length > MAX_RINGS) rings.splice(0, rings.length - MAX_RINGS);
+            if (labels.length > MAX_LABELS) labels.splice(0, labels.length - MAX_LABELS);
+            switch (kind) {
+                case 'dash':
+                    rings.push({ x, y, r0: 10, r1: 46, life: 22, max: 22, color: COLOR.signal, w: 1.5 });
+                    if (!fast) burst(x, y, 10, 3.2, COLOR.signal, 26, 2.2);
+                    break;
+                case 'burn':
+                    if (frand() < 0.5 && sparks.length < MAX_SPARKS) sparks.push({ x: x + (frand() - 0.5) * 12, y: y + (frand() - 0.5) * 12, vx: (frand() - 0.5) * 0.8, vy: -1.2 - frand(), life: 20, max: 20, color: COLOR.ember, size: 2.4 });
+                    view.hurt = Math.max(view.hurt, 0.3);
+                    break;
+                case 'shot':
+                    if (!fast && sparks.length < MAX_SPARKS) sparks.push({ x: x + a * 9, y: y + b * 9, vx: a * 1.5, vy: b * 1.5, life: 6, max: 6, color: COLOR.signal, size: 3.2 });
+                    break;
+                case 'ricochet':
+                    if (!fast && sparks.length < MAX_SPARKS) sparks.push({ x, y, vx: -a * 0.2 + (frand() - 0.5) * 2, vy: -b * 0.2 + (frand() - 0.5) * 2, life: 12, max: 12, color: COLOR.ink, size: 1.8 });
+                    break;
+                case 'hit':
+                    rings.push({ x, y, r0: a * 0.6, r1: a + 6, life: 7, max: 7, color: COLOR.ink, w: 1.5 });
+                    break;
+                case 'kill': {
+                    const ice = a === 'ice_dust';
+                    const c = ice ? COLOR.ice : COLOR.ember;
+                    rings.push({ x, y, r0: 6, r1: ice ? 26 : 40, life: 20, max: 20, color: c, w: 1.5 });
+                    if (!fast) {
+                        burst(x, y, ice ? 6 : 12, ice ? 3.2 : 4.2, c, 30, ice ? 2 : 3);
+                        labels.push({ x, y: y - 14, text: ice ? '+150' : '+400', life: 44, max: 44, color: c });
+                    }
+                    break;
+                }
+                case 'hurt':
+                    view.shake = Math.min(11, view.shake + 7);
+                    view.hurt = 1;
+                    rings.push({ x, y, r0: 12, r1: 58, life: 18, max: 18, color: COLOR.alert, w: 2 });
+                    burst(x, y, 8, 4, COLOR.alert, 22, 2.4);
+                    break;
+                case 'spawn':
+                    if (!fast) rings.push({ x, y, r0: 44, r1: a === 'ice_dust' ? 8 : 14, life: 26, max: 26, color: a === 'ice_dust' ? COLOR.ice : COLOR.ember, w: 1, dashed: true });
+                    break;
+                case 'mine_set':
+                    rings.push({ x, y, r0: 40, r1: MINE.radius, life: 20, max: 20, color: COLOR.signal, w: 1.5 });
+                    break;
+                case 'mine_trip':
+                    rings.push({ x, y, r0: MINE.radius, r1: 34, life: 14, max: 14, color: COLOR.alert, w: 2 });
+                    break;
+                case 'mine_kill': {
+                    const c = a === 'ice_dust' ? COLOR.ice : COLOR.ember;
+                    rings.push({ x, y, r0: 4, r1: 26, life: 16, max: 16, color: c, w: 1 });
+                    if (!fast) burst(x, y, 5, 4.5, c, 28, 2.6);
+                    break;
+                }
+                case 'mine_blast':
+                    view.shake = Math.min(14, view.shake + 9);
+                    rings.push({ x, y, r0: 12, r1: MINE.blastRadius, life: 26, max: 26, color: COLOR.signal, w: 3 });
+                    rings.push({ x, y, r0: 6, r1: MINE.blastRadius * 0.7, life: 36, max: 36, color: COLOR.ink, w: 1.5 });
+                    burst(x, y, fast ? 14 : 40, 8, COLOR.signal, 40, 3);
+                    labels.push({ x, y: y - 22, text: 'MINE ×' + a, life: 70, max: 70, color: COLOR.signal });
+                    break;
+                case 'mine_lost':
+                    rings.push({ x, y, r0: MINE.radius, r1: 30, life: 24, max: 24, color: COLOR.ink, w: 1, dashed: true });
+                    if (!fast) labels.push({ x, y: y - 18, text: a === 'buried' ? 'MINE BURIED' : 'MINE REPLACED', life: 60, max: 60, color: COLOR.ink });
+                    break;
+                case 'death':
+                    view.shake = 16;
+                    for (let i = 0; i < 3; i++) rings.push({ x, y, r0: 8, r1: 90 + i * 70, life: 40 + i * 12, max: 40 + i * 12, color: i ? COLOR.ink : COLOR.signal, w: 2 - i * 0.5 });
+                    burst(x, y, 46, 7, COLOR.signal, 60, 3);
+                    burst(x, y, 24, 4, COLOR.ink, 70, 2);
+                    break;
+            }
+        };
+
+        // ------------------------------------------------------------ terrain
+
+        const NS = NOISE_SCALE / CELL_SIZE;
+        const VERT = `#version 300 es
+            in vec2 aPos;
+            void main() { gl_Position = vec4(aPos, 0.0, 1.0); }`;
+        const FRAG = `#version 300 es
+            precision highp float;
+            precision highp int;
+            precision highp usampler2D;
+            uniform usampler2D uPerm;
+            uniform vec2 uRes;
+            uniform vec2 uShake;
+            uniform float uScale, uZ, uZf, uTime, uForecast;
+            out vec4 outColor;
+
+            const float NS = ${NS.toFixed(8)};
+            const float TH = ${WALL_THRESHOLD.toFixed(4)};
+            const float F3 = 1.0 / 3.0;
+            const float G3 = 1.0 / 6.0;
+            const vec3 GRAD[12] = vec3[12](
+                vec3(1,1,0), vec3(-1,1,0), vec3(1,-1,0), vec3(-1,-1,0),
+                vec3(1,0,1), vec3(-1,0,1), vec3(1,0,-1), vec3(-1,0,-1),
+                vec3(0,1,1), vec3(0,-1,1), vec3(0,1,-1), vec3(0,-1,-1));
+
+            int P(int i) { return int(texelFetch(uPerm, ivec2(i & 255, 0), 0).r); }
+
+            float corner(vec3 d, int gi) {
+                float t = 0.6 - dot(d, d);
+                if (t < 0.0) return 0.0;
+                t *= t;
+                return t * t * dot(GRAD[gi], d);
+            }
+
+            // Same simplex noise as the simulation, evaluated per pixel.
+            float snoise(vec3 v) {
+                float s = (v.x + v.y + v.z) * F3;
+                vec3 ijk = floor(v + s);
+                float t = (ijk.x + ijk.y + ijk.z) * G3;
+                vec3 d0 = v - (ijk - t);
+                ivec3 o1, o2;
+                if (d0.x >= d0.y) {
+                    if (d0.y >= d0.z) { o1 = ivec3(1,0,0); o2 = ivec3(1,1,0); }
+                    else if (d0.x >= d0.z) { o1 = ivec3(1,0,0); o2 = ivec3(1,0,1); }
+                    else { o1 = ivec3(0,0,1); o2 = ivec3(1,0,1); }
+                } else {
+                    if (d0.y < d0.z) { o1 = ivec3(0,0,1); o2 = ivec3(0,1,1); }
+                    else if (d0.x < d0.z) { o1 = ivec3(0,1,0); o2 = ivec3(0,1,1); }
+                    else { o1 = ivec3(0,1,0); o2 = ivec3(1,1,0); }
+                }
+                vec3 d1 = d0 - vec3(o1) + G3;
+                vec3 d2 = d0 - vec3(o2) + 2.0 * G3;
+                vec3 d3 = d0 - 1.0 + 3.0 * G3;
+                ivec3 I = ivec3(ijk) & 255;
+                int g0 = P(I.x + P(I.y + P(I.z))) % 12;
+                int g1 = P(I.x + o1.x + P(I.y + o1.y + P(I.z + o1.z))) % 12;
+                int g2 = P(I.x + o2.x + P(I.y + o2.y + P(I.z + o2.z))) % 12;
+                int g3 = P(I.x + 1 + P(I.y + 1 + P(I.z + 1))) % 12;
+                return 32.0 * (corner(d0, g0) + corner(d1, g1) + corner(d2, g2) + corner(d3, g3));
+            }
+
+            float hash(vec2 p) {
+                p = fract(p * vec2(123.34, 456.21));
+                p += dot(p, p + 45.32);
+                return fract(p.x * p.y);
+            }
+
+            void main() {
+                vec2 w = vec2(gl_FragCoord.x, uRes.y - gl_FragCoord.y) / uScale + uShake;
+                float n = snoise(vec3(w * NS, uZ));
+                float d = n - TH;                       // > 0 inside lavice
+                float aa = max(fwidth(n), 1e-6);
+                float e = d / aa / uScale;              // ~signed distance to the shoreline, CSS px
+
+                // surface normal from the field itself (y is down on screen)
+                vec2 g = vec2(dFdx(n), -dFdy(n)) * uScale;
+                vec3 N = normalize(vec3(-g * 34.0, 1.0));
+                vec3 L = normalize(vec3(-0.45, -0.62, 0.64));
+                float diff = max(dot(N, L), 0.0);
+                float spec = pow(max(dot(N, normalize(L + vec3(0.0, 0.0, 1.0))), 0.0), 26.0);
+
+                // ---- open ground: a night chart
+                vec3 col = mix(vec3(0.022, 0.030, 0.048), vec3(0.050, 0.068, 0.104), smoothstep(-0.8, 0.15, n));
+                col *= 0.86 + 0.24 * diff;
+                float nearShore = smoothstep(-0.5, 0.0, d);
+                float cd = abs(fract(d / 0.1 + 0.5) - 0.5) * 0.1 / aa / uScale;
+                float line = 1.0 - smoothstep(0.35, 1.05, cd);
+                vec3 lineCol = mix(vec3(0.40, 0.48, 0.64), vec3(1.0, 0.50, 0.24), nearShore * nearShore);
+                col += line * lineCol * mix(0.075, 0.24, nearShore * nearShore);
+                col += vec3(1.0, 0.31, 0.09) * exp(min(d, 0.0) * 24.0) * 0.19;      // heat spilling off the shore
+
+                // ---- lavice: molten skin, cooled crust, glacial heart
+                vec3 lav = mix(vec3(1.0, 0.34, 0.09), vec3(0.30, 0.055, 0.05), smoothstep(0.0, 0.06, d));
+                lav = mix(lav, vec3(0.028, 0.085, 0.14), smoothstep(0.04, 0.125, d));
+                lav = mix(lav, vec3(0.045, 0.27, 0.40), smoothstep(0.12, 0.40, d));
+                lav = mix(lav, vec3(0.30, 0.74, 0.90), smoothstep(0.40, 0.80, d));
+                float iceMask = smoothstep(0.08, 0.22, d);
+                float id = abs(fract(d / 0.075 + 0.5) - 0.5) * 0.075 / aa / uScale;
+                float iso = 1.0 - smoothstep(0.3, 1.0, id);
+                lav += iso * mix(vec3(1.0, 0.42, 0.18), vec3(0.45, 0.82, 0.95), iceMask) * mix(0.16, 0.20, iceMask);
+                float shimmer = hash(floor(w / 3.0) + floor(uTime * 6.0)) - 0.5;
+                lav *= 0.62 + 0.62 * diff + shimmer * 0.05 * iceMask;
+                lav += spec * vec3(0.80, 0.95, 1.0) * (0.06 + 0.30 * iceMask);
+                float rim = (1.0 - smoothstep(0.0, 2.2, e)) * step(0.0, e);
+                lav = mix(lav, vec3(1.0, 0.86, 0.60), rim * 0.92);
+
+                col = mix(col, lav, smoothstep(-0.6, 0.6, e));
+
+                // ---- forecast: where the shoreline will be in one second
+                if (uForecast > 0.5) {
+                    float nf = snoise(vec3(w * NS, uZf));
+                    float ef = (nf - TH) / max(fwidth(nf), 1e-6) / uScale;
+                    float fl = 1.0 - smoothstep(0.4, 1.2, abs(ef));
+                    float dash = step(0.5, fract((w.x + w.y) / 9.0 - uTime * 0.6));
+                    col = mix(col, vec3(0.84, 1.0, 0.25), fl * dash * 0.42);
+                }
+
+                // ---- lens: vignette + a little grain to keep the darks from banding
+                vec2 uv = gl_FragCoord.xy / uRes - 0.5;
+                col *= 1.0 - dot(uv, uv) * 0.85;
+                col += (hash(gl_FragCoord.xy + uTime) - 0.5) * 0.012;
+                outColor = vec4(col, 1.0);
+            }`;
+
+        let gl = null, glu = null;
+
+        function initGL() {
+            if (/[?&]renderer=canvas\b/.test(location.search)) return false;     // force the 2D fallback
+            let g;
+            try { g = terrainCanvas.getContext('webgl2', { antialias: false, alpha: false, powerPreference: 'high-performance' }); } catch (e) { g = null; }
+            if (!g) return false;
+            const compile = (type, src) => {
+                const sh = g.createShader(type);
+                g.shaderSource(sh, src);
+                g.compileShader(sh);
+                if (!g.getShaderParameter(sh, g.COMPILE_STATUS)) throw new Error(g.getShaderInfoLog(sh));
+                return sh;
+            };
+            try {
+                const prog = g.createProgram();
+                g.attachShader(prog, compile(g.VERTEX_SHADER, VERT));
+                g.attachShader(prog, compile(g.FRAGMENT_SHADER, FRAG));
+                g.linkProgram(prog);
+                if (!g.getProgramParameter(prog, g.LINK_STATUS)) throw new Error(g.getProgramInfoLog(prog));
+                g.useProgram(prog);
+                const buf = g.createBuffer();
+                g.bindBuffer(g.ARRAY_BUFFER, buf);
+                g.bufferData(g.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), g.STATIC_DRAW);
+                const loc = g.getAttribLocation(prog, 'aPos');
+                g.enableVertexAttribArray(loc);
+                g.vertexAttribPointer(loc, 2, g.FLOAT, false, 0, 0);
+                const tex = g.createTexture();
+                g.activeTexture(g.TEXTURE0);
+                g.bindTexture(g.TEXTURE_2D, tex);
+                g.pixelStorei(g.UNPACK_ALIGNMENT, 1);
+                g.texImage2D(g.TEXTURE_2D, 0, g.R8UI, 256, 1, 0, g.RED_INTEGER, g.UNSIGNED_BYTE, Simplex.perm.subarray(0, 256));
+                g.texParameteri(g.TEXTURE_2D, g.TEXTURE_MIN_FILTER, g.NEAREST);
+                g.texParameteri(g.TEXTURE_2D, g.TEXTURE_MAG_FILTER, g.NEAREST);
+                g.texParameteri(g.TEXTURE_2D, g.TEXTURE_WRAP_S, g.CLAMP_TO_EDGE);
+                g.texParameteri(g.TEXTURE_2D, g.TEXTURE_WRAP_T, g.CLAMP_TO_EDGE);
+                glu = {};
+                for (const name of ['uPerm', 'uRes', 'uShake', 'uScale', 'uZ', 'uZf', 'uTime', 'uForecast']) glu[name] = g.getUniformLocation(prog, name);
+                g.uniform1i(glu.uPerm, 0);
+            } catch (err) {
+                console.warn('[superbot] shader terrain unavailable, using canvas fallback:', err.message);
+                return false;
+            }
+            gl = g;
+            terrainCanvas.addEventListener('webglcontextlost', (ev) => { ev.preventDefault(); gl = null; });
+            return true;
+        }
+
+        function drawTerrainGL(now) {
+            gl.viewport(0, 0, terrainCanvas.width, terrainCanvas.height);
+            gl.uniform2f(glu.uRes, terrainCanvas.width, terrainCanvas.height);
+            gl.uniform2f(glu.uShake, view.shakeX, view.shakeY);
+            gl.uniform1f(glu.uScale, view.tScale);
+            gl.uniform1f(glu.uZ, gameTime * TIME_SCALE);
+            gl.uniform1f(glu.uZf, (gameTime + 0.6) * TIME_SCALE);
+            gl.uniform1f(glu.uTime, (now / 1000) % 1000);
+            gl.uniform1f(glu.uForecast, view.overlay ? 1 : 0);
+            gl.drawArrays(gl.TRIANGLES, 0, 3);
+        }
+
+        // Canvas fallback: same palette, cell resolution.
+        function drawTerrain2D() {
+            const cell = CELL_SIZE;
+            ctx.fillStyle = '#070a10';
+            ctx.fillRect(0, 0, width, height);
+            for (let y = 0; y < height; y += cell) {
+                for (let x = 0; x < width; x += cell) {
+                    const d = getNoise(x + cell / 2, y + cell / 2) - WALL_THRESHOLD;
+                    if (d <= 0) continue;
+                    const t = Math.min(1, d / 0.4);
+                    const r = d < 0.05 ? 255 : Math.round(60 * (1 - t) + 40 * t);
+                    const g = d < 0.05 ? 110 : Math.round(30 * (1 - t) + 190 * t);
+                    const b = d < 0.05 ? 40 : Math.round(40 * (1 - t) + 235 * t);
+                    ctx.fillStyle = `rgb(${r},${g},${b})`;
+                    ctx.fillRect(x, y, cell + 1, cell + 1);
+                }
+            }
+        }
+
+        // ------------------------------------------------------------ sprites
+
+        // Every enemy is one textured quad cut from a single sheet, so a few
+        // hundred of them reach the GPU as one batch. (Drawn as paths, each
+        // kind was a single outline whose bounds covered the whole arena.)
+        //   rows 0-4  lava chips: 8 outlines x 5 states of damage
+        //   row 5     the ice dart, pointing along +x, with its trail
+        //   row 6     the two halos
+        const SHARDS = 8, SHARD_CELL = 40, SHARD_R = 14;
+        const DART = { w: 46, h: 18, ox: 30, r: 8, y: SHARD_CELL * 5 };
+        const GLOW = { y: SHARD_CELL * 5 + 18, ember: 34, ice: 26 };
+        const sheet = document.createElement('canvas');
+        let sheetScale = 0;
+
+        function buildSprites() {
+            const k = Math.ceil(view.dpr);
+            if (k === sheetScale) return;
+            sheetScale = k;
+            sheet.width = SHARD_CELL * SHARDS * k;
+            sheet.height = (GLOW.y + GLOW.ember * 2) * k;
+            const g = sheet.getContext('2d');
+            let seed = 0x9e3779b9;
+            const rnd = () => { seed ^= seed << 13; seed ^= seed >>> 17; seed ^= seed << 5; return (seed >>> 0) / 4294967296; };
+
+            // lava debris — basalt chips with a molten seam; the more a chip
+            // is cracked, the hotter its core shows
+            g.lineJoin = 'round';
+            for (let v = 0; v < SHARDS; v++) {
+                const n = 5 + (v & 1);
+                const chip = new Path2D();
+                for (let i = 0; i < n; i++) {
+                    const a = (i / n) * Math.PI * 2 + (rnd() - 0.5) * 0.5, rr = (0.82 + rnd() * 0.34) * SHARD_R;
+                    if (i === 0) chip.moveTo(Math.cos(a) * rr, Math.sin(a) * rr); else chip.lineTo(Math.cos(a) * rr, Math.sin(a) * rr);
+                }
+                chip.closePath();
+                for (let hurt = 0; hurt < 5; hurt++) {
+                    g.setTransform(k, 0, 0, k, (v + 0.5) * SHARD_CELL * k, (hurt + 0.5) * SHARD_CELL * k);
+                    g.fillStyle = COLOR.basalt;
+                    g.fill(chip);
+                    g.lineWidth = 2;
+                    g.strokeStyle = COLOR.ember;
+                    g.stroke(chip);
+                    g.globalAlpha = 0.45 + hurt * 0.13;
+                    g.fillStyle = hurt >= 3 ? COLOR.emberHot : COLOR.ember;
+                    g.beginPath();
+                    g.arc(0, 0, 3.2 + hurt * 1.5, 0, Math.PI * 2);
+                    g.fill();
+                    g.globalAlpha = 1;
+                }
+            }
+
+            // ice dust — a dart that points where it is going
+            const r = DART.r;
+            g.setTransform(k, 0, 0, k, DART.ox * k, (DART.y + DART.h / 2) * k);
+            g.lineWidth = 1.5;
+            g.strokeStyle = 'rgba(127,224,255,0.45)';
+            g.beginPath(); g.moveTo(-r * 3.4, 0); g.lineTo(-r * 1.2, 0); g.stroke();
+            g.beginPath();
+            g.moveTo(r * 1.5, 0); g.lineTo(-r * 0.3, r * 0.72); g.lineTo(-r, 0); g.lineTo(-r * 0.3, -r * 0.72);
+            g.closePath();
+            g.fillStyle = COLOR.frost;
+            g.fill();
+            g.lineWidth = 1;
+            g.strokeStyle = COLOR.ice;
+            g.stroke();
+
+            // halos
+            const glow = (x, radius, rgb) => {
+                g.setTransform(k, 0, 0, k, x * k, GLOW.y * k);
+                const grad = g.createRadialGradient(radius, radius, 0, radius, radius, radius);
+                grad.addColorStop(0, `rgba(${rgb},0.55)`);
+                grad.addColorStop(0.35, `rgba(${rgb},0.18)`);
+                grad.addColorStop(1, `rgba(${rgb},0)`);
+                g.fillStyle = grad;
+                g.fillRect(0, 0, radius * 2, radius * 2);
+            };
+            glow(0, GLOW.ember, '255,96,36');
+            glow(GLOW.ember * 2, GLOW.ice, '127,224,255');
+        }
+
+        // Per-frame scratch grids, sized to the arena in resize(): which 14px
+        // cells already carry a halo, and how many lava chips sit in each 40px cell.
+        const HALO_CELL = 14, PILE_CELL = 40;
+        // Debris chasing the same target ends up on the same pixels, dozens deep.
+        // Past the first few, the chips underneath cannot be seen: draw at most
+        // CHIP_MAX per CHIP_CELL px and let the head-count label say the rest.
+        const CHIP_CELL = 4, CHIP_MAX = 3;
+        let chipW = 0, chipMark = new Uint32Array(0), chipCount = new Uint8Array(0);
+        let haloW = 0, haloMark = new Uint32Array(0), haloGen = 0;
+        let pileW = 0, pileN = new Uint16Array(0), pileX = new Float32Array(0), pileY = new Float32Array(0);
+        const pileHit = [];
+
+        function sizeScratch(w, h) {
+            haloW = Math.ceil(w / HALO_CELL) + 1;
+            haloMark = new Uint32Array(haloW * (Math.ceil(h / HALO_CELL) + 1));
+            haloGen = 0;
+            chipW = Math.ceil(w / CHIP_CELL) + 1;
+            const chips = chipW * (Math.ceil(h / CHIP_CELL) + 1);
+            chipMark = new Uint32Array(chips); chipCount = new Uint8Array(chips);
+            pileW = Math.ceil(w / PILE_CELL) + 1;
+            const n = pileW * (Math.ceil(h / PILE_CELL) + 1);
+            pileN = new Uint16Array(n); pileX = new Float32Array(n); pileY = new Float32Array(n);
+            pileHit.length = 0;
+        }
+
+        // ---------------------------------------------------------- rendering
+
+        const lerp = (a, b, t) => a + (b - a) * t;
+        const ix = (o, t) => (o.px === undefined ? o.x : lerp(o.px, o.x, t));
+        const iy = (o, t) => (o.py === undefined ? o.y : lerp(o.py, o.y, t));
+
+        function drawEnemies(t) {
+            const n = enemies.length;
+            const px = ix(player, t), py = iy(player, t);
+            const k = sheetScale, s = view.dpr;
+            const ox = -view.shakeX * s, oy = -view.shakeY * s;
+            const maxX = width - 1, maxY = height - 1;
+
+            // Halos, one per 14px cell: lava debris piles onto the same spot
+            // while chasing, and a stack of additive glows would burn out to a
+            // solid disc. Stacks get a head-count label instead.
+            const gen = ++haloGen;
+            const eg = GLOW.ember, ig = GLOW.ice, gy = GLOW.y * k;
+            ctx.globalCompositeOperation = 'lighter';
+            for (let i = 0; i < n; i++) {
+                const e = enemies[i];
+                const x = ix(e, t), y = iy(e, t);
+                const cx = x < 0 ? 0 : (x > maxX ? maxX : x), cy = y < 0 ? 0 : (y > maxY ? maxY : y);
+                const ice = e.type === 'ice_dust';
+                const key = ((cy / HALO_CELL) | 0) * haloW + ((cx / HALO_CELL) | 0);
+                if (haloMark[key] !== gen) {
+                    haloMark[key] = gen;
+                    if (ice) ctx.drawImage(sheet, eg * 2 * k, gy, ig * 2 * k, ig * 2 * k, x - ig, y - ig, ig * 2, ig * 2);
+                    else ctx.drawImage(sheet, 0, gy, eg * 2 * k, eg * 2 * k, x - eg, y - eg, eg * 2, eg * 2);
+                }
+                if (!ice) {
+                    const c = ((cy / PILE_CELL) | 0) * pileW + ((cx / PILE_CELL) | 0);
+                    if (pileN[c]++ === 0) pileHit.push(c);
+                    pileX[c] += x; pileY[c] += y;
+                }
+            }
+            ctx.globalCompositeOperation = 'source-over';
+
+            // lava debris, each chip tumbling at its own rate
+            const cell = SHARD_CELL * k, half = SHARD_CELL / 2;
+            for (let i = 0; i < n; i++) {
+                const e = enemies[i];
+                if (e.type === 'ice_dust') continue;
+                if (e._chip === undefined) {
+                    e._chip = (frand() * SHARDS) | 0;
+                    e._spin = (frand() < 0.5 ? -1 : 1) * (0.18 + frand() * 0.2);
+                }
+                const ex = e.x < 0 ? 0 : (e.x > maxX ? maxX : e.x), ey = e.y < 0 ? 0 : (e.y > maxY ? maxY : e.y);
+                const spot = ((ey / CHIP_CELL) | 0) * chipW + ((ex / CHIP_CELL) | 0);
+                if (chipMark[spot] !== gen) { chipMark[spot] = gen; chipCount[spot] = 1; }
+                else if (chipCount[spot] >= CHIP_MAX) continue;
+                else chipCount[spot]++;
+                const rot = e.angle * e._spin, m = e.radius / SHARD_R * s;
+                const co = Math.cos(rot) * m, si = Math.sin(rot) * m;
+                const hurt = e.hp >= 5 ? 0 : (e.hp <= 1 ? 4 : 5 - e.hp);
+                ctx.setTransform(co, si, -si, co, ix(e, t) * s + ox, iy(e, t) * s + oy);
+                ctx.drawImage(sheet, e._chip * cell, hurt * cell, cell, cell, -half, -half, SHARD_CELL, SHARD_CELL);
+            }
+
+            // ice dust, on top, nose toward the player
+            const dy0 = DART.y * k, dw = DART.w * k, dh = DART.h * k;
+            for (let i = 0; i < n; i++) {
+                const e = enemies[i];
+                if (e.type !== 'ice_dust') continue;
+                const x = ix(e, t), y = iy(e, t);
+                const dx = px - x, dy = py - y, d = Math.sqrt(dx * dx + dy * dy);
+                const m = e.radius / DART.r * s;
+                const co = d > 0 ? dx / d * m : m, si = d > 0 ? dy / d * m : 0;
+                ctx.setTransform(co, si, -si, co, x * s + ox, y * s + oy);
+                ctx.drawImage(sheet, 0, dy0, dw, dh, -DART.ox, -DART.h / 2, DART.w, DART.h);
+            }
+            ctx.setTransform(s, 0, 0, s, ox, oy);
+
+            // head-counts for piles
+            ctx.font = '700 10px "JetBrains Mono", ui-monospace, Menlo, monospace';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            for (let i = 0; i < pileHit.length; i++) {
+                const c = pileHit[i], count = pileN[c];
+                if (count >= 6) {
+                    const cx = pileX[c] / count, cy = pileY[c] / count;
+                    const label = '×' + count;
+                    const tw = ctx.measureText(label).width;
+                    ctx.fillStyle = 'rgba(7,10,16,0.78)';
+                    ctx.fillRect(cx + 17, cy - 24, tw + 8, 14);
+                    ctx.fillStyle = COLOR.emberHot;
+                    ctx.fillText(label, cx + 21, cy - 16.5);
+                }
+                pileN[c] = 0; pileX[c] = 0; pileY[c] = 0;
+            }
+            pileHit.length = 0;
+            ctx.textBaseline = 'alphabetic';
+        }
+
+        function drawBullets(t) {
+            if (!bullets.length) return;
+            ctx.lineCap = 'round';
+            for (let pass = 0; pass < 2; pass++) {
+                ctx.beginPath();
+                for (const b of bullets) {
+                    const x = b.px === undefined ? b.x : lerp(b.px, b.x, t), y = b.py === undefined ? b.y : lerp(b.py, b.y, t);
+                    ctx.moveTo(x - b.vx * 1.5, y - b.vy * 1.5);
+                    ctx.lineTo(x, y);
+                }
+                ctx.lineWidth = pass ? 2 : 6;
+                ctx.strokeStyle = pass ? '#f6ffd2' : 'rgba(214,255,63,0.22)';
+                ctx.stroke();
+            }
+            ctx.lineCap = 'butt';
+        }
+
+        function drawMine(now) {
+            if (!mine || isGameOver) return;
+            const x = mine.x, y = mine.y;
+            const sink = mine.buried / MINE.buryFrames;         // 0..1 as the lavice swallows it
+            const pulse = 0.5 + 0.5 * Math.sin(now * 0.008);
+            ctx.save();
+
+            const lit = mine.fuse >= 0;
+            const fuseK = lit ? 1 - mine.fuse / MINE.fuseFrames : 0;    // 0..1 as the fuse burns
+
+            // tethers to everything it has lured
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = 'rgba(214,255,63,0.16)';
+            ctx.beginPath();
+            let tethers = 0;
+            for (let i = 0; i < enemies.length && tethers < 60; i++) {
+                const e = enemies[i];
+                if (e.lured) { ctx.moveTo(x, y); ctx.lineTo(e.x, e.y); tethers++; }
+            }
+            ctx.stroke();
+
+            // lure reach (faint) and blast footprint (dashed; fills in as the fuse burns)
+            if (view.overlay || lit) {
+                ctx.strokeStyle = `rgba(214,255,63,${(0.10 * (1 - sink)).toFixed(3)})`;
+                ctx.beginPath(); ctx.arc(x, y, MINE.lureRadius, 0, Math.PI * 2); ctx.stroke();
+                ctx.setLineDash([3, 7]);
+                ctx.strokeStyle = lit ? `rgba(255,66,89,${(0.35 + 0.5 * fuseK).toFixed(3)})` : `rgba(214,255,63,${(0.24 * (1 - sink)).toFixed(3)})`;
+                ctx.beginPath(); ctx.arc(x, y, MINE.blastRadius, 0, Math.PI * 2); ctx.stroke();
+                ctx.setLineDash([]);
+                if (lit) {
+                    ctx.fillStyle = `rgba(255,66,89,${(0.05 + 0.12 * fuseK).toFixed(3)})`;
+                    ctx.beginPath(); ctx.arc(x, y, MINE.blastRadius * fuseK, 0, Math.PI * 2); ctx.fill();
+                }
+            }
+
+            ctx.globalAlpha = 1 - sink * 0.75;
+            ctx.strokeStyle = COLOR.signal;
+            ctx.lineWidth = 1;
+            ctx.globalAlpha *= 0.25 + 0.45 * (1 - pulse);
+            ctx.beginPath(); ctx.arc(x, y, MINE.radius + 4 + pulse * 10, 0, Math.PI * 2); ctx.stroke();
+            ctx.globalAlpha = 1 - sink * 0.75;
+
+            // body: a diamond with a lit core
+            const r = MINE.radius;
+            ctx.fillStyle = '#0b0f16';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(x, y - r); ctx.lineTo(x + r, y); ctx.lineTo(x, y + r); ctx.lineTo(x - r, y);
+            ctx.closePath(); ctx.fill(); ctx.stroke();
+            ctx.fillStyle = lit ? COLOR.alert : COLOR.signal;
+            ctx.beginPath(); ctx.arc(x, y, lit ? 2 + fuseK * 4 : 1.5 + pulse * 1.5, 0, Math.PI * 2); ctx.fill();
+
+            // burial countdown
+            if (sink > 0) {
+                ctx.globalAlpha = 1;
+                ctx.strokeStyle = COLOR.ember;
+                ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.arc(x, y, r + 6, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * sink); ctx.stroke();
+            }
+            ctx.restore();
+        }
+
+        // Tension, 0 (calm) to 1 (about to die): how crowded the ship is, how
+        // little integrity is left, and whether it is burning. It sets the
+        // colour of the body and how fast it breathes.
+        const TENSION_STOPS = [[214, 255, 63], [255, 190, 70], [255, 66, 89]];     // signal -> amber -> alert
+        function measureTension() {
+            let crowd = 0;
+            for (let i = 0; i < enemies.length; i++) {
+                const e = enemies[i];
+                if (e.lured) continue;                      // busy with the mine
+                const d = Math.hypot(e.x - player.x, e.y - player.y) - e.radius - player.radius;
+                const reach = e.type === 'ice_dust' ? 260 : 170;
+                if (d < reach) { const k = 1 - Math.max(0, d) / reach; crowd += k * k; }
+            }
+            const hurt = 1 - Math.max(0, player.hp) / player.maxHp;
+            const burning = !player.isDashing && isWall(player.x, player.y) ? 0.6 : 0;
+            return Math.min(1, Math.max(1 - Math.exp(-crowd * 0.55), hurt * hurt * 1.2, burning) + hurt * 0.25);
+        }
+        function updateTension(dtFrames) {
+            if (isGameOver) return;
+            const target = measureTension();
+            // rises fast, settles slowly, like a pulse
+            const rate = target > view.tension ? 0.12 : 0.025;
+            view.tension += (target - view.tension) * (1 - Math.pow(1 - rate, dtFrames));
+            // one breath every ~4 s when calm, about two a second at the limit
+            view.breath += dtFrames / 60 * Math.PI * 2 * (0.25 + 1.9 * view.tension * view.tension);
+        }
+        function tensionRGB(k) {
+            const f = Math.min(0.9999, Math.max(0, k)) * 2, i = f | 0, u = f - i;
+            const a = TENSION_STOPS[i], b = TENSION_STOPS[i + 1];
+            return `${Math.round(a[0] + (b[0] - a[0]) * u)},${Math.round(a[1] + (b[1] - a[1]) * u)},${Math.round(a[2] + (b[2] - a[2]) * u)}`;
+        }
+
+        // Where the pilot is looking. It stares at whatever will reach it
+        // soonest, but holds that stare: a rival has to be clearly more urgent
+        // and the current one has to have been watched for a moment. When the
+        // swarm closes from one side it watches the swarm as a whole instead
+        // of flicking between its members.
+        const GAZE = {
+            range: 320,          // px: nothing farther away is worth a look
+            dwell: 24,           // frames a stare is held before it may move on
+            crowdDwell: 54,      // ...and when surrounded
+            switchBy: 1.4,       // how much more urgent a rival must be to take over
+            snapBy: 2.6,         // ...or to take over at once
+            crowd: 6,            // threats in range before it reads them as a swarm
+            turn: 0.2            // share of the remaining eye travel covered per frame
+        };
+        // Faces, after the reference character's own set: each eye is a capsule
+        // given as length, width and lean (radians, + = top leans right), left
+        // eye then right. A short fat capsule is a round eye; one leaned right
+        // over is a narrowed one.
+        const EMOTES = {
+            calm:     [1, 1, 0,          1, 1, 0],
+            wary:     [1.05, 1, 0,       0.7, 0.72, 1.3],       // one eye narrowed
+            fierce:   [0.95, 1, -0.6,    0.95, 1, 0.6],         // \ /
+            worried:  [0.85, 0.95, 0.5,  0.85, 0.95, -0.5],     // / \
+            scared:   [0.2, 2, 0,        0.2, 2, 0],            // wide and round
+            relieved: [1.35, 1.25, 0,    1.35, 1.25, 0]         // tall and bright
+        };
+        const EMOTE_UP = [0.22, 0.45, 0.72];        // tension at which the face steps up: wary, fierce, scared
+        const EMOTE_DOWN = 0.07;                    // ...and how far below that it must fall to step back
+        function updateEmote(dtFrames) {
+            const g = view.gaze, tns = view.tension;
+            let lv = g.level;
+            while (lv < 3 && tns > EMOTE_UP[lv]) lv++;
+            while (lv > 0 && tns < EMOTE_UP[lv - 1] - EMOTE_DOWN) lv--;
+            g.level = lv;
+            // coming down from a real scare reads as relief for a moment
+            if (lv === 3) g.scare = 300;
+            else if (g.scare > 0) { g.scare -= dtFrames; if (lv === 0) { g.relief = 110; g.scare = 0; } }
+            if (g.relief > 0) g.relief -= dtFrames;
+
+            let name = ['calm', 'wary', 'fierce', 'scared'][lv];
+            if (lv === 0 && g.relief > 0) name = 'relieved';
+            // badly hurt but not mobbed: it frets instead of glaring
+            else if (lv === 2 && player.hp < player.maxHp * 0.35) name = 'worried';
+            g.emote = name;
+            const want = EMOTES[name], k = 1 - Math.pow(1 - 0.2, dtFrames);
+            for (let i = 0; i < 6; i++) g.e[i] += (want[i] - g.e[i]) * k;
+        }
+
+        function updateGaze(dtFrames) {
+            const g = view.gaze;
+            g.clock += dtFrames;
+            if (isGameOver) return;
+
+            let best = null, bestS = 0, curS = 0, n = 0, sx = 0, sy = 0, sw = 0;
+            for (let i = 0; i < enemies.length; i++) {
+                const e = enemies[i];
+                if (e.lured) continue;                      // heading for the mine, not for us
+                const dx = e.x - player.x, dy = e.y - player.y, dist = Math.hypot(dx, dy) || 1;
+                const gap = dist - e.radius - player.radius;
+                if (gap > GAZE.range) continue;
+                const s = e.speed / (Math.max(0, gap) + 24);   // ~ 1 / frames until contact
+                n++; sx += dx / dist * s; sy += dy / dist * s; sw += s;
+                if (s > bestS) { bestS = s; best = e; }
+                if (e === g.focus) curS = s;
+            }
+            if (curS === 0) g.focus = null;                 // dead, lured or out of range
+            const crowded = n >= GAZE.crowd;
+            g.hold -= dtFrames;
+            if (best && best !== g.focus) {
+                const lead = curS > 0 ? bestS / curS : Infinity;
+                if (!g.focus || lead > GAZE.snapBy || (g.hold <= 0 && lead > GAZE.switchBy)) {
+                    g.focus = best;
+                    g.hold = crowded ? GAZE.crowdDwell : GAZE.dwell;
+                }
+            }
+
+            // how one-sided the swarm is: 1 = all on one bearing, 0 = all around
+            const oneSided = sw > 0 ? Math.hypot(sx, sy) / sw : 0;
+            g.swarm = crowded && oneSided > (g.swarm ? 0.35 : 0.5);
+
+            let tx = 0, ty = 0;
+            if (g.swarm) {
+                const m = Math.hypot(sx, sy);
+                tx = sx / m; ty = sy / m; g.mode = 'swarm';
+            } else if (g.focus) {
+                const dx = g.focus.x - player.x, dy = g.focus.y - player.y, d = Math.hypot(dx, dy) || 1;
+                tx = dx / d; ty = dy / d; g.mode = crowded ? 'surrounded' : 'threat';
+            } else {
+                const sp = Math.hypot(player.vx, player.vy);
+                if (sp > 0.3) { tx = player.vx / sp * 0.6; ty = player.vy / sp * 0.6; g.mode = 'heading'; }
+                else g.mode = 'idle';
+            }
+            const k = 1 - Math.pow(1 - GAZE.turn, dtFrames);
+            g.x += (tx - g.x) * k; g.y += (ty - g.y) * k;
+
+            // the scarf and antenna trail behind the motion and hang when it stops
+            const sp = Math.hypot(player.vx, player.vy);
+            const lx = sp > 0.3 ? -player.vx / sp : 0, ly = sp > 0.3 ? -player.vy / sp : 1;
+            const kt = 1 - Math.pow(1 - 0.08, dtFrames);
+            g.tx += (lx - g.tx) * kt; g.ty += (ly - g.ty) * kt;
+
+            updateEmote(dtFrames);
+
+            if (reducedMotion) return;
+            if (g.blink > 0) g.blink = Math.max(0, g.blink - dtFrames / 9);
+            g.nextBlink -= dtFrames;
+            if (g.nextBlink <= 0) { g.blink = 1; g.nextBlink = 150 + frand() * 260; }
+        }
+
+        // Costumes. The pilot underneath never changes — hitbox, gaze, face,
+        // tension rim and breath — only the outfit does. C steps through them
+        // (Shift+C back), ?costume=name picks one, and the choice is remembered.
+        // Each has a body fill, how strongly that body takes the tension colour
+        // (`glow`), its eyes [colour, outline, height, size, outward lean,
+        // spacing], an optional body outline (`shape`), and what is drawn behind
+        // (`back`) and over (`front`) the body. Lengths are in units of R.
+        const COSTUME_KEY = 'lavice.costume.v1';
+        const DARK = '#0b0f16', TAU = Math.PI * 2;
+        const pose = { R: 0, bx: 0, by: 0, g: null, look: null, flap: 0, sway: 0, spin: 0, breath: 0, body: '' };
+
+        function seg(x0, y0, x1, y1) { ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke(); }
+        function bodyPath(p) {
+            ctx.beginPath();
+            if (p.look.shape) p.look.shape(p.bx, p.by, p.R);
+            else ctx.ellipse(0, 0, p.bx, p.by, 0, 0, TAU);
+        }
+        // everything drawn until the matching ctx.restore() stays inside the body
+        function clipBody(p) { ctx.save(); bodyPath(p); ctx.clip(p.look.rule || 'nonzero'); }
+        // a ribbon that trails behind the motion and hangs when it stops
+        function streamer(p, ax, ay, len, phase, width, color) {
+            const g = p.g, px = -g.ty, py = g.tx;
+            ctx.strokeStyle = color;
+            ctx.lineWidth = width;
+            ctx.beginPath();
+            ctx.moveTo(ax, ay);
+            for (let i = 1; i <= 5; i++) {
+                const u = i / 5, w = Math.sin(p.flap - u * 3.2 + phase) * p.R * 0.24 * u;
+                ctx.lineTo(ax + g.tx * len * u + px * w, ay + g.ty * len * u + py * w);
+            }
+            ctx.stroke();
+        }
+        // half of the black hole's tilted disc: the far half goes behind the body, the near half across it
+        function accretion(p, a0, a1) {
+            const R = p.R, tilt = -0.22, rx = R * 1.7, ry = R * 0.46;
+            ctx.lineCap = 'butt';
+            ctx.strokeStyle = COLOR.ember;
+            ctx.lineWidth = R * 0.34;
+            ctx.beginPath(); ctx.ellipse(0, 0, rx, ry, tilt, a0, a1); ctx.stroke();
+            ctx.strokeStyle = COLOR.emberHot;
+            ctx.lineWidth = R * 0.12;
+            ctx.stroke();
+            ctx.lineCap = 'round';
+            ctx.fillStyle = '#fff';
+            for (let i = 0; i < 3; i++) {                   // hot spots carried round the disc
+                const a = (p.spin * 0.07 + i * 2.094) % TAU;
+                if (a < a0 || a >= a1) continue;
+                const ex = Math.cos(a) * rx, ey = Math.sin(a) * ry;
+                ctx.beginPath(); ctx.arc(ex * Math.cos(tilt) - ey * Math.sin(tilt), ex * Math.sin(tilt) + ey * Math.cos(tilt), 1.5, 0, TAU); ctx.fill();
+            }
+        }
+        const SPRINKLES = [[-0.68, 0.02, 0.6, '#fff'], [-0.55, 0.5, 2.2, COLOR.ice], [-0.2, 0.74, 0.2, COLOR.signal], [0.32, 0.7, 1.4, '#fff'],
+                           [0.64, 0.36, 2.6, COLOR.signal], [0.7, -0.1, 0.9, COLOR.ice], [-0.7, -0.32, 1.9, COLOR.signal], [0.66, -0.4, 0.3, '#fff'], [0.02, -0.74, 1.2, COLOR.ice]];
+
+        const COSTUME = {
+            // the original kit: an ember scarf with an ice tail, and a beacon antenna
+            default: {
+                label: 'Default', fill: DARK, glow: 1, eyes: ['#fff', null, -0.2, 1, 0, 0.31],
+                back(p) {
+                    const R = p.R, g = p.g, kx = g.tx * R * 0.7, ky = R * 0.5;
+                    streamer(p, kx, ky, R * 1.55, 0, R * 0.26, COLOR.ember);
+                    streamer(p, kx, ky, R * 1.15, 1.7, R * 0.2, COLOR.ice);
+                    // antenna: leans back with the motion, beacon in the tension colour
+                    const ax = g.tx * R * 0.45 + p.sway, ay = -R * 1.62;
+                    ctx.strokeStyle = DARK;
+                    ctx.lineWidth = 3.4;
+                    ctx.beginPath(); ctx.moveTo(0, -R * 0.9); ctx.quadraticCurveTo(0, -R * 1.35, ax, ay); ctx.stroke();
+                    ctx.strokeStyle = p.body;
+                    ctx.lineWidth = 1.2;
+                    ctx.stroke();
+                    ctx.fillStyle = p.body;
+                    ctx.beginPath(); ctx.arc(ax, ay, 2 + 0.9 * p.breath, 0, TAU); ctx.fill();
+                },
+                front(p) {
+                    const R = p.R;
+                    clipBody(p);                            // scarf, wrapped round the lower body
+                    ctx.strokeStyle = COLOR.ember;
+                    ctx.lineWidth = R * 0.36;
+                    ctx.beginPath(); ctx.moveTo(-R * 1.1, R * 0.36); ctx.quadraticCurveTo(0, R * 0.92, R * 1.1, R * 0.36); ctx.stroke();
+                    ctx.strokeStyle = COLOR.emberHot;
+                    ctx.lineWidth = 1;
+                    ctx.beginPath(); ctx.moveTo(-R * 1.1, R * 0.3); ctx.quadraticCurveTo(0, R * 0.86, R * 1.1, R * 0.3); ctx.stroke();
+                    ctx.restore();
+                    ctx.fillStyle = COLOR.emberHot;
+                    ctx.beginPath(); ctx.arc(p.g.tx * R * 0.7, R * 0.62, R * 0.17, 0, TAU); ctx.fill();
+                }
+            },
+            // green, wide-browed, almond-eyed, with two beacon feelers
+            alien: {
+                label: 'Alien', fill: '#5fdc7c', glow: 0.35, eyes: [DARK, null, -0.24, 1.2, 0.5, 0.33], clipEyes: true,
+                shape(bx, by) {
+                    ctx.moveTo(0, -by);
+                    ctx.bezierCurveTo(bx * 1.3, -by, bx * 1.1, by * 0.45, 0, by * 1.08);
+                    ctx.bezierCurveTo(-bx * 1.1, by * 0.45, -bx * 1.3, -by, 0, -by);
+                    ctx.closePath();
+                },
+                back(p) {
+                    const R = p.R;
+                    for (let s = -1; s <= 1; s += 2) {
+                        const tx = s * R * 0.8 + p.g.tx * R * 0.3 + p.sway, ty = -R * 1.5;
+                        ctx.strokeStyle = DARK;
+                        ctx.lineWidth = 3.6;
+                        ctx.beginPath(); ctx.moveTo(s * R * 0.34, -R * 0.8); ctx.quadraticCurveTo(s * R * 0.4, -R * 1.3, tx, ty); ctx.stroke();
+                        ctx.strokeStyle = '#5fdc7c';
+                        ctx.lineWidth = 1.6;
+                        ctx.stroke();
+                        ctx.fillStyle = p.body;
+                        ctx.beginPath(); ctx.arc(tx, ty, 2.4 + 0.9 * p.breath, 0, TAU); ctx.fill();
+                    }
+                },
+                front() {}
+            },
+            // hood, eye slit, ember headband with trailing ends, and a sword across the back
+            ninja: {
+                label: 'Ninja', fill: '#10141c', glow: 0.6, eyes: ['#fff', null, -0.2, 1, 0, 0.31],
+                back(p) {
+                    const R = p.R, g = p.g;
+                    ctx.strokeStyle = '#c9d2de';            // blade tip past one hip
+                    ctx.lineWidth = 2.2;
+                    seg(-R * 0.5, R * 0.5, -R * 1.22, R * 1.22);
+                    ctx.strokeStyle = COLOR.ember;          // grip over the other shoulder
+                    ctx.lineWidth = 3.4;
+                    seg(R * 0.5, -R * 0.5, R * 1.28, -R * 1.28);
+                    ctx.strokeStyle = DARK;
+                    ctx.lineWidth = 1.6;
+                    ctx.setLineDash([2, 3.4]);
+                    seg(R * 0.5, -R * 0.5, R * 1.28, -R * 1.28);
+                    ctx.setLineDash([]);
+                    ctx.strokeStyle = COLOR.emberHot;       // guard
+                    ctx.lineWidth = 2;
+                    seg(R * 0.56, -R * 0.98, R * 0.98, -R * 0.56);
+                    const kx = g.tx * R * 0.8, ky = -R * 0.58;
+                    streamer(p, kx, ky, R * 2.1, 0, R * 0.2, COLOR.ember);
+                    streamer(p, kx, ky, R * 1.75, 1.7, R * 0.16, COLOR.ember);
+                },
+                front(p) {
+                    const R = p.R;
+                    clipBody(p);
+                    ctx.lineCap = 'butt';
+                    ctx.strokeStyle = '#3a4868';
+                    ctx.lineWidth = R * 0.62;
+                    seg(-R * 1.2, -R * 0.2, R * 1.2, -R * 0.2);
+                    ctx.strokeStyle = COLOR.ember;
+                    ctx.lineWidth = R * 0.22;
+                    ctx.beginPath(); ctx.moveTo(-R * 1.1, -R * 0.58); ctx.quadraticCurveTo(0, -R * 0.8, R * 1.1, -R * 0.58); ctx.stroke();
+                    ctx.restore();
+                    ctx.fillStyle = COLOR.emberHot;
+                    ctx.beginPath(); ctx.arc(p.g.tx * R * 0.8, -R * 0.66, R * 0.13, 0, TAU); ctx.fill();
+                }
+            },
+            // a striped watermelon with a stem and a leaf
+            melon: {
+                label: 'Melon', fill: '#58bd5d', glow: 0.3, eyes: ['#fff', '#145226', -0.2, 1, 0, 0.31],
+                back(p) {
+                    const R = p.R;
+                    ctx.strokeStyle = '#2f8a3f';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath(); ctx.moveTo(0, -R * 0.9); ctx.quadraticCurveTo(0, -R * 1.25, R * 0.2 + p.g.tx * R * 0.3 + p.sway, -R * 1.45); ctx.stroke();
+                    ctx.fillStyle = '#58bd5d';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath(); ctx.ellipse(-R * 0.36, -R * 1.12, R * 0.36, R * 0.17, -0.5, 0, TAU); ctx.fill(); ctx.stroke();
+                },
+                front(p) {
+                    const R = p.R;
+                    clipBody(p);
+                    ctx.strokeStyle = '#1c7a36';
+                    ctx.lineWidth = R * 0.17;
+                    for (let k = -2; k <= 2; k++) {
+                        ctx.beginPath(); ctx.moveTo(k * R * 0.2, -R * 1.05); ctx.quadraticCurveTo(k * R * 0.95, 0, k * R * 0.2, R * 1.05); ctx.stroke();
+                    }
+                    ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+                    ctx.lineWidth = R * 0.1;
+                    ctx.beginPath(); ctx.arc(0, 0, R * 0.74, -2.7, -2.05); ctx.stroke();
+                    ctx.restore();
+                }
+            },
+            // a pure black disc inside a tilted accretion disc and a photon ring
+            blackhole: {
+                label: 'Black hole', fill: '#000', glow: 0.5, eyes: ['#fff', null, -0.24, 1, 0, 0.31],
+                back(p) {
+                    accretion(p, Math.PI, TAU);
+                    ctx.globalAlpha = 0.5 + 0.4 * p.breath;
+                    ctx.strokeStyle = COLOR.emberHot;
+                    ctx.lineWidth = 1.2;
+                    ctx.beginPath(); ctx.arc(0, 0, p.R * 1.17, 0, TAU); ctx.stroke();
+                    ctx.globalAlpha = 1;
+                },
+                front(p) { accretion(p, 0, Math.PI); }
+            },
+            // black above, white below; dorsal fin, flippers and a tail that trails
+            orca: {
+                label: 'Orca', fill: DARK, glow: 0.6, eyes: ['#fff', null, -0.22, 1.05, 0, 0.33],
+                back(p) {
+                    const R = p.R, tx = p.g.tx, ty = p.g.ty, px = -ty, py = tx, wag = Math.sin(p.flap) * R * 0.16;
+                    const ex = tx * R * 1.7 + px * wag, ey = ty * R * 1.7 + py * wag;
+                    ctx.fillStyle = DARK;
+                    ctx.strokeStyle = p.body;
+                    ctx.lineWidth = 1.2;
+                    ctx.beginPath();                        // tail stock and flukes
+                    ctx.moveTo(tx * R * 0.7 + px * R * 0.3, ty * R * 0.7 + py * R * 0.3);
+                    ctx.lineTo(ex + px * R * 0.1, ey + py * R * 0.1);
+                    ctx.lineTo(ex + px * R * 0.64 + tx * R * 0.4, ey + py * R * 0.64 + ty * R * 0.4);
+                    ctx.quadraticCurveTo(ex + tx * R * 0.1, ey + ty * R * 0.1, ex - px * R * 0.64 + tx * R * 0.4, ey - py * R * 0.64 + ty * R * 0.4);
+                    ctx.lineTo(ex - px * R * 0.1, ey - py * R * 0.1);
+                    ctx.lineTo(tx * R * 0.7 - px * R * 0.3, ty * R * 0.7 - py * R * 0.3);
+                    ctx.closePath(); ctx.fill(); ctx.stroke();
+                    for (let s = -1; s <= 1; s += 2) {      // flippers
+                        ctx.beginPath(); ctx.ellipse(s * R * 0.98, R * 0.42, R * 0.42, R * 0.17, s * 0.9, 0, TAU); ctx.fill(); ctx.stroke();
+                    }
+                    const fx = tx * R * 0.55 + p.sway;      // dorsal fin, swept back
+                    ctx.beginPath();
+                    ctx.moveTo(-R * 0.36, -R * 0.8);
+                    ctx.quadraticCurveTo(-R * 0.1 + fx * 0.5, -R * 1.4, fx, -R * 1.75);
+                    ctx.quadraticCurveTo(R * 0.3 + fx * 0.3, -R * 1.25, R * 0.4, -R * 0.78);
+                    ctx.closePath(); ctx.fill(); ctx.stroke();
+                },
+                front(p) {
+                    const R = p.R;
+                    clipBody(p);
+                    ctx.fillStyle = '#eef3f7';
+                    ctx.beginPath(); ctx.ellipse(0, R * 0.95, R * 0.78, R * 0.6, 0, 0, TAU); ctx.fill();
+                    ctx.restore();
+                }
+            },
+            // an alarm clock that keeps the run's time: the long hand turns once a
+            // minute, the short one once per five-minute target, and it rings when scared
+            clock: {
+                label: 'Clock', fill: '#ece7da', glow: 0.25, eyes: [DARK, null, -0.2, 0.9, 0, 0.33],
+                back(p) {
+                    const R = p.R, ring = p.g.emote === 'scared' ? Math.sin(p.spin * 1.9) * R * 0.16 : 0;
+                    ctx.strokeStyle = '#d2a94c';
+                    ctx.lineWidth = 3;
+                    for (let s = -1; s <= 1; s += 2) seg(s * R * 0.5, R * 0.8, s * R * 0.82, R * 1.24);
+                    ctx.lineWidth = 2;
+                    seg(0, -R * 0.9, ring, -R * 1.34);
+                    ctx.fillStyle = '#d2a94c';
+                    ctx.beginPath(); ctx.arc(ring, -R * 1.38, R * 0.15, 0, TAU); ctx.fill();
+                    ctx.strokeStyle = DARK;
+                    ctx.lineWidth = 1.2;
+                    for (let s = -1; s <= 1; s += 2) {
+                        ctx.beginPath(); ctx.arc(s * R * 0.64, -R * 0.98, R * 0.38, 0, TAU); ctx.fill(); ctx.stroke();
+                    }
+                },
+                front(p) {
+                    const R = p.R;
+                    ctx.strokeStyle = 'rgba(11,15,22,0.7)';
+                    for (let i = 0; i < 12; i++) {
+                        const a = i * Math.PI / 6, big = i % 3 === 0, c = Math.sin(a), s = -Math.cos(a);
+                        ctx.lineWidth = big ? 1.8 : 1;
+                        seg(c * R * (big ? 0.68 : 0.76), s * R * (big ? 0.68 : 0.76), c * R * 0.86, s * R * 0.86);
+                    }
+                    const h = view.runFrames / GOAL_FRAMES * TAU, m = view.runFrames / 3600 * TAU;
+                    ctx.strokeStyle = DARK;
+                    ctx.lineWidth = 2.2;
+                    seg(0, 0, Math.sin(h) * R * 0.42, -Math.cos(h) * R * 0.42);
+                    ctx.strokeStyle = COLOR.ember;
+                    ctx.lineWidth = 1.5;
+                    seg(0, 0, Math.sin(m) * R * 0.7, -Math.cos(m) * R * 0.7);
+                    ctx.fillStyle = DARK;
+                    ctx.beginPath(); ctx.arc(0, 0, 1.7, 0, TAU); ctx.fill();
+                }
+            },
+            // pink icing, sprinkles, and a real hole the chart shows through
+            donut: {
+                label: 'Donut', fill: '#d99a4e', glow: 0.25, rule: 'evenodd', eyes: ['#2a1210', null, -0.38, 0.78, 0, 0.3],
+                shape(bx, by, R) {
+                    ctx.ellipse(0, 0, bx, by, 0, 0, TAU);
+                    ctx.moveTo(R * 0.26, R * 0.25);
+                    ctx.arc(0, R * 0.25, R * 0.26, 0, TAU);
+                },
+                back() {},
+                front(p) {
+                    const R = p.R;
+                    clipBody(p);
+                    ctx.fillStyle = '#ff86bd';
+                    ctx.beginPath();
+                    for (let i = 0; i < 40; i++) {
+                        const a = i / 40 * TAU, r = R * (0.8 + 0.07 * Math.sin(a * 6 + 1));
+                        ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+                    }
+                    ctx.closePath(); ctx.fill();
+                    ctx.lineWidth = 1.7;
+                    for (const [sx, sy, a, color] of SPRINKLES) {
+                        const dx = Math.cos(a) * R * 0.09, dy = Math.sin(a) * R * 0.09;
+                        ctx.strokeStyle = color;
+                        seg(sx * R - dx, sy * R - dy, sx * R + dx, sy * R + dy);
+                    }
+                    ctx.strokeStyle = '#d99a4e';            // bare dough round the hole
+                    ctx.lineWidth = R * 0.13;
+                    ctx.beginPath(); ctx.arc(0, R * 0.25, R * 0.33, 0, TAU); ctx.stroke();
+                    ctx.restore();
+                }
+            }
+        };
+        const COSTUMES = Object.keys(COSTUME);
+
+        function setCostume(name, announce) {
+            const look = COSTUME[name];
+            if (!look) return;
+            view.costume = name;
+            el.costumeLabel.textContent = look.label;
+            try { localStorage.setItem(COSTUME_KEY, name); } catch (e) {}
+            if (announce) banner('Costume — ' + look.label);
+        }
+
+        // The pilot: a blob with two capsule eyes, dressed by the current
+        // costume. Its rim and glow carry the tension colour.
+        function drawPlayer(t) {
+            if (isGameOver) return;
+            const x = ix(player, t), y = iy(player, t), r = player.radius;
+            const R = r * 1.3;                              // drawn a little larger than the hitbox
+            const tense = view.tension;
+            const rgb = tensionRGB(tense);
+            const body = `rgb(${rgb})`;
+            const g = view.gaze;
+            // 0..1, eased so it lingers on the exhale
+            const breath = reducedMotion ? 0.6 : Math.pow(0.5 + 0.5 * Math.sin(view.breath), 1.6);
+
+            for (const gh of ghosts) {
+                const k = gh.life / gh.max;
+                ctx.globalAlpha = k * 0.5;
+                ctx.strokeStyle = COLOR.signal;
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.arc(gh.x, gh.y, R * (0.55 + 0.45 * k), 0, Math.PI * 2);
+                ctx.stroke();
+            }
+            ctx.globalAlpha = 1;
+
+            // halo: swells and brightens with each breath, harder as tension climbs
+            const haloR = 38 + 10 * tense + breath * (6 + 16 * tense);
+            const halo = ctx.createRadialGradient(x, y, r * 0.6, x, y, haloR);
+            halo.addColorStop(0, `rgba(${rgb},${(0.20 + 0.30 * breath * (0.5 + 0.5 * tense)).toFixed(3)})`);
+            halo.addColorStop(1, `rgba(${rgb},0)`);
+            ctx.globalCompositeOperation = 'lighter';
+            ctx.fillStyle = halo;
+            ctx.beginPath(); ctx.arc(x, y, haloR, 0, Math.PI * 2); ctx.fill();
+            ctx.globalCompositeOperation = 'source-over';
+
+            // dash charge: a ring that closes as the dash comes back
+            const charge = player.dashCooldown <= 0 ? 1 : 1 - player.dashCooldown / player.dashMax;
+            ctx.lineWidth = 1.5;
+            ctx.strokeStyle = 'rgba(236,231,218,0.2)';
+            ctx.beginPath(); ctx.arc(x, y, R + 6, 0, Math.PI * 2); ctx.stroke();
+            ctx.strokeStyle = charge >= 1 ? COLOR.signal : COLOR.ice;
+            ctx.beginPath(); ctx.arc(x, y, R + 6, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * charge); ctx.stroke();
+
+            const sp = Math.hypot(player.vx, player.vy);
+            const flap = reducedMotion ? 0 : g.clock * (0.16 + 0.05 * Math.min(sp, 6));
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            // behind the body, the body, over the body: all from the costume
+            const look = COSTUME[view.costume], p = pose;
+            p.R = R; p.g = g; p.look = look; p.flap = flap; p.breath = breath; p.body = body;
+            p.sway = reducedMotion ? 0 : Math.sin(flap * 0.7) * 0.8;
+            p.spin = reducedMotion ? 0 : g.clock;
+            p.bx = R * (1 + 0.03 * breath); p.by = R * (1 - 0.025 * breath);
+            const rule = look.rule || 'nonzero';
+            look.back(p);
+
+            // body: fills with the tension colour on each breath
+            bodyPath(p);
+            ctx.fillStyle = look.fill;
+            ctx.fill(rule);
+            if (player.isDashing) {
+                ctx.fillStyle = `rgba(${rgb},0.55)`;
+                ctx.fill(rule);
+            } else {
+                const fill = ctx.createRadialGradient(0, R * 0.3, 0, 0, 0, R);
+                const a = (0.10 + (0.26 + 0.3 * tense) * breath) * look.glow;
+                fill.addColorStop(0, `rgba(${rgb},${Math.min(1, a * 1.25).toFixed(3)})`);
+                fill.addColorStop(1, `rgba(${rgb},${(a * 0.45).toFixed(3)})`);
+                ctx.fillStyle = fill;
+                ctx.fill(rule);
+            }
+            ctx.strokeStyle = body;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            look.front(p);
+
+            // eyes: two capsules that travel with the gaze and take the shape of
+            // the current emote; the far one shrinks a little, both squeeze on a
+            // dash, a hit or a blink, and they tremble when it is scared
+            const eye = look.eyes;
+            const gm = Math.hypot(g.x, g.y), gk = gm > 1 ? 1 / gm : 1;
+            const gx = g.x * gk, gy = g.y * gk;
+            const shiver = g.emote === 'scared' && !reducedMotion ? Math.sin(g.clock * 1.9) * 0.6 : 0;
+            const ex = gx * R * 0.34 + shiver, ey = R * eye[2] + gy * R * (gy > 0 ? 0.14 : 0.24);
+            const squeeze = player.isDashing ? 0.3 : Math.max(0.12, 1 - Math.max(g.blink > 0 ? Math.sin(g.blink * Math.PI) : 0, view.hurt > 0.45 ? 0.7 : 0));
+            if (look.clipEyes) clipBody(p);
+            for (let side = -1; side <= 1; side += 2) {
+                const far = 1 - 0.16 * side * gx;           // the eye nearer the edge it looks past is foreshortened
+                const o = side < 0 ? 0 : 3;
+                const h = R * 0.3 * g.e[o] * squeeze * far * eye[3];
+                const lean = g.e[o + 2] + 0.12 + gx * 0.22 + side * eye[4];
+                const cx = ex + side * R * eye[5], lx = Math.sin(lean) * h, ly = Math.cos(lean) * h;
+                const w = R * 0.25 * g.e[o + 1] * (0.9 + 0.1 * far) * eye[3];
+                ctx.beginPath();
+                ctx.moveTo(cx + lx, ey - ly);
+                ctx.lineTo(cx - lx, ey + ly);
+                if (eye[1]) { ctx.strokeStyle = eye[1]; ctx.lineWidth = w + 2.4; ctx.stroke(); }
+                ctx.strokeStyle = eye[0];
+                ctx.lineWidth = w;
+                ctx.stroke();
+            }
+            if (look.clipEyes) ctx.restore();
+            ctx.restore();
+
+            // heading tick
+            if (sp > 0.1) {
+                const hx = player.vx / sp, hy = player.vy / sp;
+                ctx.strokeStyle = body;
+                ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.moveTo(x + hx * (R + 10), y + hy * (R + 10)); ctx.lineTo(x + hx * (R + 16), y + hy * (R + 16)); ctx.stroke();
+            }
+        }
+
+        function drawOverlay(t) {
+            if (!view.overlay || !view.autopilot || isGameOver) return;
+            const x = ix(player, t), y = iy(player, t);
+            const intel = bot.intel;
+
+            // strategic route
+            const path = intel.path;
+            if (path && path.length > 1) {
+                ctx.setLineDash([2, 6]);
+                ctx.lineWidth = 1;
+                ctx.strokeStyle = 'rgba(214,255,63,0.38)';
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                for (let i = 1; i < path.length; i++) ctx.lineTo(path[i].x, path[i].y);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                const wp = path[path.length - 1];
+                ctx.strokeStyle = 'rgba(214,255,63,0.7)';
+                ctx.beginPath(); ctx.arc(wp.x, wp.y, 7, 0, Math.PI * 2); ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(wp.x - 12, wp.y); ctx.lineTo(wp.x - 4, wp.y); ctx.moveTo(wp.x + 4, wp.y); ctx.lineTo(wp.x + 12, wp.y);
+                ctx.moveTo(wp.x, wp.y - 12); ctx.lineTo(wp.x, wp.y - 4); ctx.moveTo(wp.x, wp.y + 4); ctx.lineTo(wp.x, wp.y + 12);
+                ctx.stroke();
+            }
+
+            // the half second the pilot has already played out
+            if (bot.planLen > 2) {
+                ctx.lineWidth = 1.5;
+                ctx.strokeStyle = 'rgba(236,231,218,0.5)';
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                for (let i = 1; i < bot.planLen; i += 3) ctx.lineTo(bot.planX[i], bot.planY[i]);
+                ctx.stroke();
+            }
+
+            // target lock
+            const lock = intel.lock;
+            if (lock && lock.hp > 0 && enemies.indexOf(lock) >= 0) {
+                const lx = ix(lock, t), ly = iy(lock, t), s = lock.radius + 7, c = 5;
+                ctx.lineWidth = 1.5;
+                ctx.strokeStyle = COLOR.signal;
+                ctx.beginPath();
+                for (const [sx, sy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) {
+                    ctx.moveTo(lx + sx * s, ly + sy * (s - c)); ctx.lineTo(lx + sx * s, ly + sy * s); ctx.lineTo(lx + sx * (s - c), ly + sy * s);
+                }
+                ctx.stroke();
+            }
+        }
+
+        function drawFx(dtFrames) {
+            // rings
+            for (let i = rings.length - 1; i >= 0; i--) {
+                const r = rings[i];
+                r.life -= dtFrames;
+                if (r.life <= 0) { rings.splice(i, 1); continue; }
+                const k = 1 - r.life / r.max;
+                const ease = 1 - (1 - k) * (1 - k);
+                ctx.globalAlpha = (1 - k) * 0.9;
+                ctx.strokeStyle = r.color;
+                ctx.lineWidth = r.w;
+                if (r.dashed) ctx.setLineDash([3, 4]);
+                ctx.beginPath();
+                ctx.arc(r.x, r.y, lerp(r.r0, r.r1, ease), 0, Math.PI * 2);
+                ctx.stroke();
+                if (r.dashed) ctx.setLineDash([]);
+            }
+            // sparks
+            for (let i = sparks.length - 1; i >= 0; i--) {
+                const s = sparks[i];
+                s.life -= dtFrames;
+                if (s.life <= 0) { sparks.splice(i, 1); continue; }
+                s.x += s.vx * dtFrames; s.y += s.vy * dtFrames;
+                s.vx *= 0.94; s.vy *= 0.94;
+                const k = s.life / s.max;
+                ctx.globalAlpha = k;
+                ctx.fillStyle = s.color;
+                const sz = s.size * (0.4 + 0.6 * k);
+                ctx.fillRect(s.x - sz / 2, s.y - sz / 2, sz, sz);
+            }
+            // score labels
+            ctx.font = '500 10px "JetBrains Mono", ui-monospace, Menlo, monospace';
+            ctx.textAlign = 'center';
+            for (let i = labels.length - 1; i >= 0; i--) {
+                const l = labels[i];
+                l.life -= dtFrames;
+                if (l.life <= 0) { labels.splice(i, 1); continue; }
+                const k = l.life / l.max;
+                ctx.globalAlpha = Math.min(1, k * 2);
+                ctx.fillStyle = l.color;
+                ctx.fillText(l.text, l.x, l.y - (1 - k) * 16);
+            }
+            for (let i = ghosts.length - 1; i >= 0; i--) {
+                ghosts[i].life -= dtFrames;
+                if (ghosts[i].life <= 0) ghosts.splice(i, 1);
+            }
+            ctx.globalAlpha = 1;
+        }
+
+        // -------------------------------------------------------------- radar
+
+        const radar = $('radar');
+        const rctx = radar.getContext('2d');
+        const RADAR_RANGE = 440;
+        let radarSweep = 0;
+
+        function drawRadar() {
+            const S = radar.width, c = S / 2, R = c - 6;
+            rctx.clearRect(0, 0, S, S);
+            rctx.save();
+            rctx.beginPath(); rctx.arc(c, c, R, 0, Math.PI * 2); rctx.clip();
+            rctx.fillStyle = 'rgba(7,10,16,0.72)';
+            rctx.fillRect(0, 0, S, S);
+            const k = R / RADAR_RANGE;
+
+            // terrain, as the bot sees it
+            if (bot.solid && bot.gw) {
+                const step = 2, cell = 8 * step;
+                const i0 = Math.max(0, Math.floor((player.x - RADAR_RANGE) / 8)), i1 = Math.min(bot.gw - 1, Math.ceil((player.x + RADAR_RANGE) / 8));
+                const j0 = Math.max(0, Math.floor((player.y - RADAR_RANGE) / 8)), j1 = Math.min(bot.gh - 1, Math.ceil((player.y + RADAR_RANGE) / 8));
+                rctx.fillStyle = 'rgba(255,106,43,0.26)';
+                const sz = Math.max(2, cell * k);
+                for (let j = j0 - (j0 % step); j <= j1; j += step) {
+                    for (let i = i0 - (i0 % step); i <= i1; i += step) {
+                        if (i < 0 || j < 0) continue;
+                        if (bot.solid[j * bot.gw + i]) rctx.fillRect(c + (i * 8 - player.x) * k, c + (j * 8 - player.y) * k, sz, sz);
+                    }
+                }
+            }
+            // arena bounds
+            rctx.strokeStyle = 'rgba(236,231,218,0.35)';
+            rctx.lineWidth = 2;
+            rctx.strokeRect(c - player.x * k, c - player.y * k, width * k, height * k);
+
+            // sweep
+            radarSweep = (radarSweep + 0.05) % (Math.PI * 2);
+            const sweep = rctx.createConicGradient ? rctx.createConicGradient(radarSweep, c, c) : null;
+            if (sweep) {
+                sweep.addColorStop(0, 'rgba(214,255,63,0)');
+                sweep.addColorStop(0.86, 'rgba(214,255,63,0)');
+                sweep.addColorStop(1, 'rgba(214,255,63,0.16)');
+                rctx.fillStyle = sweep;
+                rctx.fillRect(0, 0, S, S);
+            }
+
+            // contacts
+            for (const e of enemies) {
+                let dx = (e.x - player.x) * k, dy = (e.y - player.y) * k;
+                const d = Math.hypot(dx, dy);
+                const ice = e.type === 'ice_dust';
+                if (d > R - 3) { dx *= (R - 3) / d; dy *= (R - 3) / d; rctx.globalAlpha = 0.45; }
+                rctx.fillStyle = ice ? COLOR.ice : COLOR.ember;
+                const s = ice ? 5 : 5;
+                rctx.fillRect(c + dx - s / 2, c + dy - s / 2, s, s);
+                rctx.globalAlpha = 1;
+            }
+            // the landmine, if one is out
+            if (mine) {
+                let dx = (mine.x - player.x) * k, dy = (mine.y - player.y) * k;
+                const d = Math.hypot(dx, dy);
+                if (d > R - 6) { dx *= (R - 6) / d; dy *= (R - 6) / d; }
+                rctx.strokeStyle = COLOR.signal;
+                rctx.lineWidth = 2;
+                rctx.beginPath();
+                rctx.moveTo(c + dx, c + dy - 6); rctx.lineTo(c + dx + 6, c + dy); rctx.lineTo(c + dx, c + dy + 6); rctx.lineTo(c + dx - 6, c + dy);
+                rctx.closePath(); rctx.stroke();
+            }
+            // waypoint bearing
+            const tg = bot.intel.target;
+            if (view.autopilot && tg) {
+                const a = Math.atan2(tg.y - player.y, tg.x - player.x);
+                const d = Math.min(R - 4, Math.hypot(tg.x - player.x, tg.y - player.y) * k);
+                rctx.strokeStyle = 'rgba(214,255,63,0.7)';
+                rctx.lineWidth = 2;
+                rctx.setLineDash([4, 6]);
+                rctx.beginPath(); rctx.moveTo(c, c); rctx.lineTo(c + Math.cos(a) * d, c + Math.sin(a) * d); rctx.stroke();
+                rctx.setLineDash([]);
+            }
+            rctx.restore();
+
+            // bezel
+            rctx.strokeStyle = 'rgba(236,231,218,0.22)';
+            rctx.lineWidth = 1;
+            for (const f of [1 / 3, 2 / 3]) { rctx.beginPath(); rctx.arc(c, c, R * f, 0, Math.PI * 2); rctx.stroke(); }
+            rctx.beginPath(); rctx.moveTo(c - R, c); rctx.lineTo(c + R, c); rctx.moveTo(c, c - R); rctx.lineTo(c, c + R); rctx.stroke();
+            rctx.strokeStyle = 'rgba(236,231,218,0.5)';
+            rctx.lineWidth = 2;
+            rctx.beginPath(); rctx.arc(c, c, R, 0, Math.PI * 2); rctx.stroke();
+            rctx.fillStyle = COLOR.signal;
+            rctx.beginPath(); rctx.arc(c, c, 5, 0, Math.PI * 2); rctx.fill();
+        }
+
+        // ---------------------------------------------------------------- hud
+
+        const el = {
+            clock: $('clock'), clockWrap: $('clock-wrap'), fill: $('track-fill'), goal: $('track-goal'), goalText: $('goal-text'), bestText: $('best-text'),
+            score: $('score'), wave: $('wave'), hostiles: $('hostiles'), kills: $('kills'),
+            mHp: $('m-hp'), hpVal: $('hp-val'), hpBar: $('hp-bar'), mDash: $('m-dash'), dashVal: $('dash-val'), dashBar: $('dash-bar'),
+            thinkMs: $('think-ms'), intent: $('intent'), doctrine: $('doctrine'), doctrineLabel: $('doctrine-label'), costumeLabel: $('costume-label'), threat: $('threat'), inflow: $('inflow'), swarm: $('swarm'), dashN: $('dash-n'), hitN: $('hit-n'),
+            guide: $('guide'), guideGo: $('guide-go'),
+            mMine: $('m-mine'), mineVal: $('mine-val'), mineBar: $('mine-bar'), mineN: $('mine-n'),
+            status: $('status'), statusText: $('status-text'), statusDetail: $('status-detail'), arena: $('arena-meta'), perf: $('perf-meta'), banner: $('banner'), hurt: $('hurt'),
+            debrief: $('debrief'), dRun: $('d-run'), dTime: $('d-time'), dVerdict: $('d-verdict'), dScore: $('d-score'), dWave: $('d-wave'), dKills: $('d-kills'), dHost: $('d-host'), dCount: $('d-count'), dBar: $('d-bar')
+        };
+        const clockDigits = el.clock.querySelectorAll('b');
+        const threatPips = el.threat.querySelectorAll('i');
+        const cache = {};
+        const setText = (key, node, value) => { if (cache[key] !== value) { cache[key] = value; node.textContent = value; } };
+        const setStyle = (key, node, prop, value) => { if (cache[key] !== value) { cache[key] = value; node.style[prop] = value; } };
+        const pad2 = (n) => (n < 10 ? '0' : '') + n;
+        const fmtTime = (frames) => { const s = Math.floor(frames / 60); return pad2(Math.floor(s / 60)) + ':' + pad2(s % 60); };
+
+        function updateClock() {
+            const f = view.runFrames;
+            const tenths = Math.floor(f / 6);
+            if (cache.tenths === tenths) return;
+            cache.tenths = tenths;
+            const s = Math.floor(f / 60), m = Math.floor(s / 60), ss = s % 60;
+            const ds = [Math.floor(m / 10) % 10, m % 10, Math.floor(ss / 10), ss % 10, tenths % 10];
+            for (let i = 0; i < 5; i++) if (clockDigits[i].textContent !== String(ds[i])) clockDigits[i].textContent = ds[i];
+
+            // the track always shows the goal with some road beyond it
+            const span = f < GOAL_FRAMES ? GOAL_FRAMES * 1.2 : Math.ceil((f + 3600) / GOAL_FRAMES) * GOAL_FRAMES;
+            el.fill.style.transform = `scaleX(${Math.min(1, f / span).toFixed(4)})`;
+            const goalPct = (GOAL_FRAMES / span * 100).toFixed(2) + '%';
+            if (cache.goalPct !== goalPct) { cache.goalPct = goalPct; el.goal.style.left = goalPct; }
+
+            if (f >= GOAL_FRAMES) setText('goal', el.goalText, 'Cleared +' + fmtTime(f - GOAL_FRAMES));
+            else setText('goal', el.goalText, 'Target 05:00');
+        }
+
+        function updateHud() {
+            updateClock();
+            setText('score', el.score, score.toLocaleString('en-US'));
+            setText('wave', el.wave, String(wave));
+            setText('hostiles', el.hostiles, String(enemies.length));
+            setText('kills', el.kills, String(view.kills));
+
+            const hp = Math.max(0, player.hp);
+            setText('hp', el.hpVal, String(Math.round(hp)));
+            setStyle('hpBar', el.hpBar, 'transform', `scaleX(${(hp / player.maxHp).toFixed(3)})`);
+            const hpClass = hp < 30 ? 'meter crit' : (hp < 60 ? 'meter warn' : 'meter');
+            if (cache.hpClass !== hpClass) { cache.hpClass = hpClass; el.mHp.className = hpClass; }
+
+            const ready = player.dashCooldown <= 0;
+            const charge = ready ? 1 : 1 - player.dashCooldown / player.dashMax;
+            setStyle('dashBar', el.dashBar, 'transform', `scaleX(${charge.toFixed(3)})`);
+            setText('dash', el.dashVal, ready ? 'Ready' : Math.round(charge * 100) + '%');
+            const dashClass = ready ? 'meter ready' : 'meter';
+            if (cache.dashClass !== dashClass) { cache.dashClass = dashClass; el.mDash.className = dashClass; }
+
+            // landmine: charging -> ready to lay (auto at 60 s); "Live" while one is on the map
+            const mReady = mineTimer >= MINE.minDelay;
+            const mCharge = Math.min(1, mineTimer / MINE.minDelay);
+            setStyle('mineBar', el.mineBar, 'transform', `scaleX(${mCharge.toFixed(2)})`);
+            const mText = mReady ? 'Ready · ' + Math.max(0, Math.ceil((MINE.maxDelay - mineTimer) / 60)) + 's'
+                : (mine ? 'Live · ' : '') + Math.ceil((MINE.minDelay - mineTimer) / 60) + 's';
+            setText('mine', el.mineVal, mText);
+            const mineClass = mReady ? 'meter ready' : (mine ? 'meter live' : 'meter');
+            if (cache.mineClass !== mineClass) { cache.mineClass = mineClass; el.mMine.className = mineClass; }
+
+            setStyle('hurt', el.hurt, 'opacity', view.hurt < 0.02 ? '0' : (Math.round(view.hurt * 40) / 40).toFixed(3));
+        }
+
+        function updateCortex() {
+            const intel = bot.intel;
+            setText('think', el.thinkMs, view.autopilot ? view.thinkMs.toFixed(2) + ' ms' : 'offline');
+            setText('intent', el.intent, view.autopilot ? intel.mode : 'MANUAL');
+            setText('doctrine', el.doctrine, bot.opts.doctrine.toUpperCase());
+            // enemies per second the current wave is feeding in
+            setText('inflow', el.inflow, (60 * spawnChance()).toFixed(2) + '/s');
+            setText('swarm', el.swarm, intel.lava + ' · ' + intel.ice);
+            setText('dashN', el.dashN, String(view.dashes));
+            setText('hitN', el.hitN, String(view.hitsTaken));
+            setText('mineN', el.mineN, String(view.mineKills));
+            const level = Math.round(Math.min(1, intel.threat) * threatPips.length);
+            if (cache.level !== level) {
+                cache.level = level;
+                threatPips.forEach((p, i) => p.classList.toggle('on', i < level));
+                el.threat.className = 'pips' + (level >= 7 ? ' max' : (level >= 4 ? ' hot' : ''));
+            }
+            drawRadar();
+            // where a frame's time goes, refreshed twice a second
+            if (perf.frames - perf.shown >= 30) {
+                perf.shown = perf.frames;
+                setText('perf', el.perf, `Frame ${perf.dt.toFixed(1)} ms · sim ${perf.sim.toFixed(1)} · draw ${Math.max(0, perf.js - perf.sim).toFixed(1)}`);
+            }
+        }
+
+        function updateStatus() {
+            const cls = view.paused ? 'status paused' : (view.autopilot ? 'status' : 'status manual');
+            el.status.className = cls;
+            const hunter = bot.opts.doctrine === 'hunter';
+            el.statusText.textContent = view.paused ? 'Paused' : (view.autopilot ? 'Autopilot' : 'Manual control');
+            el.statusDetail.textContent = view.paused ? '' : (view.autopilot
+                ? (hunter ? '— hunter doctrine, weapons free' : '— endurance doctrine, holding fire on lava')
+                : '— WASD · arrows · space · E mine');
+            el.doctrineLabel.textContent = hunter ? 'Hunter' : 'Endurance';
+            el.arena.textContent = `Arena ${width} × ${height} · Run ${pad2(view.runNo)}` + (view.speed !== 1 ? ` · ${view.speed}× time` : '') + (perf.level ? ` · Detail −${perf.level}` : '');
+            document.querySelectorAll('.bc [data-act]').forEach((b) => {
+                const a = b.dataset.act;
+                b.classList.toggle('on', (a === 'pause' && view.paused) || (a === 'overlay' && view.overlay) || (a === 'auto' && view.autopilot) || (a === 'doctrine' && hunter));
+            });
+            document.querySelectorAll('.bc [data-speed]').forEach((b) => b.classList.toggle('on', Number(b.dataset.speed) === view.speed));
+        }
+
+        function showBest() {
+            el.bestText.textContent = view.best ? 'Best ' + fmtTime(view.best.frames) : 'Best —';
+        }
+
+        function banner(text) {
+            el.banner.textContent = text;
+            el.banner.classList.remove('show');
+            void el.banner.offsetWidth;
+            el.banner.classList.add('show');
+        }
+
+        // -------------------------------------------------------------- game
+
+        function startRun(first) {
+            if (!first) { resetGame(); view.runNo++; }
+            view.runFrames = 0; view.kills = 0; view.hitsTaken = 0; view.dashes = 0; view.mineKills = 0;
+            view.cleared = false; view.deadAt = 0;
+            view.pure = PLAY ? !view.autopilot : view.autopilot;    // a best time only counts if nobody else flew
+            view.shake = 0; view.hurt = 0; view.tension = 0; view.gaze.focus = null; view.gaze.swarm = false; view.gaze.level = 0; view.gaze.scare = 0; view.gaze.relief = 0;
+            sparks.length = 0; rings.length = 0; labels.length = 0; ghosts.length = 0;
+            bot.release();
+            for (const k in cache) delete cache[k];
+            el.clockWrap.classList.remove('cleared');
+            el.debrief.hidden = true;
+            player.px = player.x; player.py = player.y;
+            updateStatus();
+        }
+
+        function endRun(now) {
+            view.deadAt = now;
+            const f = view.runFrames;
+            let record = false;
+            if (view.pure && (!view.best || f > view.best.frames)) {
+                view.best = { frames: f, score, wave };
+                try { localStorage.setItem(BEST_KEY, JSON.stringify(view.best)); } catch (e) {}
+                record = true;
+                showBest();
+            }
+            el.dRun.textContent = pad2(view.runNo);
+            el.dTime.textContent = fmtTime(f);
+            const ok = f >= GOAL_FRAMES;
+            el.dVerdict.className = 'verdict' + (ok ? ' ok' : '');
+            el.dVerdict.textContent = (ok ? 'Five-minute target cleared' : 'Short of the five-minute target') + (record ? ' — new best' : '');
+            el.dScore.textContent = score.toLocaleString('en-US');
+            el.dWave.textContent = wave;
+            el.dKills.textContent = view.kills;
+            el.dHost.textContent = enemies.length;
+            el.debrief.hidden = false;
+        }
+
+        function tickOnce() {
+            if (width < 64 || height < 64) return;      // tab opened hidden: no arena yet
+            // remember where everything was, so rendering can interpolate
+            player.px = player.x; player.py = player.y;
+            for (let i = 0; i < enemies.length; i++) { const e = enemies[i]; e.px = e.x; e.py = e.y; }
+            for (let i = 0; i < bullets.length; i++) { const b = bullets[i]; b.px = b.x; b.py = b.y; }
+
+            if (view.autopilot) {
+                const t0 = performance.now();
+                bot.think();
+                view.thinkMs += (performance.now() - t0 - view.thinkMs) * 0.05;
+            }
+            const wasDashing = player.isDashing;
+            update();
+            frame++;
+            if (!isGameOver) {
+                view.runFrames++;
+                if ((wasDashing || player.isDashing) && !view.muteFx) ghosts.push({ x: player.x, y: player.y, life: 14, max: 14 });
+                if (!view.cleared && view.runFrames >= GOAL_FRAMES) {
+                    view.cleared = true;
+                    el.clockWrap.classList.add('cleared');
+                    banner('Five minutes — target cleared');
+                }
+            }
+        }
+
+        function resize() {
+            const w = window.innerWidth, h = window.innerHeight;
+            const q = QUALITY[perf.level];
+            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+            // cap the fill cost on very large / very dense displays: the sprite
+            // layer at 6.5 Mpx, the terrain shader (far dearer per pixel) at 4.4
+            view.dpr = Math.max(1, Math.min(dpr, Math.sqrt(6.5e6 / (w * h))) * q.stage);
+            view.tScale = Math.min(dpr, Math.sqrt(4.4e6 / (w * h))) * q.terrain;
+            const sw = Math.round(w * view.dpr), sh = Math.round(h * view.dpr);
+            if (stage.width !== sw || stage.height !== sh) { stage.width = sw; stage.height = sh; }
+            const tw = Math.max(1, Math.round(w * view.tScale)), th = Math.max(1, Math.round(h * view.tScale));
+            if (terrainCanvas.width !== tw || terrainCanvas.height !== th) { terrainCanvas.width = tw; terrainCanvas.height = th; }
+            perf.redrawTerrain = true;
+            buildSprites();
+            if (w !== width || h !== height || !haloW) sizeScratch(w, h);
+            setArena(w, h);
+            // keep everything inside a shrunken arena
+            const clampIn = (o, r) => { o.x = Math.max(r, Math.min(w - r, o.x)); o.y = Math.max(r, Math.min(h - r, o.y)); };
+            clampIn(player, player.radius);
+            for (const e of enemies) clampIn(e, 1);
+            if (mine) clampIn(mine, 0);
+            updateStatus();
+        }
+
+        let last = performance.now(), acc = 0, lastCortex = 0;
+
+        function render(now, alpha, dtFrames) {
+            // camera shake
+            if (view.shake > 0.2 && !reducedMotion) {
+                view.shakeX = (frand() - 0.5) * view.shake;
+                view.shakeY = (frand() - 0.5) * view.shake;
+            } else { view.shakeX = 0; view.shakeY = 0; }
+            view.shake *= Math.pow(0.88, dtFrames);
+            view.hurt *= Math.pow(0.93, dtFrames);
+            updateTension(dtFrames);
+            updateGaze(dtFrames);
+
+            ctx.setTransform(view.dpr, 0, 0, view.dpr, 0, 0);
+            if (gl) {
+                // An undrawn WebGL canvas keeps showing its last frame.
+                if (perf.redrawTerrain || perf.frames % QUALITY[perf.level].every === 0) { drawTerrainGL(now); perf.redrawTerrain = false; }
+                ctx.clearRect(0, 0, width, height);
+            } else {
+                drawTerrain2D();
+            }
+            ctx.save();
+            ctx.translate(-view.shakeX, -view.shakeY);
+            drawOverlay(alpha);
+            drawMine(now);
+            drawBullets(alpha);
+            drawEnemies(alpha);
+            drawPlayer(alpha);
+            drawFx(dtFrames);
+            ctx.restore();
+
+            updateHud();
+            if (now - lastCortex > 50) { lastCortex = now; updateCortex(); }
+        }
+
+        function setQuality(level, now) {
+            perf.level = level;
+            perf.late = 0; perf.calm = 0;
+            perf.settle = now + 2500;       // let the resized canvases and the averages settle
+            resize();
+        }
+
+        // Keeps the picture at 60 fps by trading resolution for it. Frames
+        // that arrive late while the script took under half of them are
+        // waiting on the GPU, and the GPU's work here is per pixel.
+        function govern(now, dt, js) {
+            perf.frames++;
+            if (dt >= 250) return;           // tab was in the background
+            perf.dt += (dt - perf.dt) * 0.08;
+            perf.js += (js - perf.js) * 0.08;
+            if (!perf.auto || view.paused || now < perf.settle) return;
+            if (perf.dt > 19.5 && perf.js < perf.dt * 0.5) {
+                perf.calm = 0;
+                perf.late += dt;
+                if (perf.late < 1500 || perf.level >= QUALITY.length - 1) return;
+                // Two steps that bought nothing: pixels are not the problem
+                // (a 50 Hz display, say). Give the detail back and stand down.
+                if (perf.level > 0) perf.futile = perf.dt > perf.before * 0.93 ? perf.futile + 1 : 0;
+                if (perf.futile >= 2) { perf.auto = false; setQuality(0, now); return; }
+                // a level we only just climbed back to did not hold: wait longer next time
+                if (now - perf.raisedAt < 15000) perf.retry = Math.min(perf.retry * 2, 300000);
+                perf.before = perf.dt;
+                setQuality(perf.level + 1, now);
+            } else {
+                perf.late = Math.max(0, perf.late - dt);
+                if (perf.level === 0 || perf.dt > 17.5) { perf.calm = 0; return; }
+                perf.calm += dt;
+                if (perf.calm > perf.retry) { perf.raisedAt = now; setQuality(perf.level - 1, now); }
+            }
+        }
+
+        function loop(now) {
+            requestAnimationFrame(loop);
+            const began = performance.now();
+            let dt = now - last;
+            const gap = dt;
+            last = now;
+            if (dt > 250) dt = 250;          // tab was in the background
+
+            if (!view.paused) {
+                acc += dt * view.speed;
+                const budget = performance.now() + 12;
+                let steps = 0;
+                while (acc >= STEP_MS) {
+                    tickOnce();
+                    acc -= STEP_MS;
+                    steps++;
+                    if (isGameOver && !view.deadAt) { endRun(now); acc = 0; break; }
+                    if (steps >= 16 || performance.now() > budget) { acc = 0; break; }   // can't keep up: drop time, never spiral
+                }
+            }
+
+            if (view.deadAt) {
+                const wait = 6000, gone = now - view.deadAt;
+                if (view.autopilot) {
+                    el.dCount.textContent = 'Relaunching in ' + Math.max(1, Math.ceil((wait - gone) / 1000));
+                    el.dBar.style.width = Math.min(100, gone / wait * 100) + '%';
+                    if (gone >= wait) startRun(false);
+                } else {
+                    el.dCount.textContent = 'Press space to relaunch';
+                    el.dBar.style.width = '0%';
+                }
+            }
+
+            perf.sim += (performance.now() - began - perf.sim) * 0.08;
+            const alpha = view.paused || isGameOver ? 1 : Math.min(1, acc / STEP_MS);
+            render(now, alpha, view.paused ? 0 : Math.min(4, dt / STEP_MS) * view.speed);
+            govern(now, gap, performance.now() - began);
+        }
+
+        // ------------------------------------------------------------- input
+
+        function setGuide(open) {
+            if (open === view.guide) return;
+            view.guide = open;
+            el.guide.hidden = !open;
+            if (open) { view.resume = !view.paused; view.paused = true; for (const k in keys) keys[k] = false; }
+            else if (view.resume) view.paused = false;
+            updateStatus();
+        }
+
+        function act(name, back) {
+            if (view.guide) { setGuide(false); if (name === 'guide' || name === 'pause') return; }
+            switch (name) {
+                case 'guide': setGuide(true); return;
+                case 'pause': view.paused = !view.paused; break;
+                case 'overlay': view.overlay = !view.overlay; break;
+                case 'auto':
+                    view.autopilot = !view.autopilot;
+                    view.pure = false;
+                    bot.release();
+                    break;
+                case 'doctrine': bot.opts.doctrine = bot.opts.doctrine === 'hunter' ? 'endurance' : 'hunter'; break;
+                case 'mine': if (!view.autopilot && !view.paused) tryPlaceMine(); break;
+                case 'costume': setCostume(COSTUMES[(COSTUMES.indexOf(view.costume) + (back ? COSTUMES.length - 1 : 1)) % COSTUMES.length], true); break;
+                case 'restart': startRun(false); break;
+            }
+            updateStatus();
+        }
+        function setSpeed(s) { view.speed = s; acc = 0; updateStatus(); }
+
+        const MANUAL_KEYS = new Set(['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']);
+        window.addEventListener('keydown', (e) => {
+            if (e.metaKey || e.ctrlKey || e.altKey) return;
+            if (MANUAL_KEYS.has(e.code) || e.code === 'Space') e.preventDefault();
+            if (MANUAL_KEYS.has(e.code)) { if (!view.autopilot) keys[e.code] = true; return; }
+            if (e.repeat) return;
+            switch (e.code) {
+                case 'KeyP': act('pause'); break;
+                case 'KeyV': act('overlay'); break;
+                case 'KeyB': act('auto'); break;
+                case 'KeyH': act('doctrine'); break;
+                case 'KeyE': act('mine'); break;
+                case 'KeyC': act('costume', e.shiftKey); break;
+                case 'KeyG': act('guide'); break;
+                case 'Escape': case 'Enter': if (view.guide) setGuide(false); break;
+                case 'KeyR': act('restart'); break;
+                case 'Digit1': setSpeed(1); break;
+                case 'Digit2': setSpeed(2); break;
+                case 'Digit3': setSpeed(4); break;
+                case 'Digit4': setSpeed(8); break;
+            }
+        });
+        window.addEventListener('keyup', (e) => {
+            if (MANUAL_KEYS.has(e.code)) { if (!view.autopilot) keys[e.code] = false; return; }
+            if (e.code === 'Space') {
+                if (view.guide) setGuide(false);
+                else if (isGameOver) startRun(false);
+                else if (!view.autopilot) tryDash();
+            }
+        });
+        document.querySelector('.bc').addEventListener('click', (e) => {
+            const b = e.target.closest('button');
+            if (!b) return;
+            if (b.dataset.act) act(b.dataset.act, e.shiftKey);
+            else if (b.dataset.speed) setSpeed(Number(b.dataset.speed));
+            b.blur();
+        });
+        el.guideGo.addEventListener('click', () => { el.guideGo.blur(); setGuide(false); });
+        window.addEventListener('resize', resize);
+
+        // ---------------------------------------------------------- QA hooks
+
+        // Same hooks the classic build exposes, so runs can be scripted.
+        window.render_game_to_text = () => JSON.stringify({
+            coordinateSystem: 'origin top-left; x right; y down; pixels',
+            mode: isGameOver ? 'game_over' : (view.paused ? 'paused' : 'playing'),
+            survivedSeconds: Number((view.runFrames / 60).toFixed(1)),
+            goalCleared: view.runFrames >= GOAL_FRAMES,
+            score, wave,
+            player: { x: Math.round(player.x), y: Math.round(player.y), hp: Number(player.hp.toFixed(1)), dashing: player.isDashing, dashCooldown: player.dashCooldown },
+            bot: { enabled: view.autopilot, intent: bot.intel.mode, threat: Number(bot.intel.threat.toFixed(2)), lava: bot.intel.lava, ice: bot.intel.ice, dashes: view.dashes, hitsTaken: view.hitsTaken, kills: view.kills, thinkMs: Number(view.thinkMs.toFixed(2)) },
+            mine: { onMap: mine ? { x: Math.round(mine.x), y: Math.round(mine.y), buriedSeconds: Number((mine.buried / 60).toFixed(1)), fuseLit: mine.fuse >= 0, lured: enemies.filter(e => e.lured).length } : null, secondsSinceLaid: Number((mineTimer / 60).toFixed(1)), ready: mineReady(), kills: view.mineKills },
+            tension: Number(view.tension.toFixed(2)),
+            costume: view.costume,
+            gaze: { emote: view.gaze.emote, mode: view.gaze.mode, x: Number(view.gaze.x.toFixed(2)), y: Number(view.gaze.y.toFixed(2)) },
+            enemyCount: enemies.length,
+            projectileCount: bullets.length,
+            renderer: gl ? 'webgl2' : 'canvas',
+            perf: { quality: perf.level, auto: perf.auto, frameMs: Number(perf.dt.toFixed(1)), scriptMs: Number(perf.js.toFixed(2)), simMs: Number(perf.sim.toFixed(2)), stage: stage.width + 'x' + stage.height, terrain: terrainCanvas.width + 'x' + terrainCanvas.height }
+        });
+        window.advanceTime = (ms) => {
+            const steps = Math.max(1, Math.round(ms / STEP_MS));
+            const now = performance.now();
+            view.muteFx = steps > 30;
+            for (let i = 0; i < steps && !isGameOver; i++) tickOnce();
+            view.muteFx = false;
+            if (isGameOver && !view.deadAt) endRun(now);
+            render(now, 1, 1);
+        };
+
+        // --------------------------------------------------------------- boot
+
+        initGL();
+        resize();
+        showBest();
+        {
+            const asked = /[?&]costume=([a-z]+)/.exec(location.search);
+            let kept = null;
+            try { kept = localStorage.getItem(COSTUME_KEY); } catch (e) {}
+            setCostume(asked && COSTUME[asked[1]] ? asked[1] : (COSTUME[kept] ? kept : 'default'), false);
+        }
+        startRun(true);
+        if (PLAY) {
+            $('mark-tag').textContent = 'Play';
+            document.title = 'LAVICE — Play';
+            const link = $('mode-link');
+            link.href = 'super.html';
+            link.textContent = 'Watch the Superbot ↗';
+            setGuide(true);
+        }
+        requestAnimationFrame(loop);
+    })();
+    </script>
+</body>
+</html>

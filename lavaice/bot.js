@@ -1,5 +1,5 @@
 /**
- * V0ID SH!FTER - M4 NEURAL CORE BOT (v4.0 - TensorFlow.js Edition)
+ * V0ID SH!FTER - M4 SURVIVAL CORE BOT (v5.2)
  * 
  * 結合了傳統算法 (A*) 的穩定性與深度學習 (DQN) 的適應性。
  * 
@@ -19,10 +19,14 @@ class M4NeuralBot {
         this.enabled = false;
         this.debugMode = false;
         this.useTF = true;
+        // A freshly-created model has random weights and is not safe to use as a
+        // live policy. Keep TF available for the training harness, while the
+        // game bot uses the deterministic survival controller below.
+        this.useNeuralPolicy = false;
         
         // 傳統算法配置
         this.config = {
-            gridSize: 20,
+            gridSize: 28,
             weights: {
                 wall: 999999,
                 futureWall: 50000,
@@ -43,6 +47,30 @@ class M4NeuralBot {
         this.path = [];
         this.targetSpot = null;
         this.wanderAngle = 0;
+        this.currentStrategy = 0;
+        this.moveVector = { x: 0, y: -1 };
+        this.steeringIndex = 6;
+        this.steeringHoldFrames = 0;
+        this.steeringChanges = 0;
+        this.lastPosition = null;
+        this.stuckFrames = 0;
+        this.positionHistory = [];
+        this.escapeFrames = 0;
+        this.escapeCooldownFrames = 0;
+        this.escapeVector = { x: 0, y: -1 };
+        this.escapeReason = 'none';
+        this.escapeEvents = 0;
+        this.dashCount = 0;
+        this.lastDashFrame = -999;
+        this.lastDashedEscapeEvent = 0;
+        this.lastDashReason = 'none';
+        this.dashReasons = { threat: 0, terrain: 0, edge: 0, breakout: 0, stuck: 0, travel: 0 };
+        this.movementKeyChanges = 0;
+        this.movementReversals = 0;
+        this.lastMovementMask = '';
+        this.horizontalSwitchDelay = 0;
+        this.verticalSwitchDelay = 0;
+        this.survivalFrames = 0;
         this.autoRestart = false;
         this.restartTimer = null;
         
@@ -104,9 +132,9 @@ class M4NeuralBot {
         const ui = document.createElement('div');
         ui.style.cssText = `position:fixed;top:20px;right:20px;background:rgba(0,0,0,0.9);border:1px solid #0ff;padding:15px;color:#0ff;font-family:monospace;z-index:9999;pointer-events:none;box-shadow:0 0 20px rgba(0,255,255,0.2);`;
         ui.innerHTML = `
-            <div style="font-weight:bold;border-bottom:1px solid #0ff;margin-bottom:5px;"> M4 NEURAL CORE v4.0</div>
+            <div style="font-weight:bold;border-bottom:1px solid #0ff;margin-bottom:5px;"> M4 SURVIVAL CORE v5.2</div>
             <div id="m4-status">STANDBY</div>
-            <div id="m4-mode" style="color:#ff0;font-size:11px;">MODE: HEURISTIC</div>
+            <div id="m4-mode" style="color:#ff0;font-size:11px;">MODE: SURVIVAL</div>
             <div id="m4-perf" style="font-size:10px;color:#888;margin-top:5px;"></div>
             <div id="tf-stats" style="font-size:10px;color:#aaa;margin-top:5px;display:none;">
                 Tensors: <span id="tensor-count">0</span><br>
@@ -168,32 +196,58 @@ class M4NeuralBot {
     
     update() {
         this.frameCount = (this.frameCount || 0) + 1;
-        
+        this.survivalFrames++;
+
+        // --- PER-FRAME CACHE ---
+        // Build once, reuse in getEnvironmentState / executeMovement / checkDash / trainModel
+        // Avoids iterating the enemies array 4-6 times per frame.
+        this._enemyCache = enemies.map(e => {
+            const dx = e.x - player.x;
+            const dy = e.y - player.y;
+            return { e, dx, dy, dist: Math.hypot(dx, dy) };
+        }).sort((a, b) => a.dist - b.dist);
+        this._nearestEnemy = this._enemyCache[0] || null;
+
         // 1. 感知環境 (Perception)
         const state = this.getEnvironmentState();
         
-        // 2. TF.js 決策 (Decision)
-        let strategy = 0; // Default: Balanced
-        if (this.useTF && this.model) {
+        // 2. Survival decision. The neural policy is opt-in only after a model
+        // has actually been trained/imported; random logits are not a policy.
+        let strategy = this.selectStrategy(state);
+        if (this.useNeuralPolicy && this.useTF && this.model) {
             tf.tidy(() => {
                 const input = tf.tensor2d([state], [1, 20]);
                 const prediction = this.model.predict(input);
                 strategy = prediction.argMax(1).dataSync()[0];
             });
         }
+        this.currentStrategy = strategy;
         
         // 更新 UI 顯示當前策略
-        const strategies = ['BALANCED', 'AGGRESSIVE', 'EVASIVE', 'CAMPING'];
-        if (this.frameCount % 10 === 0) this.uiMode.innerText = `STRATEGY: ${strategies[strategy]}`;
+        const strategies = ['BALANCED', 'PRESSURE', 'EVASIVE', 'RECOVER'];
+        if (this.frameCount % 10 === 0) {
+            const breakout = this.escapeFrames > 0 ? ' / BREAKOUT' : '';
+            this.uiMode.innerText = `STRATEGY: ${strategies[strategy]}${breakout}`;
+        }
         
         // 3. 根據策略調整權重 (Dynamic Weights)
         this.adjustWeights(strategy);
-        
-        // 4. 執行 A* 導航 (Navigation)
-        const bestSpot = this.analyzeTerrainAndFindSafeSpot();
-        this.targetSpot = bestSpot;
-        if (bestSpot) {
-            this.path = this.findPath(player.x, player.y, bestSpot.x, bestSpot.y);
+
+        // 4. 執行 A* 導航 (Navigation) — throttled
+        // Re-scan terrain every 15 frames; re-path every 20 frames or when target moves >40px.
+        if (this.frameCount % 15 === 0 || !this.targetSpot) {
+            const bestSpot = this.analyzeTerrainAndFindSafeSpot();
+            if (bestSpot) {
+                const prevTarget = this.targetSpot;
+                const targetMoved = !prevTarget || Math.hypot(bestSpot.x - prevTarget.x, bestSpot.y - prevTarget.y) > 40;
+                this.targetSpot = bestSpot;
+                if (targetMoved) {
+                    this.path = this.findPath(player.x, player.y, bestSpot.x, bestSpot.y);
+                }
+            }
+        } else if (this.targetSpot && this.frameCount % 20 === 0) {
+            // Refresh path periodically even with stable target (handles dynamic walls)
+            this.path = this.findPath(player.x, player.y, this.targetSpot.x, this.targetSpot.y);
         }
         this.executeMovement();
         
@@ -210,86 +264,102 @@ class M4NeuralBot {
         
         if (this.debugMode) this.drawDebug();
     }
+
+    selectStrategy() {
+        const nearest = this._nearestEnemy ? this._nearestEnemy.dist : Infinity;
+        const edgeClearance = Math.min(player.x, player.y, width - player.x, height - player.y);
+        let nearby = 0;
+        for (const item of this._enemyCache || []) {
+            if (item.dist < 180) nearby++;
+            else break;
+        }
+
+        if (player.hp < 55 || edgeClearance < 70) return 3; // recover: maximize space and avoid all trades
+        if (edgeClearance < 140) return 2;
+        if (nearest < 125 || nearby >= 3) return 2; // immediate danger
+        if (player.hp > 80 && nearby <= 1 && nearest > 260 && nearest < 520) return 1;
+        return 0;
+    }
     
     getEnvironmentState() {
         // 構建 20維 狀態向量
-        // [0-7]: 8方向牆壁距離
-        // [8-15]: 8方向敵人距離
-        // [16]: 玩家血量 (假設有) -> 這裡用 Dash CD 代替
-        // [17]: 最近敵人距離
-        // [18]: 敵人數量
-        // [19]: 當前 Wave
-        
+        // [0-7]: 8方向牆壁距離  [8-15]: 8方向敵人距離
+        // [16]: Dash CD  [17]: 最近敵人距離  [18]: 敵人數量  [19]: Wave
+
         const sensors = [];
         const dirs = [[1,0], [0.7,0.7], [0,1], [-0.7,0.7], [-1,0], [-0.7,-0.7], [0,-1], [0.7,-0.7]];
-        
+
         // Wall Sensors
-        dirs.forEach(dir => {
+        for (let d = 0; d < dirs.length; d++) {
+            const dir = dirs[d];
             let dist = 0;
-            for(let i=10; i<300; i+=20) {
-                if(isWall(player.x + dir[0]*i, player.y + dir[1]*i)) { dist = i; break; }
+            for (let i = 10; i < 300; i += 20) {
+                if (isWall(player.x + dir[0]*i, player.y + dir[1]*i)) { dist = i; break; }
             }
-            sensors.push(dist/300); // Normalize
-        });
-        
-        // Enemy Sensors
-        dirs.forEach(dir => {
+            sensors.push(dist / 300);
+        }
+
+        // Enemy Sensors — reuse per-frame cache (avoids re-computing hypot)
+        const cache = this._enemyCache || [];
+        for (let d = 0; d < dirs.length; d++) {
+            const dir = dirs[d];
             let minDist = 1.0;
-            enemies.forEach(e => {
-                // 簡單的點積判斷方向
-                const dx = e.x - player.x;
-                const dy = e.y - player.y;
-                const len = Math.sqrt(dx*dx + dy*dy);
-                const ndx = dx/len;
-                const ndy = dy/len;
-                const dot = ndx*dir[0] + ndy*dir[1];
-                if (dot > 0.8) { // 在這個方向上
-                    const d = len/500;
-                    if (d < minDist) minDist = d;
+            for (let ci = 0; ci < cache.length; ci++) {
+                const { dx, dy, dist } = cache[ci];
+                if (dist === 0) continue;
+                const invDist = 1 / dist;
+                const dot = (dx * invDist) * dir[0] + (dy * invDist) * dir[1];
+                if (dot > 0.8) {
+                    const nd = dist / 500;
+                    if (nd < minDist) minDist = nd;
                 }
-            });
+            }
             sensors.push(minDist);
-        });
-        
+        }
+
         sensors.push(player.dashCooldown / 60);
-        
-        let nearestEnemy = Infinity;
-        enemies.forEach(e => nearestEnemy = Math.min(nearestEnemy, Math.hypot(e.x-player.x, e.y-player.y)));
-        sensors.push(Math.min(1, nearestEnemy/500));
-        
-        sensors.push(Math.min(1, enemies.length/20));
-        sensors.push(Math.min(1, wave/10));
-        
+        sensors.push(Math.min(1, (this._nearestEnemy ? this._nearestEnemy.dist : Infinity) / 500));
+        sensors.push(Math.min(1, enemies.length / 20));
+        sensors.push(Math.min(1, wave / 10));
+
         return sensors;
     }
     
     adjustWeights(strategy) {
         const w = this.config.weights;
+        // Reset every field first. v4 leaked values between strategies, so one
+        // aggressive/camping frame could poison navigation for the whole run.
+        w.wall = 999999;
+        w.futureWall = 60000;
+        w.enemy = 6500;
+        w.corner = 3000;
+        w.optimalRange = -100;
         switch(strategy) {
-            case 1: // AGGRESSIVE (BERSERKER)
-                w.enemy = 0; // 完全無視敵人危險，只管衝
-                w.optimalRange = -2000; // 極度渴望貼臉 (Berserker Mode)
-                w.futureWall = 10000; // 降低撞牆恐懼以換取機動性
+            case 1: // PRESSURE: engage, but never ignore hazards
+                w.enemy = 4500;
+                w.optimalRange = -400;
                 break;
             case 2: // EVASIVE
-                w.enemy = 8000; // 遠離敵人
-                w.optimalRange = 500;
+                w.enemy = 11000;
+                w.futureWall = 90000;
                 break;
-            case 3: // CAMPING
-                w.corner = -5000; // 極度喜歡角落
+            case 3: // RECOVER
+                w.enemy = 15000;
+                w.futureWall = 110000;
+                w.corner = 6000;
                 break;
-            default: // BALANCED
-                w.enemy = 2000; // 降低默認恐懼值 (原 5000)
-                w.optimalRange = -200;
-                w.corner = 2000;
+            default:
+                break;
         }
     }
     
     async trainModel(state, action) {
-        // 簡單的獎勵機制：存活時間 + 擊殺
-        // 這裡簡化為：只要沒死就是正獎勵
-        const reward = 0.1; 
-        
+        // Shaped reward: survival + proximity danger penalty
+        // Closer enemies → negative signal; being alive → small positive
+        const nearestDist = this._nearestEnemy ? this._nearestEnemy.dist : Infinity;
+        const dangerPenalty = nearestDist < 150 ? -0.15 * (1 - nearestDist / 150) : 0;
+        const reward = 0.1 + dangerPenalty;
+
         this.replayBuffer.push({state, action, reward});
         if (this.replayBuffer.length > this.maxReplaySize) this.replayBuffer.shift();
         
@@ -324,51 +394,50 @@ class M4NeuralBot {
         const gridH = Math.ceil(height / this.config.gridSize);
         let minScore = Infinity;
         let bestPoint = null;
+        const clearanceDirs = [[1,0],[0.7,0.7],[0,1],[-0.7,0.7],[-1,0],[-0.7,-0.7],[0,-1],[0.7,-0.7]];
         
         for (let y = 0; y < gridH; y++) {
             for (let x = 0; x < gridW; x++) {
                 const wx = x * this.config.gridSize + this.config.gridSize/2;
                 const wy = y * this.config.gridSize + this.config.gridSize/2;
                 
-                if (isWall(wx, wy)) continue;
-                
-                // 1. 安全間隙檢查 (Clearance Check) - 讓機器人走在路中間
-                let clearanceScore = 0;
-                const checks = [20, 40]; // 檢查半徑
-                let isSafe = true;
-                for(let d of checks) {
-                    if (isWall(wx+d, wy) || isWall(wx-d, wy) || isWall(wx, wy+d) || isWall(wx, wy-d)) {
-                        isSafe = false;
-                        break;
+                if (isWall(wx, wy) || this.isWallAtTime(wx, wy, gameTime + 0.8)) continue;
+
+                let score = Math.hypot(player.x - wx, player.y - wy) * 0.7;
+                let openSamples = 0;
+                for (const dir of clearanceDirs) {
+                    for (const radius of [24, 46]) {
+                        const cx = wx + dir[0] * radius;
+                        const cy = wy + dir[1] * radius;
+                        if (isWall(cx, cy)) score += this.config.weights.wall * 0.035;
+                        else openSamples++;
+                        if (this.isWallAtTime(cx, cy, gameTime + 1.4)) {
+                            score += this.config.weights.futureWall * 0.12;
+                        }
                     }
-                    clearanceScore += 1;
                 }
-                if (!isSafe && clearanceScore === 0) continue; // 太窄了，不要去
-                
-                let score = 0;
-                score -= clearanceScore * 5000; // 獎勵開闊地帶
-                
-                // 2. 未來牆壁預測 (Future Wall Prediction) - 增加預判時間
-                if (this.isWallAtTime(wx, wy, gameTime + 2.0)) score += this.config.weights.futureWall * 5; // 嚴重懲罰即將生成的牆
-                
+                score -= openSamples * 350;
+
+                // Avoid edges/corners where a moving terrain pocket can trap us.
+                const edgeClearance = Math.min(wx, wy, width - wx, height - wy);
+                if (edgeClearance < 75) continue;
+                if (edgeClearance < 200) {
+                    const edgeDanger = 1 - edgeClearance / 200;
+                    score += 22000 * edgeDanger * edgeDanger;
+                }
+
                 let distToNearestEnemy = Infinity;
-                let nearestEnemy = null;
                 for (let e of enemies) {
                     const d = Math.hypot(e.x - wx, e.y - wy);
-                    if (d < distToNearestEnemy) { distToNearestEnemy = d; nearestEnemy = e; }
-                    if (d < 100) score += this.config.weights.enemy * (100 - d) / 100;
+                    if (d < distToNearestEnemy) distToNearestEnemy = d;
+                    const dangerRadius = e.type === 'ice_dust' ? 340 : 280;
+                    if (d < dangerRadius) {
+                        const danger = 1 - d / dangerRadius;
+                        score += this.config.weights.enemy * danger * danger;
+                    }
                 }
                 
                 if (distToNearestEnemy > 200 && distToNearestEnemy < 400) score += this.config.weights.optimalRange;
-                
-                // LOS Check
-                if (nearestEnemy && distToNearestEnemy < 500) {
-                    if (this.hasLineOfSight(wx, wy, nearestEnemy.x, nearestEnemy.y)) score -= 500;
-                    else score += 500;
-                }
-                
-                const distToPlayer = Math.hypot(player.x - wx, player.y - wy);
-                score += distToPlayer * 0.5;
                 
                 if (score < minScore) { minScore = score; bestPoint = { x: wx, y: wy }; }
             }
@@ -379,61 +448,72 @@ class M4NeuralBot {
     findPath(startX, startY, endX, endY) {
         const cellSize = 40;
         const startNode = { x: Math.floor(startX/cellSize), y: Math.floor(startY/cellSize), g:0, h:0, f:0, parent:null };
-        const endNode = { x: Math.floor(endX/cellSize), y: Math.floor(endY/cellSize) };
+        const endNode   = { x: Math.floor(endX/cellSize),   y: Math.floor(endY/cellSize) };
+
         let openList = [startNode];
-        let closedSet = new Set();
+        // O(1) open-list lookup by key — eliminates the O(n) openList.find() hotspot
+        const openMap  = new Map();
+        openMap.set(`${startNode.x},${startNode.y}`, startNode);
+        const closedSet = new Set();
         let iterations = 0;
-        
+
+        const dirs = [[0,1],[1,0],[0,-1],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]];
+        const nodeR = 15;
+
         while (openList.length > 0 && iterations < 200) {
             iterations++;
+
+            // Find min-F node
             let lowInd = 0;
-            for(let i=0; i<openList.length; i++) if(openList[i].f < openList[lowInd].f) lowInd = i;
-            let currentNode = openList[lowInd];
-            
-            if(Math.abs(currentNode.x - endNode.x) <= 1 && Math.abs(currentNode.y - endNode.y) <= 1) {
+            for (let i = 1; i < openList.length; i++) if (openList[i].f < openList[lowInd].f) lowInd = i;
+            const currentNode = openList[lowInd];
+
+            if (Math.abs(currentNode.x - endNode.x) <= 1 && Math.abs(currentNode.y - endNode.y) <= 1) {
                 let curr = currentNode;
-                let ret = [];
-                while(curr.parent) { ret.push({x: curr.x*cellSize+cellSize/2, y: curr.y*cellSize+cellSize/2}); curr = curr.parent; }
+                const ret = [];
+                while (curr.parent) { ret.push({x: curr.x*cellSize+cellSize/2, y: curr.y*cellSize+cellSize/2}); curr = curr.parent; }
                 return ret.reverse();
             }
-            
+
             openList.splice(lowInd, 1);
-            closedSet.add(`${currentNode.x},${currentNode.y}`);
-            
-            const dirs = [[0,1],[1,0],[0,-1],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]];
-            for(let i=0; i<dirs.length; i++) {
+            const currKey = `${currentNode.x},${currentNode.y}`;
+            openMap.delete(currKey);
+            closedSet.add(currKey);
+
+            for (let i = 0; i < dirs.length; i++) {
                 const nx = currentNode.x + dirs[i][0];
                 const ny = currentNode.y + dirs[i][1];
-                if(closedSet.has(`${nx},${ny}`)) continue;
-                
-                const wx = nx*cellSize+cellSize/2;
-                const wy = ny*cellSize+cellSize/2;
+                const key = `${nx},${ny}`;
+                if (closedSet.has(key)) continue;
+
+                const wx = nx*cellSize + cellSize/2;
+                const wy = ny*cellSize + cellSize/2;
                 if (isWall(wx, wy)) continue;
-                
-                // SAFETY BUFFER UPDATE: 擴大碰撞體積檢查
-                // 機器人現在會認為自己比實際更"胖"，從而預留更多空間
-                const nodeR = 35; // 原 15 -> 35 (極大安全緩衝)
                 if (isWall(wx+nodeR, wy) || isWall(wx-nodeR, wy) || isWall(wx, wy+nodeR) || isWall(wx, wy-nodeR)) continue;
-                
                 if (this.isWallAtTime(wx, wy, gameTime + 0.5)) continue;
-                
-                let gScore = currentNode.g + 1;
-                let gScoreIsBest = false;
-                let neighbor = openList.find(n => n.x === nx && n.y === ny);
-                
-                if(!neighbor) { gScoreIsBest = true; neighbor = { x: nx, y: ny, g: gScore, h: 0, f: 0, parent: currentNode }; openList.push(neighbor); }
-                else if(gScore < neighbor.g) gScoreIsBest = true;
-                
-                if(gScoreIsBest) { neighbor.parent = currentNode; neighbor.g = gScore; neighbor.h = Math.abs(neighbor.x - endNode.x) + Math.abs(neighbor.y - endNode.y); neighbor.f = neighbor.g + neighbor.h; }
+
+                const gScore = currentNode.g + 1;
+                let neighbor = openMap.get(key);
+
+                if (!neighbor) {
+                    neighbor = { x: nx, y: ny, g: gScore, h: Math.abs(nx - endNode.x) + Math.abs(ny - endNode.y), f: 0, parent: currentNode };
+                    neighbor.f = neighbor.g + neighbor.h;
+                    openList.push(neighbor);
+                    openMap.set(key, neighbor);
+                } else if (gScore < neighbor.g) {
+                    neighbor.parent = currentNode;
+                    neighbor.g = gScore;
+                    neighbor.f = neighbor.g + neighbor.h;
+                }
             }
         }
         return [];
     }
     
     executeMovement() {
-        // --- FLUID MOVEMENT SYSTEM (Vector Based) ---
-        
-        // 1. Determine Base Target Vector (Seek)
+        // Pick a navigation target, then locally score directions against the
+        // moving terrain and nearby enemies. This keeps the path planner from
+        // blindly walking into a hazard that appeared after the last re-path.
         let targetX = player.x;
         let targetY = player.y;
         
@@ -447,85 +527,258 @@ class M4NeuralBot {
             targetY = this.targetSpot.y; 
         }
 
-        // Calculate Seek Vector
+        this.updateEscapeState(targetX, targetY);
+
         let dx = targetX - player.x;
         let dy = targetY - player.y;
+        if (this.escapeFrames > 0) {
+            dx = this.escapeVector.x * 5;
+            dy = this.escapeVector.y * 5;
+        }
         let len = Math.hypot(dx, dy);
-        if (len > 0) { dx /= len; dy /= len; } // Normalize
+        if (len > 0) { dx /= len; dy /= len; }
+        else { dx = this.moveVector.x; dy = this.moveVector.y; }
 
-        // 2. Add Wander Noise (Never stand still)
-        // Slowly change wander angle
-        this.wanderAngle += (Math.random() - 0.5) * 0.5;
-        const wanderWeight = 0.3;
-        dx += Math.cos(this.wanderAngle) * wanderWeight;
-        dy += Math.sin(this.wanderAngle) * wanderWeight;
-
-        // 3. Wall Repulsion (Fluid Avoidance)
-        const lookAhead = 40;
-        const whiskers = 8;
-        for (let i = 0; i < whiskers; i++) {
-            const angle = (i / whiskers) * Math.PI * 2;
-            const wx = Math.cos(angle);
-            const wy = Math.sin(angle);
-            
-            // Check for wall
-            if (isWall(player.x + wx * lookAhead, player.y + wy * lookAhead)) {
-                // Repulse strongly from this direction
-                dx -= wx * 2.5;
-                dy -= wy * 2.5;
-            }
+        // Strong continuous repulsion, weighted by speed and proximity.
+        for (const item of this._enemyCache || []) {
+            if (item.dist > 320) break;
+            if (item.dist < 1) continue;
+            const danger = 1 - item.dist / 320;
+            const multiplier = (item.e.type === 'ice_dust' ? 4.2 : 3.0) * danger * danger;
+            dx -= (item.dx / item.dist) * multiplier;
+            dy -= (item.dy / item.dist) * multiplier;
         }
 
-        // 4. Combat Strafing (Circle Strafe)
-        // If there is a nearby enemy, try to move perpendicular to them
-        let nearestEnemy = null;
-        let minDist = Infinity;
-        enemies.forEach(e => {
-            const d = Math.hypot(e.x - player.x, e.y - player.y);
-            if (d < minDist) { minDist = d; nearestEnemy = e; }
-        });
+        // The game has no useful cover at the outer boundary. Bias inward well
+        // before contact so enemy knockback cannot pin the bot outside the map.
+        const edgeBuffer = 180;
+        if (player.x < edgeBuffer) dx += (1 - player.x / edgeBuffer) * 6;
+        if (player.x > width - edgeBuffer) dx -= (1 - (width - player.x) / edgeBuffer) * 6;
+        if (player.y < edgeBuffer) dy += (1 - player.y / edgeBuffer) * 6;
+        if (player.y > height - edgeBuffer) dy -= (1 - (height - player.y) / edgeBuffer) * 6;
 
-        if (nearestEnemy && minDist < 300) {
-            const edx = nearestEnemy.x - player.x;
-            const edy = nearestEnemy.y - player.y;
-            // Perpendicular vector (-y, x)
-            let strafeX = -edy;
-            let strafeY = edx;
-            const slen = Math.hypot(strafeX, strafeY);
-            if (slen > 0) {
-                // Normalize and apply
-                // Flip direction based on time to simulate "dancing"
-                const dir = Math.sin(gameTime * 2) > 0 ? 1 : -1;
-                dx += (strafeX / slen) * dir * 1.5;
-                dy += (strafeY / slen) * dir * 1.5;
-            }
-            
-            // Also maintain distance (Backpedal if too close)
-            if (minDist < 150) {
-                dx -= (edx / minDist) * 2.0;
-                dy -= (edy / minDist) * 2.0;
-            }
+        const chosen = this.findBestMoveDirection(dx, dy);
+        this.moveVector = chosen;
+        this.applyMovementKeys(chosen);
+
+        if (this.lastPosition) {
+            const moved = Math.hypot(player.x - this.lastPosition.x, player.y - this.lastPosition.y);
+            this.stuckFrames = moved < 1.1 ? this.stuckFrames + 1 : Math.max(0, this.stuckFrames - 2);
+        }
+        this.lastPosition = { x: player.x, y: player.y };
+    }
+
+    updateEscapeState(targetX, targetY) {
+        if (this.escapeFrames > 0) {
+            this.escapeFrames--;
+            this.positionHistory.length = 0;
+            if (this.escapeFrames === 0) this.escapeCooldownFrames = 90;
+            return;
+        }
+        if (this.escapeCooldownFrames > 0) this.escapeCooldownFrames--;
+
+        if (this.frameCount % 5 === 0) {
+            this.positionHistory.push({ x: player.x, y: player.y });
+            if (this.positionHistory.length > 12) this.positionHistory.shift();
         }
 
-        // 5. Apply to Keys (Analog Simulation)
-        // We want to press keys that align with the final dx, dy vector
-        // Threshold is lower to allow fine adjustments
-        keys['KeyW'] = dy < -0.2;
-        keys['KeyS'] = dy > 0.2;
-        keys['KeyA'] = dx < -0.2;
-        keys['KeyD'] = dx > 0.2;
+        if (this.escapeCooldownFrames > 0 || this.positionHistory.length < 10) return;
+        const oldest = this.positionHistory[0];
+        const progress = Math.hypot(player.x - oldest.x, player.y - oldest.y);
+        const targetDistance = Math.hypot(targetX - player.x, targetY - player.y);
+        const blocked = isWall(player.x + this.moveVector.x * 28, player.y + this.moveVector.y * 28);
+        const noProgress = targetDistance > 120 && progress < 24;
 
-        // 6. Opportunistic Dash (Fluid Mobility)
-        // If we have a strong desire to move in a direction, and it's clear, DASH!
-        const desireStrength = Math.hypot(dx, dy);
-        if (desireStrength > 2.0 && player.dashCooldown <= 0) {
-            // Only dash if we are not about to hit a wall
-            const dashDist = 100;
-            if (!isWall(player.x + dx * dashDist, player.y + dy * dashDist)) {
-                // 10% chance per frame to dash if conditions met (don't spam instantly)
-                if (Math.random() < 0.05) tryDash();
+        const hardStuck = this.stuckFrames > 14;
+        const blockedStuck = blocked && progress < 35;
+        if (hardStuck || noProgress || blockedStuck) {
+            this.escapeReason = hardStuck ? 'stuck' : (blockedStuck ? 'blocked' : 'no_progress');
+            this.escapeVector = this.findEscapeDirection(targetX - player.x, targetY - player.y);
+            this.escapeFrames = 48;
+            this.escapeEvents++;
+            this.steeringHoldFrames = 0;
+            this.positionHistory.length = 0;
+        }
+    }
+
+    findEscapeDirection(preferredX, preferredY) {
+        const preferredLen = Math.hypot(preferredX, preferredY) || 1;
+        preferredX /= preferredLen;
+        preferredY /= preferredLen;
+        let best = this.moveVector;
+        let bestScore = Infinity;
+
+        for (let i = 0; i < 8; i++) {
+            const angle = i * Math.PI * 2 / 8;
+            const vx = Math.cos(angle);
+            const vy = Math.sin(angle);
+            const landX = player.x + vx * player.dashSpeed * 8;
+            const landY = player.y + vy * player.dashSpeed * 8;
+            let score = -(vx * preferredX + vy * preferredY) * 250;
+            let landingBlocked = false;
+
+            for (const offset of [[0,0],[14,0],[-14,0],[0,14],[0,-14]]) {
+                const x = landX + offset[0];
+                const y = landY + offset[1];
+                if (isWall(x, y) || this.isWallAtTime(x, y, gameTime + 0.8)) {
+                    landingBlocked = true;
+                    break;
+                }
+            }
+            if (landingBlocked) continue;
+
+            // Prefer a roomy landing pocket; intermediate walls are allowed
+            // because the dash mechanic intentionally crosses thin terrain.
+            for (let j = 0; j < 8; j++) {
+                const a = j * Math.PI * 2 / 8;
+                for (const radius of [28, 52]) {
+                    const x = landX + Math.cos(a) * radius;
+                    const y = landY + Math.sin(a) * radius;
+                    if (isWall(x, y) || this.isWallAtTime(x, y, gameTime + 1.0)) score += 650;
+                    else score -= 180;
+                }
+            }
+
+            const edgeClearance = Math.min(landX, landY, width - landX, height - landY);
+            if (edgeClearance < 130) score += (130 - edgeClearance) * 80;
+            for (const item of this._enemyCache || []) {
+                const d = Math.hypot(item.e.x - landX, item.e.y - landY);
+                if (d < 190) score += (190 - d) * (item.e.type === 'ice_dust' ? 55 : 35);
+            }
+
+            if (score < bestScore) {
+                bestScore = score;
+                best = { x: vx, y: vy };
             }
         }
+        return best;
+    }
+
+    findBestMoveDirection(preferredX, preferredY) {
+        const preferredLen = Math.hypot(preferredX, preferredY) || 1;
+        preferredX /= preferredLen;
+        preferredY /= preferredLen;
+        const candidates = [];
+
+        for (let i = 0; i < 8; i++) {
+            const angle = i * Math.PI * 2 / 8;
+            const vx = Math.cos(angle);
+            const vy = Math.sin(angle);
+            let score = -(vx * preferredX + vy * preferredY) * 900;
+            score -= (vx * this.moveVector.x + vy * this.moveVector.y) * 120;
+
+            for (const probe of [22, 46, 82]) {
+                const px = player.x + vx * probe;
+                const py = player.y + vy * probe;
+                if (isWall(px, py)) score += 16000 * (90 - probe) / 68;
+                if (this.isWallAtTime(px, py, gameTime + 0.65)) score += 8500 * (90 - probe) / 68;
+            }
+
+            const sampleX = player.x + vx * 60;
+            const sampleY = player.y + vy * 60;
+            const edgeClearance = Math.min(sampleX, sampleY, width - sampleX, height - sampleY);
+            if (edgeClearance < 140) {
+                const edgeDanger = Math.max(0, 140 - edgeClearance);
+                score += edgeDanger * edgeDanger * 2.5;
+            }
+            for (const item of this._enemyCache || []) {
+                if (item.dist > 380) break;
+                const d = Math.hypot(item.e.x - sampleX, item.e.y - sampleY);
+                if (d < 220) {
+                    const danger = 1 - d / 220;
+                    score += (item.e.type === 'ice_dust' ? 7000 : 4500) * danger * danger;
+                }
+            }
+
+            candidates.push({ index: i, x: vx, y: vy, score });
+        }
+
+        candidates.sort((a, b) => a.score - b.score);
+        const rawBest = candidates[0];
+        const current = candidates.find(c => c.index === this.steeringIndex) || rawBest;
+        const improvement = current.score - rawBest.score;
+        const immediateX = player.x + current.x * 22;
+        const immediateY = player.y + current.y * 22;
+        const emergencyTurn = isWall(immediateX, immediateY) || this.isWallAtTime(immediateX, immediateY, gameTime + 0.35);
+        let chosen = rawBest;
+
+        // Direction hysteresis: keep the current lane through small score
+        // fluctuations. Only a materially safer route may break the lock.
+        if (!emergencyTurn && this.steeringHoldFrames > 0) {
+            chosen = current;
+            this.steeringHoldFrames--;
+        } else if (!emergencyTurn && rawBest.index !== this.steeringIndex && improvement < 1050) {
+            chosen = current;
+            this.steeringHoldFrames = Math.max(0, this.steeringHoldFrames - 1);
+        } else if (rawBest.index !== this.steeringIndex) {
+            this.steeringIndex = rawBest.index;
+            this.steeringHoldFrames = this.escapeFrames > 0 ? 22 : 18;
+            this.steeringChanges++;
+        }
+
+        // Low-pass steering removes single-frame angle jumps. Breakout and
+        // emergency avoidance react faster, normal travel stays deliberately smooth.
+        const alpha = emergencyTurn ? 0.78 : (this.escapeFrames > 0 ? 0.55 : 0.20);
+        let x = this.moveVector.x * (1 - alpha) + chosen.x * alpha;
+        let y = this.moveVector.y * (1 - alpha) + chosen.y * alpha;
+        const len = Math.hypot(x, y) || 1;
+        return { x: x / len, y: y / len };
+    }
+
+    applyMovementKeys(vector, forceTurn = false) {
+        const engage = 0.42;
+        const release = 0.22;
+        const wasA = !!keys['KeyA'];
+        const wasD = !!keys['KeyD'];
+        const wasW = !!keys['KeyW'];
+        const wasS = !!keys['KeyS'];
+
+        if (vector.x < -engage) {
+            keys['KeyA'] = true; keys['KeyD'] = false;
+        } else if (vector.x > engage) {
+            keys['KeyD'] = true; keys['KeyA'] = false;
+        } else {
+            if (keys['KeyA'] && vector.x > -release) keys['KeyA'] = false;
+            if (keys['KeyD'] && vector.x < release) keys['KeyD'] = false;
+        }
+
+        if (vector.y < -engage) {
+            keys['KeyW'] = true; keys['KeyS'] = false;
+        } else if (vector.y > engage) {
+            keys['KeyS'] = true; keys['KeyW'] = false;
+        } else {
+            if (keys['KeyW'] && vector.y > -release) keys['KeyW'] = false;
+            if (keys['KeyS'] && vector.y < release) keys['KeyS'] = false;
+        }
+
+        // Reversing an axis in one frame is the most visible form of jitter.
+        // Insert a tiny neutral window for normal steering; intentional escape
+        // dashes can still force an immediate turn.
+        const horizontalFlipRequested = (wasA && keys['KeyD']) || (wasD && keys['KeyA']);
+        const verticalFlipRequested = (wasW && keys['KeyS']) || (wasS && keys['KeyW']);
+        if (!forceTurn && horizontalFlipRequested) {
+            keys['KeyA'] = false; keys['KeyD'] = false;
+            this.horizontalSwitchDelay = 3;
+        } else if (!forceTurn && this.horizontalSwitchDelay > 0) {
+            keys['KeyA'] = false; keys['KeyD'] = false;
+            this.horizontalSwitchDelay--;
+        }
+        if (!forceTurn && verticalFlipRequested) {
+            keys['KeyW'] = false; keys['KeyS'] = false;
+            this.verticalSwitchDelay = 3;
+        } else if (!forceTurn && this.verticalSwitchDelay > 0) {
+            keys['KeyW'] = false; keys['KeyS'] = false;
+            this.verticalSwitchDelay--;
+        }
+
+        const mask = `${keys['KeyW'] ? 'W' : ''}${keys['KeyA'] ? 'A' : ''}${keys['KeyS'] ? 'S' : ''}${keys['KeyD'] ? 'D' : ''}`;
+        if (this.lastMovementMask && mask !== this.lastMovementMask) {
+            this.movementKeyChanges++;
+            const horizontalFlip = (this.lastMovementMask.includes('A') && mask.includes('D')) || (this.lastMovementMask.includes('D') && mask.includes('A'));
+            const verticalFlip = (this.lastMovementMask.includes('W') && mask.includes('S')) || (this.lastMovementMask.includes('S') && mask.includes('W'));
+            if (horizontalFlip || verticalFlip) this.movementReversals++;
+        }
+        this.lastMovementMask = mask;
     }
     
     executeCombat(strategy) {
@@ -539,16 +792,16 @@ class M4NeuralBot {
             const dist = Math.hypot(e.x - player.x, e.y - player.y);
             if (!this.hasLineOfSight(player.x, player.y, e.x, e.y)) return;
             
-            let score = dist + (e.hp * 50);
-            if (strategy === 1) {
-                score = dist; // Aggressive: 純粹打最近的，不管血量
-            }
+            // Prefer immediate threats while still finishing weak targets.
+            let score = dist + (e.hp * 10);
+            if (e.type === 'ice_dust') score -= 80;
+            if (strategy === 1) score = dist + (e.hp * 5);
             if (score < minScore) { minScore = score; bestTarget = e; }
         });
         
         if (bestTarget) {
             // AIMING V2: 增強型預判與鎖定
-            const bulletSpeed = 10;
+            const bulletSpeed = 12;
             const dist = Math.hypot(bestTarget.x - player.x, bestTarget.y - player.y);
             const timeToHit = dist / bulletSpeed;
             
@@ -564,8 +817,9 @@ class M4NeuralBot {
                 targetY = ey;
             } else {
                 const eSpeed = bestTarget.speed;
-                targetX = ex + (edx/elen) * eSpeed * timeToHit;
-                targetY = ey + (edy/elen) * eSpeed * timeToHit;
+                const safeLen = elen || 1;
+                targetX = ex + (edx/safeLen) * eSpeed * timeToHit;
+                targetY = ey + (edy/safeLen) * eSpeed * timeToHit;
             }
             
             const angle = Math.atan2(targetY - player.y, targetX - player.x);
@@ -601,65 +855,120 @@ class M4NeuralBot {
     
     checkDash() {
         if (player.dashCooldown > 0) return;
-        
-        // 1. Bullet Dodge (Matrix Mode)
-        // Check for incoming bullets
-        for (let b of bullets) {
-            const dist = Math.hypot(b.x - player.x, b.y - player.y);
-            if (dist < 60) {
-                // Is it heading towards me?
-                // Simple check: is distance decreasing?
-                const nextDist = Math.hypot((b.x + b.vx) - player.x, (b.y + b.vy) - player.y);
-                if (nextDist < dist) {
-                    // DODGE! Dash perpendicular to bullet path
-                    // Bullet vector: (b.vx, b.vy)
-                    // Perpendicular: (-b.vy, b.vx)
-                    const dodgeX = -b.vy;
-                    const dodgeY = b.vx;
-                    
-                    // Choose direction that moves us away from walls
-                    if (!isWall(player.x + dodgeX * 5, player.y + dodgeY * 5)) {
-                        keys['KeyW'] = dodgeY < 0; keys['KeyS'] = dodgeY > 0;
-                        keys['KeyA'] = dodgeX < 0; keys['KeyD'] = dodgeX > 0;
-                    } else {
-                        keys['KeyW'] = -dodgeY < 0; keys['KeyS'] = -dodgeY > 0;
-                        keys['KeyA'] = -dodgeX < 0; keys['KeyD'] = -dodgeX > 0;
-                    }
-                    tryDash();
-                    return;
+
+        // Every dash needs an explicit reason. Emergency reasons are immediate;
+        // travel dashes have a long interval and must save meaningful distance.
+        let nearbyEnemies = 0;
+        let escapeX = 0, escapeY = 0;
+        const ec = this._enemyCache || [];
+        for (let i = 0; i < ec.length; i++) {
+            if (ec[i].dist >= 145) break;
+            nearbyEnemies++;
+            const safeDist = ec[i].dist || 1;
+            escapeX -= ec[i].dx / safeDist;
+            escapeY -= ec[i].dy / safeDist;
+        }
+        const nearestDanger = this._nearestEnemy && this._nearestEnemy.dist < (this._nearestEnemy.e.type === 'ice_dust' ? 140 : 105);
+        const terrainClosing = this.isWallAtTime(player.x, player.y, gameTime + 0.45);
+        const blockedAhead = isWall(player.x + this.moveVector.x * 26, player.y + this.moveVector.y * 26);
+        const edgeClearance = Math.min(player.x, player.y, width - player.x, height - player.y);
+        const edgeDanger = edgeClearance < 90;
+        const sinceLastDash = this.frameCount - this.lastDashFrame;
+        const routeDistance = this.targetSpot ? Math.hypot(this.targetSpot.x - player.x, this.targetSpot.y - player.y) : 0;
+        const nearestDistance = this._nearestEnemy ? this._nearestEnemy.dist : Infinity;
+        const criticalThreat = this._nearestEnemy && this._nearestEnemy.dist < (this._nearestEnemy.e.type === 'ice_dust' ? 75 : 55);
+        const threatDash = (nearestDanger || nearbyEnemies >= 2) && (criticalThreat || nearbyEnemies >= 4 || sinceLastDash > 120);
+        const edgeDash = edgeDanger && (edgeClearance < 35 || sinceLastDash > 130);
+        const terrainDash = terrainClosing && (isWall(player.x, player.y) || sinceLastDash > 90);
+        const stuckDanger = ((blockedAhead && this.stuckFrames > 5) || this.stuckFrames > 12) && sinceLastDash > 130;
+        const breakoutDash = this.escapeFrames > 0 && this.escapeReason !== 'no_progress' && this.lastDashedEscapeEvent !== this.escapeEvents;
+        const travelDash = (routeDistance > 300 || this.path.length > 5) && nearestDistance > 240 && sinceLastDash > 300;
+
+        let reason = null;
+        if (edgeDash) reason = 'edge';
+        else if (terrainDash) reason = 'terrain';
+        else if (threatDash) reason = 'threat';
+        else if (breakoutDash) reason = 'breakout';
+        else if (stuckDanger) reason = 'stuck';
+        else if (travelDash) reason = 'travel';
+        if (!reason) return;
+
+        if (reason === 'edge') {
+            escapeX = width / 2 - player.x;
+            escapeY = height / 2 - player.y;
+        } else if (reason === 'breakout') {
+            escapeX = this.escapeVector.x;
+            escapeY = this.escapeVector.y;
+        } else if (nearbyEnemies === 0) {
+            escapeX = this.moveVector.x;
+            escapeY = this.moveVector.y;
+        } else {
+            escapeX += this.moveVector.x * 0.5;
+            escapeY += this.moveVector.y * 0.5;
+        }
+
+        const dash = this.findSafeDashDirection(escapeX, escapeY);
+        if (!dash) return;
+
+        if (reason === 'travel' && this.targetSpot) {
+            const dashDistance = player.dashSpeed * 8;
+            const landingDistance = Math.hypot(
+                this.targetSpot.x - (player.x + dash.x * dashDistance),
+                this.targetSpot.y - (player.y + dash.y * dashDistance)
+            );
+            if (routeDistance - landingDistance < 70) return;
+        }
+
+        this.moveVector = dash;
+        this.steeringIndex = Math.round((Math.atan2(dash.y, dash.x) + Math.PI * 2) / (Math.PI * 2 / 8)) % 8;
+        this.steeringHoldFrames = 16;
+        this.applyMovementKeys(dash, true);
+        tryDash();
+        this.dashCount++;
+        this.dashReasons[reason]++;
+        this.lastDashReason = reason;
+        if (reason === 'breakout') this.lastDashedEscapeEvent = this.escapeEvents;
+        this.lastDashFrame = this.frameCount;
+        this.stuckFrames = 0;
+    }
+
+    findSafeDashDirection(preferredX, preferredY) {
+        const preferredLen = Math.hypot(preferredX, preferredY) || 1;
+        preferredX /= preferredLen;
+        preferredY /= preferredLen;
+        const dashDistance = player.dashSpeed * 8;
+        let best = null;
+        let bestScore = Infinity;
+
+        for (let i = 0; i < 16; i++) {
+            const angle = i * Math.PI * 2 / 16;
+            const vx = Math.cos(angle);
+            const vy = Math.sin(angle);
+            const landX = player.x + vx * dashDistance;
+            const landY = player.y + vy * dashDistance;
+            let unsafe = false;
+
+            for (const offset of [[0,0],[14,0],[-14,0],[0,14],[0,-14]]) {
+                const x = landX + offset[0];
+                const y = landY + offset[1];
+                if (isWall(x, y) || this.isWallAtTime(x, y, gameTime + 0.8)) {
+                    unsafe = true;
+                    break;
                 }
             }
-        }
-        
-        // 2. Swarm Panic (Original Logic, kept for safety)
-        let nearbyEnemies = 0;
-        let avgX = 0, avgY = 0;
-        enemies.forEach(e => { 
-            if (Math.hypot(e.x - player.x, e.y - player.y) < 100) {
-                nearbyEnemies++; 
-                avgX += e.x;
-                avgY += e.y;
+            if (unsafe) continue;
+
+            let score = -(vx * preferredX + vy * preferredY) * 1000;
+            for (const item of this._enemyCache || []) {
+                const d = Math.hypot(item.e.x - landX, item.e.y - landY);
+                if (d < 150) score += (150 - d) * 80;
             }
-        });
-        
-        if (nearbyEnemies >= 3) {
-            avgX /= nearbyEnemies;
-            avgY /= nearbyEnemies;
-            const dx = player.x - avgX;
-            const dy = player.y - avgY;
-            keys['KeyW'] = dy < -5; keys['KeyS'] = dy > 5; keys['KeyA'] = dx < -5; keys['KeyD'] = dx > 5;
-            tryDash();
-            return;
-        }
-        
-        // 3. Gap Crossing (Original Logic)
-        if (this.path.length > 0) {
-            const nextNode = this.path[0];
-            if (this.isWallLine(player.x, player.y, nextNode.x, nextNode.y)) {
-                tryDash();
-                return;
+            if (score < bestScore) {
+                bestScore = score;
+                best = { x: vx, y: vy };
             }
         }
+        return best;
     }
     
     isWallAtTime(x, y, time) {

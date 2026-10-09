@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LAVAICE.IO - 3D BETA</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        :root {
+            --primary: #00ffff;
+            --secondary: #ff4b4b;
+            --bg: #121212;
+            --panel-bg: rgba(20, 20, 35, 0.85);
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: var(--bg);
+            color: #fff;
+            font-family: 'Poppins', sans-serif;
+            user-select: none;
+        }
+
+        #ui-layer {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            pointer-events: none;
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .hud-panel {
+            background: var(--panel-bg);
+            padding: 15px 25px;
+            border-radius: 16px;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin: 0;
+            color: #fff;
+            font-weight: 800;
+            letter-spacing: 1px;
+            line-height: 1;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #aaa;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .bar-container {
+            width: 220px;
+            height: 14px;
+            background: rgba(0,0,0,0.6);
+            border-radius: 7px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .bar-fill {
+            height: 100%;
+            width: 100%;
+            transition: width 0.1s linear;
+            position: relative;
+        }
+
+        #hp-bar { background: linear-gradient(90deg, #ff3333, #ff6b6b); }
+        #dash-bar { background: linear-gradient(90deg, #00d2ff, #3a7bd5); }
+
+        #game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            display: none;
+            z-index: 30;
+            background: var(--panel-bg);
+            padding: 60px;
+            border-radius: 30px;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        #game-over h1 {
+            color: var(--secondary);
+            font-size: 3.5rem;
+            margin-bottom: 10px;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, var(--secondary), #ff8e53);
+            border: none;
+            padding: 15px 40px;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 800;
+            border-radius: 50px;
+            cursor: pointer;
+            margin-top: 20px;
+            box-shadow: 0 5px 15px rgba(255, 75, 75, 0.4);
+            transition: transform 0.1s;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .btn:hover { transform: scale(1.05); }
+
+        .hud-btn {
+            position: absolute;
+            bottom: 30px;
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            pointer-events: auto;
+            backdrop-filter: blur(5px);
+            transition: all 0.2s;
+            z-index: 50;
+            user-select: none;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .hud-btn span { font-size: 0.7rem; opacity: 0.7; font-weight: 400; }
+        
+        #auto-aim-btn { right: 30px; }
+        #safewalk-btn { right: 100px; }
+
+        .hud-btn.active {
+            background: rgba(0, 255, 255, 0.3);
+            border-color: #00ffff;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
+        }
+        #safewalk-btn.active {
+            background: rgba(0, 255, 100, 0.3);
+            border-color: #00ff66;
+            box-shadow: 0 0 20px rgba(0, 255, 100, 0.4);
+        }
+
+        .controls-hint {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255,255,255,0.5);
+            font-size: 0.9rem;
+            font-weight: 600;
+            background: rgba(0,0,0,0.4);
+            padding: 10px 20px;
+            border-radius: 20px;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="ui-layer">
+        <div class="hud-panel">
+            <div class="stat-label">Score</div>
+            <h1 id="score-display">0</h1>
+        </div>
+        <div class="hud-panel">
+            <div class="stat-label">Wave <span id="wave-display" style="color:white; margin-left:5px;">1</span></div>
+        </div>
+        <div class="hud-panel">
+            <div class="stat-label">Integrity</div>
+            <div class="bar-container"><div id="hp-bar" class="bar-fill"></div></div>
+            <div class="stat-label" style="margin-top:5px;">Energy</div>
+            <div class="bar-container"><div id="dash-bar" class="bar-fill"></div></div>
+        </div>
+    </div>
+    
+    <div id="auto-aim-indicator" style="top: 20px; right: 20px; position: absolute; background: rgba(0,0,0,0.6); padding: 10px 20px; border-radius: 10px; color: #555; font-weight: 800; border: 1px solid #333; transition: all 0.3s;">AUTO AIM: OFF</div>
+    <div id="safewalk-indicator" style="top: 60px; right: 20px; position: absolute; background: rgba(0,0,0,0.6); padding: 10px 20px; border-radius: 10px; color: #555; font-weight: 800; border: 1px solid #333; transition: all 0.3s;">SAFEWALK: OFF</div>
+
+    <div id="game-over">
+        <h1>ELIMINATED</h1>
+        <p id="final-score">Score: 0</p>
+        <button class="btn" onclick="resetGame()">REBOOT SYSTEM</button>
+    </div>
+
+    <div id="auto-aim-btn" class="hud-btn" onclick="toggleAutoAim()">H<span>AIM</span></div>
+    <div id="safewalk-btn" class="hud-btn" onclick="toggleSafewalk()">V<span>SAFE</span></div>
+
+    <div class="controls-hint">
+        WASD to Move • ARROWS to Shoot • SPACE to Dash • H: Auto-Aim • V: Safewalk
+    </div>
+
+    <script>
+        // --- FAST NOISE (Permutation Table) ---
+        const Simplex = (function() {
+            const p = new Uint8Array(256);
+            for(let i=0; i<256; i++) p[i] = i;
+            for(let i=255; i>0; i--) {
+                const r = Math.floor(Math.random() * (i+1));
+                [p[i], p[r]] = [p[r], p[i]];
+            }
+            const perm = new Uint8Array(512);
+            const permMod12 = new Uint8Array(512);
+            for(let i=0; i<512; i++) {
+                perm[i] = p[i & 255];
+                permMod12[i] = perm[i] % 12;
+            }
+            const grad3 = [[1,1,0],[-1,1,0],[1,-1,0],[-1,-1,0],[1,0,1],[-1,0,1],[1,0,-1],[-1,0,-1],[0,1,1],[0,-1,1],[0,1,-1],[0,-1,-1]];
+            
+            return {
+                noise3D: function(xin, yin, zin) {
+                    let n0, n1, n2, n3;
+                    const F3 = 1.0/3.0;
+                    const s = (xin+yin+zin)*F3;
+                    const i = Math.floor(xin+s);
+                    const j = Math.floor(yin+s);
+                    const k = Math.floor(zin+s);
+                    const G3 = 1.0/6.0;
+                    const t = (i+j+k)*G3;
+                    const X0 = i-t;
+                    const Y0 = j-t;
+                    const Z0 = k-t;
+                    const x0 = xin-X0;
+                    const y0 = yin-Y0;
+                    const z0 = zin-Z0;
+                    let i1, j1, k1;
+                    let i2, j2, k2;
+                    if(x0>=y0) {
+                        if(y0>=z0) { i1=1; j1=0; k1=0; i2=1; j2=1; k2=0; }
+                        else if(x0>=z0) { i1=1; j1=0; k1=0; i2=1; j2=0; k2=1; }
+                        else { i1=0; j1=0; k1=1; i2=1; j2=0; k2=1; }
+                    } else {
+                        if(y0<z0) { i1=0; j1=0; k1=1; i2=0; j2=1; k2=1; }
+                        else if(x0<z0) { i1=0; j1=1; k1=0; i2=0; j2=1; k2=1; }
+                        else { i1=0; j1=1; k1=0; i2=1; j2=1; k2=0; }
+                    }
+                    const x1 = x0 - i1 + G3;
+                    const y1 = y0 - j1 + G3;
+                    const z1 = z0 - k1 + G3;
+                    const x2 = x0 - i2 + 2.0*G3;
+                    const y2 = y0 - j2 + 2.0*G3;
+                    const z2 = z0 - k2 + 2.0*G3;
+                    const x3 = x0 - 1.0 + 3.0*G3;
+                    const y3 = y0 - 1.0 + 3.0*G3;
+                    const z3 = z0 - 1.0 + 3.0*G3;
+                    const ii = i & 255;
+                    const jj = j & 255;
+                    const kk = k & 255;
+                    const gi0 = permMod12[ii+perm[jj+perm[kk]]];
+                    const gi1 = permMod12[ii+i1+perm[jj+j1+perm[kk+k1]]];
+                    const gi2 = permMod12[ii+i2+perm[jj+j2+perm[kk+k2]]];
+                    const gi3 = permMod12[ii+1+perm[jj+1+perm[kk+1]]];
+                    let t0 = 0.6 - x0*x0 - y0*y0 - z0*z0;
+                    if(t0<0) n0 = 0.0; else { t0 *= t0; n0 = t0 * t0 * (grad3[gi0][0]*x0 + grad3[gi0][1]*y0 + grad3[gi0][2]*z0); }
+                    let t1 = 0.6 - x1*x1 - y1*y1 - z1*z1;
+                    if(t1<0) n1 = 0.0; else { t1 *= t1; n1 = t1 * t1 * (grad3[gi1][0]*x1 + grad3[gi1][1]*y1 + grad3[gi1][2]*z1); }
+                    let t2 = 0.6 - x2*x2 - y2*y2 - z2*z2;
+                    if(t2<0) n2 = 0.0; else { t2 *= t2; n2 = t2 * t2 * (grad3[gi2][0]*x2 + grad3[gi2][1]*y2 + grad3[gi2][2]*z2); }
+                    let t3 = 0.6 - x3*x3 - y3*y3 - z3*z3;
+                    if(t3<0) n3 = 0.0; else { t3 *= t3; n3 = t3 * t3 * (grad3[gi3][0]*x3 + grad3[gi3][1]*y3 + grad3[gi3][2]*z3); }
+                    return 32.0*(n0 + n1 + n2 + n3);
+                }
+            };
+        })();
+
+        // --- THREE.JS SETUP ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x121212);
+        scene.fog = new THREE.FogExp2(0x121212, 0.0015);
+
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        document.body.appendChild(renderer.domElement);
+
+        // Lights
+        const ambientLight = new THREE.AmbientLight(0x404040);
+        scene.add(ambientLight);
+
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(100, 200, 100);
+        dirLight.castShadow = true;
+        dirLight.shadow.camera.left = -500;
+        dirLight.shadow.camera.right = 500;
+        dirLight.shadow.camera.top = 500;
+        dirLight.shadow.camera.bottom = -500;
+        dirLight.shadow.mapSize.width = 2048;
+        dirLight.shadow.mapSize.height = 2048;
+        scene.add(dirLight);
+
+        // --- GAME CONSTANTS ---
+        const WORLD_SIZE = 1000;
+        const SEGMENTS = 150;
+        const CELL_SIZE = 8;
+        const WALL_THRESHOLD = 0.15;
+        const NOISE_SCALE = 0.05;
+        const TIME_SCALE = 0.1;
+        const HEIGHT_SCALE = 60; // How high the lavaice rises
+
+        // --- STATE ---
+        let gameTime = 0;
+        let score = 0;
+        let wave = 1;
+        let isGameOver = false;
+        let autoAim = false;
+        let safewalk = false;
+
+        // --- TERRAIN ---
+        const geometry = new THREE.PlaneGeometry(WORLD_SIZE, WORLD_SIZE, SEGMENTS, SEGMENTS);
+        geometry.rotateX(-Math.PI / 2);
+        
+        // Vertex Colors
+        const count = geometry.attributes.position.count;
+        geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(count * 3), 3));
+
+        const material = new THREE.MeshStandardMaterial({ 
+            vertexColors: true,
+            roughness: 0.8,
+            metalness: 0.2,
+            flatShading: true
+        });
+        const terrain = new THREE.Mesh(geometry, material);
+        terrain.receiveShadow = true;
+        scene.add(terrain);
+
+        // --- ENTITIES ---
+        const player = {
+            mesh: new THREE.Mesh(
+                new THREE.SphereGeometry(8, 16, 16),
+                new THREE.MeshStandardMaterial({ color: 0x00ffff, emissive: 0x004444 })
+            ),
+            x: 0, z: 0, y: 0,
+            speed: 4,
+            dashSpeed: 15,
+            isDashing: false,
+            dashCooldown: 0,
+            dashMax: 50,
+            dashDuration: 0,
+            vx: 0, vz: 0,
+            hp: 100,
+            maxHp: 100
+        };
+        player.mesh.castShadow = true;
+        scene.add(player.mesh);
+
+        let bullets = [];
+        let enemies = [];
+        let particles = [];
+
+        // --- INPUT ---
+        const keys = {};
+        window.addEventListener('keydown', e => {
+            keys[e.code] = true;
+            if (e.code === 'KeyH') toggleAutoAim();
+            if (e.code === 'KeyV') toggleSafewalk();
+        });
+        window.addEventListener('keyup', e => {
+            keys[e.code] = false;
+            if(e.code === 'Space' && isGameOver) resetGame();
+            else if(e.code === 'Space') tryDash();
+        });
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        function toggleAutoAim() {
+            autoAim = !autoAim;
+            const el = document.getElementById('auto-aim-indicator');
+            const btn = document.getElementById('auto-aim-btn');
+            if (autoAim) {
+                el.innerText = "AUTO AIM: ON";
+                el.classList.add('active');
+                btn.classList.add('active');
+            } else {
+                el.innerText = "AUTO AIM: OFF";
+                el.classList.remove('active');
+                btn.classList.remove('active');
+            }
+        }
+
+        function toggleSafewalk() {
+            safewalk = !safewalk;
+            const el = document.getElementById('safewalk-indicator');
+            const btn = document.getElementById('safewalk-btn');
+            if (safewalk) {
+                el.innerText = "SAFEWALK: ON";
+                el.style.color = "#00ff66";
+                el.style.borderColor = "#00ff66";
+                el.style.boxShadow = "0 0 15px rgba(0, 255, 100, 0.3)";
+                btn.classList.add('active');
+            } else {
+                el.innerText = "SAFEWALK: OFF";
+                el.style.color = "#555";
+                el.style.borderColor = "#333";
+                el.style.boxShadow = "none";
+                btn.classList.remove('active');
+            }
+        }
+
+        function tryDash() {
+            if (player.dashCooldown <= 0) {
+                player.isDashing = true;
+                player.dashDuration = 8;
+                player.dashCooldown = player.dashMax;
+                
+                // Dash particles
+                for(let i=0; i<10; i++) {
+                    createParticle(player.x, player.y, player.z, 0x00ffff);
+                }
+            }
+        }
+
+        function createParticle(x, y, z, color) {
+            const pGeo = new THREE.BoxGeometry(1,1,1);
+            const pMat = new THREE.MeshBasicMaterial({ color: color });
+            const mesh = new THREE.Mesh(pGeo, pMat);
+            mesh.position.set(x, y, z);
+            scene.add(mesh);
+            particles.push({
+                mesh: mesh,
+                vx: (Math.random()-0.5)*2,
+                vy: (Math.random()-0.5)*2 + 1,
+                vz: (Math.random()-0.5)*2,
+                life: 30
+            });
+        }
+
+        function getNoise(x, z) {
+            return Simplex.noise3D(x * NOISE_SCALE / CELL_SIZE, z * NOISE_SCALE / CELL_SIZE, gameTime * TIME_SCALE);
+        }
+
+        function updateTerrain() {
+            const positions = geometry.attributes.position.array;
+            const colors = geometry.attributes.color.array;
+
+            for (let i = 0; i < count; i++) {
+                const x = positions[i * 3];
+                const z = positions[i * 3 + 2];
+                
+                // Offset noise by player position to simulate infinite world (simplified: just static world for now)
+                // For true infinite world we need to shift UVs, but let's stick to fixed world for beta
+                
+                const n = getNoise(x, z);
+                let h = 0;
+                
+                // Color
+                let r=0.1, g=0.1, b=0.15; // Base ground
+
+                if (n > WALL_THRESHOLD) {
+                    // Lavaice Area
+                    h = (n - WALL_THRESHOLD) * HEIGHT_SCALE;
+                    
+                    // Gradient
+                    let t = (n - WALL_THRESHOLD) * 2.5; 
+                    if (t > 1) t = 1;
+                    r = 1.0 * (1-t) + 0.1 * t;
+                    g = 0.3 * (1-t) + 0.8 * t;
+                    b = 0.1 * (1-t) + 1.0 * t;
+                }
+
+                positions[i * 3 + 1] = h;
+                colors[i * 3] = r;
+                colors[i * 3 + 1] = g;
+                colors[i * 3 + 2] = b;
+            }
+            
+            geometry.attributes.position.needsUpdate = true;
+            geometry.attributes.color.needsUpdate = true;
+            geometry.computeVertexNormals();
+        }
+
+        function getHeightAt(x, z) {
+            const n = getNoise(x, z);
+            if (n > WALL_THRESHOLD) {
+                return (n - WALL_THRESHOLD) * HEIGHT_SCALE;
+            }
+            return 0;
+        }
+
+        function spawnEnemy() {
+            const angle = Math.random() * Math.PI * 2;
+            const dist = 300 + Math.random() * 200;
+            const ex = player.x + Math.cos(angle) * dist;
+            const ez = player.z + Math.sin(angle) * dist;
+            
+            // Clamp to world
+            if (ex < -WORLD_SIZE/2 || ex > WORLD_SIZE/2 || ez < -WORLD_SIZE/2 || ez > WORLD_SIZE/2) return;
+
+            const type = Math.random() > 0.7 ? 'ice_dust' : 'lava_debris';
+            const size = type === 'ice_dust' ? 4 : 7;
+            const color = type === 'ice_dust' ? 0xaaddff : 0xff5500;
+            
+            const mesh = new THREE.Mesh(
+                new THREE.TetrahedronGeometry(size),
+                new THREE.MeshStandardMaterial({ color: color, flatShading: true })
+            );
+            mesh.position.set(ex, 10, ez);
+            scene.add(mesh);
+
+            enemies.push({
+                mesh: mesh,
+                x: ex, z: ez,
+                type: type,
+                speed: type === 'ice_dust' ? 2.5 : 1.0,
+                hp: type === 'ice_dust' ? 1 : 5,
+                radius: size
+            });
+        }
+
+        function resetGame() {
+            score = 0;
+            wave = 1;
+            gameTime = 0;
+            isGameOver = false;
+            player.hp = player.maxHp;
+            player.x = 0; player.z = 0;
+            player.dashCooldown = 0;
+            
+            enemies.forEach(e => scene.remove(e.mesh));
+            bullets.forEach(b => scene.remove(b.mesh));
+            particles.forEach(p => scene.remove(p.mesh));
+            enemies = [];
+            bullets = [];
+            particles = [];
+            
+            document.getElementById('game-over').style.display = 'none';
+        }
+
+        // --- LOOP ---
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            if (!isGameOver) {
+                update();
+            }
+            
+            renderer.render(scene, camera);
+        }
+
+        function update() {
+            gameTime += 0.01;
+            updateTerrain();
+
+            if (Math.random() < 0.01 + (wave * 0.0005)) spawnEnemy();
+            if (score > wave * 1200) wave++;
+
+            // --- SAFEWALK ---
+            let overrideDx = 0;
+            let overrideDz = 0;
+            let isSafewalking = false;
+
+            if (safewalk) {
+                let fleeX = 0;
+                let fleeZ = 0;
+                let dangerLevel = 0;
+
+                enemies.forEach(e => {
+                    const dx = player.x - e.x;
+                    const dz = player.z - e.z;
+                    const dist = Math.sqrt(dx*dx + dz*dz);
+                    if (dist < 150) {
+                        const weight = (150 - dist) / 150;
+                        fleeX += (dx / dist) * weight;
+                        fleeZ += (dz / dist) * weight;
+                        dangerLevel += weight;
+                    }
+                });
+
+                // Avoid High Ground (Lavaice)
+                const currentH = getHeightAt(player.x, player.z);
+                if (currentH > 5 || dangerLevel > 0) {
+                    // Scan for lower ground
+                    let bestDirX = 0, bestDirZ = 0;
+                    let minH = 999;
+                    
+                    for (let a = 0; a < Math.PI*2; a += Math.PI/4) {
+                        let tx = Math.cos(a) * 20;
+                        let tz = Math.sin(a) * 20;
+                        let h = getHeightAt(player.x + tx, player.z + tz);
+                        if (h < minH) {
+                            minH = h;
+                            bestDirX = Math.cos(a);
+                            bestDirZ = Math.sin(a);
+                        }
+                    }
+                    
+                    if (currentH > 5) {
+                        fleeX += bestDirX * 2;
+                        fleeZ += bestDirZ * 2;
+                        dangerLevel += 1;
+                    }
+                }
+
+                if (dangerLevel > 0) {
+                    isSafewalking = true;
+                    overrideDx = fleeX;
+                    overrideDz = fleeZ;
+                    if ((dangerLevel > 1.5 || player.hp < 30) && !player.isDashing) tryDash();
+                }
+            }
+
+            // --- MOVEMENT ---
+            let dx = 0;
+            let dz = 0;
+            
+            if (isSafewalking) {
+                dx = overrideDx;
+                dz = overrideDz;
+            } else {
+                if (keys['KeyW']) dz = -1;
+                if (keys['KeyS']) dz = 1;
+                if (keys['KeyA']) dx = -1;
+                if (keys['KeyD']) dx = 1;
+            }
+
+            if (dx !== 0 || dz !== 0) {
+                const len = Math.sqrt(dx*dx + dz*dz);
+                dx /= len;
+                dz /= len;
+            }
+
+            let currentSpeed = player.isDashing ? player.dashSpeed : player.speed;
+            
+            // Height Check (Lavaice Effect)
+            const groundH = getHeightAt(player.x, player.z);
+            player.y = groundH + 8; // Keep player on ground
+            
+            if (groundH > 2 && !player.isDashing) {
+                // In Lavaice
+                currentSpeed *= 0.4;
+                player.hp -= 0.3;
+                if (Math.random() < 0.2) createParticle(player.x, player.y, player.z, 0xff0000);
+            }
+
+            player.vx = dx * currentSpeed;
+            player.vz = dz * currentSpeed;
+
+            // Dash Collision: Blocked by Lavaice
+            if (player.isDashing) {
+                let nextX = player.x + player.vx;
+                let nextZ = player.z + player.vz;
+                if (getHeightAt(nextX, nextZ) > 2) {
+                    player.vx = 0;
+                    player.vz = 0;
+                    player.isDashing = false;
+                    player.dashDuration = 0;
+                    for(let k=0; k<5; k++) createParticle(nextX, 10, nextZ, 0x00ffff);
+                }
+            }
+
+            player.x += player.vx;
+            player.z += player.vz;
+            
+            // Clamp to world
+            player.x = Math.max(-WORLD_SIZE/2 + 10, Math.min(WORLD_SIZE/2 - 10, player.x));
+            player.z = Math.max(-WORLD_SIZE/2 + 10, Math.min(WORLD_SIZE/2 - 10, player.z));
+
+            player.mesh.position.set(player.x, player.y, player.z);
+            
+            // Camera Follow
+            camera.position.set(player.x, player.y + 200, player.z + 150);
+            camera.lookAt(player.x, player.y, player.z);
+
+            if (player.isDashing) {
+                player.dashDuration--;
+                if (player.dashDuration <= 0) player.isDashing = false;
+            }
+            if (player.dashCooldown > 0) player.dashCooldown--;
+            if (player.hp < player.maxHp) player.hp += 0.05;
+            if (player.hp <= 0) {
+                isGameOver = true;
+                document.getElementById('game-over').style.display = 'block';
+                document.getElementById('final-score').innerText = "Score: " + score;
+            }
+
+            // --- SHOOTING ---
+            let shootVx = 0, shootVz = 0;
+            let shouldShoot = false;
+
+            if (autoAim) {
+                let nearest = null;
+                let minDist = Infinity;
+                for(let e of enemies) {
+                    let d = Math.hypot(e.x - player.x, e.z - player.z);
+                    // Simple line of sight check: is there high ground between?
+                    // Simplified for 3D: just check distance
+                    if (d < minDist && d < 400) {
+                        minDist = d;
+                        nearest = e;
+                    }
+                }
+                if (nearest) {
+                    let angle = Math.atan2(nearest.z - player.z, nearest.x - player.x);
+                    shootVx = Math.cos(angle);
+                    shootVz = Math.sin(angle);
+                    shouldShoot = true;
+                }
+            } else {
+                let sx = 0, sz = 0;
+                if (keys['ArrowUp']) sz = -1;
+                else if (keys['ArrowDown']) sz = 1;
+                if (keys['ArrowLeft']) sx = -1;
+                else if (keys['ArrowRight']) sx = 1;
+                if (sx !== 0 || sz !== 0) {
+                    let len = Math.sqrt(sx*sx + sz*sz);
+                    shootVx = sx / len;
+                    shootVz = sz / len;
+                    shouldShoot = true;
+                }
+            }
+
+            if (shouldShoot && Math.floor(gameTime * 100) % 10 === 0) {
+                const bGeo = new THREE.SphereGeometry(2);
+                const bMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+                const mesh = new THREE.Mesh(bGeo, bMat);
+                mesh.position.set(player.x, player.y, player.z);
+                scene.add(mesh);
+                bullets.push({ mesh: mesh, x: player.x, z: player.z, y: player.y, vx: shootVx * 10, vz: shootVz * 10, life: 60 });
+            }
+
+            // --- ENTITIES ---
+            // Bullets
+            for(let i=bullets.length-1; i>=0; i--) {
+                let b = bullets[i];
+                b.x += b.vx;
+                b.z += b.vz;
+                b.life--;
+                // Bullets fly straight (shoot over lavaice)
+                b.mesh.position.set(b.x, b.y, b.z);
+                
+                if (b.life <= 0) {
+                    scene.remove(b.mesh);
+                    bullets.splice(i, 1);
+                }
+            }
+
+            // Enemies
+            for(let i=enemies.length-1; i>=0; i--) {
+                let e = enemies[i];
+                let dx = player.x - e.x;
+                let dz = player.z - e.z;
+                let dist = Math.sqrt(dx*dx + dz*dz);
+                
+                if (dist > 0) {
+                    e.x += (dx/dist) * e.speed;
+                    e.z += (dz/dist) * e.speed;
+                }
+                
+                e.mesh.rotation.x += 0.05;
+                e.mesh.rotation.y += 0.05;
+                
+                const eh = getHeightAt(e.x, e.z);
+                e.mesh.position.set(e.x, eh + e.radius, e.z);
+
+                if (dist < player.radius + e.radius && !player.isDashing) {
+                    player.hp -= 5;
+                    // Push back
+                    player.x += (dx/dist) * 10;
+                    player.z += (dz/dist) * 10;
+                }
+
+                // Bullet Collision
+                for(let j=bullets.length-1; j>=0; j--) {
+                    let b = bullets[j];
+                    let bDist = Math.hypot(b.x - e.x, b.z - e.z);
+                    if (bDist < e.radius + 5) {
+                        e.hp--;
+                        scene.remove(b.mesh);
+                        bullets.splice(j, 1);
+                        createParticle(e.x, eh+5, e.z, 0xffffff);
+                        
+                        if (e.hp <= 0) {
+                            scene.remove(e.mesh);
+                            enemies.splice(i, 1);
+                            score += e.type === 'ice_dust' ? 150 : 400;
+                            for(let k=0; k<5; k++) createParticle(e.x, eh, e.z, e.type==='ice_dust'?0xaaddff:0xff5500);
+                        }
+                        break;
+                    }
+                }
+            }
+
+            // Particles
+            for(let i=particles.length-1; i>=0; i--) {
+                let p = particles[i];
+                p.mesh.position.x += p.vx;
+                p.mesh.position.y += p.vy;
+                p.mesh.position.z += p.vz;
+                p.vy -= 0.1; // Gravity
+                p.life--;
+                p.mesh.scale.setScalar(p.life/30);
+                if (p.life <= 0 || p.mesh.position.y < getHeightAt(p.mesh.position.x, p.mesh.position.z)) {
+                    scene.remove(p.mesh);
+                    particles.splice(i, 1);
+                }
+            }
+
+            // UI
+            document.getElementById('score-display').innerText = score.toLocaleString();
+            document.getElementById('wave-display').innerText = wave;
+            let dashPct = (1 - (player.dashCooldown / player.dashMax)) * 100;
+            if(player.dashCooldown <= 0) dashPct = 100;
+            document.getElementById('dash-bar').style.width = dashPct + "%";
+            let hpPct = (player.hp / player.maxHp) * 100;
+            document.getElementById('hp-bar').style.width = Math.max(0, hpPct) + "%";
+        }
+
+        resetGame();
+        animate();
+
+    </script>
+</body>
+</html>

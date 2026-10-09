@@ -162,31 +162,6 @@
             border-radius: 20px;
             pointer-events: none;
         }
-
-        .mode-link {
-            position: absolute;
-            bottom: 30px;
-            right: 30px;
-            z-index: 20;
-            color: var(--primary);
-            font-size: 0.9rem;
-            font-weight: 600;
-            text-decoration: none;
-            background: rgba(0,0,0,0.4);
-            padding: 10px 20px;
-            border-radius: 20px;
-            border: 1px solid rgba(0, 255, 255, 0.35);
-            transition: background 0.15s;
-        }
-
-        .mode-link:hover {
-            background: rgba(0, 255, 255, 0.14);
-        }
-
-        /* keep clear of the centred controls hint on narrow windows */
-        @media (max-width: 900px) {
-            .mode-link { bottom: 96px; }
-        }
     </style>
 </head>
 <body>
@@ -216,8 +191,6 @@
     <div class="controls-hint">
         WASD to Move • ARROWS to Shoot • SPACE to Dash
     </div>
-
-    <a class="mode-link" href="super.html">Superbot mode →</a>
 
     <canvas id="gameCanvas"></canvas>
 
@@ -596,9 +569,6 @@
                     // Push back
                     player.x += (dx/dist) * 20;
                     player.y += (dy/dist) * 20;
-                    // Never let knockback create an unrecoverable out-of-bounds trap.
-                    player.x = Math.max(player.radius, Math.min(width - player.radius, player.x));
-                    player.y = Math.max(player.radius, Math.min(height - player.radius, player.y));
                 }
 
                 for(let j=bullets.length-1; j>=0; j--) {
@@ -778,60 +748,10 @@
             frame++;
         }
 
-        // Compact machine-readable state for bot QA and deterministic stepping.
-        window.render_game_to_text = () => JSON.stringify({
-            coordinateSystem: 'origin top-left; x right; y down; pixels',
-            mode: isGameOver ? 'game_over' : 'playing',
-            time: Number(gameTime.toFixed(2)),
-            score,
-            wave,
-            player: {
-                x: Math.round(player.x),
-                y: Math.round(player.y),
-                hp: Number(player.hp.toFixed(1)),
-                dashing: player.isDashing,
-                dashCooldown: player.dashCooldown
-            },
-            bot: window.voidBot ? {
-                enabled: window.voidBot.enabled,
-                strategy: window.voidBot.currentStrategy,
-                stuckFrames: window.voidBot.stuckFrames,
-                escapeFrames: window.voidBot.escapeFrames,
-                escapeReason: window.voidBot.escapeReason,
-                escapeEvents: window.voidBot.escapeEvents,
-                steeringChanges: window.voidBot.steeringChanges,
-                movementKeyChanges: window.voidBot.movementKeyChanges,
-                movementReversals: window.voidBot.movementReversals,
-                dashCount: window.voidBot.dashCount,
-                lastDashReason: window.voidBot.lastDashReason,
-                dashReasons: window.voidBot.dashReasons,
-                move: {
-                    x: Number(window.voidBot.moveVector.x.toFixed(2)),
-                    y: Number(window.voidBot.moveVector.y.toFixed(2))
-                }
-            } : null,
-            enemies: enemies.slice(0, 12).map(e => ({
-                type: e.type,
-                x: Math.round(e.x),
-                y: Math.round(e.y),
-                hp: e.hp
-            })),
-            enemyCount: enemies.length,
-            projectileCount: bullets.length
-        });
-
-        window.advanceTime = (ms) => {
-            const steps = Math.max(1, Math.round(ms / (1000 / 60)));
-            for (let i = 0; i < steps; i++) {
-                update();
-                draw();
-            }
-        };
-
         loop();
 
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
-    <script src="bot.js"></script>
+    <script src="old-bot.js"></script>
 </body>
 </html>
