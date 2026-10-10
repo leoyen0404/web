@@ -38,6 +38,7 @@
     <canvas id="stage"></canvas>
 
     <header class="bar top">
+        <span class="k" id="build"></span>
         <span id="clock">00:00</span>
         <span><span class="k">best</span> <b id="best">—</b></span>
         <span><span class="k">hp</span> <b id="hp">100</b></span>
@@ -215,17 +216,27 @@
             buryFrames: 3 * 60,
             scores: false
         };
+        // Shown in the top-left corner of super.html and lite.html. Bump it with
+        // every published change, so a glance tells which build a device has.
+        const BUILD = 'v2026.10.10c';
+
         // --- LATE-GAME BALANCE (Superbot mode only; the classic build has none) ---
         // In the classic rules every wave adds the same spawn chance, and waves
         // come from score, which comes from kills: the swarm grows exponentially
         // and nothing can keep up for long. Here waves past `spawnKnee` each add
-        // a little less (the curve keeps climbing, as a square root), and the
-        // mine grows with the wave: it recharges faster and reaches further.
+        // a little less, the spawn rate closing in on `spawnMax` without ever
+        // reaching it, and the mine grows with the wave: it recharges faster
+        // and reaches further. So that the late game still gets harder, ice
+        // dust starts arriving armoured: from `iceKnee` a growing share of it
+        // takes a second hit, later a third.
         const TUNE = {
             spawnKnee: 20,          // waves up to here count in full, as in the classic build
-            spawnPast: 6,           // ...then: knee + spawnPast * sqrt(wave - knee)
+            spawnMax: 2,            // ...then the rate bends toward this many enemies a second
+            iceKnee: 40,            // wave at which ice dust starts to gain armour
+            iceStep: 60,            // waves per extra hit point of ice dust (0 = never)
             mineHaste: 60,          // mine delays are divided by 1 + wave / mineHaste
             mineFastest: 12 * 60,   // ...but it never recharges faster than this
+            hitGrace: 0,            // frames of immunity after a contact hit (0 = none, as in the classic build)
             mineReach: 1,           // px the lure and blast radii gain per wave
             mineReachMax: 110       // ...up to this much
         };
@@ -240,6 +251,7 @@
             MINE.blastRadius = MINE_BASE.blastRadius + reach;
         }
 
+        let hitGrace = 0;       // frames of contact immunity left
         let mine = null;        // { x, y, buried, age, fuse }  fuse < 0 until tripped
         let mineTimer = 0;      // frames since the last mine was laid
 
@@ -280,6 +292,7 @@
             findSafeSpawn();
             player.hp = player.maxHp;
             player.dashCooldown = 0;
+            hitGrace = 0;
             mine = null;
             mineTimer = 0;
             tuneMine();
@@ -377,11 +390,17 @@
             if (attempts < 50) {
                 // Lava Debris (heavy) & Ice Dust (fast)
                 const type = Math.random() > 0.7 ? 'ice_dust' : 'lava_debris';
+                // armour: one hit point per `iceStep` waves past the knee, the fraction decided by chance
+                let armour = 0;
+                if (type === 'ice_dust' && TUNE.iceStep > 0 && wave > TUNE.iceKnee) {
+                    const extra = (wave - TUNE.iceKnee) / TUNE.iceStep;
+                    armour = Math.floor(extra) + (Math.random() < extra % 1 ? 1 : 0);
+                }
                 enemies.push({
                     x: ex, y: ey,
                     type: type,
                     speed: type === 'ice_dust' ? 3.5 : 1.5,
-                    hp: type === 'ice_dust' ? 1 : 5,
+                    hp: type === 'ice_dust' ? 1 + armour : 5,
                     radius: type === 'ice_dust' ? 8 : 14,
                     angle: 0
                 });
@@ -392,8 +411,11 @@
         // Chance per frame that a new enemy appears. It climbs with the wave,
         // and the wave climbs with score — every kill raises it.
         function spawnChance() {
-            const w = wave <= TUNE.spawnKnee ? wave : TUNE.spawnKnee + TUNE.spawnPast * Math.sqrt(wave - TUNE.spawnKnee);
-            return 0.008 + (w * 0.0005);
+            if (wave <= TUNE.spawnKnee) return 0.008 + (wave * 0.0005);
+            // same slope at the knee, then an exponential approach to the ceiling
+            const knee = 0.008 + (TUNE.spawnKnee * 0.0005), room = TUNE.spawnMax / 60 - knee;
+            if (room <= 0) return knee;
+            return knee + room * (1 - Math.exp(-(wave - TUNE.spawnKnee) * 0.0005 / room));
         }
 
         function update() {
@@ -495,6 +517,7 @@
             }
 
             // --- ENEMIES ---
+            if (hitGrace > 0) hitGrace--;
             for(let i=enemies.length-1; i>=0; i--) {
                 let e = enemies[i];
                 let dx = player.x - e.x;
@@ -522,7 +545,8 @@
                     if (isWall(e.x, e.y)) e.y -= (my/md) * e.speed;
                 }
 
-                if (dist < player.radius + e.radius && !player.isDashing) {
+                if (dist < player.radius + e.radius && !player.isDashing && hitGrace <= 0) {
+                    hitGrace = TUNE.hitGrace;
                     player.hp -= 10;    // contact damage
                     // Push back
                     player.x += (dx/dist) * 20;
@@ -690,6 +714,18 @@
                 ctx.closePath();
             }
             ctx.fill();
+            // armoured ice dust (takes more than one hit) gets a pale outline
+            ctx.strokeStyle = COLOR.ink;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            for (let i = 0; i < enemies.length; i++) {
+                const e = enemies[i];
+                if (e.type !== 'ice_dust' || e.hp < 2) continue;
+                const x = ix(e, t), y = iy(e, t), r = e.radius;
+                ctx.moveTo(x, y - r); ctx.lineTo(x + r, y); ctx.lineTo(x, y + r); ctx.lineTo(x - r, y);
+                ctx.closePath();
+            }
+            ctx.stroke();
 
             ctx.fillStyle = COLOR.ink;
             for (let i = 0; i < bullets.length; i++) {
@@ -714,6 +750,7 @@
 
         // --------------------------------------------------------------- hud
 
+        $('build').textContent = BUILD;
         const el = {
             clock: $('clock'), best: $('best'), hp: $('hp'), dash: $('dash'), mine: $('mine'), score: $('score'), wave: $('wave'),
             hostiles: $('hostiles'), kills: $('kills'), rate: $('rate'), doctrine: $('doctrine'), guide: $('guide'), debrief: $('debrief'),

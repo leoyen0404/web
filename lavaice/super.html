@@ -93,6 +93,7 @@
             color: var(--abyss); background: var(--signal);
             padding: 5px 6px 5px 9px; transform: translateY(-7px);
         }
+        .mark-ver { font: 500 10px/1 var(--mono); letter-spacing: .12em; color: var(--ink-3); transform: translateY(-7px); }
         .status { display: flex; align-items: center; gap: 9px; margin-top: 14px; font: 500 11px/1 var(--mono); letter-spacing: .08em; color: var(--ink-2); }
         .status i { position: relative; width: 7px; height: 7px; border-radius: 50%; background: var(--signal); }
         .status i::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: var(--signal); opacity: 0; animation: beacon 1.6s ease-out infinite; }
@@ -305,7 +306,7 @@
     <div class="frame"></div>
 
     <header class="hud tl">
-        <div class="mark"><span class="mark-name">Lavice</span><span class="mark-tag" id="mark-tag">Superbot</span></div>
+        <div class="mark"><span class="mark-name">Lavice</span><span class="mark-tag" id="mark-tag">Superbot</span><span class="mark-ver" id="mark-ver"></span></div>
         <div class="status" id="status"><i></i><span id="status-text">Autopilot</span><span class="status-detail" id="status-detail"></span></div>
         <div class="meta" id="arena-meta"></div>
         <div class="meta" id="perf-meta" title="Time between frames · of which the simulation (bot + rules) and drawing calls. The rest is the GPU and the browser."></div>
@@ -401,7 +402,7 @@
         <ul>
             <li><b>Lavice</b> — the glowing blue masses with a molten rim. Pressing against the rim burns you; being inside one slows you to a crawl and burns about 30 integrity a second. It drifts constantly: the <b>dashed line</b> shows where the rim is heading.</li>
             <li><b class="ember">Lava debris</b> — slow, takes 5 hits, 400 points. You walk more than twice as fast as it does.</li>
-            <li><b class="ice">Ice dust</b> — almost as fast as you, dies to 1 hit, 150 points. Shoot these first.</li>
+            <li><b class="ice">Ice dust</b> — almost as fast as you, dies to 1 hit, 150 points. Shoot these first. From wave 40 some arrive armoured — white-edged, one dark pip per extra hit they take — and the share grows with the wave.</li>
             <li>Any touch costs <b>10 integrity</b> and knocks you back. You regain about 3 a second.</li>
             <li><b>The map edge</b> — pinned against it you cannot be knocked clear, so one enemy hits again and again and a full bar is gone in a blink.</li>
         </ul>
@@ -410,7 +411,7 @@
         <ul>
             <li><b>Dash</b> — passes through lavice and through enemies without harm. Do not end a dash inside lavice or beyond the edge of the map: out there you are frozen and burning.</li>
             <li><b class="sig">Landmine</b> — ready 30 seconds after the last one; at 60 seconds it is laid for you. Each wave it recharges a little faster (down to 12 seconds) and reaches a little further. Enemies within its outer ring abandon you and go for the mine. The first to touch it lights a short fuse, then everything inside the dashed ring dies. Only one exists at a time, lavice covering it for 3 seconds destroys it, the blast cannot hurt you, and its kills score nothing.</li>
-            <li><b>Gun</b> — shots stop at lavice. Every 1,200 points raises the wave, and each wave makes enemies arrive faster (past wave 20, by a little less each time).</li>
+            <li><b>Gun</b> — shots stop at lavice. Every 1,200 points raises the wave, and each wave makes enemies arrive faster (past wave 20 by less each time; the rate levels off just under two a second).</li>
         </ul>
 
         <h3>How to last</h3>
@@ -571,17 +572,27 @@
             buryFrames: 3 * 60,
             scores: false
         };
+        // Shown in the top-left corner of super.html and lite.html. Bump it with
+        // every published change, so a glance tells which build a device has.
+        const BUILD = 'v2026.10.10c';
+
         // --- LATE-GAME BALANCE (Superbot mode only; the classic build has none) ---
         // In the classic rules every wave adds the same spawn chance, and waves
         // come from score, which comes from kills: the swarm grows exponentially
         // and nothing can keep up for long. Here waves past `spawnKnee` each add
-        // a little less (the curve keeps climbing, as a square root), and the
-        // mine grows with the wave: it recharges faster and reaches further.
+        // a little less, the spawn rate closing in on `spawnMax` without ever
+        // reaching it, and the mine grows with the wave: it recharges faster
+        // and reaches further. So that the late game still gets harder, ice
+        // dust starts arriving armoured: from `iceKnee` a growing share of it
+        // takes a second hit, later a third.
         const TUNE = {
             spawnKnee: 20,          // waves up to here count in full, as in the classic build
-            spawnPast: 6,           // ...then: knee + spawnPast * sqrt(wave - knee)
+            spawnMax: 2,            // ...then the rate bends toward this many enemies a second
+            iceKnee: 40,            // wave at which ice dust starts to gain armour
+            iceStep: 60,            // waves per extra hit point of ice dust (0 = never)
             mineHaste: 60,          // mine delays are divided by 1 + wave / mineHaste
             mineFastest: 12 * 60,   // ...but it never recharges faster than this
+            hitGrace: 0,            // frames of immunity after a contact hit (0 = none, as in the classic build)
             mineReach: 1,           // px the lure and blast radii gain per wave
             mineReachMax: 110       // ...up to this much
         };
@@ -596,6 +607,7 @@
             MINE.blastRadius = MINE_BASE.blastRadius + reach;
         }
 
+        let hitGrace = 0;       // frames of contact immunity left
         let mine = null;        // { x, y, buried, age, fuse }  fuse < 0 until tripped
         let mineTimer = 0;      // frames since the last mine was laid
 
@@ -636,6 +648,7 @@
             findSafeSpawn();
             player.hp = player.maxHp;
             player.dashCooldown = 0;
+            hitGrace = 0;
             mine = null;
             mineTimer = 0;
             tuneMine();
@@ -733,11 +746,17 @@
             if (attempts < 50) {
                 // Lava Debris (heavy) & Ice Dust (fast)
                 const type = Math.random() > 0.7 ? 'ice_dust' : 'lava_debris';
+                // armour: one hit point per `iceStep` waves past the knee, the fraction decided by chance
+                let armour = 0;
+                if (type === 'ice_dust' && TUNE.iceStep > 0 && wave > TUNE.iceKnee) {
+                    const extra = (wave - TUNE.iceKnee) / TUNE.iceStep;
+                    armour = Math.floor(extra) + (Math.random() < extra % 1 ? 1 : 0);
+                }
                 enemies.push({
                     x: ex, y: ey,
                     type: type,
                     speed: type === 'ice_dust' ? 3.5 : 1.5,
-                    hp: type === 'ice_dust' ? 1 : 5,
+                    hp: type === 'ice_dust' ? 1 + armour : 5,
                     radius: type === 'ice_dust' ? 8 : 14,
                     angle: 0
                 });
@@ -748,8 +767,11 @@
         // Chance per frame that a new enemy appears. It climbs with the wave,
         // and the wave climbs with score — every kill raises it.
         function spawnChance() {
-            const w = wave <= TUNE.spawnKnee ? wave : TUNE.spawnKnee + TUNE.spawnPast * Math.sqrt(wave - TUNE.spawnKnee);
-            return 0.008 + (w * 0.0005);
+            if (wave <= TUNE.spawnKnee) return 0.008 + (wave * 0.0005);
+            // same slope at the knee, then an exponential approach to the ceiling
+            const knee = 0.008 + (TUNE.spawnKnee * 0.0005), room = TUNE.spawnMax / 60 - knee;
+            if (room <= 0) return knee;
+            return knee + room * (1 - Math.exp(-(wave - TUNE.spawnKnee) * 0.0005 / room));
         }
 
         function update() {
@@ -851,6 +873,7 @@
             }
 
             // --- ENEMIES ---
+            if (hitGrace > 0) hitGrace--;
             for(let i=enemies.length-1; i>=0; i--) {
                 let e = enemies[i];
                 let dx = player.x - e.x;
@@ -878,7 +901,8 @@
                     if (isWall(e.x, e.y)) e.y -= (my/md) * e.speed;
                 }
 
-                if (dist < player.radius + e.radius && !player.isDashing) {
+                if (dist < player.radius + e.radius && !player.isDashing && hitGrace <= 0) {
+                    hitGrace = TUNE.hitGrace;
                     player.hp -= 10;    // contact damage
                     // Push back
                     player.x += (dx/dist) * 20;
@@ -1326,20 +1350,26 @@
                 }
             }
 
-            // ice dust — a dart that points where it is going
+            // ice dust — a dart that points where it is going; three versions,
+            // side by side: plain, then armoured for one and two extra hits
+            // (white-edged, with a dark pip per hit still needed after the first)
             const r = DART.r;
-            g.setTransform(k, 0, 0, k, DART.ox * k, (DART.y + DART.h / 2) * k);
-            g.lineWidth = 1.5;
-            g.strokeStyle = 'rgba(127,224,255,0.45)';
-            g.beginPath(); g.moveTo(-r * 3.4, 0); g.lineTo(-r * 1.2, 0); g.stroke();
-            g.beginPath();
-            g.moveTo(r * 1.5, 0); g.lineTo(-r * 0.3, r * 0.72); g.lineTo(-r, 0); g.lineTo(-r * 0.3, -r * 0.72);
-            g.closePath();
-            g.fillStyle = COLOR.frost;
-            g.fill();
-            g.lineWidth = 1;
-            g.strokeStyle = COLOR.ice;
-            g.stroke();
+            for (let armour = 0; armour < 3; armour++) {
+                g.setTransform(k, 0, 0, k, (armour * DART.w + DART.ox) * k, (DART.y + DART.h / 2) * k);
+                g.lineWidth = 1.5;
+                g.strokeStyle = 'rgba(127,224,255,0.45)';
+                g.beginPath(); g.moveTo(-r * 3.4, 0); g.lineTo(-r * 1.2, 0); g.stroke();
+                g.beginPath();
+                g.moveTo(r * 1.5, 0); g.lineTo(-r * 0.3, r * 0.72); g.lineTo(-r, 0); g.lineTo(-r * 0.3, -r * 0.72);
+                g.closePath();
+                g.fillStyle = armour ? COLOR.ice : COLOR.frost;
+                g.fill();
+                g.lineWidth = armour ? 1.8 : 1;
+                g.strokeStyle = armour ? '#fff' : COLOR.ice;
+                g.stroke();
+                g.fillStyle = '#0b2a3a';
+                for (let pip = 0; pip < armour; pip++) { g.beginPath(); g.arc(r * 0.45 - pip * r * 0.6, 0, 1.7, 0, Math.PI * 2); g.fill(); }
+            }
 
             // halos
             const glow = (x, radius, rgb) => {
@@ -1449,7 +1479,7 @@
                 const m = e.radius / DART.r * s;
                 const co = d > 0 ? dx / d * m : m, si = d > 0 ? dy / d * m : 0;
                 ctx.setTransform(co, si, -si, co, x * s + ox, y * s + oy);
-                ctx.drawImage(sheet, 0, dy0, dw, dh, -DART.ox, -DART.h / 2, DART.w, DART.h);
+                ctx.drawImage(sheet, (e.hp > 2 ? 2 : e.hp - 1) * dw, dy0, dw, dh, -DART.ox, -DART.h / 2, DART.w, DART.h);
             }
             ctx.setTransform(s, 0, 0, s, ox, oy);
 
@@ -2718,6 +2748,7 @@
             enemyCount: enemies.length,
             projectileCount: bullets.length,
             renderer: gl ? 'webgl2' : 'canvas',
+            build: BUILD,
             perf: { quality: perf.level, auto: perf.auto, frameMs: Number(perf.dt.toFixed(1)), scriptMs: Number(perf.js.toFixed(2)), simMs: Number(perf.sim.toFixed(2)), stage: stage.width + 'x' + stage.height, terrain: terrainCanvas.width + 'x' + terrainCanvas.height }
         });
         window.advanceTime = (ms) => {
@@ -2732,6 +2763,7 @@
 
         // --------------------------------------------------------------- boot
 
+        $('mark-ver').textContent = BUILD;
         initGL();
         resize();
         showBest();

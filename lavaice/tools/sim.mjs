@@ -182,7 +182,7 @@ export function createGame({ engine = 'super', bot = 'super', seed = 1, width = 
     const parts = [extractScript(fs.readFileSync(path.join(ROOT, spec.file), 'utf8'), spec.scriptId), shim];
     if (engine !== 'classic' && mine === 'off') parts.push('MINE.enabled = false;');
     if (engine !== 'classic' && mine === 'score') parts.push('MINE.scores = true;');
-    if (engine !== 'classic' && tune) parts.push(`if (typeof TUNE !== 'undefined') { Object.assign(TUNE, ${tune === 'classic' ? '{ spawnKnee: Infinity, mineHaste: 0, mineReach: 0 }' : tune}); tuneMine(); }`);
+    if (engine !== 'classic' && tune) parts.push(`if (typeof TUNE !== 'undefined') { Object.assign(TUNE, ${tune === 'classic' ? '{ spawnKnee: Infinity, mineHaste: 0, mineReach: 0, iceStep: 0 }' : tune}); tuneMine(); }`);
     if (bot === 'classic') {
         parts.push(fs.readFileSync(path.join(ROOT, 'bot.js'), 'utf8'));
         parts.push('var __bot = new M4NeuralBot(); __bot.enabled = true; function __tick() { __bot.update(); }');
@@ -273,6 +273,7 @@ function parity(cfg) {
         };
         MINE.enabled = false;       // the classic build has no landmine
         TUNE.spawnKnee = Infinity;  // ...and its spawn curve never eases off
+        TUNE.iceStep = 0;           // ...and its ice dust always dies to one hit
         var __afterPrime = function () { Math.random(); Math.random(); };`;
     const sizes = [[1280, 720], [900, 600], [1512, 860]];
     let ok = true, total = 0;

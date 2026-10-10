@@ -978,6 +978,9 @@ const SuperBot = (() => {
             let px = player.x, py = player.y;
             let dashLeft = dashStart ? RULE.dashFrames : (player.isDashing ? player.dashDuration : 0);
             let hits = 0, hitCost = 0, burn = 0, prox = 0, shot = 0, landing = 0, lean = 0, outside = false;
+            // frames of immunity after a hit, where the engine has them
+            const GRACE = typeof TUNE !== 'undefined' && TUNE.hitGrace > 0 ? TUNE.hitGrace : 0;
+            let grace = GRACE > 0 && typeof hitGrace === 'number' ? hitGrace : 0;
             const hp = player.hp;
             const hpW = 1 + (hp < 60 ? (60 - hp) / 60 * 1.5 : 0);
             const fr0 = frame;
@@ -1031,6 +1034,7 @@ const SuperBot = (() => {
                     if (bi >= 0 && this._los(px, py, sx[bi], sy[bi])) shot += bv * (1 - 0.4 * t / Hn);
                 }
 
+                if (grace > 0) grace--;
                 // enemies, newest first — same order as the game loop
                 for (let i = M - 1; i >= 0; i--) {
                     const ex = sx[i], ey = sy[i];
@@ -1048,7 +1052,7 @@ const SuperBot = (() => {
                     sx[i] = nx; sy[i] = ny; stuck[i] = st;
                     const reach = PR + br[i];
                     if (dist < reach) {
-                        if (dashLeft === 0) {
+                        if (dashLeft === 0 && grace === 0) {
                             // Each member of a pack hits in turn, as in the game: the
                             // knockback from one usually carries us clear of the next,
                             // unless the arena edge holds us in place.
@@ -1059,6 +1063,7 @@ const SuperBot = (() => {
                                 px += vx * RULE.knockback; py += vy * RULE.knockback;
                                 if (px < PR) px = PR; else if (px > W - PR) px = W - PR;
                                 if (py < PR) py = PR; else if (py > H - PR) py = H - PR;
+                                if (GRACE > 0) { grace = GRACE; break; }
                                 if (--left <= 0) break;
                                 const ax = px - ex, ay = py - ey;
                                 const ad = Math.sqrt(ax * ax + ay * ay);
