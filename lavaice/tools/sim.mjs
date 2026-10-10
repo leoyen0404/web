@@ -13,6 +13,7 @@
  *   node tools/sim.mjs --engine classic         Superbot on index.html's own engine
  *   node tools/sim.mjs --engine lite            lite.html's copy of the rules
  *   node tools/sim.mjs --mine off               no landmine (also: --mine score)
+ *   node tools/sim.mjs --tune classic           classic spawn curve, fixed mine (or a JSON patch for TUNE)
  *   node tools/sim.mjs --parity                 prove super.html's engine == index.html's
  *   node tools/sim.mjs --seeds 7 --trace        last second + local map of one run
  *
@@ -161,7 +162,7 @@ const DRIVER = `
  * single function scope, so the page's top-level `let`s become ordinary closure
  * variables (fast, and private to this game instance).
  */
-export function createGame({ engine = 'super', bot = 'super', seed = 1, width = 1280, height = 720, botOptions = null, botFile = null, shim = '', mine = '' }) {
+export function createGame({ engine = 'super', bot = 'super', seed = 1, width = 1280, height = 720, botOptions = null, botFile = null, shim = '', mine = '', tune = '' }) {
     const spec = ENGINES[engine];
     const elements = new Map();
     const document = {
@@ -181,6 +182,7 @@ export function createGame({ engine = 'super', bot = 'super', seed = 1, width = 
     const parts = [extractScript(fs.readFileSync(path.join(ROOT, spec.file), 'utf8'), spec.scriptId), shim];
     if (engine !== 'classic' && mine === 'off') parts.push('MINE.enabled = false;');
     if (engine !== 'classic' && mine === 'score') parts.push('MINE.scores = true;');
+    if (engine !== 'classic' && tune) parts.push(`if (typeof TUNE !== 'undefined') { Object.assign(TUNE, ${tune === 'classic' ? '{ spawnKnee: Infinity, mineHaste: 0, mineReach: 0 }' : tune}); tuneMine(); }`);
     if (bot === 'classic') {
         parts.push(fs.readFileSync(path.join(ROOT, 'bot.js'), 'utf8'));
         parts.push('var __bot = new M4NeuralBot(); __bot.enabled = true; function __tick() { __bot.update(); }');
@@ -270,6 +272,7 @@ function parity(cfg) {
             else if (kind === 'kill') { for (let i = 0; i < 16; i++) Math.random(); }
         };
         MINE.enabled = false;       // the classic build has no landmine
+        TUNE.spawnKnee = Infinity;  // ...and its spawn curve never eases off
         var __afterPrime = function () { Math.random(); Math.random(); };`;
     const sizes = [[1280, 720], [900, 600], [1512, 860]];
     let ok = true, total = 0;
@@ -305,6 +308,7 @@ async function main() {
         botFile: args.botfile || null,
         trace: !!args.trace,
         mine: args.mine || '',
+        tune: args.tune || '',
         seeds: parseSeeds(args.seeds || (args.parity ? '1-6' : '1-16'))
     };
 
@@ -326,6 +330,7 @@ async function main() {
     if (snapshot) pass.push('--botfile', snapshot);
     if (cfg.trace) pass.push('--trace');
     if (cfg.mine) pass.push('--mine', cfg.mine);
+    if (cfg.tune) pass.push('--tune', cfg.tune);
 
     const rows = [];
     let next = 0;

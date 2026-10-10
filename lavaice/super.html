@@ -409,8 +409,8 @@
         <h3>Your tools</h3>
         <ul>
             <li><b>Dash</b> — passes through lavice and through enemies without harm. Do not end a dash inside lavice or beyond the edge of the map: out there you are frozen and burning.</li>
-            <li><b class="sig">Landmine</b> — ready 30 seconds after the last one; at 60 seconds it is laid for you. Enemies within its outer ring abandon you and go for the mine. The first to touch it lights a short fuse, then everything inside the dashed ring dies. Only one exists at a time, lavice covering it for 3 seconds destroys it, the blast cannot hurt you, and its kills score nothing.</li>
-            <li><b>Gun</b> — shots stop at lavice. Every 1,200 points raises the wave, and each wave makes enemies arrive faster.</li>
+            <li><b class="sig">Landmine</b> — ready 30 seconds after the last one; at 60 seconds it is laid for you. Each wave it recharges a little faster (down to 12 seconds) and reaches a little further. Enemies within its outer ring abandon you and go for the mine. The first to touch it lights a short fuse, then everything inside the dashed ring dies. Only one exists at a time, lavice covering it for 3 seconds destroys it, the blast cannot hurt you, and its kills score nothing.</li>
+            <li><b>Gun</b> — shots stop at lavice. Every 1,200 points raises the wave, and each wave makes enemies arrive faster (past wave 20, by a little less each time).</li>
         </ul>
 
         <h3>How to last</h3>
@@ -571,6 +571,31 @@
             buryFrames: 3 * 60,
             scores: false
         };
+        // --- LATE-GAME BALANCE (Superbot mode only; the classic build has none) ---
+        // In the classic rules every wave adds the same spawn chance, and waves
+        // come from score, which comes from kills: the swarm grows exponentially
+        // and nothing can keep up for long. Here waves past `spawnKnee` each add
+        // a little less (the curve keeps climbing, as a square root), and the
+        // mine grows with the wave: it recharges faster and reaches further.
+        const TUNE = {
+            spawnKnee: 20,          // waves up to here count in full, as in the classic build
+            spawnPast: 6,           // ...then: knee + spawnPast * sqrt(wave - knee)
+            mineHaste: 60,          // mine delays are divided by 1 + wave / mineHaste
+            mineFastest: 12 * 60,   // ...but it never recharges faster than this
+            mineReach: 1,           // px the lure and blast radii gain per wave
+            mineReachMax: 110       // ...up to this much
+        };
+        const MINE_BASE = { minDelay: MINE.minDelay, maxDelay: MINE.maxDelay, lureRadius: MINE.lureRadius, blastRadius: MINE.blastRadius };
+
+        function tuneMine() {
+            const haste = TUNE.mineHaste > 0 ? 1 + (wave - 1) / TUNE.mineHaste : 1;
+            MINE.minDelay = Math.max(Math.min(TUNE.mineFastest, MINE_BASE.minDelay), Math.round(MINE_BASE.minDelay / haste));
+            MINE.maxDelay = MINE.minDelay * 2;
+            const reach = Math.min(TUNE.mineReachMax, (wave - 1) * TUNE.mineReach);
+            MINE.lureRadius = MINE_BASE.lureRadius + reach;
+            MINE.blastRadius = MINE_BASE.blastRadius + reach;
+        }
+
         let mine = null;        // { x, y, buried, age, fuse }  fuse < 0 until tripped
         let mineTimer = 0;      // frames since the last mine was laid
 
@@ -613,6 +638,7 @@
             player.dashCooldown = 0;
             mine = null;
             mineTimer = 0;
+            tuneMine();
             fx('reset', player.x, player.y);
         }
 
@@ -722,7 +748,8 @@
         // Chance per frame that a new enemy appears. It climbs with the wave,
         // and the wave climbs with score — every kill raises it.
         function spawnChance() {
-            return 0.008 + (wave * 0.0005);
+            const w = wave <= TUNE.spawnKnee ? wave : TUNE.spawnKnee + TUNE.spawnPast * Math.sqrt(wave - TUNE.spawnKnee);
+            return 0.008 + (w * 0.0005);
         }
 
         function update() {
@@ -731,7 +758,7 @@
             gameTime += 0.01;
 
             if (Math.random() < spawnChance()) spawnEnemy();
-            if (score > wave * 1200) wave++;
+            if (score > wave * 1200) { wave++; tuneMine(); }
 
             // --- PLAYER MOVEMENT ---
             let dx = 0;
