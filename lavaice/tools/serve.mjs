@@ -57,6 +57,6 @@ const handler = (req, res) => {
 
 const scheme = HTTPS ? 'https' : 'http';
 (HTTPS ? https.createServer(selfSigned(), handler) : http.createServer(handler)).listen(PORT, '0.0.0.0', () => {
-    console.log(`${scheme}://localhost:${PORT}/lite.html`);
-    for (const a of lanAddresses()) console.log(`${scheme}://${a}:${PORT}/lite.html`);
+    console.log(`${scheme}://localhost:${PORT}/`);
+    for (const a of lanAddresses()) console.log(`${scheme}://${a}:${PORT}/`);
 });

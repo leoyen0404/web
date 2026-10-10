@@ -10,11 +10,11 @@
  *   node tools/sim.mjs --minutes 20 --seeds 1-32
  *   node tools/sim.mjs --doctrine hunter --size 900x600
  *   node tools/sim.mjs --bot classic            the original bot.js, for comparison
- *   node tools/sim.mjs --engine classic         Superbot on index.html's own engine
- *   node tools/sim.mjs --engine lite            lite.html's copy of the rules
+ *   node tools/sim.mjs --engine classic         Superbot on classic.html's own engine
+ *   node tools/sim.mjs --engine io              index.html's copy of the rules
  *   node tools/sim.mjs --mine off               no landmine (also: --mine score)
  *   node tools/sim.mjs --tune classic           classic spawn curve, fixed mine (or a JSON patch for TUNE)
- *   node tools/sim.mjs --parity                 prove super.html's engine == index.html's
+ *   node tools/sim.mjs --parity                 prove super.html's engine == classic.html's
  *   node tools/sim.mjs --seeds 7 --trace        last second + local map of one run
  *
  * One game "minute" is 3600 simulation frames (the game logic's 60 Hz).
@@ -28,8 +28,8 @@ import { fileURLToPath } from 'node:url';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const ENGINES = {
     super: { file: 'super.html', scriptId: 'lavice-core' },
-    lite: { file: 'lite.html', scriptId: 'lavice-core' },
-    classic: { file: 'index.html', scriptId: null }
+    io: { file: 'index.html', scriptId: 'lavice-core' },
+    classic: { file: 'classic.html', scriptId: null }
 };
 
 // ----------------------------------------------------------------- sandbox
@@ -282,7 +282,7 @@ function parity(cfg) {
         const botOptions = { doctrine: seed % 2 ? 'hunter' : 'endurance' };
         const a = createGame({ engine: 'classic', bot: 'super', seed, width, height, botOptions });
         const b = createGame({ engine: 'super', bot: 'super', seed, width, height, botOptions, shim });
-        b.prime();      // index.html runs one update + draw at load
+        b.prime();      // classic.html runs one update + draw at load
         let frames = 0, at = -1;
         while (frames < cfg.frames && !a.state().dead) {
             a.run(20); b.run(20); frames += 20;

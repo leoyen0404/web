@@ -6,227 +6,210 @@
     <title>LAVAICE.IO</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
+        /*
+         * LAVAICE.IO — the classic IO look on the Superbot rules.
+         * Same simulation and the same bot as super.html (landmine, late-game
+         * balance, 60 Hz steps), drawn the light way: one 2D canvas, the lavice
+         * as one stretched bitmap, no shader, no shadows, no blur.
+         */
         :root {
             --primary: #00ffff;
             --secondary: #ff4b4b;
+            --signal: #d6ff3f;
             --bg: #121212;
-            --panel-bg: rgba(20, 20, 35, 0.85);
+            --panel-bg: rgba(20, 20, 35, 0.88);
+            --line: rgba(255, 255, 255, 0.1);
         }
-
+        * { box-sizing: border-box; }
+        html, body { height: 100%; }
         body {
             margin: 0;
             overflow: hidden;
             background-color: var(--bg);
-            color: #fff;
-            font-family: 'Poppins', sans-serif;
-            user-select: none;
-        }
-
-        /* IO Style Grid Background */
-        body::before {
-            content: "";
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-image: 
+            /* IO style grid, behind the transparent canvas */
+            background-image:
                 linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
             background-size: 40px 40px;
-            z-index: -1;
-            pointer-events: none;
+            color: #fff;
+            font-family: 'Poppins', system-ui, sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
         }
-
-        #ui-layer {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            pointer-events: none;
-            z-index: 20;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
+        canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+        [hidden] { display: none !important; }
 
         .hud-panel {
             background: var(--panel-bg);
-            padding: 15px 25px;
+            padding: 14px 22px;
             border-radius: 16px;
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
+            border: 1px solid var(--line);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
         }
+        .stat-label { font-size: 0.8rem; color: #aaa; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-label b { color: #fff; font-weight: 600; margin-left: 5px; font-variant-numeric: tabular-nums; }
 
-        h1 {
-            font-size: 2.5rem;
-            margin: 0;
-            color: #fff;
-            font-weight: 800;
-            letter-spacing: 1px;
-            line-height: 1;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
-        }
-
-        .stat-label {
-            font-size: 0.9rem;
-            color: #aaa;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .bar-container {
-            width: 220px;
-            height: 14px;
-            background: rgba(0,0,0,0.6);
-            border-radius: 7px;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .bar-fill {
-            height: 100%;
-            width: 100%;
-            transition: width 0.1s linear;
-            position: relative;
-        }
-
-        .bar-fill::after {
-            content: "";
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(to bottom, rgba(255,255,255,0.3), transparent);
-        }
-
+        /* ---- left column ---- */
+        #ui-layer { position: fixed; top: 20px; left: 20px; z-index: 20; pointer-events: none; display: flex; flex-direction: column; gap: 12px; width: 300px; }
+        #score { font-size: 2.5rem; margin: 0; font-weight: 800; letter-spacing: 1px; line-height: 1.05; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5); font-variant-numeric: tabular-nums; }
+        .row { display: flex; justify-content: space-between; gap: 10px; white-space: nowrap; }
+        .stats { padding: 12px 18px; }
+        .stats .stat-label { letter-spacing: 0.5px; }
+        .bar-head { display: flex; justify-content: space-between; align-items: baseline; margin: 8px 0 5px; }
+        .bar-head:first-child { margin-top: 0; }
+        .bar-container { height: 14px; background: rgba(0, 0, 0, 0.6); border-radius: 7px; overflow: hidden; }
+        .bar-fill { height: 100%; width: 100%; transform-origin: left; position: relative; }
+        .bar-fill::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(255, 255, 255, 0.3), transparent); }
         #hp-bar { background: linear-gradient(90deg, #ff3333, #ff6b6b); }
         #dash-bar { background: linear-gradient(90deg, #00d2ff, #3a7bd5); }
+        #mine-bar { background: linear-gradient(90deg, #9bbf1c, #d6ff3f); }
 
-        #game-over {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-            display: none;
-            z-index: 30;
-            background: var(--panel-bg);
-            padding: 60px;
-            border-radius: 30px;
-            border: 1px solid rgba(255,255,255,0.1);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-            backdrop-filter: blur(10px);
+        /* ---- top centre: survival clock ---- */
+        #clock-panel { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 20; pointer-events: none; text-align: center; padding: 10px 28px 12px; }
+        #clock { font-size: 2.2rem; font-weight: 800; line-height: 1; letter-spacing: 1px; font-variant-numeric: tabular-nums; }
+        #clock.cleared { color: var(--signal); }
+
+        /* ---- top right: the pilot's readout ---- */
+        #core {
+            position: fixed; top: 20px; right: 20px; z-index: 20; pointer-events: none; min-width: 236px;
+            background: rgba(0, 0, 0, 0.82); border: 1px solid rgba(0, 255, 255, 0.55); padding: 9px 12px 10px;
+            font: 600 11px/1.55 ui-monospace, 'SF Mono', Menlo, Consolas, monospace; color: var(--primary); letter-spacing: 0.5px;
         }
+        #core .title { font-weight: 700; border-bottom: 1px solid rgba(0, 255, 255, 0.4); padding-bottom: 3px; margin-bottom: 4px; display: flex; justify-content: space-between; gap: 12px; }
+        #core .title span { color: rgba(0, 255, 255, 0.6); font-weight: 600; }
+        #core .mode { color: var(--signal); }
+        #core.manual { border-color: rgba(255, 255, 255, 0.3); color: #ddd; }
 
-        #game-over h1 {
-            color: var(--secondary);
-            font-size: 3.5rem;
-            margin-bottom: 10px;
+        /* ---- bottom: controls ---- */
+        #controls {
+            position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 20;
+            display: flex; align-items: center; gap: 4px; padding: 6px 10px; white-space: nowrap;
+            background: rgba(0, 0, 0, 0.55); border-radius: 22px; border: 1px solid var(--line);
         }
-
-        #game-over p {
-            font-size: 1.2rem;
-            color: #ddd;
-            margin: 10px 0;
+        #controls button {
+            appearance: none; border: 0; background: none; cursor: pointer; padding: 6px 10px; border-radius: 14px;
+            font: 600 0.8rem/1 'Poppins', system-ui, sans-serif; color: rgba(255, 255, 255, 0.55);
         }
+        #controls button:hover { color: #fff; background: rgba(255, 255, 255, 0.08); }
+        #controls button.on { color: #111; background: var(--primary); }
+        #controls button kbd { font: inherit; opacity: 0.65; margin-right: 5px; }
+        #controls .sep { width: 1px; height: 16px; background: rgba(255, 255, 255, 0.16); margin: 0 5px; }
 
-        .btn {
-            background: linear-gradient(45deg, var(--secondary), #ff8e53);
-            border: none;
-            padding: 15px 40px;
-            color: white;
-            font-size: 1.2rem;
-            font-weight: 800;
-            border-radius: 50px;
-            cursor: pointer;
-            margin-top: 20px;
-            box-shadow: 0 5px 15px rgba(255, 75, 75, 0.4);
-            transition: transform 0.1s;
-            font-family: 'Poppins', sans-serif;
-        }
-
-        .btn:hover {
-            transform: scale(1.05);
-        }
-
-        .controls-hint {
-            position: absolute;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: rgba(255,255,255,0.5);
-            font-size: 0.9rem;
-            font-weight: 600;
-            background: rgba(0,0,0,0.4);
-            padding: 10px 20px;
-            border-radius: 20px;
-            pointer-events: none;
-        }
-
+        .mode-links { position: fixed; bottom: 24px; right: 20px; z-index: 20; display: flex; gap: 8px; }
         .mode-link {
-            position: absolute;
-            bottom: 30px;
-            right: 30px;
-            z-index: 20;
-            color: var(--primary);
-            font-size: 0.9rem;
-            font-weight: 600;
-            text-decoration: none;
-            background: rgba(0,0,0,0.4);
-            padding: 10px 20px;
-            border-radius: 20px;
-            border: 1px solid rgba(0, 255, 255, 0.35);
-            transition: background 0.15s;
+            color: var(--primary); font-size: 0.8rem; font-weight: 600; text-decoration: none;
+            background: rgba(0, 0, 0, 0.55); padding: 10px 16px; border-radius: 20px; border: 1px solid rgba(0, 255, 255, 0.35);
         }
+        .mode-link:hover { background: rgba(0, 255, 255, 0.14); }
 
-        .mode-link:hover {
-            background: rgba(0, 255, 255, 0.14);
+        /* ---- cards ---- */
+        .card {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 30; text-align: center;
+            width: min(560px, calc(100vw - 32px)); padding: 44px 40px 36px;
+            background: rgba(20, 20, 35, 0.96); border-radius: 30px; border: 1px solid var(--line); box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
         }
+        .card h1 { margin: 0 0 6px; font-size: 3rem; font-weight: 800; letter-spacing: 1px; line-height: 1; }
+        #debrief h1 { color: var(--secondary); }
+        .card .big { font-size: 2.6rem; font-weight: 800; font-variant-numeric: tabular-nums; margin: 8px 0 2px; }
+        .card p { font-size: 1rem; color: #ddd; margin: 8px 0; }
+        .card p b { color: #fff; font-weight: 600; }
+        #guide { text-align: left; padding: 34px 38px 30px; }
+        #guide h1 { font-size: 2rem; margin-bottom: 12px; }
+        #guide p { font-size: 0.92rem; color: #c8c8d0; }
+        .btn {
+            background: linear-gradient(45deg, var(--secondary), #ff8e53); border: none; padding: 13px 36px; color: #fff;
+            font: 800 1.05rem 'Poppins', system-ui, sans-serif; border-radius: 50px; cursor: pointer; margin-top: 16px;
+            box-shadow: 0 5px 15px rgba(255, 75, 75, 0.4); transition: transform 0.1s;
+        }
+        .btn:hover { transform: scale(1.05); }
 
-        /* keep clear of the centred controls hint on narrow windows */
-        @media (max-width: 900px) {
-            .mode-link { bottom: 96px; }
-        }
+        /* narrower windows: fold the labels, then the side panels */
+        @media (max-width: 1180px) { #controls button span { display: none; } #controls button kbd { margin-right: 0; opacity: 1; } }
+        @media (max-width: 900px) { #core { display: none; } .mode-links { bottom: 76px; right: 50%; transform: translateX(50%); } #ui-layer { width: 250px; } #score { font-size: 1.9rem; } .stats .stat-label { font-size: 0.7rem; } }
+        @media (max-width: 620px) { #clock-panel { top: auto; bottom: 128px; } #controls { max-width: calc(100vw - 16px); overflow-x: auto; } }
+        @media (max-height: 560px) { #ui-layer .stats { display: none; } }
     </style>
 </head>
 <body>
+    <canvas id="stage"></canvas>
 
     <div id="ui-layer">
         <div class="hud-panel">
-            <div class="stat-label">Score</div>
-            <h1 id="score-display">0</h1>
+            <div class="stat-label row"><span>Score</span><span id="build"></span></div>
+            <h1 id="score">0</h1>
+        </div>
+        <div class="hud-panel stats">
+            <div class="row">
+                <div class="stat-label">Wave<b id="wave">1</b></div>
+                <div class="stat-label">Hostiles<b id="hostiles">0</b></div>
+                <div class="stat-label">Kills<b id="kills">0</b></div>
+            </div>
         </div>
         <div class="hud-panel">
-            <div class="stat-label">Wave <span id="wave-display" style="color:white; margin-left:5px;">1</span></div>
-        </div>
-        <div class="hud-panel">
-            <div class="stat-label">Integrity</div>
+            <div class="bar-head stat-label"><span>Integrity</span><b id="hp">100</b></div>
             <div class="bar-container"><div id="hp-bar" class="bar-fill"></div></div>
-            <div class="stat-label" style="margin-top:5px;">Energy</div>
+            <div class="bar-head stat-label"><span>Energy</span><b id="dash">ready</b></div>
             <div class="bar-container"><div id="dash-bar" class="bar-fill"></div></div>
+            <div class="bar-head stat-label"><span>Mine</span><b id="mine">30s</b></div>
+            <div class="bar-container"><div id="mine-bar" class="bar-fill"></div></div>
         </div>
     </div>
 
-    <div id="game-over">
+    <div class="hud-panel" id="clock-panel">
+        <div id="clock">00:00</div>
+        <div class="stat-label">Survived · best<b id="best">—</b></div>
+    </div>
+
+    <div id="core">
+        <div class="title">SUPERBOT<span id="core-ms"></span></div>
+        <div id="core-state"></div>
+        <div class="mode" id="core-mode"></div>
+        <div id="rate"></div>
+    </div>
+
+    <nav id="controls" aria-label="Controls">
+        <button type="button" data-act="pause"><kbd>P</kbd><span>Pause</span></button>
+        <i class="sep"></i>
+        <button type="button" data-speed="1" class="on">1×</button><button type="button" data-speed="2">2×</button><button type="button" data-speed="4">4×</button><button type="button" data-speed="8">8×</button><button type="button" data-speed="16">16×</button>
+        <i class="sep"></i>
+        <button type="button" data-act="auto"><kbd>B</kbd><span>Autopilot</span></button>
+        <button type="button" data-act="doctrine"><kbd>H</kbd><span id="doctrine">Endurance</span></button>
+        <button type="button" data-act="mine" title="Manual control only"><kbd>E</kbd><span>Mine</span></button>
+        <button type="button" data-act="restart"><kbd>R</kbd><span>Restart</span></button>
+        <button type="button" data-act="guide"><kbd>G</kbd><span>Help</span></button>
+    </nav>
+
+    <div class="mode-links">
+        <a class="mode-link" href="index.html?play" id="mode-link">Play it yourself</a>
+        <a class="mode-link" href="super.html">Superbot mode →</a>
+    </div>
+
+    <section class="card" id="guide" hidden>
+        <h1>LAVAICE.IO</h1>
+        <p><b>WASD</b> move · <b>arrows</b> fire (two together for diagonals) · <b>Space</b> dash · <b>E</b> lay the mine when it reads ready.</p>
+        <p>The <b style="color:#5fd3ff">blue</b> masses with an <b style="color:#ff7a45">orange</b> rim are lavice: touching the rim burns, being inside slows you to a crawl and burns fast. A dash passes through it and through enemies.</p>
+        <p><b style="color:#ff5500">Orange squares</b> are lava debris: slow, 5 hits. <b style="color:#aaddff">Pale diamonds</b> are ice dust: fast, 1 hit — later some arrive armoured (white edge) and take more. Any touch costs 10 integrity.</p>
+        <p>The mine pulls in enemies inside its outer ring; the first to touch it lights a fuse and everything in the inner ring dies. It recharges faster and reaches further every wave.</p>
+        <p><b>P</b> pause · <b>R</b> restart · <b>B</b> hand over to the Superbot · <b>H</b> doctrine · <b>1–5</b> speed · <b>G</b> this card.</p>
+        <button type="button" class="btn" id="guide-go">START · SPACE</button>
+    </section>
+
+    <section class="card" id="debrief" hidden>
         <h1>ELIMINATED</h1>
-        <p id="final-score">Score: 0</p>
-        <button class="btn" onclick="resetGame()">REBOOT SYSTEM</button>
-    </div>
+        <div class="big" id="d-time">00:00</div>
+        <p id="d-verdict"></p>
+        <p>Score <b id="d-score">0</b> · Wave <b id="d-wave">1</b> · Kills <b id="d-kills">0</b> · Hostiles <b id="d-host">0</b></p>
+        <p id="d-count"></p>
+        <button type="button" class="btn" id="d-go">REBOOT SYSTEM</button>
+    </section>
 
-    <div class="controls-hint">
-        WASD to Move • ARROWS to Shoot • SPACE to Dash
-    </div>
-
-    <a class="mode-link" href="super.html">Superbot mode →</a>
-
-    <canvas id="gameCanvas"></canvas>
-
-    <script>
-        /**
-         * LAVICE.IO
-         * Classic IO style redesign with Lavice material.
-         */
-
+    <!--
+        CORE RULES
+        A byte-for-byte copy of the lavice-core script in super.html. Do not
+        edit it here: change super.html and copy the block across again.
+        `node tools/sim.mjs --engine io` runs this copy headlessly.
+    -->
+    <script id="lavice-core">
         // --- FAST NOISE (Permutation Table) ---
         const Simplex = (function() {
             const p = new Uint8Array(256);
@@ -242,8 +225,9 @@
                 permMod12[i] = perm[i] % 12;
             }
             const grad3 = [[1,1,0],[-1,1,0],[1,-1,0],[-1,-1,0],[1,0,1],[-1,0,1],[1,0,-1],[-1,0,-1],[0,1,1],[0,-1,1],[0,1,-1],[0,-1,-1]];
-            
+
             return {
+                perm,
                 noise3D: function(xin, yin, zin) {
                     let n0, n1, n2, n3;
                     const F3 = 1.0/3.0;
@@ -300,24 +284,19 @@
         })();
 
         // --- GAME CONSTANTS ---
-        const CELL_SIZE = 8; // Finer grid for better Lavice texture
-        const WALL_THRESHOLD = 0.15; 
+        const CELL_SIZE = 8;
+        const WALL_THRESHOLD = 0.15;
         const NOISE_SCALE = 0.05;
-        const TIME_SCALE = 0.1; 
-
-        // --- ENGINE ---
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        let width, height, cols, rows;
+        const TIME_SCALE = 0.1;
 
         // --- STATE ---
+        let width = 0, height = 0;
         let gameTime = 0;
         let score = 0;
         let wave = 1;
         let isGameOver = false;
-        let shake = 0;
+        let frame = 0;
 
-        // --- ENTITIES ---
         const player = {
             x: 0, y: 0,
             radius: 12,
@@ -329,32 +308,79 @@
             dashDuration: 0,
             vx: 0, vy: 0,
             hp: 100,
-            maxHp: 100,
-            color: '#fff'
+            maxHp: 100
         };
 
         let bullets = [];
         let enemies = [];
-        let particles = [];
-        
-        // --- INPUT ---
         const keys = {};
-        window.addEventListener('keydown', e => keys[e.code] = true);
-        window.addEventListener('keyup', e => {
-            keys[e.code] = false;
-            if(e.code === 'Space' && isGameOver) resetGame();
-            else if(e.code === 'Space') tryDash();
-        });
 
-        function resize() {
-            width = canvas.width = window.innerWidth;
-            height = canvas.height = window.innerHeight;
-            cols = Math.ceil(width / CELL_SIZE);
-            rows = Math.ceil(height / CELL_SIZE);
-            findSafeSpawn();
+        // --- LANDMINE (Superbot mode only; the classic build has none) ---
+        // One mine on the map at a time. It can be laid 30 s after the last one
+        // and is laid automatically at 60 s. It is a lure: enemies inside its
+        // lure radius go for the mine instead of the player. The first one to
+        // step on it lights a short fuse, and the blast kills every enemy in
+        // range. Lavice covering it for 3 s swallows it (unless the fuse is
+        // already lit). The blast does not hurt the player. Its kills award no
+        // score: score drives the wave, and the wave drives the spawn rate, so
+        // a scoring mine would bring in more enemies than it removes.
+        const MINE = {
+            enabled: true,
+            minDelay: 30 * 60,
+            maxDelay: 60 * 60,
+            radius: 10,
+            lureRadius: 190,
+            fuseFrames: 40,
+            blastRadius: 130,
+            buryFrames: 3 * 60,
+            scores: false
+        };
+        // Shown in the top-left corner of super.html and index.html. Bump it with
+        // every published change, so a glance tells which build a device has.
+        const BUILD = 'v2026.10.10d';
+
+        // --- LATE-GAME BALANCE (Superbot mode only; the classic build has none) ---
+        // In the classic rules every wave adds the same spawn chance, and waves
+        // come from score, which comes from kills: the swarm grows exponentially
+        // and nothing can keep up for long. Here waves past `spawnKnee` each add
+        // a little less, the spawn rate closing in on `spawnMax` without ever
+        // reaching it, and the mine grows with the wave: it recharges faster
+        // and reaches further. So that the late game still gets harder, ice
+        // dust starts arriving armoured: from `iceKnee` a growing share of it
+        // takes a second hit, later a third.
+        const TUNE = {
+            spawnKnee: 20,          // waves up to here count in full, as in the classic build
+            spawnMax: 2,            // ...then the rate bends toward this many enemies a second
+            iceKnee: 40,            // wave at which ice dust starts to gain armour
+            iceStep: 60,            // waves per extra hit point of ice dust (0 = never)
+            mineHaste: 60,          // mine delays are divided by 1 + wave / mineHaste
+            mineFastest: 12 * 60,   // ...but it never recharges faster than this
+            hitGrace: 0,            // frames of immunity after a contact hit (0 = none, as in the classic build)
+            mineReach: 1,           // px the lure and blast radii gain per wave
+            mineReachMax: 110       // ...up to this much
+        };
+        const MINE_BASE = { minDelay: MINE.minDelay, maxDelay: MINE.maxDelay, lureRadius: MINE.lureRadius, blastRadius: MINE.blastRadius };
+
+        function tuneMine() {
+            const haste = TUNE.mineHaste > 0 ? 1 + (wave - 1) / TUNE.mineHaste : 1;
+            MINE.minDelay = Math.max(Math.min(TUNE.mineFastest, MINE_BASE.minDelay), Math.round(MINE_BASE.minDelay / haste));
+            MINE.maxDelay = MINE.minDelay * 2;
+            const reach = Math.min(TUNE.mineReachMax, (wave - 1) * TUNE.mineReach);
+            MINE.lureRadius = MINE_BASE.lureRadius + reach;
+            MINE.blastRadius = MINE_BASE.blastRadius + reach;
         }
-        window.addEventListener('resize', resize);
-        resize();
+
+        let hitGrace = 0;       // frames of contact immunity left
+        let mine = null;        // { x, y, buried, age, fuse }  fuse < 0 until tripped
+        let mineTimer = 0;      // frames since the last mine was laid
+
+        // Cosmetic event sink (kind, x, y, a, b). Never affects the rules.
+        let fx = function() {};
+
+        function setArena(w, h) {
+            width = w;
+            height = h;
+        }
 
         function findSafeSpawn() {
             let attempts = 0;
@@ -382,11 +408,75 @@
             isGameOver = false;
             enemies = [];
             bullets = [];
-            particles = [];
             findSafeSpawn();
             player.hp = player.maxHp;
             player.dashCooldown = 0;
-            document.getElementById('game-over').style.display = 'none';
+            hitGrace = 0;
+            mine = null;
+            mineTimer = 0;
+            tuneMine();
+            fx('reset', player.x, player.y);
+        }
+
+        function mineReady() {
+            return MINE.enabled && !isGameOver && mineTimer >= MINE.minDelay;
+        }
+
+        function tryPlaceMine() {
+            if (!mineReady()) return false;
+            if (mine) fx('mine_lost', mine.x, mine.y, 'replaced');
+            mine = {
+                x: Math.max(0, Math.min(width, player.x)),
+                y: Math.max(0, Math.min(height, player.y)),
+                buried: 0, age: 0, fuse: -1
+            };
+            mineTimer = 0;
+            fx('mine_set', mine.x, mine.y);
+            return true;
+        }
+
+        function updateMine() {
+            mineTimer++;
+            if (mineTimer >= MINE.maxDelay) tryPlaceMine();
+            if (!mine) return;
+            mine.age++;
+
+            if (mine.fuse < 0) {
+                if (isWall(mine.x, mine.y)) {
+                    if (++mine.buried > MINE.buryFrames) {
+                        fx('mine_lost', mine.x, mine.y, 'buried');
+                        mine = null;
+                        return;
+                    }
+                } else {
+                    mine.buried = 0;
+                }
+
+                for (let i = 0; i < enemies.length; i++) {
+                    const e = enemies[i];
+                    if (Math.hypot(e.x - mine.x, e.y - mine.y) < e.radius + MINE.radius) {
+                        mine.fuse = MINE.fuseFrames;
+                        fx('mine_trip', mine.x, mine.y);
+                        break;
+                    }
+                }
+                return;
+            }
+            if (--mine.fuse > 0) return;
+
+            const bx = mine.x, by = mine.y;
+            let killed = 0;
+            mine = null;
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                const e = enemies[i];
+                if (Math.hypot(e.x - bx, e.y - by) < MINE.blastRadius) {
+                    enemies.splice(i, 1);
+                    if (MINE.scores) score += e.type === 'ice_dust' ? 150 : 400;
+                    killed++;
+                    fx('mine_kill', e.x, e.y, e.type);
+                }
+            }
+            fx('mine_blast', bx, by, killed);
         }
 
         function tryDash() {
@@ -395,21 +485,10 @@
                 player.dashDuration = 8;
                 player.dashCooldown = player.dashMax;
                 if (player.vx === 0 && player.vy === 0) player.vy = -1;
-                
-                // Dash particles
-                for(let i=0; i<12; i++) {
-                    particles.push({
-                        x: player.x, y: player.y,
-                        vx: (Math.random()-0.5)*8, vy: (Math.random()-0.5)*8,
-                        life: 25, color: '#00ffff', size: 4
-                    });
-                }
+                fx('dash', player.x, player.y);
             }
         }
 
-        // --- CORE FUNCTIONS ---
-        
-        // Returns noise value at x,y
         function getNoise(x, y) {
             return Simplex.noise3D(x * NOISE_SCALE / CELL_SIZE, y * NOISE_SCALE / CELL_SIZE, gameTime * TIME_SCALE);
         }
@@ -428,34 +507,43 @@
             } while (isWall(ex, ey) && attempts < 50);
 
             if (attempts < 50) {
-                // New Enemy Types: Lava Debris (Heavy) & Ice Dust (Fast)
+                // Lava Debris (heavy) & Ice Dust (fast)
                 const type = Math.random() > 0.7 ? 'ice_dust' : 'lava_debris';
+                // armour: one hit point per `iceStep` waves past the knee, the fraction decided by chance
+                let armour = 0;
+                if (type === 'ice_dust' && TUNE.iceStep > 0 && wave > TUNE.iceKnee) {
+                    const extra = (wave - TUNE.iceKnee) / TUNE.iceStep;
+                    armour = Math.floor(extra) + (Math.random() < extra % 1 ? 1 : 0);
+                }
                 enemies.push({
                     x: ex, y: ey,
                     type: type,
                     speed: type === 'ice_dust' ? 3.5 : 1.5,
-                    hp: type === 'ice_dust' ? 1 : 5,
+                    hp: type === 'ice_dust' ? 1 + armour : 5,
                     radius: type === 'ice_dust' ? 8 : 14,
-                    color: type === 'ice_dust' ? '#aaddff' : '#ff5500',
                     angle: 0
                 });
+                fx('spawn', ex, ey, type);
             }
         }
 
-        // --- LOOP ---
-        function loop() {
-            update();
-            draw();
-            requestAnimationFrame(loop);
+        // Chance per frame that a new enemy appears. It climbs with the wave,
+        // and the wave climbs with score — every kill raises it.
+        function spawnChance() {
+            if (wave <= TUNE.spawnKnee) return 0.008 + (wave * 0.0005);
+            // same slope at the knee, then an exponential approach to the ceiling
+            const knee = 0.008 + (TUNE.spawnKnee * 0.0005), room = TUNE.spawnMax / 60 - knee;
+            if (room <= 0) return knee;
+            return knee + room * (1 - Math.exp(-(wave - TUNE.spawnKnee) * 0.0005 / room));
         }
 
         function update() {
             if (isGameOver) return;
 
             gameTime += 0.01;
-            
-            if (Math.random() < 0.008 + (wave * 0.0005)) spawnEnemy();
-            if (score > wave * 1200) wave++;
+
+            if (Math.random() < spawnChance()) spawnEnemy();
+            if (score > wave * 1200) { wave++; tuneMine(); }
 
             // --- PLAYER MOVEMENT ---
             let dx = 0;
@@ -472,27 +560,15 @@
             }
 
             let currentSpeed = player.isDashing ? player.dashSpeed : player.speed;
-            
-            // LAVICE EFFECT: Freeze Inside
-            // Check if player is inside Lavice
+
+            // Inside lavice: frozen to a crawl and burning.
             const noiseVal = getNoise(player.x, player.y);
             const inLavice = noiseVal > WALL_THRESHOLD;
-            
+
             if (inLavice && !player.isDashing) {
-                // Freeze effect: Slow down significantly
                 currentSpeed *= 0.2;
-                // Burnt effect: Take damage
                 player.hp -= 0.5;
-                
-                // Visual feedback for burning/freezing
-                if (Math.random() < 0.3) {
-                    particles.push({
-                        x: player.x + (Math.random()-0.5)*10,
-                        y: player.y + (Math.random()-0.5)*10,
-                        vx: 0, vy: -1,
-                        life: 10, color: '#ff0000', size: 2
-                    });
-                }
+                fx('burn', player.x, player.y);
             }
 
             player.vx = dx * currentSpeed;
@@ -501,26 +577,18 @@
             let nextX = player.x + player.vx;
             let nextY = player.y + player.vy;
 
-            // Collision with Lavice Surface (Burnt on touch)
-            // We no longer stop the player hard, but we punish touching the "wall"
-            // Actually, classic IO usually has walls you collide with.
-            // Let's keep collision but add "Burnt" damage when touching.
-            
             if (!player.isDashing) {
-                // Predictive collision for sliding
                 if (!isWall(nextX, player.y)) {
                     player.x = nextX;
                 } else {
                     player.vx = 0;
-                    // Touching wall X -> Burn
-                    player.hp -= 0.2;
+                    player.hp -= 0.2;   // touching the shoreline burns
                 }
 
                 if (!isWall(player.x, nextY)) {
                     player.y = nextY;
                 } else {
                     player.vy = 0;
-                    // Touching wall Y -> Burn
                     player.hp -= 0.2;
                 }
             } else {
@@ -529,16 +597,14 @@
                 player.dashDuration--;
                 if (player.dashDuration <= 0) player.isDashing = false;
             }
-            
-            // HP Check
-            if (player.hp <= 0) die();
-            if (player.hp < player.maxHp) player.hp += 0.05; // Slow regen? Or maybe not. Let's add very slow regen.
 
-            // Cooldowns
+            if (player.hp <= 0) die();
+            if (player.hp < player.maxHp) player.hp += 0.05;
+
             if (player.dashCooldown > 0) player.dashCooldown--;
 
             // --- SHOOTING ---
-            let shootX = 0; 
+            let shootX = 0;
             let shootY = 0;
             if (keys['ArrowUp']) shootY = -1;
             else if (keys['ArrowDown']) shootY = 1;
@@ -551,54 +617,63 @@
                     vx: shootX * 12, vy: shootY * 12,
                     life: 50
                 });
+                fx('shot', player.x, player.y, shootX, shootY);
             }
 
-            // --- ENTITIES UPDATE ---
-            
-            // Bullets
+            // --- BULLETS ---
             for(let i=bullets.length-1; i>=0; i--) {
                 let b = bullets[i];
                 b.x += b.vx;
                 b.y += b.vy;
                 b.life--;
-                
+
                 if (isWall(b.x, b.y)) {
                     bullets.splice(i, 1);
-                    particles.push({x:b.x, y:b.y, vx: -b.vx*0.3, vy: -b.vy*0.3, life:10, color:'#fff', size:2});
+                    fx('ricochet', b.x, b.y, b.vx, b.vy);
                     continue;
                 }
                 if (b.life <= 0) bullets.splice(i, 1);
             }
 
-            // Enemies
+            // --- ENEMIES ---
+            if (hitGrace > 0) hitGrace--;
             for(let i=enemies.length-1; i>=0; i--) {
                 let e = enemies[i];
                 let dx = player.x - e.x;
                 let dy = player.y - e.y;
                 let dist = Math.sqrt(dx*dx + dy*dy);
-                
-                if (dist > 0) {
-                    e.x += (dx/dist) * e.speed;
-                    e.y += (dy/dist) * e.speed;
+
+                // A live mine lures enemies in its radius away from the player.
+                let mx = dx, my = dy, md = dist;
+                e.lured = false;
+                if (mine) {
+                    const lx = mine.x - e.x, ly = mine.y - e.y;
+                    const ld = Math.sqrt(lx*lx + ly*ly);
+                    if (ld < MINE.lureRadius) { mx = lx; my = ly; md = ld; e.lured = true; }
                 }
-                
-                // Rotate debris
+
+                if (md > 0) {
+                    e.x += (mx/md) * e.speed;
+                    e.y += (my/md) * e.speed;
+                }
+
                 e.angle += 0.1;
 
                 if (isWall(e.x, e.y)) {
-                    e.x -= (dx/dist) * e.speed;
-                    if (isWall(e.x, e.y)) e.y -= (dy/dist) * e.speed;
+                    e.x -= (mx/md) * e.speed;
+                    if (isWall(e.x, e.y)) e.y -= (my/md) * e.speed;
                 }
 
-                if (dist < player.radius + e.radius && !player.isDashing) {
-                    player.hp -= 10; // Contact damage
-                    shake = 5;
+                if (dist < player.radius + e.radius && !player.isDashing && hitGrace <= 0) {
+                    hitGrace = TUNE.hitGrace;
+                    player.hp -= 10;    // contact damage
                     // Push back
                     player.x += (dx/dist) * 20;
                     player.y += (dy/dist) * 20;
                     // Never let knockback create an unrecoverable out-of-bounds trap.
                     player.x = Math.max(player.radius, Math.min(width - player.radius, player.x));
                     player.y = Math.max(player.radius, Math.min(height - player.radius, player.y));
+                    fx('hurt', player.x, player.y);
                 }
 
                 for(let j=bullets.length-1; j>=0; j--) {
@@ -607,231 +682,474 @@
                     if (bDist < e.radius + 8) {
                         e.hp--;
                         bullets.splice(j, 1);
-                        particles.push({x:e.x, y:e.y, vx:0, vy:0, life:5, color:'#fff', size: e.radius});
-                        
+                        fx('hit', e.x, e.y, e.radius);
+
                         if (e.hp <= 0) {
                             enemies.splice(i, 1);
                             score += e.type === 'ice_dust' ? 150 : 400;
-                            for(let k=0; k<8; k++) {
-                                particles.push({
-                                    x: e.x, y: e.y,
-                                    vx: (Math.random()-0.5)*8,
-                                    vy: (Math.random()-0.5)*8,
-                                    life: 30,
-                                    color: e.color,
-                                    size: 4
-                                });
-                            }
+                            fx('kill', e.x, e.y, e.type);
                         }
                         break;
                     }
                 }
             }
 
-            // Particles
-            for(let i=particles.length-1; i>=0; i--) {
-                let p = particles[i];
-                p.x += p.vx;
-                p.y += p.vy;
-                p.life--;
-                if(p.life <= 0) particles.splice(i,1);
-            }
-
-            // UI Update
-            document.getElementById('score-display').innerText = score.toLocaleString();
-            document.getElementById('wave-display').innerText = wave;
-            
-            let dashPct = (1 - (player.dashCooldown / player.dashMax)) * 100;
-            if(player.dashCooldown <= 0) dashPct = 100;
-            document.getElementById('dash-bar').style.width = dashPct + "%";
-            
-            let hpPct = (player.hp / player.maxHp) * 100;
-            document.getElementById('hp-bar').style.width = Math.max(0, hpPct) + "%";
-
-            if(shake > 0) shake *= 0.9;
+            if (MINE.enabled) updateMine();
         }
 
         function die() {
             isGameOver = true;
-            shake = 0;
-            document.getElementById('game-over').style.display = 'block';
-            document.getElementById('final-score').innerText = "Score: " + score;
+            fx('death', player.x, player.y);
         }
 
-        let frame = 0;
+        // Boot the arena exactly like the classic build's first resize().
+        setArena(window.innerWidth, window.innerHeight);
+        findSafeSpawn();
+    </script>
+    <script src="super-bot.js"></script>
 
-        // --- RENDER ---
-        function draw() {
-            let sx = (Math.random()-0.5) * shake;
-            let sy = (Math.random()-0.5) * shake;
+    <script>
+    (() => {
+        'use strict';
 
-            ctx.clearRect(0, 0, width, height); // Clear for transparent bg (grid is in body)
+        const $ = (id) => document.getElementById(id);
+        const stage = $('stage');
+        const ctx = stage.getContext('2d');
 
-            ctx.save();
-            ctx.translate(sx, sy);
+        const COLOR = { lava: '#ff5500', ice: '#aaddff', ink: '#ffffff', primary: '#00ffff', signal: '#d6ff3f', alert: '#ff4b4b' };
+        const GOAL_FRAMES = 5 * 60 * 60;
+        const STEP_MS = 1000 / 60;
+        const TAU = Math.PI * 2;
+        const PLAY = /[?&]play\b/.test(location.search);
+        const BEST_KEY = PLAY ? 'lavice.play.best.v1' : 'lavice.superbot.best.v1';     // same rules, same records as super.html
 
-            // 1. Draw LAVICE (The Living Terrain)
-            // We iterate grid
-            for (let y = 0; y < rows; y++) {
-                for (let x = 0; x < cols; x++) {
-                    const wx = x * CELL_SIZE;
-                    const wy = y * CELL_SIZE;
-                    
-                    const n = getNoise(wx+CELL_SIZE/2, wy+CELL_SIZE/2);
-                    
-                    if (n > WALL_THRESHOLD) {
-                        // Lavice Material: Liquid Glass Texture
-                        // Gradient from Lava (Surface) to Ice (Deep)
-                        let t = (n - WALL_THRESHOLD) * 2.5; 
-                        if (t > 1) t = 1;
-                        
-                        // Color Interpolation
-                        const r = Math.floor(255 * (1-t) + 31 * t);
-                        const g = Math.floor(75 * (1-t) + 221 * t);
-                        const b = Math.floor(31 * (1-t) + 255 * t);
-                        
-                        // Liquid Glass Effect
-                        // 1. Semi-transparent base
-                        ctx.fillStyle = `rgba(${r},${g},${b}, 0.6)`;
-                        // Overlap slightly to remove grid lines
-                        ctx.fillRect(wx, wy, CELL_SIZE+1, CELL_SIZE+1);
+        const bot = new SuperBot();
+        window.superBot = bot;
 
-                        // 2. Subtle Highlight (Soft Glow)
-                        // Instead of a hard block, we use a smaller, centered highlight
-                        // ctx.fillStyle = `rgba(255,255,255, 0.15)`;
-                        // ctx.fillRect(wx + 2, wy + 2, CELL_SIZE - 4, CELL_SIZE - 4);
-                    }
-                }
-            }
+        const view = {
+            dpr: 1, autopilot: !PLAY, paused: false, speed: 1, guide: false, resume: false,
+            runFrames: 0, runNo: 1, kills: 0, hitsTaken: 0, dashes: 0, mineKills: 0, pure: true,
+            cleared: false, deadAt: 0, thinkMs: 0, hurt: 0, blast: null,
+            rate: 1, fps: 0, best: null
+        };
+        try { view.best = JSON.parse(localStorage.getItem(BEST_KEY) || 'null'); } catch (e) { view.best = null; }
 
-            // 2. Draw Entities
-            
-            // Particles
-            particles.forEach(p => {
-                ctx.fillStyle = p.color;
-                ctx.globalAlpha = p.life / 30;
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.size/2, 0, Math.PI*2);
-                ctx.fill();
-            });
-            ctx.globalAlpha = 1.0;
-
-            // Enemies
-            enemies.forEach(e => {
-                ctx.save();
-                ctx.translate(e.x, e.y);
-                ctx.rotate(e.angle);
-                
-                ctx.fillStyle = e.color;
-                ctx.shadowColor = e.color;
-                ctx.shadowBlur = 15;
-                
-                if (e.type === 'lava_debris') {
-                    // Square/Jagged shape
-                    ctx.fillRect(-e.radius, -e.radius, e.radius*2, e.radius*2);
-                } else {
-                    // Ice Dust: Triangle or Diamond
-                    ctx.beginPath();
-                    ctx.moveTo(0, -e.radius);
-                    ctx.lineTo(e.radius, 0);
-                    ctx.lineTo(0, e.radius);
-                    ctx.lineTo(-e.radius, 0);
-                    ctx.fill();
-                }
-                
-                ctx.restore();
-            });
-
-            // Bullets
-            ctx.fillStyle = '#fff';
-            ctx.shadowColor = '#fff';
-            ctx.shadowBlur = 5;
-            bullets.forEach(b => {
-                ctx.beginPath();
-                ctx.arc(b.x, b.y, 3, 0, Math.PI*2);
-                ctx.fill();
-            });
-            ctx.shadowBlur = 0;
-
-            // Player
-            if (!isGameOver) {
-                ctx.fillStyle = player.isDashing ? '#00ffff' : '#ffffff';
-                ctx.shadowColor = player.isDashing ? '#00ffff' : '#ffffff';
-                ctx.shadowBlur = 10;
-                
-                ctx.beginPath();
-                ctx.arc(player.x, player.y, player.radius, 0, Math.PI*2);
-                ctx.fill();
-                
-                // Direction indicator
-                // ctx.strokeStyle = '#333';
-                // ctx.lineWidth = 2;
-                // ctx.beginPath();
-                // ctx.moveTo(player.x, player.y);
-                // ctx.lineTo(player.x + player.vx*5, player.y + player.vy*5);
-                // ctx.stroke();
-                
-                ctx.shadowBlur = 0;
-            }
-
-            ctx.restore();
-            frame++;
-        }
-
-        // Compact machine-readable state for bot QA and deterministic stepping.
-        window.render_game_to_text = () => JSON.stringify({
-            coordinateSystem: 'origin top-left; x right; y down; pixels',
-            mode: isGameOver ? 'game_over' : 'playing',
-            time: Number(gameTime.toFixed(2)),
-            score,
-            wave,
-            player: {
-                x: Math.round(player.x),
-                y: Math.round(player.y),
-                hp: Number(player.hp.toFixed(1)),
-                dashing: player.isDashing,
-                dashCooldown: player.dashCooldown
-            },
-            bot: window.voidBot ? {
-                enabled: window.voidBot.enabled,
-                strategy: window.voidBot.currentStrategy,
-                stuckFrames: window.voidBot.stuckFrames,
-                escapeFrames: window.voidBot.escapeFrames,
-                escapeReason: window.voidBot.escapeReason,
-                escapeEvents: window.voidBot.escapeEvents,
-                steeringChanges: window.voidBot.steeringChanges,
-                movementKeyChanges: window.voidBot.movementKeyChanges,
-                movementReversals: window.voidBot.movementReversals,
-                dashCount: window.voidBot.dashCount,
-                lastDashReason: window.voidBot.lastDashReason,
-                dashReasons: window.voidBot.dashReasons,
-                move: {
-                    x: Number(window.voidBot.moveVector.x.toFixed(2)),
-                    y: Number(window.voidBot.moveVector.y.toFixed(2))
-                }
-            } : null,
-            enemies: enemies.slice(0, 12).map(e => ({
-                type: e.type,
-                x: Math.round(e.x),
-                y: Math.round(e.y),
-                hp: e.hp
-            })),
-            enemyCount: enemies.length,
-            projectileCount: bullets.length
-        });
-
-        window.advanceTime = (ms) => {
-            const steps = Math.max(1, Math.round(ms / (1000 / 60)));
-            for (let i = 0; i < steps; i++) {
-                update();
-                draw();
-            }
+        // The core reports cosmetic moments here. This page keeps the
+        // counters, a hit flash and the mine's blast ring.
+        fx = function(kind, x, y) {
+            if (kind === 'dash') view.dashes++;
+            else if (kind === 'kill') view.kills++;
+            else if (kind === 'mine_kill') { view.kills++; view.mineKills++; }
+            else if (kind === 'hurt') { view.hitsTaken++; view.hurt = 1; }
+            else if (kind === 'mine_blast') view.blast = { x, y, life: 1 };
         };
 
-        loop();
+        // ----------------------------------------------------------- terrain
 
+        // The classic lavice colours — lava at the rim running to ice in the
+        // depths, 60 % opaque over the grid — but sampled once per cell into a
+        // tiny bitmap and stretched with smoothing off: one drawImage a frame
+        // instead of a fillRect per cell.
+        const field = document.createElement('canvas');
+        const fctx = field.getContext('2d');
+        let cell = CELL_SIZE, cols = 1, rows = 1, fieldImg = null, fieldPx = null, fieldTime = -1;
+        const SHADES = 24;
+        const SHADE = new Uint32Array(SHADES + 1);
+        for (let i = 0; i <= SHADES; i++) {
+            const t = i / SHADES;
+            const r = Math.floor(255 * (1 - t) + 31 * t), g = Math.floor(75 * (1 - t) + 221 * t), b = Math.floor(31 * (1 - t) + 255 * t);
+            SHADE[i] = ((153 << 24) | (b << 16) | (g << 8) | r) >>> 0;      // little-endian ABGR
+        }
+
+        function sizeField() {
+            cell = Math.max(CELL_SIZE, Math.ceil(Math.sqrt(width * height / 26000)));
+            cols = Math.max(1, Math.ceil(width / cell));
+            rows = Math.max(1, Math.ceil(height / cell));
+            field.width = cols; field.height = rows;
+            fieldImg = fctx.createImageData(cols, rows);
+            fieldPx = new Uint32Array(fieldImg.data.buffer);
+            fieldTime = -1;
+        }
+
+        function drawField() {
+            if (fieldTime !== gameTime) {
+                fieldTime = gameTime;
+                const half = cell / 2, k25 = 2.5 * SHADES;
+                let k = 0;
+                for (let r = 0; r < rows; r++) {
+                    const y = r * cell + half;
+                    for (let c = 0; c < cols; c++) {
+                        const d = getNoise(c * cell + half, y) - WALL_THRESHOLD;
+                        fieldPx[k++] = d > 0 ? SHADE[d * k25 >= SHADES ? SHADES : (d * k25) | 0] : 0;
+                    }
+                }
+                fctx.putImageData(fieldImg, 0, 0);
+            }
+            ctx.imageSmoothingEnabled = false;
+            ctx.drawImage(field, 0, 0, cols * cell, rows * cell);
+        }
+
+        // ------------------------------------------------------------ render
+
+        const lerp = (a, b, t) => a + (b - a) * t;
+        const ix = (o, t) => (o.px === undefined ? o.x : lerp(o.px, o.x, t));
+        const iy = (o, t) => (o.py === undefined ? o.y : lerp(o.py, o.y, t));
+
+        function ring(x, y, r, color, dash) {
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, TAU);
+            ctx.setLineDash(dash || []);
+            ctx.strokeStyle = color;
+            ctx.stroke();
+        }
+
+        // a square (lava) or diamond (ice) spinning with the enemy, added to the current path
+        function spinner(x, y, r, angle, diamond) {
+            const c = Math.cos(angle) * r, s = Math.sin(angle) * r;
+            if (diamond) { ctx.moveTo(x + s, y - c); ctx.lineTo(x + c, y + s); ctx.lineTo(x - s, y + c); ctx.lineTo(x - c, y - s); }
+            else { ctx.moveTo(x + c - s, y + s + c); ctx.lineTo(x - c - s, y - s + c); ctx.lineTo(x - c + s, y - s - c); ctx.lineTo(x + c + s, y + s - c); }
+            ctx.closePath();
+        }
+
+        function render(t) {
+            ctx.setTransform(view.dpr, 0, 0, view.dpr, 0, 0);
+            ctx.clearRect(0, 0, width, height);
+            drawField();
+            ctx.lineWidth = 1;
+
+            if (mine) {
+                const lit = mine.fuse >= 0;
+                ring(mine.x, mine.y, MINE.lureRadius, 'rgba(214,255,63,.22)');
+                ring(mine.x, mine.y, MINE.blastRadius, lit ? COLOR.alert : 'rgba(214,255,63,.5)', [4, 6]);
+                ctx.setLineDash([]);
+                ctx.fillStyle = lit ? COLOR.alert : COLOR.signal;
+                ctx.beginPath(); spinner(mine.x, mine.y, 7, 0, true); ctx.fill();
+            }
+            if (view.blast) {
+                ctx.lineWidth = 3;
+                ring(view.blast.x, view.blast.y, MINE.blastRadius * (1.15 - 0.15 * view.blast.life), COLOR.ink);
+                ctx.lineWidth = 1;
+            }
+
+            // every enemy of a kind goes into one path: two fills for the whole swarm
+            ctx.fillStyle = COLOR.lava;
+            ctx.beginPath();
+            for (let i = 0; i < enemies.length; i++) {
+                const e = enemies[i];
+                if (e.type !== 'ice_dust') spinner(ix(e, t), iy(e, t), e.radius, e.angle, false);
+            }
+            ctx.fill();
+            ctx.fillStyle = COLOR.ice;
+            ctx.beginPath();
+            for (let i = 0; i < enemies.length; i++) {
+                const e = enemies[i];
+                if (e.type === 'ice_dust') spinner(ix(e, t), iy(e, t), e.radius, e.angle, true);
+            }
+            ctx.fill();
+            // armoured ice dust (takes more than one hit) gets a white edge
+            ctx.strokeStyle = COLOR.ink;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            for (let i = 0; i < enemies.length; i++) {
+                const e = enemies[i];
+                if (e.type === 'ice_dust' && e.hp > 1) spinner(ix(e, t), iy(e, t), e.radius + 1, e.angle, true);
+            }
+            ctx.stroke();
+
+            ctx.fillStyle = COLOR.ink;
+            ctx.beginPath();
+            for (let i = 0; i < bullets.length; i++) {
+                const b = bullets[i], x = ix(b, t), y = iy(b, t);
+                ctx.moveTo(x + 3, y);
+                ctx.arc(x, y, 3, 0, TAU);
+            }
+            ctx.fill();
+
+            if (!isGameOver) {
+                const px = ix(player, t), py = iy(player, t);
+                const hpK = Math.max(0, player.hp / player.maxHp);
+                const body = player.isDashing ? COLOR.primary : (hpK < 0.35 ? COLOR.alert : COLOR.ink);
+                ctx.globalAlpha = 0.22;
+                ctx.fillStyle = body;
+                ctx.beginPath(); ctx.arc(px, py, player.radius + 7, 0, TAU); ctx.fill();
+                ctx.globalAlpha = 1;
+                ctx.beginPath(); ctx.arc(px, py, player.radius, 0, TAU); ctx.fill();
+            }
+
+            if (view.hurt > 0.05) {
+                ctx.lineWidth = 10;
+                ctx.strokeStyle = 'rgba(255,75,75,' + view.hurt.toFixed(2) + ')';
+                ctx.strokeRect(0, 0, width, height);
+            }
+        }
+
+        // --------------------------------------------------------------- hud
+
+        $('build').textContent = BUILD;
+        const el = {
+            clock: $('clock'), best: $('best'), hp: $('hp'), dash: $('dash'), mine: $('mine'), score: $('score'), wave: $('wave'),
+            hpBar: $('hp-bar'), dashBar: $('dash-bar'), mineBar: $('mine-bar'),
+            hostiles: $('hostiles'), kills: $('kills'), rate: $('rate'), doctrine: $('doctrine'), guide: $('guide'), debrief: $('debrief'),
+            core: $('core'), coreMs: $('core-ms'), coreState: $('core-state'), coreMode: $('core-mode'),
+            dTime: $('d-time'), dVerdict: $('d-verdict'), dScore: $('d-score'), dWave: $('d-wave'), dKills: $('d-kills'), dHost: $('d-host'), dCount: $('d-count')
+        };
+        const cache = {};
+        const setText = (key, node, value) => { if (cache[key] !== value) { cache[key] = value; node.textContent = value; } };
+        const setBar = (key, node, k) => { const v = 'scaleX(' + Math.max(0, Math.min(1, k)).toFixed(3) + ')'; if (cache[key] !== v) { cache[key] = v; node.style.transform = v; } };
+        const pad2 = (n) => (n < 10 ? '0' : '') + n;
+        const fmtTime = (frames) => { const s = Math.floor(frames / 60); return pad2(Math.floor(s / 60)) + ':' + pad2(s % 60); };
+
+        function updateHud() {
+            setText('clock', el.clock, fmtTime(view.runFrames));
+            const hp = Math.max(0, Math.min(player.maxHp, player.hp));
+            setText('hp', el.hp, String(Math.ceil(hp)));
+            setBar('hpBar', el.hpBar, hp / player.maxHp);
+            setText('dash', el.dash, player.dashCooldown > 0 ? (player.dashCooldown / 60).toFixed(1) + 's' : 'ready');
+            setBar('dashBar', el.dashBar, 1 - player.dashCooldown / player.dashMax);
+            setText('mine', el.mine, mineReady()
+                ? 'ready · ' + Math.max(0, Math.ceil((MINE.maxDelay - mineTimer) / 60)) + 's'
+                : (mine ? 'live · ' : '') + Math.ceil((MINE.minDelay - mineTimer) / 60) + 's');
+            setBar('mineBar', el.mineBar, mineTimer / MINE.minDelay);
+            setText('score', el.score, score.toLocaleString('en-US'));
+            setText('wave', el.wave, String(wave));
+            setText('hostiles', el.hostiles, String(enemies.length));
+            setText('kills', el.kills, String(view.kills));
+
+            setText('coreMs', el.coreMs, view.autopilot ? view.thinkMs.toFixed(2) + ' ms' : 'offline');
+            setText('coreState', el.coreState, view.autopilot ? 'AUTOPILOT · ' + bot.opts.doctrine.toUpperCase() : 'MANUAL CONTROL');
+            setText('coreMode', el.coreMode, view.paused ? 'PAUSED' : (view.autopilot ? 'MODE: ' + bot.intel.mode : 'WASD · ARROWS · SPACE · E'));
+            const slow = !view.paused && !isGameOver && view.rate < view.speed * 0.93;
+            setText('rate', el.rate, (slow ? view.speed + '× → ' + view.rate.toFixed(1) + '×' : view.speed + '×') + ' · ' + Math.round(view.fps) + ' fps');
+        }
+
+        function updateStatus() {
+            const hunter = bot.opts.doctrine === 'hunter';
+            el.doctrine.textContent = hunter ? 'Hunter' : 'Endurance';
+            el.core.classList.toggle('manual', !view.autopilot);
+            document.querySelectorAll('#controls [data-act]').forEach((b) => {
+                const a = b.dataset.act;
+                b.classList.toggle('on', (a === 'pause' && view.paused) || (a === 'auto' && view.autopilot) || (a === 'doctrine' && hunter));
+            });
+            document.querySelectorAll('#controls [data-speed]').forEach((b) => b.classList.toggle('on', Number(b.dataset.speed) === view.speed));
+        }
+
+        function showBest() { el.best.textContent = view.best ? fmtTime(view.best.frames) : '—'; }
+
+        // -------------------------------------------------------------- game
+
+        function startRun(first) {
+            if (!first) { resetGame(); view.runNo++; }
+            view.runFrames = 0; view.kills = 0; view.hitsTaken = 0; view.dashes = 0; view.mineKills = 0;
+            view.cleared = false; view.deadAt = 0; view.hurt = 0; view.blast = null;
+            view.pure = PLAY ? !view.autopilot : view.autopilot;    // a best time only counts if nobody else flew
+            bot.release();
+            el.clock.classList.remove('cleared');
+            el.debrief.hidden = true;
+            player.px = player.x; player.py = player.y;
+            updateStatus();
+        }
+
+        function endRun(now) {
+            view.deadAt = now;
+            const f = view.runFrames;
+            let record = false;
+            if (view.pure && (!view.best || f > view.best.frames)) {
+                view.best = { frames: f, score, wave };
+                try { localStorage.setItem(BEST_KEY, JSON.stringify(view.best)); } catch (e) {}
+                record = true;
+                showBest();
+            }
+            el.dTime.textContent = fmtTime(f);
+            el.dVerdict.textContent = 'Run ' + pad2(view.runNo) + ' · ' + (f >= GOAL_FRAMES ? 'five-minute target cleared' : 'short of the five-minute target') + (record ? ' · new best' : '');
+            el.dScore.textContent = score.toLocaleString('en-US');
+            el.dWave.textContent = wave;
+            el.dKills.textContent = view.kills;
+            el.dHost.textContent = enemies.length;
+            el.debrief.hidden = false;
+        }
+
+        // Identical stepping to super.html: bot thinks, then one core update.
+        function tickOnce() {
+            if (width < 64 || height < 64) return;      // tab opened hidden: no arena yet
+            player.px = player.x; player.py = player.y;
+            for (let i = 0; i < enemies.length; i++) { const e = enemies[i]; e.px = e.x; e.py = e.y; }
+            for (let i = 0; i < bullets.length; i++) { const b = bullets[i]; b.px = b.x; b.py = b.y; }
+
+            if (view.autopilot) {
+                const t0 = performance.now();
+                bot.think();
+                view.thinkMs += (performance.now() - t0 - view.thinkMs) * 0.05;
+            }
+            update();
+            frame++;
+            view.hurt *= 0.9;
+            if (view.blast && (view.blast.life -= 0.08) <= 0) view.blast = null;
+            if (!isGameOver) {
+                view.runFrames++;
+                if (!view.cleared && view.runFrames >= GOAL_FRAMES) { view.cleared = true; el.clock.classList.add('cleared'); }
+            }
+        }
+
+        function resize() {
+            const w = window.innerWidth, h = window.innerHeight;
+            const cap = Number((/[?&]dpr=([\d.]+)/.exec(location.search) || [])[1]) || 2;
+            view.dpr = Math.min(window.devicePixelRatio || 1, cap);
+            stage.width = Math.round(w * view.dpr);
+            stage.height = Math.round(h * view.dpr);
+            setArena(w, h);
+            sizeField();
+            const clampIn = (o, r) => { o.x = Math.max(r, Math.min(w - r, o.x)); o.y = Math.max(r, Math.min(h - r, o.y)); };
+            clampIn(player, player.radius);
+            for (const e of enemies) clampIn(e, 1);
+            if (mine) clampIn(mine, 0);
+        }
+
+        // -------------------------------------------------------------- loop
+
+        // Above 1× the simulation gets most of the frame and the picture is
+        // allowed to drop to ~30 fps before any game time is thrown away.
+        let last = performance.now(), acc = 0, lastHud = 0, rateT = last, rateSteps = 0, rateFrames = 0;
+
+        function loop(now) {
+            requestAnimationFrame(loop);
+            let dt = now - last;
+            last = now;
+            if (dt > 250) dt = 250;          // tab was in the background
+
+            if (!view.paused && !isGameOver) {
+                acc += dt * view.speed;
+                const deadline = performance.now() + (view.speed > 1 ? 30 : 12);
+                while (acc >= STEP_MS) {
+                    tickOnce();
+                    acc -= STEP_MS;
+                    rateSteps++;
+                    if (isGameOver) { endRun(now); acc = 0; break; }
+                    if (performance.now() > deadline) { acc = 0; break; }   // can't keep up: drop time, never spiral
+                }
+            }
+
+            if (view.deadAt) {
+                const wait = 6000, gone = now - view.deadAt;
+                if (view.autopilot) {
+                    setText('count', el.dCount, 'Relaunching in ' + Math.max(1, Math.ceil((wait - gone) / 1000)));
+                    if (gone >= wait) startRun(false);
+                } else {
+                    setText('count', el.dCount, 'Press space to relaunch');
+                }
+            }
+
+            render(view.paused || isGameOver ? 1 : Math.min(1, acc / STEP_MS));
+
+            rateFrames++;
+            if (now - rateT >= 500) {
+                view.rate = rateSteps * STEP_MS / (now - rateT);
+                view.fps = rateFrames * 1000 / (now - rateT);
+                rateT = now; rateSteps = 0; rateFrames = 0;
+            }
+            if (now - lastHud > 100) { lastHud = now; updateHud(); }
+        }
+
+        // ------------------------------------------------------------- input
+
+        function setGuide(open) {
+            if (open === view.guide) return;
+            view.guide = open;
+            el.guide.hidden = !open;
+            if (open) { view.resume = !view.paused; view.paused = true; for (const k in keys) keys[k] = false; }
+            else if (view.resume) view.paused = false;
+            updateStatus();
+        }
+
+        function act(name) {
+            if (view.guide) { setGuide(false); if (name === 'guide' || name === 'pause') return; }
+            switch (name) {
+                case 'guide': setGuide(true); return;
+                case 'pause': view.paused = !view.paused; break;
+                case 'auto': view.autopilot = !view.autopilot; view.pure = false; bot.release(); break;
+                case 'doctrine': bot.opts.doctrine = bot.opts.doctrine === 'hunter' ? 'endurance' : 'hunter'; break;
+                case 'mine': if (!view.autopilot && !view.paused) tryPlaceMine(); break;
+                case 'restart': startRun(false); break;
+            }
+            updateStatus();
+        }
+        function setSpeed(s) { view.speed = s; acc = 0; updateStatus(); }
+
+        const MANUAL_KEYS = new Set(['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']);
+        const SPEED_KEYS = { Digit1: 1, Digit2: 2, Digit3: 4, Digit4: 8, Digit5: 16 };
+        window.addEventListener('keydown', (e) => {
+            if (e.metaKey || e.ctrlKey || e.altKey) return;
+            if (MANUAL_KEYS.has(e.code) || e.code === 'Space') e.preventDefault();
+            if (MANUAL_KEYS.has(e.code)) { if (!view.autopilot) keys[e.code] = true; return; }
+            if (e.repeat) return;
+            if (SPEED_KEYS[e.code]) { setSpeed(SPEED_KEYS[e.code]); return; }
+            switch (e.code) {
+                case 'KeyP': act('pause'); break;
+                case 'KeyB': act('auto'); break;
+                case 'KeyH': act('doctrine'); break;
+                case 'KeyE': act('mine'); break;
+                case 'KeyG': act('guide'); break;
+                case 'Escape': case 'Enter': if (view.guide) setGuide(false); break;
+                case 'KeyR': act('restart'); break;
+            }
+        });
+        window.addEventListener('keyup', (e) => {
+            if (MANUAL_KEYS.has(e.code)) { if (!view.autopilot) keys[e.code] = false; return; }
+            if (e.code === 'Space') {
+                if (view.guide) setGuide(false);
+                else if (isGameOver) startRun(false);
+                else if (!view.autopilot) tryDash();
+            }
+        });
+        $('controls').addEventListener('click', (e) => {
+            const b = e.target.closest('button');
+            if (!b) return;
+            if (b.dataset.act) act(b.dataset.act);
+            else if (b.dataset.speed) setSpeed(Number(b.dataset.speed));
+            b.blur();
+        });
+        $('guide-go').addEventListener('click', (e) => { e.currentTarget.blur(); setGuide(false); });
+        $('d-go').addEventListener('click', (e) => { e.currentTarget.blur(); startRun(false); });
+        window.addEventListener('resize', resize);
+
+        // ---------------------------------------------------------- QA hooks
+
+        window.render_game_to_text = () => JSON.stringify({
+            coordinateSystem: 'origin top-left; x right; y down; pixels',
+            mode: isGameOver ? 'game_over' : (view.paused ? 'paused' : 'playing'),
+            survivedSeconds: Number((view.runFrames / 60).toFixed(1)),
+            goalCleared: view.runFrames >= GOAL_FRAMES,
+            score, wave,
+            player: { x: Math.round(player.x), y: Math.round(player.y), hp: Number(player.hp.toFixed(1)), dashing: player.isDashing, dashCooldown: player.dashCooldown },
+            bot: { enabled: view.autopilot, intent: bot.intel.mode, lava: bot.intel.lava, ice: bot.intel.ice, dashes: view.dashes, hitsTaken: view.hitsTaken, kills: view.kills, thinkMs: Number(view.thinkMs.toFixed(2)) },
+            mine: { onMap: mine ? { x: Math.round(mine.x), y: Math.round(mine.y), fuseLit: mine.fuse >= 0 } : null, secondsSinceLaid: Number((mineTimer / 60).toFixed(1)), ready: mineReady(), kills: view.mineKills },
+            enemyCount: enemies.length,
+            projectileCount: bullets.length,
+            speed: { asked: view.speed, reached: Number(view.rate.toFixed(2)), fps: Math.round(view.fps) },
+            build: BUILD,
+            renderer: 'io'
+        });
+        window.advanceTime = (ms) => {
+            const steps = Math.max(1, Math.round(ms / STEP_MS));
+            for (let i = 0; i < steps && !isGameOver; i++) tickOnce();
+            if (isGameOver && !view.deadAt) endRun(performance.now());
+            render(1);
+            updateHud();
+        };
+
+        // --------------------------------------------------------------- boot
+
+        resize();
+        showBest();
+        startRun(true);
+        if (PLAY) {
+            document.title = 'LAVAICE.IO — Play';
+            const link = $('mode-link');
+            link.href = 'index.html';
+            link.textContent = 'Watch the Superbot';
+            setGuide(true);
+        }
+        requestAnimationFrame(loop);
+    })();
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
-    <script src="bot.js"></script>
 </body>
 </html>

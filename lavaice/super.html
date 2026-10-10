@@ -376,8 +376,8 @@
         <button type="button" data-act="guide"><kbd>G</kbd><span>Guide</span></button>
         <i class="sep"></i>
         <a href="super.html?play" id="mode-link">Play it yourself ↗</a>
-        <a href="lite.html">Lite ↗</a>
-        <a href="index.html">Classic ↗</a>
+        <a href="index.html">IO ↗</a>
+        <a href="classic.html">Classic ↗</a>
     </nav>
 
     <div class="hud banner" id="banner"></div>
@@ -440,7 +440,7 @@
 
     <!--
         CORE RULES
-        A line-for-line port of the classic build's simulation (index.html):
+        A line-for-line port of the classic build's simulation (classic.html):
         same noise, same spawn curve, same speeds, damage, dash and knockback.
         Only presentation moved out — cosmetic moments are reported through
         fx() and drawn by the renderer below. tools/sim.mjs runs this exact
@@ -572,9 +572,9 @@
             buryFrames: 3 * 60,
             scores: false
         };
-        // Shown in the top-left corner of super.html and lite.html. Bump it with
+        // Shown in the top-left corner of super.html and index.html. Bump it with
         // every published change, so a glance tells which build a device has.
-        const BUILD = 'v2026.10.10c';
+        const BUILD = 'v2026.10.10d';
 
         // --- LATE-GAME BALANCE (Superbot mode only; the classic build has none) ---
         // In the classic rules every wave adds the same spawn chance, and waves
